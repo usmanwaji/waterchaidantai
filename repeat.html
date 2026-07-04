@@ -100,7 +100,7 @@ const map = L.map('map', {zoomControl:false}).setView([6.85,100.85], 8);
 L.control.zoom({position:'topright'}).addTo(map);
 L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap | GISTDA'}).addTo(map);
-const tms = L.tileLayer(`${B}/maps/flood-freq/tms/{z}/{x}/{y}?api_key=${KEY}`, {tms:true, opacity:.75, maxZoom:18}).addTo(map);
+const tms = L.tileLayer(`${B}/maps/flood-freq/tms/{z}/{x}/{y}?api_key=${KEY}`, {opacity:.75, maxZoom:18}).addTo(map);  // endpoint ชื่อ tms แต่ใช้ลำดับ y แบบ XYZ มาตรฐาน
 document.getElementById('opaSlider').oninput = e => tms.setOpacity(e.target.value/100);
 
 async function loadStats(){

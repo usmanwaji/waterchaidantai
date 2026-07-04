@@ -112,7 +112,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,att
 
 function setLayer(){
   if(tms) map.removeLayer(tms);
-  tms = L.tileLayer(`${B}/maps/flood/${period}/tms/{z}/{x}/{y}?api_key=${KEY}`, {tms:true, opacity:.75, maxZoom:18});
+  tms = L.tileLayer(`${B}/maps/flood/${period}/tms/{z}/{x}/{y}?api_key=${KEY}`, {opacity:.75, maxZoom:18});  // ลำดับ y แบบ XYZ
   tms.addTo(map);
   loadStats();
 }
