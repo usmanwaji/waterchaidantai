@@ -21,7 +21,8 @@ body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:v
 header{background:linear-gradient(180deg,#fb923c,#f97316 45%,#ea580c);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 header h1{font-size:17px;font-weight:700;line-height:1.2}
 header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
-.navtab{display:flex;gap:4px;background:rgba(255,255,255,.15);border-radius:9px;padding:3px}
+.navtab{display:flex;gap:4px;background:rgba(255,255,255,.15);border-radius:9px;padding:3px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+.navtab a{white-space:nowrap}
 .navtab a{color:#fff;text-decoration:none;font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:7px;opacity:.8}
 .navtab a.on{background:#fff;color:#ea580c;opacity:1}
 #updated{font-size:11px;opacity:.9;margin-left:auto;text-align:right}
@@ -32,7 +33,15 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 #horizons{display:flex;gap:6px;padding:8px 14px;background:#fff;border-bottom:2px solid var(--peach);flex-wrap:wrap;align-items:center}
 .hbtn{padding:7px 18px;border:1.5px solid var(--navy);background:var(--navy);color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;border-radius:10px;cursor:pointer}
 .hbtn.on{background:var(--orange);border-color:var(--orange)}
+.pbtn{padding:6px 12px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-family:inherit;font-size:12px;font-weight:600;border-radius:9px;cursor:pointer;white-space:nowrap}
+.pbtn.on{background:var(--orange);border-color:var(--orange);color:#fff}
 #conf{font-size:11px;color:var(--muted);margin-left:auto}
+@media(max-width:820px){
+  .hbtn{padding:6px 12px;font-size:12.5px}
+  .pbtn{padding:5px 9px;font-size:11px}
+  #conf{display:none}
+  header h1 small{display:none}
+}
 
 #wrap{flex:1;display:flex;min-height:0}
 #map{flex:1;min-width:0}
@@ -78,8 +87,11 @@ footer a{color:#fdba74;text-decoration:none}
 <header>
   <h1>🔮 คาดการณ์น้ำท่วม<small>สตูล · สงขลา · ปัตตานี · ยะลา · นราธิวาส</small></h1>
   <nav class="navtab">
-    <a href="index.html">🏠 สถานการณ์ปัจจุบัน</a>
+    <a href="index.html">🏠 สถานการณ์</a>
     <a href="forecast.html" class="on">🔮 คาดการณ์</a>
+    <a href="history.html">🛰️ ย้อนหลัง</a>
+    <a href="repeat.html">🔁 ซ้ำซาก</a>
+    <a href="sim.html">🌊 แบบจำลอง</a>
   </nav>
   <div id="updated">กำลังโหลด…</div>
   <button id="btnRefresh" onclick="loadAll()">รีเฟรช</button>
@@ -90,6 +102,13 @@ footer a{color:#fdba74;text-decoration:none}
   <button class="hbtn" data-h="12">+12 ชม.</button>
   <button class="hbtn" data-h="24">+24 ชม.</button>
   <button class="hbtn" data-h="72">+72 ชม.</button>
+  <span style="width:1px;height:22px;background:#e2e8f0;margin:0 2px"></span>
+  <button class="pbtn on" data-prov="all">ทั้งหมด</button>
+  <button class="pbtn" data-prov="สตูล">สตูล</button>
+  <button class="pbtn" data-prov="สงขลา">สงขลา</button>
+  <button class="pbtn" data-prov="ปัตตานี">ปัตตานี</button>
+  <button class="pbtn" data-prov="ยะลา">ยะลา</button>
+  <button class="pbtn" data-prov="นราธิวาส">นราธิวาส</button>
   <span id="conf"></span>
 </div>
 
@@ -194,6 +213,12 @@ let wrfImgs = [];       // [{date,url}]
 let ffpiRows = [];      // ตำบลเสี่ยงฉับพลัน
 let damBanglang = null; // {pct, storage}
 let horizon = 6;
+let provFilter = 'all';
+const PROV_VIEWS = {
+  'all':[[6.85,100.85],8], 'สตูล':[[6.75,100.05],10], 'สงขลา':[[7.10,100.60],9],
+  'ปัตตานี':[[6.70,101.30],10], 'ยะลา':[[6.30,101.25],10], 'นราธิวาส':[[6.20,101.75],10]
+};
+const inProv = s => provFilter==='all' || s.prov===provFilter;
 let trendsLoaded = 0, trendsTotal = 0;
 
 async function loadAll(){
@@ -334,7 +359,7 @@ function render(){
   const panel = document.getElementById('panel');
   if(horizon === 72){ render72(panel); return; }
 
-  const evald = stations.map(s => ({s, p: predict(s, horizon)}));
+  const evald = stations.filter(inProv).map(s => ({s, p: predict(s, horizon)}));
   evald.forEach(({s,p}) => {
     const C = CLS[p.cls];
     const size = (p.cls==='over'||p.cls==='risk') ? 22 : 15;
@@ -375,7 +400,7 @@ function render(){
 
   if(horizon >= 12){
     html += `<div class="card"><h3>🌍 ดัชนีดินอิ่มน้ำ (ฝนสะสม 3 วันย้อนหลัง สูงสุดรายจังหวัด)</h3>`;
-    PROVINCES.forEach(p=>{
+    PROVINCES.filter(p=>provFilter==='all'||p.name===provFilter).forEach(p=>{
       const mm = provRain3d[p.name];
       const c = mm==null?'#9ca3af': mm>=200?'#dc2626': mm>=100?'#f97316': mm>=50?'#eab308':'#22c55e';
       const lb = mm==null?'ไม่มีข้อมูล': mm>=200?'อิ่มน้ำมาก เสี่ยงสูง': mm>=100?'อิ่มน้ำ เฝ้าระวัง': mm>=50?'ชื้นปานกลาง':'ปกติ';
@@ -392,7 +417,7 @@ function render(){
 
 function render72(panel){
   // +72 ชม.: ไม่มีหมุดคาดรายสถานี — แสดงหมุดสถานะปัจจุบันจาง ๆ เพื่อบริบท
-  stations.forEach(s=>{
+  stations.filter(inProv).forEach(s=>{
     L.marker([s.lat,s.lon], {icon: L.divIcon({className:'', html:
       `<div class="mk" style="width:10px;height:10px;background:#94a3b8;opacity:.6"></div>`, iconSize:[10,10], iconAnchor:[5,5]})})
       .bindPopup(`<b>${esc(s.name)}</b><br><span style="font-size:11px;color:#64748b">ระดับปัจจุบัน ${fmt(s.msl)} ม.รทก. — ดูคาดการณ์รายสถานีที่ +6/+12/+24 ชม.</span>`)
@@ -402,7 +427,7 @@ function render72(panel){
   html += wrfCard(3);
   // ความเสี่ยงรายจังหวัด = ดินอิ่มน้ำ (ย้อนหลัง) เป็นฐาน — ให้ผู้ใช้อ่านร่วมกับแผนที่ฝนพยากรณ์
   html += `<div class="card"><h3>🗺️ ความเสี่ยงพื้นฐานรายจังหวัด (จากดินอิ่มน้ำ)</h3>`;
-  PROVINCES.forEach(p=>{
+  PROVINCES.filter(p=>provFilter==='all'||p.name===provFilter).forEach(p=>{
     const mm = provRain3d[p.name];
     const c = mm==null?'#9ca3af': mm>=200?'#dc2626': mm>=100?'#f97316': mm>=50?'#eab308':'#22c55e';
     const lb = mm==null?'ไม่มีข้อมูล': mm>=200?'เสี่ยงสูง หากฝนตกเพิ่ม':'' || (mm>=100?'เฝ้าระวัง':'') || (mm>=50?'ปานกลาง':'ต่ำ');
@@ -448,6 +473,16 @@ document.querySelectorAll('.hbtn').forEach(b=>{
     document.querySelectorAll('.hbtn').forEach(x=>x.classList.remove('on'));
     b.classList.add('on');
     horizon = +b.dataset.h;
+    render();
+  };
+});
+document.querySelectorAll('.pbtn').forEach(b=>{
+  b.onclick = () => {
+    document.querySelectorAll('.pbtn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    provFilter = b.dataset.prov;
+    const v = PROV_VIEWS[provFilter];
+    if(v) map.flyTo(v[0], v[1], {duration:.6});
     render();
   };
 });
