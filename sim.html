@@ -50,7 +50,7 @@ footer a{color:#fdba74;text-decoration:none}
   <button class="chip" data-prov="pattani">ปัตตานี (เมือง)</button>
   <button class="chip" data-prov="yala">ยะลา (เมือง)</button>
   <button class="chip on" data-prov="narathiwat">นราธิวาส (สุไหงโก-ลก)</button>
-  <a id="openFull" class="chip" href="https://gain9999.github.io/dtm" target="_blank">เปิดเต็มจอ ↗</a>
+  <a id="openFull" class="chip" href="dtm-th/index.html" target="_blank">เปิดเต็มจอ ↗</a>
 </div>
 
 <div id="howto">
@@ -86,7 +86,7 @@ function tile(lat, lon){
 }
 function go(key){
   const p = SPOTS[key];
-  const url = `https://gain9999.github.io/dtm/?lat=${p.lat}&lon=${p.lon}&z=${p.z}&base=${p.base}&water=${p.water}&opacity=65&tiles=${encodeURIComponent(p.tiles)}`;
+  const url = `dtm-th/index.html?lat=${p.lat}&lon=${p.lon}&z=${p.z}&base=${p.base}&water=${p.water}&opacity=65&tiles=${encodeURIComponent(p.tiles)}`;
   document.getElementById('simFrame').src = url;
   document.querySelectorAll('.chip[data-prov]').forEach(x=>x.classList.toggle('on', x.dataset.prov===key));
 }

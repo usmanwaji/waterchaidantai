@@ -79,6 +79,25 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 @keyframes sp{to{transform:rotate(360deg)}}
 footer{background:var(--navy-d);color:#c7d2fe;font-size:10.5px;padding:5px 14px;display:flex;gap:10px;flex-wrap:wrap}
 footer a{color:#fdba74;text-decoration:none}
+
+/* เรดาร์ตำบล */
+#radarBar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.rchip{padding:6px 13px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-family:inherit;font-size:12.5px;font-weight:600;border-radius:9px;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-block}
+.rchip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+#radarOpen{display:inline-flex;align-items:center;gap:6px;background:var(--orange);color:#fff;border:none;border-radius:9px;padding:8px 16px;font-family:inherit;font-size:13px;font-weight:700;text-decoration:none;margin-top:4px}
+#radarOpen:hover{background:var(--orange-d)}
+
+/* ฝนพยากรณ์ 7 วัน */
+#wrfRow{display:flex;gap:8px;overflow-x:auto;padding:4px 0;-webkit-overflow-scrolling:touch}
+.wrfCard{flex:0 0 auto;text-align:center}
+.wrfThumb{width:172px;height:139px;border-radius:8px;border:1px solid #e2e8f0;overflow:hidden;position:relative;cursor:zoom-in;background:#eef2f7}
+.wrfThumb img{position:absolute;image-rendering:-webkit-optimize-contrast}
+.wrfCard .dn{font-size:11.5px;font-weight:600;margin-top:4px}
+.wrfLegend{display:flex;flex-wrap:wrap;gap:2px;align-items:center;margin-top:8px;font-size:10px;color:#475569}
+.wrfLegend .sw{padding:2px 6px;border-radius:3px;color:#0f172a;font-weight:600;font-size:9.5px}
+#wrfModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.85);z-index:2000;align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
+#wrfModal.show{display:flex}
+#wrfModal img{max-width:95%;max-height:92vh;border-radius:8px;background:#fff}
 </style>
 </head>
 <body>
@@ -140,7 +159,30 @@ footer a{color:#fdba74;text-decoration:none}
     <div id="ampList"><span class="spin"></span> กำลังประเมิน…</div>
     <div class="note">คะแนนรวมจาก: ฝนพยากรณ์ 7 วัน (Open-Meteo รายอำเภอ) + ดินอิ่มน้ำ (ฝน 3 วันที่ผ่านมา สสน.) + สถานีน้ำมาก/ล้นตลิ่งในอำเภอ · คลิกชื่ออำเภอเพื่อดูพยากรณ์เฉพาะจุด</div>
   </div>
+
+  <div class="card full">
+    <h2>📡 เรดาร์ฝนสทิงพระ (กรมอุตุฯ) <span class="where" id="radarUpdated"></span></h2>
+    <div style="text-align:center">
+      <img id="radarImg" src="" alt="เรดาร์ฝนสทิงพระ ล่าสุด" style="max-width:100%;max-height:520px;border-radius:8px;border:1px solid #e2e8f0;cursor:zoom-in;background:#eef2f7" onclick="bigWrf(this.src)">
+    </div>
+    <div id="radarBar" style="margin-top:8px"></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+      <a href="https://weather.tmd.go.th/stp240Loop.php" target="_blank" rel="noopener" class="rchip">🔁 ภาพเคลื่อนไหวย้อนหลัง ↗</a>
+      <a href="https://weather.tmd.go.th/stp240.php" target="_blank" rel="noopener" class="rchip">เปิดหน้าเต็มที่ TMD ↗</a>
+      <a id="radarOpen" href="#" target="_blank" rel="noopener" class="rchip">เรดาร์ระดับตำบลรายจังหวัด (Google Sites) ↗</a>
+    </div>
+    <div class="note">ที่มา: เรดาร์สทิงพระ จ.สงขลา รัศมี 240 กม. (กรมอุตุนิยมวิทยา) ครอบคลุมทั้ง 5 จังหวัด — แถบสีซ้ายภาพคือความแรงสัญญาณสะท้อน (dBZ) ยิ่งสีร้อน/เข้มยิ่งฝนแรง เวลาบนภาพเป็น UTC (ช้ากว่าเวลาไทย 7 ชม.) รีเฟรชภาพอัตโนมัติทุก 10 นาที · ปุ่มขวาสุดเปิดเรดาร์ระดับตำบลของแต่ละจังหวัดจาก Google Sites (ฝังในหน้านี้ไม่ได้ ต้นทางบล็อกไว้)</div>
+  </div>
+
+  <div class="card full">
+    <h2>🌧️ แผนที่คาดการณ์ฝนล่วงหน้า 7 วัน (WRF-ROMS สสน.) <span class="where">โฟกัสภาคใต้ตอนล่าง</span></h2>
+    <div id="wrfRow"><span class="spin"></span> กำลังโหลด…</div>
+    <div class="wrfLegend" id="wrfLegend"></div>
+    <div class="note">แผนที่ครอบตัดแสดงเฉพาะภาคใต้ตอนล่างจากภาพต้นฉบับ (ความละเอียด ~9x9 กม.) — คลิกภาพเพื่อดูฉบับเต็มพร้อมแถบสีและพิกัด ค่าฝนเป็นปริมาณสะสมต่อวัน (มม./วัน) ความแม่นยำลดลงตามระยะเวลาคาดการณ์</div>
+  </div>
 </div>
+
+<div id="wrfModal" onclick="this.classList.remove('show')"><img id="wrfModalImg" src="" alt=""></div>
 
 <footer>
   <span>ข้อมูล: Open-Meteo · thaiwater.net (สสน.) · ศูนย์กลางอำเภอจาก OpenGISData-Thailand</span>
@@ -252,7 +294,7 @@ function renderAll(){
     const el = document.getElementById(id);
     if(el) el.textContent = id==='whereSt' ? (amp?`อ.${amp} จ.${prov}`:`จ.${prov}`) : (id==='whereAmp'?`จ.${prov}`:whereTxt);
   });
-  renderHour(met); renderDay(met); renderRain7(met, sel); renderStations(); renderAmphoes(list);
+  renderHour(met); renderDay(met); renderRain7(met, sel); renderStations(); renderAmphoes(list); renderRadarBar();
 }
 function renderHour(met){
   const now = document.getElementById('nowBox'), row = document.getElementById('hourRow');
@@ -359,6 +401,83 @@ function renderAmphoes(list){
   }).join('');
 }
 
+/* ---------- เรดาร์ตรวจอากาศระดับตำบล (ศูนย์อุตุฯ ภาคใต้ฝั่งตะวันออก / Google Sites) ---------- */
+/* หมายเหตุ: หน้าเรดาร์ต้นทางส่ง X-Frame-Options และภาพ (lh3.googleusercontent.com) ผูกกับสิทธิ์การเข้าถึงของหน้า Sites เอง
+   ฝังเป็น iframe/รูปตรง ๆ จากโดเมนอื่นไม่ได้ (ทดสอบแล้ว 403/ถูกบล็อก) จึงเปิดลิงก์ในแท็บใหม่แทน */
+const RADAR_SLUG = { 'สตูล':'สตล', 'สงขลา':'สงขลา', 'ปัตตานี':'ปตตาน', 'ยะลา':'ยะลา', 'นราธิวาส':'นราธวาส' };
+const radarUrl = p => `https://sites.google.com/view/semet-radar/เรดารตำบล/${encodeURIComponent(RADAR_SLUG[p]||p)}`;
+function renderRadarBar(){
+  const bar = document.getElementById('radarBar');
+  if(!bar) return;
+  bar.innerHTML = Object.keys(RADAR_SLUG).map(p=>
+    `<a href="${esc(radarUrl(p))}" target="_blank" rel="noopener" class="rchip ${p===prov?'on':''}" data-rprov="${esc(p)}">${esc(p)}</a>`
+  ).join('');
+  bar.querySelectorAll('.rchip').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      bar.querySelectorAll('.rchip').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      const open = document.getElementById('radarOpen');
+      if(open) open.href = radarUrl(b.dataset.rprov);
+    });
+  });
+  const open = document.getElementById('radarOpen');
+  if(open) open.href = radarUrl(prov);
+}
+function loadRadarImg(){
+  const img = document.getElementById('radarImg');
+  if(!img) return;
+  img.src = `https://weather.tmd.go.th/stp/stp240_latest.jpg?v=${Date.now()}`;
+  const upd = document.getElementById('radarUpdated');
+  if(upd) upd.textContent = 'โหลดล่าสุด ' + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+}
+
+/* ---------- แผนที่คาดการณ์ฝนล่วงหน้า 7 วัน (WRF-ROMS, โดเมน Southeast Asia 9x9กม. — มีครบ 7 วัน) ---------- */
+/* กรอบครอบตัด (พิกเซลจากภาพต้นฉบับ 1016x708) คำนวณจากกริดเส้นละติจูด/ลองจิจูดในภาพจริง
+   ให้ครอบคลุมประมาณ 4.5–10.5°N, 97–104.5°E (ภาคใต้ตอนล่างทั้งแถบ) */
+const WRF_CROP = { x1:217, y1:349, x2:324, y2:435, W:1016, H:708 };
+const WRF_BANDS = [
+  {c:'#dbe9f9', t:'1–5'}, {c:'#7fa8d9', t:'5–10'},
+  {c:'#a8dfb5', t:'10–20'}, {c:'#4caf50', t:'20–35'},
+  {c:'#f2e01a', t:'35–50'}, {c:'#f5a623', t:'50–70'}, {c:'#c6791f', t:'70–90'},
+  {c:'#f2401a', t:'90–150'}, {c:'#d4372f', t:'150–200'},
+  {c:'#701010', t:'200–300', dark:true}, {c:'#a832c8', t:'>300', dark:true}
+];
+function renderWrfLegend(){
+  const el = document.getElementById('wrfLegend');
+  if(!el) return;
+  el.innerHTML = '<b style="font-size:10.5px;color:#334155">ฝนสะสม (มม./วัน):</b>' +
+    WRF_BANDS.map(b=>`<span class="sw" style="background:${b.c};${b.dark?'color:#fff':''}">${b.t}</span>`).join('');
+}
+async function loadRainForecast(){
+  const row = document.getElementById('wrfRow');
+  if(!row) return;
+  try{
+    const j = await fetch(`${API}/public/rain7day_forecast`).then(r=>r.json());
+    const days = (j?.data?.pre_rain_sea?.data || []).slice(0,7);
+    if(!days.length) throw new Error('no data');
+    const cropW = WRF_CROP.x2-WRF_CROP.x1, cropH = WRF_CROP.y2-WRF_CROP.y1;
+    const dispW = 172, dispH = 139;
+    const scale = Math.max(dispW/cropW, dispH/cropH);
+    const imgW = (WRF_CROP.W*scale).toFixed(0), imgH = (WRF_CROP.H*scale).toFixed(0);
+    const left = (-WRF_CROP.x1*scale).toFixed(0), top = (-WRF_CROP.y1*scale).toFixed(0);
+    row.innerHTML = days.map((d,i)=>{
+      const url = `${API}/shared/image?image=${encodeURIComponent(d.media_path)}`;
+      const dstr = String(d.media_datetime||'').slice(0,10);
+      let dn = dstr;
+      try{ dn = new Date(dstr+'T00:00:00+07:00').toLocaleDateString('th-TH',{day:'numeric',month:'short'}); }catch(e){}
+      return `<div class="wrfCard">
+        <div class="wrfThumb" onclick="bigWrf('${esc(url)}')" title="คลิกเพื่อดูภาพเต็ม">
+          <img src="${esc(url)}" loading="lazy" style="width:${imgW}px;height:${imgH}px;left:${left}px;top:${top}px" alt="ฝนพยากรณ์ +${i+1} วัน">
+        </div>
+        <div class="dn">+${i+1} วัน · ${esc(dn)}</div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    row.innerHTML = '⚠️ โหลดแผนที่ฝนพยากรณ์ไม่สำเร็จ — ดูที่ <a href="https://nationalthaiwater.onwr.go.th/forecast/rainfall" target="_blank" rel="noopener">nationalthaiwater.onwr.go.th</a>';
+  }
+}
+function bigWrf(src){ document.getElementById('wrfModalImg').src = src; document.getElementById('wrfModal').classList.add('show'); }
+
 /* ---------- ตัวเลือกจังหวัด/อำเภอ ---------- */
 function fillAmpSel(){
   const sel = document.getElementById('ampSel');
@@ -387,8 +506,14 @@ document.querySelectorAll('.chip[data-prov]').forEach(b=>{
 document.getElementById('ampSel').onchange = e => { amp = e.target.value; renderAll(); };
 
 fillAmpSel();
+renderRadarBar();
+loadRadarImg();
+renderWrfLegend();
+loadRainForecast();
 loadAll();
 setInterval(loadAll, 30*60*1000);
+setInterval(loadRainForecast, 60*60*1000);
+setInterval(loadRadarImg, 10*60*1000);
 </script>
 </body>
 </html>
