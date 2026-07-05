@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="https://gain9999.github.io/dtm/" />
+    <title>แบบจำลองภูมิประเทศน้ำท่วม (DTM)</title>
+    <link rel="stylesheet" href="./vendor/leaflet.css" />
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #101014;
+        color: #f7f7f8;
+      }
+
+      #app {
+        position: relative;
+        height: 100%;
+        width: 100%;
+      }
+
+      #map {
+        height: 100%;
+        width: 100%;
+        position: relative;
+        z-index: 0;
+      }
+
+      .status {
+        position: absolute;
+        top: 64px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(10, 10, 16, 0.9);
+        padding: 10px 18px;
+        border-radius: 999px;
+        font-size: 14px;
+        letter-spacing: 0.02em;
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+        z-index: 600;
+        transition: opacity 0.3s ease;
+      }
+
+      .status.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .progress-indicator {
+        position: absolute;
+        top: 132px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(10, 10, 16, 0.9);
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+        letter-spacing: 0.02em;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+        z-index: 600;
+        transition: opacity 0.2s ease;
+      }
+
+      .progress-indicator.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .search-control {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        z-index: 100;
+      }
+
+      .search-control form {
+        display: flex;
+        gap: 8px;
+        background: rgba(10, 10, 16, 0.92);
+        padding: 6px 10px;
+        border-radius: 8px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+        position: relative;
+        z-index: 1;
+      }
+
+      .search-control input {
+        border: none;
+        background: rgba(255, 255, 255, 0.08);
+        color: #f2f2f5;
+        padding: 6px 10px;
+        border-radius: 6px;
+        width: 160px;
+        font-size: 13px;
+      }
+
+      .search-control button {
+        border: none;
+        background: #4da3ff;
+        color: #0a0a10;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .legend {
+        position: absolute;
+        bottom: 16px;
+        left: 16px;
+        background: rgba(10, 10, 16, 0.92);
+        border-radius: 12px;
+        padding: 14px 16px;
+        width: 300px;
+        z-index: 500;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
+      }
+
+      .legend.collapsed {
+        padding-bottom: 12px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+      }
+
+      .legend-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .legend h2 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .legend-toggle {
+        border: none;
+        background: rgba(255, 255, 255, 0.08);
+        color: #f7f7f8;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        letter-spacing: 0.03em;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      .legend-toggle:hover,
+      .legend-toggle:focus-visible {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+      }
+
+      .share-button {
+        border: none;
+        background: rgba(255, 255, 255, 0.08);
+        color: #f7f7f8;
+        padding: 4px 8px;
+        border-radius: 8px;
+        font-size: 12px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      .share-button:hover,
+      .share-button:focus-visible {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+      }
+
+      .share-button svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .legend-content {
+        margin-top: 12px;
+      }
+
+      .legend.collapsed .legend-content {
+        display: none;
+      }
+
+      .legend p {
+        margin: 6px 0 0;
+        font-size: 12px;
+        color: #aaa;
+      }
+
+      .leaflet-control-locate {
+        box-shadow: none !important;
+        background: none !important;
+        border: none !important;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .leaflet-control-locate .locate-button,
+      .leaflet-control-locate .rotate-button {
+        border: none;
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        background: rgba(10, 10, 16, 0.92);
+        color: #f7f7f8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+        transition: background 0.2s ease, color 0.2s ease, opacity 0.3s ease;
+      }
+
+      .leaflet-control-locate .locate-button:hover,
+      .leaflet-control-locate .locate-button:focus-visible,
+      .leaflet-control-locate .rotate-button:hover,
+      .leaflet-control-locate .rotate-button:focus-visible {
+        background: rgba(77, 163, 255, 0.95);
+        color: #0a0a10;
+      }
+
+      .leaflet-control-locate .locate-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .rotate-button.hidden {
+        display: none;
+      }
+
+      .leaflet-control-locate .locate-button svg,
+      .leaflet-control-locate .rotate-button svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      .colorbar {
+        margin-top: 12px;
+        height: 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: linear-gradient(
+          90deg,
+          #274060,
+          #387780,
+          #78a890,
+          #c1d37f,
+          #e6b566,
+          #e26b5f
+        );
+      }
+
+      .range {
+        margin-top: 6px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: #d7d7dc;
+      }
+
+      .slider-control {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #d0d0d6;
+      }
+
+      .slider-control input[type="range"] {
+        width: 100%;
+        accent-color: #5ab0ff;
+      }
+
+      .toggle-control {
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #d0d0d6;
+      }
+
+      .toggle-control input[type="checkbox"] {
+        accent-color: #4da3ff;
+      }
+
+      .flood-summary {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #d0d0d6;
+      }
+
+      .flood-summary strong {
+        color: #7ec9ff;
+      }
+
+      .number-control {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        color: #d0d0d6;
+      }
+
+      .number-control input[type="number"] {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #f7f7f8;
+        border-radius: 6px;
+        padding: 6px 8px;
+        width: 80px;
+      }
+
+      .legend .citation {
+        margin-top: 14px;
+        font-size: 9px;
+        color: #b8b8bf;
+        line-height: 1.4;
+      }
+
+      .citation a {
+        color: #7ec9ff;
+        text-decoration: none;
+      }
+
+      .cell-value {
+        color: #f7f7f8;
+        font-size: 11px;
+        font-weight: 600;
+        text-shadow: 0 0 4px rgba(0, 0, 0, 0.85);
+        pointer-events: none;
+      }
+
+      .leaflet-control-layers {
+        background: rgba(10, 10, 16, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        color: #f7f7f8;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+        z-index: 1100;
+      }
+
+      .leaflet-control-layers-expanded {
+        z-index: 1200;
+      }
+
+      .leaflet-top.leaflet-right {
+        position: absolute;
+        z-index: 1300;
+        pointer-events: auto;
+      }
+
+
+      .leaflet-control-layers-toggle {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        background-image: none !important;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .leaflet-control-layers-toggle::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        width: 24px;
+        height: 24px;
+        background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='12 3 3 8 12 13 21 8 12 3' stroke='%23f7f7f8' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpolyline points='3 13 12 18 21 13' stroke='%23f7f7f8' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpolyline points='3 18 12 23 21 18' stroke='%23f7f7f8' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 22px;
+        pointer-events: none;
+      }
+
+      .leaflet-control-layers-list {
+        padding: 10px;
+      }
+
+      .leaflet-control-layers label {
+        color: #f2f2f5;
+        font-size: 13px;
+      }
+
+      .flood-legend {
+        position: absolute;
+        top: 66px;
+        right: 12px;
+        background: rgba(10, 10, 16, 0.94);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 6px 8px;
+        width: fit-content;
+        min-width: 0;
+        z-index: 550;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+      }
+
+      .flood-legend.hidden {
+        display: none;
+      }
+
+      .flood-legend-header {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        margin-bottom: 6px;
+        font-size: 13px;
+        color: #f7f7f8;
+      }
+
+      .flood-legend-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: #cdd3df;
+      }
+
+      .flood-legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #7ec9ff;
+        box-shadow: 0 0 8px rgba(126, 201, 255, 0.45);
+      }
+
+      .flood-legend-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .flood-legend-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        color: #e1e4eb;
+      }
+
+      .flood-legend-swatch {
+        width: 26px;
+        height: 10px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: #4da3ff;
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="map"></div>
+      <div class="search-control">
+        <form id="search-form">
+          <input
+            type="text"
+            id="search-input"
+            placeholder="ค้นหาเมืองหรือพิกัด lat,lon"
+            autocomplete="off"
+          />
+          <button type="submit">ไป</button>
+        </form>
+      </div>
+      <div id="status" class="status">กำลังเริ่มโปรแกรมแสดงผล DTM…</div>
+      <div id="progress-indicator" class="progress-indicator hidden">
+        <span id="progress-label">กำลังดาวน์โหลดข้อมูล DEM…</span>
+        <span id="progress-value">0%</span>
+      </div>
+      <aside class="legend">
+        <div class="legend-header">
+          <h2>
+            แบบจำลองภูมิประเทศ (DTM)
+            <button type="button" id="share-button" class="share-button" aria-label="คัดลอกลิงก์แชร์">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+              </svg>
+            </button>
+          </h2>
+          <button
+            type="button"
+            id="legend-toggle"
+            class="legend-toggle"
+            aria-expanded="true"
+            aria-controls="legend-content"
+          >
+            X
+          </button>
+        </div>
+        <div id="legend-content" class="legend-content">
+          <p id="legend-note">กำลังรอค่าสถิติของชุดข้อมูล…</p>
+          <div class="colorbar"></div>
+          <div class="range">
+            <span id="legend-min">…</span>
+            <span id="legend-max">…</span>
+          </div>
+          <div class="slider-control">
+            <label for="max-slider">ความสูงสูงสุด</label>
+            <input
+              type="range"
+              id="max-slider"
+              min="0"
+              max="1000"
+              value="1000"
+              step="1"
+              disabled
+            />
+            <span id="slider-value">…</span>
+          </div>
+          <div class="slider-control">
+            <label for="opacity-slider">ความทึบของสี</label>
+            <input
+              type="range"
+              id="opacity-slider"
+              min="10"
+              max="100"
+              value="70"
+              step="5"
+            />
+            <span id="opacity-value">70%</span>
+          </div>
+          <label class="number-control" for="river-base-input">
+            <span>ระดับน้ำฐานของแม่น้ำ (ม. รทก.)</span>
+            <input
+              type="number"
+              id="river-base-input"
+              min="0"
+              step="0.1"
+              value="3.00"
+            />
+          </label>
+          <p class="flood-summary">
+            จำนวนช่องน้ำท่วมที่เชื่อมต่อกัน:
+            <strong id="flood-cell-count">0</strong>
+            <br />
+            <span id="affected-building-row">
+              จำนวนอาคารที่ได้รับผลกระทบ:
+              <strong id="affected-building-count">0</strong>
+            </span>
+          </p>
+          <label class="number-control" for="river-seed-input">
+            <span>จำนวนช่องแม่น้ำขั้นต่ำ</span>
+            <input
+              type="number"
+              id="river-seed-input"
+              min="1"
+              max="5000"
+              value="30"
+            />
+          </label>
+          <div class="slider-control">
+            <label for="river-slider">ระดับน้ำ</label>
+            <input
+              type="range"
+              id="river-slider"
+              min="0"
+              max="15"
+              value="3"
+              step="0.2"
+            />
+            <span id="river-slider-value">3.0 m</span>
+          </div>
+          <p class="citation">
+            แหล่งข้อมูล:
+            <a
+              href="https://doi.org/10.5281/zenodo.14900181"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Ho, Y., &amp; Hengl, T. (2025). Global Ensemble Digital Terrain Model 30m
+              (GEDTM30).
+            </a>
+            |
+            <a
+              href="https://github.com/zhu-xlab/GlobalBuildingAtlas"
+              target="_blank"
+              rel="noreferrer"
+            >
+              GlobalBuildingAtlas
+            </a>
+          </p>
+        </div>
+      </aside>
+      <div id="flood-legend" class="flood-legend hidden" aria-live="polite">
+        <div class="flood-legend-header">
+          <span>ความลึกน้ำท่วม (ม.)</span>
+        </div>
+        <div class="flood-legend-rows">
+          <div class="flood-legend-row">
+            <span
+              class="flood-legend-swatch"
+              style="background: rgb(148, 197, 233)"
+            ></span>
+            <span>0.5–1</span>
+          </div>
+          <div class="flood-legend-row">
+            <span
+              class="flood-legend-swatch"
+              style="background: rgb(99, 157, 223)"
+            ></span>
+            <span>1–2</span>
+          </div>
+          <div class="flood-legend-row">
+            <span
+              class="flood-legend-swatch"
+              style="background: rgb(55, 127, 228)"
+            ></span>
+            <span>2–3</span>
+          </div>
+          <div class="flood-legend-row">
+            <span
+              class="flood-legend-swatch"
+              style="background: rgb(46, 70, 198)"
+            ></span>
+            <span>3–4</span>
+          </div>
+          <div class="flood-legend-row">
+            <span
+              class="flood-legend-swatch"
+              style="background: rgb(7, 38, 59)"
+            ></span>
+            <span>4–5</span>
+          </div>
+          <div class="flood-legend-row">
+            <span
+              class="flood-legend-swatch"
+              style="background: rgb(110, 0, 0)"
+            ></span>
+            <span>&gt; 5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* ===== ตัวแปลภาษาไทย (ทำงานอิสระจาก app.js เดิม ไม่แก้ไขไฟล์ต้นฉบับ) ===== */
+      (function () {
+        "use strict";
+
+        // ครอบ window.prompt เพื่อแปลข้อความกล่องคัดลอกลิงก์ (fallback เมื่อ clipboard ใช้ไม่ได้)
+        var originalPrompt = window.prompt ? window.prompt.bind(window) : null;
+        if (originalPrompt) {
+          window.prompt = function (message, defaultValue) {
+            if (message === "Copy this link") message = "คัดลอกลิงก์นี้";
+            return originalPrompt(message, defaultValue);
+          };
+        }
+
+        var DICT = {
+          "Booting DTM visualizer…": "กำลังเริ่มโปรแกรมแสดงผล DTM…",
+          "Downloading DEM…": "กำลังดาวน์โหลดข้อมูล DEM…",
+          "Downloading buildings…": "กำลังดาวน์โหลดข้อมูลอาคาร…",
+          "Zoom in and click on a tile to see DEM data.":
+            "ซูมเข้าแล้วคลิกที่ช่องตารางเพื่อดูข้อมูล DEM",
+          "Click a tile grid to stream DTM data.":
+            "คลิกที่ตารางพื้นที่เพื่อโหลดข้อมูล DTM",
+          "Preparing tile…": "กำลังเตรียมข้อมูลพื้นที่…",
+          "No data in this cell.": "ไม่มีข้อมูลในช่องนี้",
+          "DEM tile ready. Loading Global Building Atlas…":
+            "ข้อมูล DEM พร้อมแล้ว กำลังโหลดฐานข้อมูลอาคาร…",
+          "DEM tile ready.": "ข้อมูล DEM พร้อมแล้ว",
+          "Failed to render DEM tile (see console).":
+            "แสดงผลข้อมูล DEM ไม่สำเร็จ (ดูรายละเอียดใน console)",
+          "Click inside a loaded DEM tile to see grid elevation.":
+            "คลิกภายในพื้นที่ DEM ที่โหลดแล้วเพื่อดูค่าความสูง",
+          "Unable to fetch your location.": "ไม่สามารถระบุตำแหน่งของคุณได้",
+          "Location not found. Try 'lat,lon' or a known city.":
+            "ไม่พบตำแหน่งที่ค้นหา ลองพิมพ์ 'lat,lon' หรือชื่อเมืองที่รู้จัก",
+          "Loading Global Building Atlas for this tile…":
+            "กำลังโหลดฐานข้อมูลอาคารสำหรับพื้นที่นี้…",
+          "Global Building Atlas loaded for tile.":
+            "โหลดฐานข้อมูลอาคารสำหรับพื้นที่นี้แล้ว",
+          "Failed to load Global Building Atlas for this tile.":
+            "โหลดฐานข้อมูลอาคารสำหรับพื้นที่นี้ไม่สำเร็จ",
+          "Share link copied.": "คัดลอกลิงก์แชร์แล้ว",
+          "": ""
+        };
+
+        var PATTERNS = [
+          [/^Centered on your location$/, "เลื่อนไปยังตำแหน่งของคุณ"],
+          [
+            /^Centered on (.+)$/,
+            function (m) {
+              return "เลื่อนไปยัง " + m[1];
+            }
+          ],
+          [
+            /^Base river level set to (.+)$/,
+            function (m) {
+              return "ตั้งระดับน้ำฐานของแม่น้ำเป็น " + m[1];
+            }
+          ],
+          [
+            /^Min river cells set to (.+)$/,
+            function (m) {
+              return "ตั้งจำนวนช่องแม่น้ำขั้นต่ำเป็น " + m[1];
+            }
+          ],
+          [
+            /^Max slider set to (.+)$/,
+            function (m) {
+              return "ตั้งค่าความสูงสูงสุดเป็น " + m[1];
+            }
+          ],
+          [
+            /^Water height set to (.+)$/,
+            function (m) {
+              return "ตั้งระดับน้ำเป็น " + m[1];
+            }
+          ]
+        ];
+
+        function translateText(text) {
+          if (text == null) return null;
+          if (Object.prototype.hasOwnProperty.call(DICT, text)) {
+            return DICT[text];
+          }
+          for (var i = 0; i < PATTERNS.length; i += 1) {
+            var re = PATTERNS[i][0];
+            var repl = PATTERNS[i][1];
+            var m = text.match(re);
+            if (m) {
+              return typeof repl === "function" ? repl(m) : text.replace(re, repl);
+            }
+          }
+          return null;
+        }
+
+        function applyToTextEl(el) {
+          if (!el) return;
+          var t = translateText(el.textContent);
+          if (t !== null && t !== el.textContent) el.textContent = t;
+        }
+
+        function watchTextEl(id) {
+          var el = document.getElementById(id);
+          if (!el) return;
+          var obs = new MutationObserver(function () {
+            applyToTextEl(el);
+          });
+          obs.observe(el, { characterData: true, childList: true, subtree: true });
+          applyToTextEl(el);
+        }
+
+        var LAYER_LABELS = {
+          Streets: "ถนน",
+          Satellite: "ภาพถ่ายดาวเทียม",
+          "Global Building Atlas": "ฐานข้อมูลอาคารทั่วโลก",
+          "3D View": "มุมมอง 3 มิติ"
+        };
+
+        var POPUP_REPLACEMENTS = [
+          ["Ground elevation (MSL):", "ความสูงพื้นดิน (รทก.):"],
+          ["Elevation (MSL):", "ความสูง (รทก.):"],
+          ["Building height:", "ความสูงอาคาร:"],
+          ["Flood depth:", "ความลึกน้ำท่วม:"],
+          ["n/a", "ไม่มีข้อมูล"]
+        ];
+
+        function translatePopup(node) {
+          if (!node || node.getAttribute("data-i18n-done")) return;
+          var html = node.innerHTML;
+          POPUP_REPLACEMENTS.forEach(function (pair) {
+            html = html.split(pair[0]).join(pair[1]);
+          });
+          node.innerHTML = html;
+          node.setAttribute("data-i18n-done", "1");
+        }
+
+        function translateLayerControl(root) {
+          var spans = root.querySelectorAll(".leaflet-control-layers-list span");
+          spans.forEach(function (span) {
+            var key = span.textContent.trim();
+            if (Object.prototype.hasOwnProperty.call(LAYER_LABELS, key)) {
+              span.textContent = " " + LAYER_LABELS[key];
+            }
+          });
+        }
+
+        function fixTitles(root) {
+          var rotateButtons = root.querySelectorAll(".rotate-button");
+          rotateButtons.forEach(function (btn, idx) {
+            btn.title = idx === 0 ? "หมุนซ้าย" : "หมุนขวา";
+          });
+          var locateBtn = root.querySelector(".locate-button");
+          if (locateBtn) locateBtn.title = "ไปยังตำแหน่งของฉัน";
+        }
+
+        function fixLegendToggleAria() {
+          var btn = document.getElementById("legend-toggle");
+          if (!btn) return;
+          var expanded = btn.getAttribute("aria-expanded") === "true";
+          btn.setAttribute("aria-label", expanded ? "ย่อแผงข้อมูล" : "ขยายแผงข้อมูล");
+        }
+
+        var mapScheduled = false;
+        function scheduleMapPass() {
+          if (mapScheduled) return;
+          mapScheduled = true;
+          requestAnimationFrame(function () {
+            mapScheduled = false;
+            var mapEl = document.getElementById("map");
+            if (!mapEl) return;
+            mapEl.querySelectorAll(".leaflet-popup-content").forEach(translatePopup);
+            translateLayerControl(mapEl);
+            fixTitles(mapEl);
+          });
+        }
+
+        function start() {
+          watchTextEl("status");
+          watchTextEl("progress-label");
+          watchTextEl("legend-note");
+
+          var mapEl = document.getElementById("map");
+          if (mapEl) {
+            var mapObs = new MutationObserver(scheduleMapPass);
+            mapObs.observe(mapEl, { childList: true, subtree: true });
+            scheduleMapPass();
+          }
+
+          var toggleBtn = document.getElementById("legend-toggle");
+          if (toggleBtn) {
+            fixLegendToggleAria();
+            var toggleObs = new MutationObserver(fixLegendToggleAria);
+            toggleObs.observe(toggleBtn, {
+              attributes: true,
+              attributeFilter: ["aria-expanded"]
+            });
+          }
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", start);
+        } else {
+          start();
+        }
+      })();
+    </script>
+
+    <script src="./vendor/leaflet.js"></script>
+    <script src="./vendor/geotiff.min.js"></script>
+    <script src="./vendor/deck.gl.9p2p3.min.js"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
