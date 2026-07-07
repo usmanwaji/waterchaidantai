@@ -1,0 +1,51 @@
+name: telerid-cctv-scrape
+
+# ดึงภาพกล้อง+ระดับน้ำ telerid ของ 5 จังหวัดใต้ ทุก 15 นาที แล้ว publish ไปสาขา cam
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # ทุก 15 นาที (GitHub อาจดีเลย์บ้างช่วง peak)
+  workflow_dispatch: {}       # กดรันเองได้จากแท็บ Actions
+
+permissions:
+  contents: write
+
+concurrency:
+  group: telerid-cctv
+  cancel-in-progress: true
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps + Chromium
+        working-directory: telerid-scraper
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Run scraper
+        working-directory: telerid-scraper
+        env:
+          RID_USER: ${{ secrets.RID_USER }}   # ใส่ก็ต่อเมื่อ anonymous ดึงไม่ได้ (ไม่ใส่ = ลอง anonymous)
+          RID_PASS: ${{ secrets.RID_PASS }}
+        run: node scrape.mjs
+
+      - name: Publish images to 'cam' branch
+        working-directory: telerid-scraper/telerid-cam
+        run: |
+          git init -q
+          git checkout -q -b cam
+          git config user.name "telerid-bot"
+          git config user.email "telerid-bot@users.noreply.github.com"
+          git add -A
+          git commit -q -m "telerid cam $(date -u +%FT%TZ)" || { echo "nothing to commit"; exit 0; }
+          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" cam
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
