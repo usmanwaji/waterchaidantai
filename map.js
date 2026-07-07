@@ -1,4 +1,3 @@
-
 'use strict';
 const API = 'https://api-v3.thaiwater.net/api/v1/thaiwater30';
 const PROVINCES = [
@@ -557,6 +556,10 @@ async function loadCctv(){
 /* ---------- 6.4) สถานี CCTV ปภ. (cctv.disaster.go.th) ----------
    ดึงสดจาก ArcGIS FeatureServer ของ ปภ. (gis-portal.disaster.go.th — เปิด CORS สาธารณะ)
    ได้ทั้งพิกัด ระดับน้ำปัจจุบัน สถานะ และสถานะกล้อง / ถ้าดึงไม่ได้ ใช้พิกัดสำรองที่ฝังไว้ */
+/* ---- ภาพกล้อง ปภ. (live snapshot) ผ่าน Cloudflare Worker proxy (แก้ CORS ของ cctv.disaster.go.th/api/v1) ----
+   ใส่ URL ของ Worker ที่ deploy แล้ว เช่น 'https://ddpm-proxy.xxxx.workers.dev'
+   เว้นว่าง '' = ปิดฟีเจอร์ภาพ (popup แสดงข้อมูล+ลิงก์เหมือนเดิม ไม่มี error) */
+const DDPM_PROXY = 'https://ddpm-proxy.newusmanwaji.workers.dev';
 const DDPM_URL = 'https://gis-portal.disaster.go.th/arcgis/rest/services/Map_DDPM_CCTV/DDPM_CCTV_STATION_PROD/FeatureServer/0/query?where=1%3D1&outFields=code,name,latitude,longitude,basin,agency,telephone,current_water_level,water_level_status,camera_status,updated_at&returnGeometry=false&f=json';
 const DDPM_PROV = {'ปภ.จ.ปัตตานี':'ปัตตานี','ปภ.จ.ยะลา':'ยะลา','ปภ.จ.สตูล':'สตูล','ปภ.จ.นราธิวาส':'นราธิวาส','ปภ.จ.สงขลา':'สงขลา'};
 /* พิกัดสำรอง (snapshot 3 ก.ค. 2569 จากระบบจริง): [code, name, lat, lon, province] */
@@ -614,12 +617,13 @@ function ddpmMarker(row){
   // row: {code,name,lat,lon,prov, wl?, status?, cam?, tel?, updated?}
   const S = ddpmStatusInfo(row.status);
   const live = row.status !== undefined;
-  L.marker([row.lat,row.lon], {icon: mkIcon('mk-ddpm', live ? S.color : '#b91c1c', 20, '📹', S.blink), zIndexOffset:120})
+  const m = L.marker([row.lat,row.lon], {icon: mkIcon('mk-ddpm', live ? S.color : '#b91c1c', 20, '📹', S.blink), zIndexOffset:120})
     .bindPopup(()=>{
       const S2 = ddpmStatusInfo(row.status);
       return `
       <div class="pp-title">📹 ${esc(row.name)} (${esc(row.code)})</div>
       <div class="pp-sub">${tProv(row.prov)} · ${t('ddpmSrc')}</div>
+      <div class="ddpm-snap" id="snap-${esc(row.code)}" style="margin:6px 0"></div>
       ${live?`<div class="pp-status"><span class="badge" style="background:${S2.color};font-size:12px;padding:3px 14px">${S2.label}${row.wl!=null?` · ${fmt(row.wl)} m`:''}</span></div>`:''}
       <dl class="pp-grid">
         <dt>${t('ddpmCoord')}</dt><dd>${row.lat.toFixed(5)}, ${row.lon.toFixed(5)}</dd>
@@ -628,10 +632,56 @@ function ddpmMarker(row){
         ${row.tel?`<dt>${t('ddpmTel')}</dt><dd>${esc(row.tel)}</dd>`:''}
         ${row.updated?`<dt>${t('time')}</dt><dd>${new Date(row.updated).toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'})}</dd>`:''}
       </dl>
-      <a class="pp-link" href="#" onclick="openDdpm();return false;">${t('ddpmOpen')}</a>
-      <a class="pp-link" href="https://cctv.disaster.go.th" target="_blank">${t('ddpmNewTabLbl')}</a>`;
-    }, {maxWidth:290})
-    .addTo(gDdpm);
+      <a class="pp-link" href="https://cctv.disaster.go.th/stations/${esc(row.code)}" target="_blank" rel="noopener">📊 ผลวิเคราะห์</a>`;
+    }, {maxWidth:300});
+  m.on('popupopen', ()=>loadDdpmSnapshot(row));
+  m.addTo(gDdpm);
+}
+/* ดึงภาพ snapshot ล่าสุดของกล้อง ปภ. ผ่าน DDPM_PROXY (Cloudflare Worker แก้ CORS)
+   GET <proxy>/stations/{code} → histories[0].snapshotPath ; ภาพอยู่ที่ <proxy>/<snapshotPath> */
+async function loadDdpmSnapshot(row){
+  const el = document.getElementById('snap-'+row.code);
+  if(!el) return;
+  if(!DDPM_PROXY){ el.innerHTML=''; return; }
+  const base = DDPM_PROXY.replace(/\/+$/,'');
+  el.innerHTML = '<div style="font-size:11px;color:#64748b">📷 กำลังโหลดภาพกล้อง…</div>';
+  try{
+    const j = await fetch(base+'/stations/'+encodeURIComponent(row.code), {cache:'no-store'}).then(r=>r.json());
+    const d = j.data||j;
+    const h0 = (d.histories||d.history||[])[0];
+    const bank = (d.riverBankLevel!=null ? d.riverBankLevel : d.dpmRiverBankLevel);
+    const cur  = (d.currentWaterLevel!=null ? d.currentWaterLevel : (h0 && h0.level));
+    if(!h0 || !h0.snapshotPath){ el.innerHTML = '<div style="font-size:11px;color:#64748b">ยังไม่มีภาพล่าสุดจากกล้องนี้</div>'; return; }
+    const sp1 = String(h0.snapshotPath).replace(/^\/+/,'');
+    const sib = p => p.replace(/_(\d{1,2})(\.[a-z]+)$/i, (m,n,e)=>'_'+((n.replace(/^0/,'')==='1')?'02':'01')+e);
+    const sp2 = sib(sp1);
+    const is01 = /_0?1\.[a-z]+$/i.test(sp1);
+    const path1 = is01 ? sp1 : sp2;   // กล้อง 1 (_01)
+    const path2 = is01 ? sp2 : sp1;   // กล้อง 2 (_02)
+    const url1 = base+'/'+path1, url2 = base+'/'+path2;
+    const nCam = Array.isArray(d.cameras) ? d.cameras.length : 1;
+    const twoCam = nCam>=2 && sp2!==sp1;
+    const tstr = h0.timeStamp ? new Date(h0.timeStamp).toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}) : '';
+    const off = h0.isOnline===false;
+    const info = '📷 ภาพล่าสุด '+esc(tstr)
+      + (cur!=null  ? ' · ระดับน้ำ '+fmt(cur)+' ม.'  : '')
+      + (bank!=null ? ' · ตลิ่ง '+fmt(bank)+' ม.' : '')
+      + (off ? ' · ⚠️ กล้องออฟไลน์' : '');
+    const st = 'width:100%;border-radius:8px;border:1px solid #e3e0dd;cursor:zoom-in;background:#eef1ee';
+    const tabs = twoCam
+      ? '<div class="ddpm-tabs"><button type="button" class="ddpm-tab on" onclick="ddpmCam(this,\''+esc(url1)+'\')">กล้อง 1</button>'
+        + '<button type="button" class="ddpm-tab" onclick="ddpmCam(this,\''+esc(url2)+'\')">กล้อง 2</button></div>'
+      : '';
+    el.innerHTML = '<div class="ddpm-cams">'+tabs
+      + '<img class="ddpm-img" src="'+esc(url1)+'" alt="ภาพกล้อง '+esc(row.code)+'" style="'+st+'" onclick="window.open(this.src,\'_blank\')">'
+      + '<div style="font-size:10.5px;color:#64748b;margin-top:3px">'+info+'</div></div>';
+  }catch(e){ el.innerHTML = '<div style="font-size:11px;color:#ef4444">โหลดภาพไม่สำเร็จ — ตรวจสอบว่าตั้งค่า DDPM_PROXY ถูกต้อง</div>'; }
+}
+/* สลับกล้องในภาพ popup */
+function ddpmCam(btn, url){
+  const w = btn.closest('.ddpm-cams'); if(!w) return;
+  const img = w.querySelector('img.ddpm-img'); if(img) img.src = url;
+  w.querySelectorAll('.ddpm-tab').forEach(b=>b.classList.toggle('on', b===btn));
 }
 async function loadDdpm(){
   gDdpm.clearLayers();
@@ -656,14 +706,48 @@ function openDdpm(){
   document.getElementById('ddpmModal').classList.add('show');
 }
 
-/* ---------- 6.5) สถานีโทรมาตร กรมชลประทาน (telerid.rid.go.th) ---------- */
+/* ---------- 6.5) สถานีโทรมาตร กรมชลประทาน (telerid.rid.go.th) ----------
+   ภาพ+ระดับน้ำมาจาก scraper (Playwright + GitHub Action) ที่ publish ไว้สาขา cam
+   ดูวิธีตั้งค่าใน telerid-scraper/README.md — เปลี่ยน repo/สาขาได้ที่ TELERID_CAM */
+const TELERID_CAM = 'https://raw.githubusercontent.com/usmanwaji/waterchaidantai/cam';
 async function loadTelerid(){
-  // API โทรมาตรไม่รับรองว่าเปิด CORS ให้เว็บภายนอก — เรียกไม่ได้จะข้ามชั้นนี้เงียบ ๆ
-  // (สถานีโทรมาตร ชป. ส่วนที่รายงานเข้า คลังข้อมูลน้ำแห่งชาติ แสดงในชั้น "ระดับน้ำ" อยู่แล้ว รหัส X.xxx)
+  gTele.clearLayers();
+  // 1) ใช้ภาพ+ข้อมูลที่ scraper ดึงมา (สาขา cam) ก่อน
+  try{
+    const j = await fetchJSON(`${TELERID_CAM}/stations.json`, 15000);
+    const rows = Array.isArray(j?.stations) ? j.stations : [];
+    let n = 0;
+    rows.forEach(d => {
+      const lat = num(d.lat), lon = num(d.lon);
+      if(lat==null || lon==null) return;
+      if(PROV_SET.size && !PROV_SET.has(String(d.province||'').trim())) return;
+      n++;
+      L.marker([lat,lon], {icon: mkIcon('mk-tele', '#1e40af', 18, '▲', false), zIndexOffset:80})
+        .bindPopup(()=>{
+          const upd = j.updated ? new Date(j.updated).toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}) : '';
+          const img = d.hasImage
+            ? `<img src="${TELERID_CAM}/${esc(d.code)}.jpg?v=${encodeURIComponent(j.updated||'')}" alt="กล้อง ${esc(d.code)}" style="width:100%;border-radius:8px;border:1px solid #e3e0dd;cursor:zoom-in;background:#eef1ee;margin:6px 0" onclick="window.open(this.src,'_blank')">`
+            : '';
+          return `
+          <div class="pp-title">▲ ${esc(d.name||d.code||'')} (${esc(d.code)})</div>
+          <div class="pp-sub">${esc(d.basin||'')} · ${esc(d.amphur||'')} · ${tProv(String(d.province||'').trim())} · ${t('teleSrc')}</div>
+          ${img}
+          <dl class="pp-grid">
+            ${d.level!=null?`<dt>${t('ddpmWL')}</dt><dd>${fmt(d.level)} ม.</dd>`:''}
+            ${d.bank!=null?`<dt>ระดับตลิ่ง</dt><dd>${fmt(d.bank)} ม.</dd>`:''}
+          </dl>
+          <div style="font-size:10px;color:#94a3b8">${img?'📷 ภาพล่าสุด ':'อัปเดต '}${esc(upd)}</div>
+          <a class="pp-link" href="https://telerid.rid.go.th/#/" target="_blank">${t('teleView')}</a>`;
+        }, {maxWidth:300})
+        .addTo(gTele);
+    });
+    if(n>0) return;   // ใช้ข้อมูล scraper สำเร็จ
+  }catch(e){ /* ยังไม่มีสาขา cam / scraper ยังไม่รัน → ใช้ station_list สดแบบเดิม */ }
+
+  // 2) fallback: station_list สด (ลิงก์อย่างเดียว)
   try{
     const g = await fetchJSON('https://telerid.rid.go.th/restapi/main/station_list/', 20000);
     const rows = Array.isArray(g?.results) ? g.results : (Array.isArray(g) ? g : []);
-    gTele.clearLayers();
     rows.forEach(d => {
       if(!PROV_SET.has(String(d.province_name||'').trim())) return;
       const co = d.geom?.coordinates;
@@ -912,7 +996,3 @@ applyLang();
 loadAll();
 loadBoundaries();
 setInterval(loadAll, 10*60*1000);
-
-
-
-
