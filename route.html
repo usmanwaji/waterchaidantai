@@ -36,7 +36,7 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 .sec{padding:12px 14px;border-bottom:1px solid var(--outline)}
 .sec h3{font-size:12.5px;color:var(--navy-d);margin-bottom:8px;display:flex;align-items:center;gap:6px}
 label.f{display:block;font-size:11.5px;color:var(--muted);margin:8px 0 3px}
-input[type=text], input[type=number], input[type=tel], select, textarea{
+input[type=text], input[type=number], input[type=tel], input[type=file], select, textarea{
   width:100%;padding:7px 9px;border:1px solid var(--outline-strong);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;color:var(--ink)
 }
 .vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:4px}
@@ -74,8 +74,11 @@ input[type=text], input[type=number], input[type=tel], select, textarea{
 .gate.rejected{background:#fee2e2;color:#b91c1c}
 .gate.signedout{background:#f3f4f6;color:var(--muted)}
 .gate button{margin-top:6px}
-#pinBtn{width:100%;margin-top:2px;padding:8px;border:1.5px dashed var(--orange);background:#fff8f2;color:var(--orange-d);font-family:inherit;font-weight:600;font-size:12.5px;border-radius:9px;cursor:pointer}
-#pinBtn.active{background:var(--orange);color:#fff;border-style:solid}
+
+.pin-btn { flex: 1; padding:8px; border:1.5px dashed var(--orange);background:#fff8f2;color:var(--orange-d);font-family:inherit;font-weight:600;font-size:11px;border-radius:9px;cursor:pointer; }
+.pin-btn.active { background:var(--orange);color:#fff;border-style:solid; }
+.pin-btn.done { background:#dcfce7;color:#15803d;border:1.5px solid #15803d; }
+
 #btnSubmitReport{width:100%;margin-top:10px;padding:9px;border:none;background:var(--navy);color:#fff;font-family:inherit;font-weight:700;font-size:13px;border-radius:9px;cursor:pointer}
 #btnSubmitReport:hover{background:#3a352f}
 .note{font-size:10.5px;color:#94a3b8;margin-top:6px;line-height:1.5;padding:0 14px 10px}
@@ -175,37 +178,39 @@ footer a{color:var(--orange-warm);text-decoration:none}
 
 /* ================================================================
    Google Maps API Key — แก้ค่านี้เป็น API Key ของคุณ
-   (ดูวิธีสร้างใน SETUP-GUIDE.md)
    ================================================================ */
 const GOOGLE_MAPS_API_KEY = 'AIzaSyBQn9I9wIGZek05pVc-ST9i4tO8QnLiBtI';
 
-/* ---------- โหลด Google Maps API แบบ Dynamic ---------- */
 let gMap, gInfoWindow, gDirectionsService;
 let startAutocomplete, endAutocomplete;
-let startPoint = null, endPoint = null; // { lat, lng, label }
+let startPoint = null, endPoint = null; 
 let routePolylines = [];
-let floodGMarkers = [];
+let floodGPolylines = [];
 let lastRoutes = [];
 let activeRouteIdx = 0;
 let allFloodReports = [];
-let pinMode = false;
-let reportLat = null, reportLon = null;
-let pinMarker = null; // marker for report pin
+
+// For reporting
+let currentPinMode = null; // 'start' | 'end' | null
+let reportStart = null; // {lat, lng}
+let reportEnd = null;
+let pinStartMarker = null;
+let pinEndMarker = null;
+let reportPolylineObj = null; 
+let reportPolylineString = null; // encoded
 
 const SOUTH_BOUNDS = { south: 5.6, west: 99.5, north: 7.9, east: 102.2 };
 
 (function loadGoogleMaps(){
   const script = document.createElement('script');
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,marker&language=th&region=TH&callback=initMap&loading=async`;
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,marker,geometry&language=th&region=TH&callback=initMap&loading=async`;
   script.async = true;
   script.defer = true;
   document.head.appendChild(script);
 })();
 
-/* ---------- Google Maps Initialization ---------- */
 window.initMap = function() {
   const mapEl = document.getElementById('map');
-
   gMap = new google.maps.Map(mapEl, {
     center: { lat: 6.4, lng: 101.3 },
     zoom: 9,
@@ -213,36 +218,26 @@ window.initMap = function() {
     zoomControl: true,
     zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_TOP },
     mapTypeControl: true,
-    mapTypeControlOptions: {
-      style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
-      position: google.maps.ControlPosition.TOP_RIGHT
-    },
     streetViewControl: false,
     fullscreenControl: true,
-    fullscreenControlOptions: { position: google.maps.ControlPosition.RIGHT_TOP },
     gestureHandling: 'greedy'
   });
 
   gInfoWindow = new google.maps.InfoWindow();
   gDirectionsService = new google.maps.DirectionsService();
 
-  // Map click → report pin mode
   gMap.addListener('click', (e) => {
-    if (pinMode) {
+    if (currentPinMode) {
       setReportLatLon(e.latLng.lat(), e.latLng.lng());
     }
   });
 
-  // Setup Places Autocomplete
   setupAutocomplete();
-
-  // Load flood reports
   loadFloodReports();
   setInterval(loadFloodReports, 5 * 60 * 1000);
 };
 
-/* ---------- ประเภทรถ ---------- */
-let vehicle = VEHICLE_TYPES[1]; // default: รถเก๋ง
+let vehicle = VEHICLE_TYPES[1]; 
 function renderVehiclePicker(){
   const el = document.getElementById('vgrid');
   el.innerHTML = VEHICLE_TYPES.map(v => `
@@ -259,51 +254,23 @@ function renderVehiclePicker(){
 }
 renderVehiclePicker();
 
-/* ---------- Places Autocomplete ---------- */
 function setupAutocomplete(){
   const thBounds = new google.maps.LatLngBounds(
     { lat: 5.6, lng: 99.5 },
     { lat: 7.9, lng: 102.2 }
   );
-
-  const options = {
-    bounds: thBounds,
-    componentRestrictions: { country: 'th' },
-    fields: ['geometry', 'formatted_address', 'name'],
-    strictBounds: false
-  };
-
-  const startInput = document.getElementById('startInput');
-  const endInput = document.getElementById('endInput');
-
-  startAutocomplete = new google.maps.places.Autocomplete(startInput, options);
-  endAutocomplete = new google.maps.places.Autocomplete(endInput, options);
-
+  const options = { bounds: thBounds, componentRestrictions: { country: 'th' }, fields: ['geometry', 'formatted_address', 'name'], strictBounds: false };
+  startAutocomplete = new google.maps.places.Autocomplete(document.getElementById('startInput'), options);
+  endAutocomplete = new google.maps.places.Autocomplete(document.getElementById('endInput'), options);
+  
   startAutocomplete.addListener('place_changed', () => {
     const place = startAutocomplete.getPlace();
-    if (place.geometry) {
-      startPoint = {
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng(),
-        label: place.formatted_address || place.name
-      };
-    }
+    if (place.geometry) startPoint = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng(), label: place.formatted_address || place.name };
   });
-
   endAutocomplete.addListener('place_changed', () => {
     const place = endAutocomplete.getPlace();
-    if (place.geometry) {
-      endPoint = {
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng(),
-        label: place.formatted_address || place.name
-      };
-    }
+    if (place.geometry) endPoint = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng(), label: place.formatted_address || place.name };
   });
-
-  // Support manual lat,lon input
-  startInput.addEventListener('change', () => tryParseLatLon(startInput, 'start'));
-  endInput.addEventListener('change', () => tryParseLatLon(endInput, 'end'));
 }
 
 function tryParseLatLon(input, which){
@@ -316,35 +283,28 @@ function tryParseLatLon(input, which){
     else endPoint = point;
   }
 }
+document.getElementById('startInput').addEventListener('change', () => tryParseLatLon(document.getElementById('startInput'), 'start'));
+document.getElementById('endInput').addEventListener('change', () => tryParseLatLon(document.getElementById('endInput'), 'end'));
 
-/* ---------- Swap ---------- */
 document.getElementById('btnSwap').onclick = () => {
   const si = document.getElementById('startInput'), ei = document.getElementById('endInput');
   [si.value, ei.value] = [ei.value, si.value];
   [startPoint, endPoint] = [endPoint, startPoint];
 };
 
-/* ---------- Sidebar toggle ---------- */
 function toggleSidebar(){
   const sb = document.getElementById('sidebar'), btn = document.getElementById('btnCollapse');
   const hidden = sb.style.display === 'none';
   sb.style.display = hidden ? 'flex' : 'none';
   btn.classList.toggle('closed', !hidden);
-  // Google Maps auto-resizes via ResizeObserver, no manual invalidateSize needed
 }
 
 const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-/* ---------- หาเส้นทาง (Google Directions) ---------- */
 async function findRoute(){
-  // Try parsing lat,lon from inputs if not set via autocomplete
   if (!startPoint) tryParseLatLon(document.getElementById('startInput'), 'start');
   if (!endPoint) tryParseLatLon(document.getElementById('endInput'), 'end');
-
-  if (!startPoint || !endPoint) {
-    alert('กรุณาเลือกจุดเริ่มต้นและปลายทางจากรายการที่แนะนำ หรือพิมพ์ lat,lon');
-    return;
-  }
+  if (!startPoint || !endPoint) { alert('กรุณาเลือกจุดเริ่มต้นและปลายทาง'); return; }
 
   const btn = document.getElementById('btnRoute');
   btn.disabled = true; btn.textContent = 'กำลังค้นหา…';
@@ -357,37 +317,31 @@ async function findRoute(){
       provideRouteAlternatives: true,
       region: 'th'
     });
-
     if (!result.routes || !result.routes.length) throw new Error('ไม่พบเส้นทาง');
 
-    // Convert Google routes to our internal format
     lastRoutes = result.routes.map(route => {
       const leg = route.legs[0];
-      const path = route.overview_path; // array of LatLng
       return {
         _googleRoute: route,
-        distance: leg.distance.value,   // meters
-        duration: leg.duration.value,    // seconds
+        distance: leg.distance.value,
+        duration: leg.duration.value,
         distanceText: leg.distance.text,
         durationText: leg.duration.text,
-        coordinates: path.map(p => ({ lat: p.lat(), lng: p.lng() }))
+        coordinates: route.overview_path.map(p => ({ lat: p.lat(), lng: p.lng() }))
       };
     });
-
     activeRouteIdx = 0;
     await ensureFloodReports();
     evaluateAndRender();
   } catch(e) {
-    console.error('Directions error:', e);
     const box = document.getElementById('resultBox');
     box.className = 'show';
-    box.innerHTML = `<div class="verdict bad">⚠️ หาเส้นทางไม่สำเร็จ — ${esc(e.message || 'ลองใหม่อีกครั้ง')}</div>`;
+    box.innerHTML = `<div class="verdict bad">⚠️ หาเส้นทางไม่สำเร็จ — ${esc(e.message)}</div>`;
   } finally {
     btn.disabled = false; btn.textContent = '🔍 ค้นหาเส้นทาง';
   }
 }
 
-/* ---------- ระยะทาง haversine (เมตร) ---------- */
 function distM(lat1,lon1,lat2,lon2){
   const R=6371000, toRad=d=>d*Math.PI/180;
   const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
@@ -403,10 +357,22 @@ function floodsOnRoute(route){
   allFloodReports.forEach(f => {
     if (f.status !== 'active') return;
     let minD = Infinity;
-    for (let i=0; i<coords.length; i++){
-      const d = distM(f.lat, f.lon, coords[i].lat, coords[i].lng);
-      if (d < minD) minD = d;
-      if (minD < FLOOD_BUFFER_M) break;
+    if (f.polyline) {
+      const floodPath = google.maps.geometry.encoding.decodePath(f.polyline);
+      for(let i=0; i<coords.length; i++){
+        for(let j=0; j<floodPath.length; j++){
+          const d = distM(floodPath[j].lat(), floodPath[j].lng(), coords[i].lat, coords[i].lng);
+          if (d < minD) minD = d;
+          if (minD < FLOOD_BUFFER_M) break;
+        }
+        if (minD < FLOOD_BUFFER_M) break;
+      }
+    } else if (f.lat && f.lon) {
+      for (let i=0; i<coords.length; i++){
+        const d = distM(f.lat, f.lon, coords[i].lat, coords[i].lng);
+        if (d < minD) minD = d;
+        if (minD < FLOOD_BUFFER_M) break;
+      }
     }
     if (minD <= FLOOD_BUFFER_M) hits.push(f);
   });
@@ -419,250 +385,299 @@ function evaluateAndRender(){
     const blocking = hits.filter(h => +h.depth_cm > vehicle.safeDepthCm);
     return { route: r, hits, blocking, passable: blocking.length === 0 };
   });
-
   let bestIdx = evaluated.findIndex(e => e.passable);
   if (bestIdx === -1) {
     bestIdx = 0;
     let minBlock = evaluated[0].blocking.length;
-    evaluated.forEach((e,i) => {
-      if (e.blocking.length < minBlock) { minBlock = e.blocking.length; bestIdx = i; }
-    });
+    evaluated.forEach((e,i) => { if (e.blocking.length < minBlock) { minBlock = e.blocking.length; bestIdx = i; } });
   }
   activeRouteIdx = bestIdx;
   drawRoutes(evaluated);
   renderResultBox(evaluated);
 }
 
-/* ---------- วาดเส้นทาง (Google Maps Polylines) ---------- */
 function drawRoutes(evaluated){
-  // Clear old polylines
   routePolylines.forEach(p => p.setMap(null));
   routePolylines = [];
-  // Clear old flood markers
-  floodGMarkers.forEach(m => m.setMap(null));
-  floodGMarkers = [];
-
   const bounds = new google.maps.LatLngBounds();
 
   evaluated.forEach((e, i) => {
     const path = e.route.coordinates.map(c => ({ lat: c.lat, lng: c.lng }));
     const isActive = i === activeRouteIdx;
     const color = isActive ? (e.passable ? '#16a34a' : '#dc2626') : '#94a3b8';
-
     const polyline = new google.maps.Polyline({
-      path: path,
-      strokeColor: color,
-      strokeWeight: isActive ? 6 : 4,
-      strokeOpacity: isActive ? 0.9 : 0.5,
-      zIndex: isActive ? 10 : 5,
-      map: gMap
+      path: path, strokeColor: color, strokeWeight: isActive ? 6 : 4,
+      strokeOpacity: isActive ? 0.9 : 0.5, zIndex: isActive ? 10 : 5, map: gMap
     });
-
-    if (!isActive) {
-      // Dashed line for inactive routes (using icons)
-      polyline.setOptions({
-        strokeOpacity: 0,
-        icons: [{
-          icon: { path: 'M 0,-1 0,1', strokeOpacity: 0.5, strokeColor: color, strokeWeight: 4, scale: 3 },
-          offset: '0', repeat: '16px'
-        }]
-      });
-    }
-
-    polyline.addListener('click', () => {
-      activeRouteIdx = i;
-      drawRoutes(evaluated);
-      renderResultBox(evaluated);
-    });
+    if (!isActive) polyline.setOptions({ strokeOpacity: 0, icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 0.5, strokeColor: color, strokeWeight: 4, scale: 3 }, offset: '0', repeat: '16px' }] });
+    polyline.addListener('click', () => { activeRouteIdx = i; drawRoutes(evaluated); renderResultBox(evaluated); });
     routePolylines.push(polyline);
-
-    if (isActive) {
-      path.forEach(p => bounds.extend(p));
-
-      // Draw flood markers on active route
-      e.hits.forEach(f => {
-        const blocked = +f.depth_cm > vehicle.safeDepthCm;
-        const markerEl = document.createElement('div');
-        markerEl.className = 'gm-flood-marker';
-        markerEl.style.background = blocked ? '#dc2626' : '#f59e0b';
-        markerEl.innerHTML = `<span>${f.depth_cm}</span>`;
-
-        const marker = new google.maps.marker.AdvancedMarkerElement({
-          position: { lat: f.lat, lng: f.lon },
-          map: gMap,
-          content: markerEl,
-          zIndex: 20
-        });
-
-        marker.addListener('click', () => {
-          gInfoWindow.setContent(popupForReport(f, blocked));
-          gInfoWindow.open(gMap, marker);
-        });
-
-        floodGMarkers.push(marker);
-      });
-    }
+    if (isActive) path.forEach(p => bounds.extend(p));
   });
 
-  if (!bounds.isEmpty()) {
-    gMap.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 });
-  }
+  if (!bounds.isEmpty()) gMap.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 });
+  renderFloodListOnMap(); 
+}
+
+function renderFloodListOnMap(){
+  floodGPolylines.forEach(m => m.setMap(null));
+  floodGPolylines = [];
+
+  allFloodReports.forEach(f => {
+    if (f.status !== 'active') return;
+    const blocked = +f.depth_cm > vehicle.safeDepthCm;
+    const color = blocked ? '#dc2626' : '#f59e0b';
+    
+    if (f.polyline) {
+      const path = google.maps.geometry.encoding.decodePath(f.polyline);
+      const poly = new google.maps.Polyline({
+        path: path, strokeColor: color, strokeWeight: 8, strokeOpacity: 0.8, map: gMap, zIndex: 15
+      });
+      poly.addListener('click', (e) => {
+        gInfoWindow.setContent(popupForReport(f, blocked));
+        gInfoWindow.setPosition(e.latLng);
+        gInfoWindow.open(gMap);
+      });
+      floodGPolylines.push(poly);
+    } else {
+      // Legacy point fallback
+      const markerEl = document.createElement('div');
+      markerEl.className = 'gm-flood-marker';
+      markerEl.style.background = color;
+      markerEl.innerHTML = `<span>${f.depth_cm}</span>`;
+      const marker = new google.maps.marker.AdvancedMarkerElement({
+        position: { lat: f.lat, lng: f.lon }, map: gMap, content: markerEl, zIndex: 20
+      });
+      marker.addListener('click', () => {
+        gInfoWindow.setContent(popupForReport(f, blocked));
+        gInfoWindow.open(gMap, marker);
+      });
+      floodGPolylines.push(marker);
+    }
+  });
 }
 
 function popupForReport(f, blocked){
-  return `<div style="font-family:'Noto Sans Thai',Tahoma,sans-serif;font-size:12.5px;line-height:1.6;padding:4px">
+  let updatedStr = '';
+  if (f.updated_at && f.updated_at !== f.reported_at) {
+    updatedStr = `<br><span style="color:var(--muted)">อัปเดตล่าสุด: ${new Date(f.updated_at).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'})}</span>`;
+  }
+  let photoStr = f.photo_url ? `<br><img src="${esc(f.photo_url)}" style="max-width:100%;height:auto;max-height:120px;border-radius:6px;margin-top:6px">` : '';
+  
+  let updateBtn = '';
+  if (window.currentUserProfile && (window.currentUserProfile.role === 'admin' || window.currentUserProfile.status === 'approved')) {
+    updateBtn = `<hr style="margin:8px 0;border:none;border-top:1px solid #ddd">
+      <div style="background:#f9f9f9;padding:6px;border-radius:6px">
+        <b>อัปเดตสถานการณ์</b><br>
+        <input type="number" id="upd_depth_${f.id}" placeholder="ความลึกใหม่ (ซม.)" style="width:100px;margin-top:4px"><br>
+        <input type="file" id="upd_photo_${f.id}" accept="image/*" style="width:100%;margin-top:4px"><br>
+        <button onclick="submitUpdate('${f.id}')" style="margin-top:6px;padding:4px 8px;background:var(--navy);color:#fff;border:none;border-radius:4px;cursor:pointer">บันทึกอัปเดต</button>
+        <button onclick="viewHistory('${f.id}')" style="margin-top:6px;margin-left:4px;padding:4px 8px;background:#e2e8f0;color:#333;border:none;border-radius:4px;cursor:pointer">ดูประวัติ</button>
+      </div>`;
+  } else {
+    updateBtn = `<hr style="margin:8px 0;border:none;border-top:1px solid #ddd">
+      <button onclick="viewHistory('${f.id}')" style="padding:4px 8px;background:#e2e8f0;color:#333;border:none;border-radius:4px;cursor:pointer">ดูประวัติการอัปเดต</button>`;
+  }
+
+  return `<div style="font-family:'Noto Sans Thai',Tahoma,sans-serif;font-size:12.5px;line-height:1.6;padding:4px;width:220px">
     <b>${blocked?'🔴 รถประเภทนี้ผ่านไม่ได้':'🟠 ผ่านได้แต่ต้องระวัง'}</b><br>
     ความลึก: <b>${esc(f.depth_cm)} ซม.</b> ${f.road_name?('· '+esc(f.road_name)):''}<br>
-    เวลา: ${new Date(f.reported_at).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'})}<br>
-    ผู้รายงาน: ${esc(f.reporter_name)} (${esc(f.reporter_phone)})
+    เวลา: ${new Date(f.reported_at).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'})}
+    ${updatedStr}
+    <br>ผู้รายงาน: ${esc(f.reporter_name)} (${esc(f.reporter_phone)})
+    ${photoStr}
+    ${updateBtn}
+    <div id="hist_${f.id}" style="margin-top:8px"></div>
   </div>`;
 }
 
-/* ---------- Result Box ---------- */
+window.submitUpdate = async function(id) {
+  const depth = parseFloat(document.getElementById(`upd_depth_${id}`).value);
+  const file = document.getElementById(`upd_photo_${id}`).files[0];
+  if (isNaN(depth)) { alert('กรุณาใส่ความลึกใหม่เป็นตัวเลข'); return; }
+  
+  try {
+    let photo_url = null;
+    if (file) photo_url = await uploadFloodPhoto(file);
+    
+    // Insert into history
+    const user = await getUser();
+    await sb.from('flood_report_updates').insert({
+      report_id: id, depth_cm: depth, photo_url: photo_url, updated_by: user.id
+    });
+    
+    // Update main report
+    let updates = { depth_cm: depth };
+    if (photo_url) updates.photo_url = photo_url;
+    
+    await sb.from('flood_reports').update(updates).eq('id', id);
+    alert('อัปเดตสำเร็จ!');
+    gInfoWindow.close();
+    loadFloodReports();
+  } catch(e) {
+    alert('เกิดข้อผิดพลาด: ' + e.message);
+  }
+};
+
+window.viewHistory = async function(id) {
+  const box = document.getElementById(`hist_${id}`);
+  box.innerHTML = 'กำลังโหลด...';
+  const { data, error } = await sb.from('flood_report_updates').select('*, profiles:updated_by(full_name)').eq('report_id', id).order('updated_at', { ascending: false });
+  if (error || !data || data.length === 0) { box.innerHTML = '<span style="color:#666">ไม่มีประวัติการอัปเดต</span>'; return; }
+  
+  box.innerHTML = '<b>ประวัติการเปลี่ยนแปลง:</b><br>' + data.map(h => {
+    let p = h.photo_url ? ` <a href="${esc(h.photo_url)}" target="_blank">[รูปภาพ]</a>` : '';
+    let name = h.profiles ? h.profiles.full_name : 'แอดมิน';
+    return `<div style="margin-top:4px;padding:4px;background:#f1f5f9;border-radius:4px;font-size:11px">
+      ${new Date(h.updated_at).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'})}<br>
+      ปรับเป็น <b>${h.depth_cm} ซม.</b> โดย ${esc(name)}${p}
+    </div>`;
+  }).join('');
+};
+
 function renderResultBox(evaluated){
   const box = document.getElementById('resultBox');
   box.classList.add('show');
   const active = evaluated[activeRouteIdx];
   const km = (active.route.distance/1000).toFixed(1);
-  const min = Math.round(active.route.duration/60);
-
   let verdictClass, verdictText;
   if (active.blocking.length === 0 && active.hits.length === 0) {
-    verdictClass='ok'; verdictText=`✅ ${vehicle.label} ผ่านได้ปกติ ไม่พบจุดน้ำท่วมบนเส้นทางนี้`;
+    verdictClass='ok'; verdictText=`✅ ${vehicle.label} ผ่านได้ปกติ`;
   } else if (active.blocking.length === 0) {
-    verdictClass='warn'; verdictText=`🟠 ${vehicle.label} ผ่านได้ แต่มี ${active.hits.length} จุดที่มีน้ำท่วมเล็กน้อย โปรดขับช้าลง`;
+    verdictClass='warn'; verdictText=`🟠 ${vehicle.label} ผ่านได้ แต่มี ${active.hits.length} จุดน้ำท่วม`;
   } else {
-    verdictClass='bad'; verdictText=`🔴 ${vehicle.label} ผ่าน "ไม่ได้" — มี ${active.blocking.length} จุดน้ำท่วมลึกเกินขีดจำกัด (>${vehicle.safeDepthCm}ซม.) บนเส้นทางนี้`;
+    verdictClass='bad'; verdictText=`🔴 ${vehicle.label} ผ่าน "ไม่ได้" — เจอ ${active.blocking.length} จุดกีดขวาง`;
   }
-
-  const altBtns = evaluated.map((e,i)=>{
-    const label = e.passable ? `เส้นทาง ${i+1} ✓` : `เส้นทาง ${i+1} (${e.blocking.length} จุดกีดขวาง)`;
-    return `<span class="altbtn ${i===activeRouteIdx?'on':''}" onclick="pickAltRoute(${i})">${esc(label)}</span>`;
-  }).join('');
-
-  let detourNote = '';
-  if (active.blocking.length > 0) {
-    const otherOk = evaluated.some(e=>e.passable);
-    detourNote = otherOk
-      ? `<div class="note" style="padding:0;margin-top:6px">💡 มีเส้นทางอื่นที่ ${esc(vehicle.label)} ผ่านได้ — เลือกจากปุ่มด้านบน</div>`
-      : `<div class="note" style="padding:0;margin-top:6px">⚠️ ไม่พบเส้นทางอื่นที่ผ่านได้สำหรับ ${esc(vehicle.label)} ในตัวเลือกที่ระบบค้นหาได้ โปรดพิจารณาเปลี่ยนประเภทรถ รอน้ำลด หรือติดต่อหน่วยงานในพื้นที่</div>`;
-  }
-
-  box.innerHTML = `
-    <div class="verdict ${verdictClass}">${verdictText}</div>
-    <div class="rmeta"><span>📏 ${km} กม. (${esc(active.route.distanceText)})</span><span>⏱️ ${esc(active.route.durationText)}</span></div>
-    <div>${altBtns}</div>
-    ${active.blocking.map(f=>`<div class="floodhit" onclick="gMap.panTo({lat:${f.lat},lng:${f.lon}});gMap.setZoom(15)"><b>${esc(f.depth_cm)} ซม.</b> ${esc(f.road_name||'')} — รายงานเมื่อ ${new Date(f.reported_at).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'})}</div>`).join('')}
-    ${detourNote}
-  `;
+  const altBtns = evaluated.map((e,i)=>`<span class="altbtn ${i===activeRouteIdx?'on':''}" onclick="pickAltRoute(${i})">${e.passable ? `เส้นทาง ${i+1} ✓` : `เส้นทาง ${i+1} (${e.blocking.length} กีดขวาง)`}</span>`).join('');
+  box.innerHTML = `<div class="verdict ${verdictClass}">${verdictText}</div><div class="rmeta"><span>📏 ${km} กม.</span><span>⏱️ ${esc(active.route.durationText)}</span></div><div>${altBtns}</div>`;
 }
 
-function pickAltRoute(i){
-  activeRouteIdx = i;
-  const evaluated = lastRoutes.map(r => {
-    const hits = floodsOnRoute(r);
-    const blocking = hits.filter(h => +h.depth_cm > vehicle.safeDepthCm);
-    return { route:r, hits, blocking, passable: blocking.length===0 };
-  });
-  drawRoutes(evaluated);
-  renderResultBox(evaluated);
-}
+function pickAltRoute(i){ activeRouteIdx = i; evaluateAndRender(); }
 
-/* ---------- จุดน้ำท่วมที่รายงาน (Supabase) ---------- */
-async function ensureFloodReports(){
-  if (allFloodReports.length) return;
-  await loadFloodReports();
-}
+async function ensureFloodReports(){ if (!allFloodReports.length) await loadFloodReports(); }
+
 async function loadFloodReports(){
-  const { data, error } = await sb
-    .from('flood_reports')
-    .select('id, lat, lon, road_name, depth_cm, reported_at, reporter_name, reporter_phone, status')
-    .eq('status','active')
-    .order('reported_at', { ascending:false });
+  const { data, error } = await sb.from('flood_reports').select('id, lat, lon, start_lat, start_lon, end_lat, end_lon, polyline, photo_url, road_name, depth_cm, reported_at, updated_at, reporter_name, reporter_phone, status').eq('status','active').order('reported_at', { ascending:false });
   if (error) { console.error(error); allFloodReports = []; }
-  else allFloodReports = data || [];
+  else { allFloodReports = data || []; }
   renderFloodList();
+  renderFloodListOnMap();
   if (lastRoutes.length) evaluateAndRender();
 }
+
 function renderFloodList(){
   const el = document.getElementById('floodList');
   document.getElementById('floodCount').textContent = allFloodReports.length ? `(${allFloodReports.length})` : '';
   if (!allFloodReports.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:6px 0">✅ ยังไม่มีรายงานจุดน้ำท่วมที่ใช้งานอยู่</div>'; return; }
   el.innerHTML = allFloodReports.map(f=>{
     const c = f.depth_cm>=50?'#dc2626':f.depth_cm>=20?'#f59e0b':'#16a34a';
-    return `<div class="frow" style="border-left-color:${c}" onclick="gMap.setCenter({lat:${f.lat},lng:${f.lon}});gMap.setZoom(15)">
-      <div class="nm">${esc(f.road_name||'จุดน้ำท่วม')} <span class="badge" style="background:${c}">${esc(f.depth_cm)} ซม.</span></div>
+    const focusLat = f.start_lat || f.lat; const focusLon = f.start_lon || f.lon;
+    return `<div class="frow" style="border-left-color:${c}" onclick="gMap.setCenter({lat:${focusLat},lng:${focusLon}});gMap.setZoom(15)">
+      <div class="nm">${esc(f.road_name||'จุดน้ำท่วมบนถนน')} <span class="badge" style="background:${c}">${esc(f.depth_cm)} ซม.</span></div>
       <div class="sub">${new Date(f.reported_at).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'})} · ${esc(f.reporter_name)}</div>
     </div>`;
   }).join('');
 }
 
-/* ---------- สมาชิก + แบบฟอร์มรายงาน (จำกัดสิทธิ์) ---------- */
-function setReportLatLon(lat, lng){
-  reportLat = lat; reportLon = lng;
-  const el = document.getElementById('reportLatLon');
-  if (el) el.textContent = `📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-  togglePinMode(false);
+window.togglePinMode = function(mode){
+  if (currentPinMode === mode) { currentPinMode = null; } 
+  else { currentPinMode = mode; }
+  
+  document.getElementById('pinStartBtn').className = `pin-btn ${reportStart?'done':''} ${currentPinMode==='start'?'active':''}`;
+  document.getElementById('pinEndBtn').className = `pin-btn ${reportEnd?'done':''} ${currentPinMode==='end'?'active':''}`;
+  
+  if (gMap) gMap.setOptions({ draggableCursor: currentPinMode ? 'crosshair' : null });
+};
 
-  // Show/move pin marker
-  if (pinMarker) {
-    pinMarker.position = { lat, lng };
-  } else if (gMap) {
-    const pinEl = document.createElement('div');
-    pinEl.textContent = '📍';
-    pinEl.style.fontSize = '28px';
-    pinEl.style.cursor = 'pointer';
-    pinMarker = new google.maps.marker.AdvancedMarkerElement({
-      position: { lat, lng },
-      map: gMap,
-      content: pinEl,
-      zIndex: 30
-    });
+async function setReportLatLon(lat, lng){
+  if (currentPinMode === 'start') {
+    reportStart = { lat, lng };
+    if (!pinStartMarker) {
+      pinStartMarker = new google.maps.marker.AdvancedMarkerElement({ position: {lat, lng}, map: gMap, content: createPinIcon('A'), zIndex: 30 });
+    } else { pinStartMarker.position = {lat, lng}; }
+  } else if (currentPinMode === 'end') {
+    reportEnd = { lat, lng };
+    if (!pinEndMarker) {
+      pinEndMarker = new google.maps.marker.AdvancedMarkerElement({ position: {lat, lng}, map: gMap, content: createPinIcon('B'), zIndex: 30 });
+    } else { pinEndMarker.position = {lat, lng}; }
+  }
+  
+  currentPinMode = null;
+  togglePinMode(null); // refresh buttons
+  
+  if (reportStart && reportEnd) {
+    document.getElementById('reportLatLon').innerHTML = '⏳ กำลังประมวลผลเส้นทางถนน...';
+    try {
+      const res = await gDirectionsService.route({
+        origin: new google.maps.LatLng(reportStart.lat, reportStart.lng),
+        destination: new google.maps.LatLng(reportEnd.lat, reportEnd.lng),
+        travelMode: google.maps.TravelMode.DRIVING
+      });
+      const dist = res.routes[0].legs[0].distance.value;
+      if (dist > 10000) {
+        document.getElementById('distanceWarn').style.display = 'block';
+        document.getElementById('reportLatLon').innerHTML = `ระยะทาง ${Math.round(dist/1000)} กม.`;
+        if (reportPolylineObj) reportPolylineObj.setMap(null);
+        reportPolylineString = null;
+      } else {
+        document.getElementById('distanceWarn').style.display = 'none';
+        document.getElementById('reportLatLon').innerHTML = `✅ คำนวณเส้นทางสำเร็จ (${(dist/1000).toFixed(1)} กม.)`;
+        reportPolylineString = res.routes[0].overview_polyline;
+        if (reportPolylineObj) reportPolylineObj.setMap(null);
+        reportPolylineObj = new google.maps.Polyline({
+          path: google.maps.geometry.encoding.decodePath(reportPolylineString),
+          strokeColor: '#3b82f6', strokeWeight: 6, map: gMap, zIndex: 35
+        });
+      }
+    } catch(e) {
+      document.getElementById('reportLatLon').innerHTML = '❌ ไม่สามารถหาเส้นทางเชื่อมต่อได้ โปรดปักหมุดใหม่บนถนน';
+      console.error(e);
+    }
+  } else {
+    document.getElementById('reportLatLon').innerHTML = 'กรุณาปักหมุดให้ครบทั้งสองจุด';
   }
 }
-function togglePinMode(force){
-  pinMode = (force !== undefined) ? force : !pinMode;
-  const btn = document.getElementById('pinBtn');
-  if (btn) btn.classList.toggle('active', pinMode);
-  if (gMap) gMap.setOptions({ draggableCursor: pinMode ? 'crosshair' : null });
+
+function createPinIcon(label) {
+  const el = document.createElement('div');
+  el.style.background = '#3b82f6'; el.style.color = '#fff'; el.style.borderRadius = '50%';
+  el.style.width = '24px'; el.style.height = '24px'; el.style.display = 'flex';
+  el.style.alignItems = 'center'; el.style.justifyContent = 'center';
+  el.style.fontWeight = 'bold'; el.style.fontSize = '12px'; el.style.border = '2px solid white';
+  el.innerText = label;
+  return el;
 }
 
 function renderAuthHeader(state, profile){
   const el = document.getElementById('authBox');
-  if (state==='signedout') {
-    el.innerHTML = `<button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button>`;
-  } else if (state==='pending') {
-    el.innerHTML = `<span class="pill" style="background:#fef3c7;color:#92400e">รออนุมัติ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
-  } else if (state==='rejected') {
-    el.innerHTML = `<span class="pill" style="background:#fee2e2;color:#b91c1c">ถูกปฏิเสธ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
-  } else {
-    el.innerHTML = `<span class="pill" style="background:#dcfce7;color:#15803d">${esc(profile.full_name||profile.email)}${profile.role==='admin'?' · แอดมิน':''}</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
-  }
+  if (state==='signedout') el.innerHTML = `<button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button>`;
+  else if (state==='pending') el.innerHTML = `<span class="pill" style="background:#fef3c7;color:#92400e">รออนุมัติ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
+  else if (state==='rejected') el.innerHTML = `<span class="pill" style="background:#fee2e2;color:#b91c1c">ถูกปฏิเสธ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
+  else el.innerHTML = `<span class="pill" style="background:#dcfce7;color:#15803d">${esc(profile.full_name||profile.email)}${profile.role==='admin'?' · แอดมิน':''}</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
 }
 
 function renderReportSection(state, profile){
+  window.currentUserProfile = (state === 'approved' || state === 'admin') ? profile : null;
   const el = document.getElementById('reportSec');
-  if (state==='signedout') {
-    el.innerHTML = `<div class="gate signedout">🔒 ต้องเข้าสู่ระบบและได้รับอนุมัติจากผู้ดูแลระบบก่อน จึงจะสามารถรายงานจุดน้ำท่วมได้<br><button onclick="signInWithGoogle()" style="margin-top:8px;background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-family:inherit;font-weight:600;cursor:pointer">เข้าสู่ระบบด้วย Google</button></div>`;
-    return;
-  }
-  if (state==='pending') {
-    el.innerHTML = `<div class="gate pending">⏳ บัญชีของคุณ (${esc(profile.email)}) กำลังรออนุมัติจากผู้ดูแลระบบ จะสามารถบันทึกจุดน้ำท่วมได้หลังได้รับอนุมัติ</div>`;
-    return;
-  }
-  if (state==='rejected') {
-    el.innerHTML = `<div class="gate rejected">🚫 บัญชีของคุณไม่ได้รับอนุมัติให้บันทึกข้อมูล หากคิดว่าไม่ถูกต้อง โปรดติดต่อผู้ดูแลระบบ</div>`;
-    return;
-  }
-  // approved หรือ admin
+  if (state==='signedout') { el.innerHTML = `<div class="gate signedout">🔒 ต้องเข้าสู่ระบบก่อน จึงจะรายงานจุดน้ำท่วมได้<br><button onclick="signInWithGoogle()" style="margin-top:8px;background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 14px;cursor:pointer">เข้าสู่ระบบด้วย Google</button></div>`; return; }
+  if (state==='pending') { el.innerHTML = `<div class="gate pending">⏳ บัญชีรออนุมัติจากผู้ดูแลระบบ</div>`; return; }
+  if (state==='rejected') { el.innerHTML = `<div class="gate rejected">🚫 บัญชีของคุณไม่ได้รับอนุมัติให้บันทึกข้อมูล</div>`; return; }
+  
   el.innerHTML = `
-    <h3>📝 รายงานจุดน้ำท่วม</h3>
-    <button id="pinBtn" onclick="togglePinMode()">📍 คลิกเพื่อปักหมุดตำแหน่งบนแผนที่</button>
-    <div id="reportLatLon" style="font-size:11.5px;color:var(--muted);margin-top:4px">ยังไม่ได้เลือกตำแหน่ง</div>
-    <label class="f">ชื่อถนน / จุดสังเกต (ถ้ามี)</label>
-    <input type="text" id="rRoad" placeholder="เช่น ถ.เจริญเขต หน้า อบต.">
+    <h3>📝 รายงานแนวถนนที่น้ำท่วม</h3>
+    <div style="display:flex;gap:6px">
+      <button id="pinStartBtn" onclick="togglePinMode('start')" class="pin-btn">📍 1. จุดเริ่มต้น</button>
+      <button id="pinEndBtn" onclick="togglePinMode('end')" class="pin-btn">📍 2. จุดสิ้นสุด</button>
+    </div>
+    <div id="distanceWarn" style="color:var(--danger);font-size:11.5px;display:none;margin-top:4px">⚠️ ระยะทางเกิน 10 กม. กรุณาปักหมุดให้สั้นลง</div>
+    <div id="reportLatLon" style="font-size:11.5px;color:var(--muted);margin-top:4px">เลือกจุดเริ่มต้นและสิ้นสุดของช่วงที่น้ำท่วม</div>
+    
+    <label class="f">ชื่อถนน / บริเวณ</label>
+    <input type="text" id="rRoad" placeholder="เช่น ถ.เพชรเกษม หน้าโรงพยาบาล">
     <label class="f">ความลึกน้ำท่วม (ซม.)</label>
     <input type="number" id="rDepth" min="0" max="500" step="1" placeholder="เช่น 25">
+    <label class="f">รูปภาพประกอบ (ถ้ามี)</label>
+    <input type="file" id="rPhoto" accept="image/*">
     <label class="f">ชื่อผู้รายงาน</label>
     <input type="text" id="rName" value="${esc(profile.full_name||'')}">
     <label class="f">เบอร์โทรติดต่อ (หน่วยงาน)</label>
@@ -671,30 +686,61 @@ function renderReportSection(state, profile){
   `;
 }
 
-async function submitReport(){
-  if (reportLat==null || reportLon==null) { alert('กรุณาปักหมุดตำแหน่งบนแผนที่ก่อน'); return; }
+window.submitReport = async function(){
+  if (!reportStart || !reportEnd || !reportPolylineString) { alert('กรุณาปักหมุดจุดเริ่มต้นและสิ้นสุด และรอให้ระบบวาดเส้นทางบนถนนก่อนครับ (ระยะทางต้องไม่เกิน 10 กม.)'); return; }
   const depth = parseFloat(document.getElementById('rDepth').value);
   const name = document.getElementById('rName').value.trim();
   const phone = document.getElementById('rPhone').value.trim();
   const road = document.getElementById('rRoad').value.trim();
+  const file = document.getElementById('rPhoto').files[0];
+
   if (isNaN(depth) || depth < 0) { alert('กรุณาระบุความลึกน้ำเป็นตัวเลข'); return; }
   if (!name || !phone) { alert('กรุณาระบุชื่อผู้รายงานและเบอร์โทรติดต่อ'); return; }
 
-  const user = await getUser();
-  const { error } = await sb.from('flood_reports').insert({
-    lat: reportLat, lon: reportLon, road_name: road || null,
-    depth_cm: depth, reporter_name: name, reporter_phone: phone,
-    created_by: user.id
-  });
-  if (error) { alert('บันทึกไม่สำเร็จ: ' + error.message); return; }
-  alert('บันทึกรายงานเรียบร้อย');
-  reportLat = reportLon = null;
-  if (pinMarker) { pinMarker.setMap(null); pinMarker = null; }
-  document.getElementById('reportLatLon').textContent = 'ยังไม่ได้เลือกตำแหน่ง';
-  document.getElementById('rRoad').value = '';
-  document.getElementById('rDepth').value = '';
-  document.getElementById('rPhone').value = '';
-  loadFloodReports();
+  const btn = document.getElementById('btnSubmitReport');
+  btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
+
+  try {
+    let photoUrl = null;
+    if (file) {
+      photoUrl = await uploadFloodPhoto(file);
+    }
+
+    const user = await getUser();
+    const { error } = await sb.from('flood_reports').insert({
+      lat: reportStart.lat, lon: reportStart.lng, 
+      start_lat: reportStart.lat, start_lon: reportStart.lng,
+      end_lat: reportEnd.lat, end_lon: reportEnd.lng,
+      polyline: reportPolylineString,
+      photo_url: photoUrl,
+      road_name: road || null,
+      depth_cm: depth, reporter_name: name, reporter_phone: phone,
+      created_by: user.id
+    });
+    if (error) throw error;
+    
+    alert('บันทึกรายงานเรียบร้อย');
+    
+    // Reset form
+    reportStart = null; reportEnd = null; reportPolylineString = null;
+    if (pinStartMarker) pinStartMarker.setMap(null);
+    if (pinEndMarker) pinEndMarker.setMap(null);
+    if (reportPolylineObj) reportPolylineObj.setMap(null);
+    pinStartMarker = null; pinEndMarker = null; reportPolylineObj = null;
+    
+    document.getElementById('rRoad').value = '';
+    document.getElementById('rDepth').value = '';
+    document.getElementById('rPhone').value = '';
+    document.getElementById('rPhoto').value = '';
+    togglePinMode(null);
+    document.getElementById('reportLatLon').innerHTML = 'เลือกจุดเริ่มต้นและสิ้นสุดของช่วงที่น้ำท่วม';
+    
+    loadFloodReports();
+  } catch(e) {
+    alert('บันทึกไม่สำเร็จ: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '✅ บันทึกรายงาน';
+  }
 }
 
 watchAuthState({

@@ -37,6 +37,17 @@ async function getUser() {
   return data?.user || null;
 }
 
+/** Upload a photo to flood_photos bucket and return the public URL */
+async function uploadFloodPhoto(file) {
+  if (!file) return null;
+  const ext = file.name.split('.').pop();
+  const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${ext}`;
+  const { data, error } = await sb.storage.from('flood_photos').upload(fileName, file, { upsert: false });
+  if (error) { console.error('Upload error:', error); throw error; }
+  const { data: pubData } = sb.storage.from('flood_photos').getPublicUrl(fileName);
+  return pubData.publicUrl;
+}
+
 /** Current user's row in public.profiles (or null if signed out). */
 async function getProfile() {
   const user = await getUser();
