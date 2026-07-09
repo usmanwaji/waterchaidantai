@@ -10,8 +10,8 @@
  */
 'use strict';
 
-const SUPABASE_URL = 'https://YOUR-PROJECT-REF.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR-ANON-PUBLIC-KEY';
+const SUPABASE_URL = 'https://tnvzeahfugmmrydtnsdv.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudnplYWhmdWdtbXJ5ZHRuc2R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NDUyNjksImV4cCI6MjA5OTEyMTI2OX0.r10_gbLUpB6XgIbZa7IO94vJ4LON3BGQF5J473EizLQ';
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
