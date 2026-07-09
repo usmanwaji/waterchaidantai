@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คาดการณ์น้ำท่วม | One Map ระดับน้ำชายแดนใต้</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{
+  --bg:#fdeacb; --panel:#fff; --ink:#0f172a; --muted:#64748b;
+  --orange:#f97316; --orange-d:#ea580c; --navy:#1e40af; --navy-d:#1e3a8a; --peach:#f2d3a0;
+  --c-over:#dc2626; --c-risk:#f97316; --c-watch:#eab308; --c-ok:#22c55e; --c-down:#0ea5e9; --c-na:#9ca3af;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden}
+
+header{background:linear-gradient(180deg,#fb923c,#f97316 45%,#ea580c);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+header h1{font-size:17px;font-weight:700;line-height:1.2}
+header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
+.navtab{display:flex;gap:4px;background:rgba(255,255,255,.15);border-radius:9px;padding:3px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+.navtab a{white-space:nowrap}
+.navtab a{color:#fff;text-decoration:none;font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:7px;opacity:.8}
+.navtab a.on{background:#fff;color:#ea580c;opacity:1}
+#updated{font-size:11px;opacity:.9;margin-left:auto;text-align:right}
+#btnRefresh{background:#fff;color:#ea580c;border:none;border-radius:8px;padding:6px 14px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer}
+#btnRefresh:hover{background:#ffedd5}
+
+/* แถบเลือกช่วงเวลา */
+#horizons{display:flex;gap:6px;padding:8px 14px;background:#fff;border-bottom:2px solid var(--peach);flex-wrap:wrap;align-items:center}
+.hbtn{padding:7px 18px;border:1.5px solid var(--navy);background:var(--navy);color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;border-radius:10px;cursor:pointer}
+.hbtn.on{background:var(--orange);border-color:var(--orange)}
+.pbtn{padding:6px 12px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-family:inherit;font-size:12px;font-weight:600;border-radius:9px;cursor:pointer;white-space:nowrap}
+.pbtn.on{background:var(--orange);border-color:var(--orange);color:#fff}
+#conf{font-size:11px;color:var(--muted);margin-left:auto}
+@media(max-width:820px){
+  .hbtn{padding:6px 12px;font-size:12.5px}
+  .pbtn{padding:5px 9px;font-size:11px}
+  #conf{display:none}
+  header h1 small{display:none}
+}
+
+#wrap{flex:1;display:flex;min-height:0}
+#map{flex:1;min-width:0}
+#side{width:400px;background:var(--panel);border-left:2px solid var(--peach);overflow-y:auto;padding:10px}
+@media(max-width:820px){
+  #wrap{flex-direction:column}
+  #map{min-height:44vh}
+  #side{width:100%;flex:1;border-left:none;border-top:2px solid var(--peach)}
+}
+
+.disc{background:#fef3c7;border:1px solid #f59e0b;border-radius:9px;padding:8px 10px;font-size:11.5px;line-height:1.55;color:#78350f;margin-bottom:10px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.card h3{font-size:13.5px;color:var(--navy-d);margin-bottom:6px}
+.item{border:1px solid #e2e8f0;border-left-width:5px;border-radius:8px;padding:7px 10px;margin-bottom:6px;cursor:pointer;background:#fff;font-size:12.5px}
+.item:hover{background:#f8fafc}
+.item .nm{font-weight:600;line-height:1.25}
+.item .sub{font-size:11px;color:var(--muted)}
+.badge{padding:1px 8px;border-radius:99px;color:#fff;font-size:10.5px;font-weight:600;white-space:nowrap}
+.mk{display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.45)}
+.blink{animation:blink 1s ease-in-out infinite}
+@keyframes blink{50%{opacity:.35}}
+.provlabel{background:none;border:none;box-shadow:none}
+.provlabel div{font-size:13px;font-weight:700;color:#1e293b;text-shadow:0 0 4px #fff,0 0 4px #fff,0 0 4px #fff;white-space:nowrap;text-align:center}
+.wrfimg{width:100%;border-radius:8px;border:1px solid #e2e8f0;cursor:pointer}
+.imgrow{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.imgrow figure{margin:0}
+.imgrow figcaption{font-size:10.5px;color:var(--muted);text-align:center;margin-top:2px}
+.provcard{display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;margin-bottom:5px;font-size:12.5px}
+.legend{background:rgba(255,255,255,.95);padding:8px 12px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.25);font-size:11px;line-height:1.7}
+.lg{display:flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:50%;flex:0 0 12px;border:1px solid rgba(0,0,0,.15)}
+footer{background:var(--navy-d);color:#c7d2fe;font-size:10.5px;padding:4px 14px;display:flex;gap:12px;flex-wrap:wrap}
+footer a{color:#fdba74;text-decoration:none}
+#imgModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.8);z-index:2000;align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
+#imgModal.show{display:flex}
+#imgModal img{max-width:95%;max-height:92vh;border-radius:10px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid #cbd5e1;border-top-color:var(--orange);border-radius:50%;animation:spin 1s linear infinite;vertical-align:-2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== Command Center theme (override) ===== */
+:root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--panel:#ffffff;--orange:#fe6e00;--orange-d:#ff6b00;--orange-warm:#ffb74d;--navy:#57504a;--navy-d:#423d38;--peach:#e3e0dd;--outline:#e3e0dd;--outline-strong:#d1d5dc;--elevated:#ffffff;--surface:#f3f4f6;--shell:rgba(0,0,0,.72);--c-over:#fb2c36;--c-risk:#fe6e00;--c-watch:#edb200;--c-ok:#00c758;--c-down:#3080ff}
+header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);border-bottom:1px solid rgba(255,255,255,.12)}
+.navtab{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09)}
+.navtab a{color:rgba(255,255,255,.72)}
+.navtab a.on{background:var(--orange);color:#fff;opacity:1}
+#btnRefresh{background:var(--orange);color:#fff}#btnRefresh:hover{background:var(--orange-d)}
+#horizons{border-bottom:1px solid var(--outline)}
+.hbtn.on,.pbtn.on{background:var(--orange);border-color:var(--orange)}
+#side{border-left:1px solid var(--outline)}
+.card,.item,.provcard{border-color:var(--outline)}
+footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔮 คาดการณ์น้ำท่วม<small>สตูล · สงขลา · ปัตตานี · ยะลา · นราธิวาส</small></h1>
+  <nav class="navtab">
+    <a href="index.html">🌤️ หน้าแรก</a>
+    <a href="map.html">🗺️ สถานการณ์</a>
+    <a href="forecast.html" class="on">🔮 คาดการณ์</a>
+    <a href="history.html">🛰️ ย้อนหลัง</a>
+    <a href="repeat.html">🔁 ซ้ำซาก</a>
+    <a href="sim.html">🌊 แบบจำลอง</a>
+    <a href="shelter.html">🏠 ศูนย์พักพิง</a>
+    <a href="route.html">🚗 เส้นทาง</a>
+  </nav>
+  <div id="updated">กำลังโหลด…</div>
+  <button id="btnRefresh" onclick="loadAll()">รีเฟรช</button>
+</header>
+
+<div id="horizons">
+  <button class="hbtn on" data-h="6">+6 ชม.</button>
+  <button class="hbtn" data-h="12">+12 ชม.</button>
+  <button class="hbtn" data-h="24">+24 ชม.</button>
+  <button class="hbtn" data-h="72">+72 ชม.</button>
+  <span style="width:1px;height:22px;background:#e2e8f0;margin:0 2px"></span>
+  <button class="pbtn on" data-prov="all">ทั้งหมด</button>
+  <button class="pbtn" data-prov="สตูล">สตูล</button>
+  <button class="pbtn" data-prov="สงขลา">สงขลา</button>
+  <button class="pbtn" data-prov="ปัตตานี">ปัตตานี</button>
+  <button class="pbtn" data-prov="ยะลา">ยะลา</button>
+  <button class="pbtn" data-prov="นราธิวาส">นราธิวาส</button>
+  <span id="conf"></span>
+</div>
+
+<div id="wrap">
+  <div id="map"></div>
+  <aside id="side">
+    <div class="disc">⚠️ <b>ข้อจำกัดการคาดการณ์:</b> หน้านี้ใช้การประมาณอย่างง่ายจาก <b>แนวโน้มระดับน้ำจริง</b> ของแต่ละสถานี ร่วมกับ <b>ฝนพยากรณ์แบบจำลอง WRF-ROMS (สสน.)</b> — ไม่ใช่แบบจำลองอุทกวิทยาเต็มรูปแบบ ความแม่นยำลดลงตามระยะเวลา โปรดใช้ประกอบกับประกาศของ ปภ./สทนช./กรมอุตุฯ เสมอ</div>
+    <div id="panel"></div>
+  </aside>
+</div>
+
+<div id="imgModal" onclick="this.classList.remove('show')"><img id="imgModalImg" src="" alt=""></div>
+
+<footer>
+  <span>แหล่งข้อมูล: thaiwater.net (สสน.) · HII · แบบจำลอง WRF-ROMS</span>
+  <span style="margin-left:auto">อยู่ระหว่างการทดลองปรับปรุง — <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a></span>
+</footer>
+
+<script>
+'use strict';
+const API = 'https://api-v3.thaiwater.net/api/v1/thaiwater30';
+const PROVINCES = [
+  {code:'91', name:'สตูล'}, {code:'90', name:'สงขลา'}, {code:'94', name:'ปัตตานี'},
+  {code:'95', name:'ยะลา'}, {code:'96', name:'นราธิวาส'}
+];
+const PROV_SET = new Set(PROVINCES.map(p=>p.name));
+
+const num = v => { const n = parseFloat(v); return isNaN(n) ? null : n; };
+const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const thName = o => (o && typeof o==='object') ? (o.th || o.en || '') : (o || '');
+const fmt = (v,d=2) => v==null ? '—' : v.toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d});
+async function fetchJSON(url, timeout=25000){
+  const ctrl = new AbortController();
+  const tm = setTimeout(()=>ctrl.abort(), timeout);
+  try{
+    const r = await fetch(url, {signal:ctrl.signal, headers:{'Accept':'application/json'}});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  } finally { clearTimeout(tm); }
+}
+
+/* ---------- คำอธิบายวิธีการ + ความเชื่อมั่น รายช่วงเวลา ---------- */
+const HORIZON_INFO = {
+  6:  {damp:1.0,  conf:'ความเชื่อมั่น: สูง — จากแนวโน้มระดับน้ำจริง 6 ชม.ล่าสุด',
+       method:'คาดการณ์จากอัตราการขึ้น–ลงของระดับน้ำจริง (เชิงเส้น 6 ชม.)'},
+  12: {damp:0.8,  conf:'ความเชื่อมั่น: ปานกลาง — แนวโน้มอาจเปลี่ยนตามฝนที่ตกเพิ่ม',
+       method:'คาดการณ์จากแนวโน้มระดับน้ำ (ถ่วงลด 20%) + ดัชนีดินอิ่มน้ำ'},
+  24: {damp:0.55, conf:'ความเชื่อมั่น: ต่ำ–ปานกลาง — ใช้ร่วมกับแผนที่ฝนพยากรณ์ด้านขวา',
+       method:'แนวโน้มระดับน้ำ (ถ่วงลด 45%) + ฝนพยากรณ์ WRF-ROMS วันนี้/พรุ่งนี้'},
+  72: {damp:null, conf:'ความเชื่อมั่น: เชิงแนวโน้มเท่านั้น — ไม่คาดระดับน้ำรายสถานี',
+       method:'ประเมินความเสี่ยงรายจังหวัดจากฝนพยากรณ์ 3 วัน + ดินอิ่มน้ำ + สถานะเขื่อน'}
+};
+const CLS = {
+  over: {label:'ล้นตลิ่ง/คาดล้น', color:'#dc2626', order:0},
+  risk: {label:'เสี่ยงสูง',        color:'#f97316', order:1},
+  watch:{label:'กำลังขึ้น เฝ้าระวัง', color:'#eab308', order:2},
+  ok:   {label:'ทรงตัว/ปกติ',      color:'#22c55e', order:3},
+  down: {label:'กำลังลด',          color:'#0ea5e9', order:4},
+  na:   {label:'ข้อมูลไม่พอ',      color:'#9ca3af', order:5}
+};
+
+/* ---------- แผนที่ ---------- */
+const map = L.map('map', {zoomControl:false}).setView([6.85, 100.85], 8);
+L.control.zoom({position:'topright'}).addTo(map);
+L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
+map.createPane('bnd'); map.getPane('bnd').style.zIndex = 350;
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18, attribution:'© OpenStreetMap | สสน./HII'}).addTo(map);
+const gMk = L.layerGroup().addTo(map), gBnd = L.layerGroup().addTo(map);
+
+const legend = L.control({position:'bottomleft'});
+legend.onAdd = () => {
+  const d = L.DomUtil.create('div','legend');
+  d.innerHTML = `<b style="font-size:11.5px">สถานะคาดการณ์</b>` +
+    Object.values(CLS).map(c=>`<div class="lg"><span class="sw" style="background:${c.color}"></span>${c.label}</div>`).join('');
+  return d;
+};
+legend.addTo(map);
+
+const BND_SOURCES = [
+  'https://raw.githubusercontent.com/apisit/thailand.json/master/thailand.json',
+  'https://raw.githubusercontent.com/chingchai/OpenGISData-Thailand/master/provinces.geojson'
+];
+const BND_NAMES = ['สตูล','สงขลา','ปัตตานี','ยะลา','นราธิวาส','Satun','Songkhla','Pattani','Yala','Narathiwat'];
+async function loadBoundaries(){
+  for(const src of BND_SOURCES){
+    try{
+      const gj = await fetchJSON(src, 40000);
+      const feats = (gj.features||[]).filter(f => Object.values(f.properties||{}).some(v => typeof v==='string' && BND_NAMES.includes(v.trim())));
+      if(feats.length < PROVINCES.length) continue;
+      gBnd.clearLayers();
+      L.geoJSON({type:'FeatureCollection',features:feats}, {pane:'bnd', interactive:false, style:{color:'#ffffff', weight:5, opacity:.9, fill:false}}).addTo(gBnd);
+      L.geoJSON({type:'FeatureCollection',features:feats}, {pane:'bnd', interactive:false, style:{color:'#334155', weight:2.2, opacity:1, dashArray:'6 3', fill:false}}).addTo(gBnd);
+      return;
+    }catch(e){}
+  }
+}
+
+/* ---------- สถานะรวม ---------- */
+let stations = [];      // {id,name,code,river,amphoe,prov,msl,bank,pct,dt,lat,lon,stationId,stationType,rate}
+let provRain3d = {};    // จังหวัด -> ฝนสะสม 3 วันสูงสุด (มม.)
+let wrfImgs = [];       // [{date,url}]
+let ffpiRows = [];      // ตำบลเสี่ยงฉับพลัน
+let damBanglang = null; // {pct, storage}
+let horizon = 6;
+let provFilter = 'all';
+const PROV_VIEWS = {
+  'all':[[6.85,100.85],8], 'สตูล':[[6.75,100.05],10], 'สงขลา':[[7.10,100.60],9],
+  'ปัตตานี':[[6.70,101.30],10], 'ยะลา':[[6.30,101.25],10], 'นราธิวาส':[[6.20,101.75],10]
+};
+const inProv = s => provFilter==='all' || s.prov===provFilter;
+let trendsLoaded = 0, trendsTotal = 0;
+
+async function loadAll(){
+  document.getElementById('updated').innerHTML = '<span class="spin"></span> กำลังโหลด…';
+  gMk.clearLayers();
+  await loadStations();
+  render();                      // แสดงผลทันทีด้วยข้อมูลปัจจุบัน (แนวโน้มจะทยอยตามมา)
+  await Promise.allSettled([loadTrends(), loadRain3d(), loadWrf(), loadFfpi(), loadDam()]);
+  render();
+  document.getElementById('updated').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'});
+}
+
+async function loadStations(){
+  const res = await Promise.allSettled(PROVINCES.map(p => fetchJSON(`${API}/public/waterlevel?province_code=${p.code}`)));
+  const rows = [];
+  res.forEach(r => { if(r.status==='fulfilled' && Array.isArray(r.value?.data)) rows.push(...r.value.data); });
+  stations = rows.map(d => {
+    const st = d.station || {};
+    const lat = num(st.tele_station_lat), lon = num(st.tele_station_long);
+    if(lat==null || lon==null) return null;
+    return {
+      id: 'f'+st.id, stationId: st.id, stationType: d.station_type || 'tele_waterlevel',
+      name: thName(st.tele_station_name).trim(), code: st.tele_station_oldcode || '',
+      river: d.river_name || '', amphoe: thName(d.geocode?.amphoe_name), prov: thName(d.geocode?.province_name),
+      msl: num(d.waterlevel_msl), bank: num(st.min_bank), pct: num(d.storage_percent),
+      dt: d.waterlevel_datetime || '', lat, lon, rate: undefined   // undefined = ยังไม่คำนวณ
+    };
+  }).filter(Boolean);
+}
+
+/* ---------- คำนวณแนวโน้ม (m/ชม.) จากกราฟ 24 ชม.ย้อนหลัง ---------- */
+async function loadTrends(){
+  const list = stations.filter(s=>s.stationId);
+  trendsTotal = list.length; trendsLoaded = 0;
+  const f = d => d.toISOString().slice(0,10);
+  const end = new Date(), start = new Date(end.getTime()-2*86400000);
+  const pool = 6;
+  let i = 0;
+  async function worker(){
+    while(i < list.length){
+      const s = list[i++];
+      try{
+        const g = await fetchJSON(`${API}/public/waterlevel_graph?station_type=${encodeURIComponent(s.stationType)}&station_id=${s.stationId}&start_date=${f(start)}&end_date=${f(end)}`, 20000);
+        const pts = (g?.data?.graph_data||[])
+          .map(p=>({t:new Date(String(p.datetime).replace(' ','T')+'+07:00').getTime(), v:num(p.value)}))
+          .filter(p=>p.v!=null && !isNaN(p.t));
+        s.rate = calcRate(pts);
+        if(s.bank==null){ const b = num(g?.data?.min_bank); if(b!=null) s.bank = b; }
+      }catch(e){ s.rate = null; }
+      trendsLoaded++;
+      if(trendsLoaded % 10 === 0 || trendsLoaded===trendsTotal) render();
+    }
+  }
+  await Promise.all(Array.from({length:pool}, worker));
+}
+function calcRate(pts){
+  // ใช้จุดข้อมูลช่วง 6 ชม.ล่าสุด ทำ linear regression (ทนทานต่อจุดหาย)
+  if(pts.length < 3) return null;
+  const tEnd = pts[pts.length-1].t;
+  const win = pts.filter(p => tEnd - p.t <= 6.5*3600*1000);
+  if(win.length < 3) return null;
+  const xs = win.map(p=>(p.t - win[0].t)/3600000), ys = win.map(p=>p.v);
+  const n = xs.length, mx = xs.reduce((a,b)=>a+b,0)/n, my = ys.reduce((a,b)=>a+b,0)/n;
+  let sxy=0, sxx=0;
+  for(let k=0;k<n;k++){ sxy += (xs[k]-mx)*(ys[k]-my); sxx += (xs[k]-mx)**2; }
+  if(sxx===0) return null;
+  const slope = sxy/sxx;                          // ม./ชม.
+  return Math.abs(slope) < 0.0005 ? 0 : slope;    // ตัด noise เล็กจิ๋ว
+}
+
+async function loadRain3d(){
+  try{
+    const j = await fetchJSON(`${API}/provinces/rain3d`, 30000);
+    provRain3d = {};
+    (j?.data||[]).forEach(d => {
+      const p = thName(d.geocode?.province_name);
+      if(!PROV_SET.has(p)) return;
+      const mm = num(d.rain_3d);
+      if(mm==null) return;
+      if(!(p in provRain3d) || mm > provRain3d[p]) provRain3d[p] = mm;
+    });
+  }catch(e){ provRain3d = {}; }
+}
+async function loadWrf(){
+  try{
+    const j = await fetchJSON(`${API}/public/rain7day_forecast`, 30000);
+    wrfImgs = (j?.data?.pre_rain?.data||[]).slice(0,3).map(d=>({
+      date: d.media_datetime || d.filename,
+      url: `${API}/shared/image?image=${encodeURIComponent(d.media_path)}`
+    }));
+  }catch(e){ wrfImgs = []; }
+}
+async function loadFfpi(){
+  try{
+    const txt = await fetch('https://fews2.hii.or.th/model-output/data_portal/flashflood/flashflood_report.txt').then(r=>r.text());
+    ffpiRows = txt.split('\n').slice(1).map(l=>[...l.matchAll(/"([^"]*)"/g)].map(m=>m[1]))
+      .filter(c=>c.length>=5 && PROV_SET.has(c[1]));
+  }catch(e){ ffpiRows = []; }
+}
+async function loadDam(){
+  try{
+    const g = await fetchJSON(`${API}/analyst/dam`, 30000);
+    const rows = [ ...(g?.data?.dam_hourly||[]), ...(g?.data?.dam_medium||[]) ];
+    const bl = rows.find(d => thName((d.dam||d).dam_name).includes('บางลาง'));
+    if(bl) damBanglang = {pct:num(bl.dam_storage_percent), storage:num(bl.dam_storage), inflow:num(bl.dam_inflow), released:num(bl.dam_released)};
+  }catch(e){ damBanglang = null; }
+}
+/* ---------- คาดการณ์รายสถานี ---------- */
+function predict(s, h){
+  // คืนค่า {cls, pred, tta} — tta = ชั่วโมงโดยประมาณจนถึงระดับตลิ่ง (เฉพาะกำลังขึ้น)
+  if(s.msl!=null && s.bank!=null && s.msl >= s.bank) return {cls:'over', pred:s.msl, tta:0};
+  if(s.rate === undefined) return {cls:'na', pred:null, tta:null, pending:true};
+  if(s.rate === null || s.msl==null) return {cls:'na', pred:null, tta:null};
+  const damp = HORIZON_INFO[h].damp ?? 0.55;
+  const pred = s.msl + s.rate * h * damp;
+  let tta = null;
+  if(s.rate > 0.001 && s.bank!=null) tta = (s.bank - s.msl) / s.rate;
+  let cls;
+  if(s.bank!=null && pred >= s.bank) cls = 'over';
+  else if(tta!=null && tta <= h*1.5) cls = 'risk';
+  else if(s.rate >= 0.02) cls = 'watch';
+  else if(s.rate <= -0.02) cls = 'down';
+  else cls = 'ok';
+  return {cls, pred, tta};
+}
+function rateTxt(r){
+  if(r==null) return '—';
+  const cm = r*100;
+  if(Math.abs(cm) < 0.5) return 'ทรงตัว';
+  return (cm>0?'▲ +':'▼ ') + fmt(cm,1) + ' ซม./ชม.';
+}
+
+/* ---------- แสดงผล ---------- */
+function render(){
+  document.getElementById('conf').textContent = HORIZON_INFO[horizon].conf +
+    (trendsTotal && trendsLoaded<trendsTotal ? ` · คำนวณแนวโน้ม ${trendsLoaded}/${trendsTotal}` : '');
+  gMk.clearLayers();
+  const panel = document.getElementById('panel');
+  if(horizon === 72){ render72(panel); return; }
+
+  const evald = stations.filter(inProv).map(s => ({s, p: predict(s, horizon)}));
+  evald.forEach(({s,p}) => {
+    const C = CLS[p.cls];
+    const size = (p.cls==='over'||p.cls==='risk') ? 22 : 15;
+    L.marker([s.lat,s.lon], {icon: L.divIcon({className:'', html:
+      `<div class="mk ${p.cls==='over'?'blink':''}" style="width:${size}px;height:${size}px;background:${C.color}"></div>`,
+      iconSize:[size,size], iconAnchor:[size/2,size/2]}), zIndexOffset:(5-C.order)*100})
+      .bindPopup(()=>{
+        const pp = predict(s, horizon);
+        return `
+        <div style="font-weight:700">${esc(s.name)} ${s.code?`(${esc(s.code)})`:''}</div>
+        <div style="font-size:11px;color:#64748b">${esc(s.river)} · ${esc(s.amphoe)} · ${esc(s.prov)}</div>
+        <div style="margin:4px 0;text-align:center"><span class="badge" style="background:${CLS[pp.cls].color};font-size:12px;padding:3px 12px">${CLS[pp.cls].label}</span></div>
+        <table style="font-size:12px;width:100%">
+          <tr><td style="color:#64748b">ระดับปัจจุบัน</td><td style="text-align:right"><b>${fmt(s.msl)}</b> ม.รทก. (${esc(s.dt)})</td></tr>
+          <tr><td style="color:#64748b">ระดับตลิ่ง</td><td style="text-align:right">${fmt(s.bank)} ม.รทก.</td></tr>
+          <tr><td style="color:#64748b">แนวโน้ม</td><td style="text-align:right">${rateTxt(s.rate)}</td></tr>
+          ${pp.pred!=null?`<tr><td style="color:#64748b">คาดระดับ +${horizon} ชม.</td><td style="text-align:right"><b>${fmt(pp.pred)}</b> ม.รทก.</td></tr>`:''}
+          ${pp.tta!=null&&pp.tta>0&&pp.tta<48?`<tr><td style="color:#dc2626">คาดถึงตลิ่งใน</td><td style="text-align:right;color:#dc2626"><b>~${fmt(pp.tta,1)} ชม.</b></td></tr>`:''}
+        </table>`;
+      }, {maxWidth:290})
+      .addTo(gMk);
+  });
+
+  // แผงขวา: สถานีเสี่ยงเรียงตามความรุนแรง
+  const hot = evald.filter(({p})=>['over','risk','watch'].includes(p.cls))
+    .sort((a,b)=> CLS[a.p.cls].order - CLS[b.p.cls].order || (a.p.tta??99) - (b.p.tta??99));
+  let html = `<div class="card"><h3>📌 วิธีคาดการณ์ช่วง +${horizon} ชม.</h3><div style="font-size:12px;color:#475569">${HORIZON_INFO[horizon].method}</div></div>`;
+  html += `<div class="card"><h3>⚠️ สถานีเฝ้าระวัง (${hot.length})</h3>`;
+  if(!hot.length) html += `<div style="font-size:12.5px;color:#16a34a">✅ ไม่มีสถานีที่คาดว่าจะถึงระดับเสี่ยงในช่วง +${horizon} ชม.</div>`;
+  hot.slice(0,25).forEach(({s,p})=>{
+    const C = CLS[p.cls];
+    html += `<div class="item" style="border-left-color:${C.color}" onclick="fly(${s.lat},${s.lon})">
+      <div style="display:flex;justify-content:space-between;gap:6px"><span class="nm">${esc(s.name)}</span><span class="badge" style="background:${C.color}">${C.label}</span></div>
+      <div class="sub">${esc(s.amphoe)} · ${esc(s.prov)} · ${rateTxt(s.rate)}${p.tta!=null&&p.tta>0&&p.tta<48?` · <b style="color:#dc2626">ถึงตลิ่ง ~${fmt(p.tta,1)} ชม.</b>`:''}</div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  if(horizon >= 12){
+    html += `<div class="card"><h3>🌍 ดัชนีดินอิ่มน้ำ (ฝนสะสม 3 วันย้อนหลัง สูงสุดรายจังหวัด)</h3>`;
+    PROVINCES.filter(p=>provFilter==='all'||p.name===provFilter).forEach(p=>{
+      const mm = provRain3d[p.name];
+      const c = mm==null?'#9ca3af': mm>=200?'#dc2626': mm>=100?'#f97316': mm>=50?'#eab308':'#22c55e';
+      const lb = mm==null?'ไม่มีข้อมูล': mm>=200?'อิ่มน้ำมาก เสี่ยงสูง': mm>=100?'อิ่มน้ำ เฝ้าระวัง': mm>=50?'ชื้นปานกลาง':'ปกติ';
+      html += `<div class="provcard"><span>${p.name}</span><span><b>${mm!=null?fmt(mm,0)+' มม.':'—'}</b> <span class="badge" style="background:${c}">${lb}</span></span></div>`;
+    });
+    html += `<div style="font-size:10.5px;color:#94a3b8">ดินที่อิ่มน้ำทำให้ฝนใหม่กลายเป็นน้ำท่าเร็วขึ้น — ใช้ประกอบการอ่านแนวโน้ม</div></div>`;
+  }
+  if(horizon === 24){
+    html += wrfCard(2);
+    html += ffpiCard();
+  }
+  panel.innerHTML = html;
+}
+
+function render72(panel){
+  // +72 ชม.: ไม่มีหมุดคาดรายสถานี — แสดงหมุดสถานะปัจจุบันจาง ๆ เพื่อบริบท
+  stations.filter(inProv).forEach(s=>{
+    L.marker([s.lat,s.lon], {icon: L.divIcon({className:'', html:
+      `<div class="mk" style="width:10px;height:10px;background:#94a3b8;opacity:.6"></div>`, iconSize:[10,10], iconAnchor:[5,5]})})
+      .bindPopup(`<b>${esc(s.name)}</b><br><span style="font-size:11px;color:#64748b">ระดับปัจจุบัน ${fmt(s.msl)} ม.รทก. — ดูคาดการณ์รายสถานีที่ +6/+12/+24 ชม.</span>`)
+      .addTo(gMk);
+  });
+  let html = `<div class="card"><h3>📌 วิธีประเมินช่วง +72 ชม.</h3><div style="font-size:12px;color:#475569">${HORIZON_INFO[72].method} — ระยะนี้ความไม่แน่นอนสูง จึงประเมินเป็น "ระดับความเสี่ยงรายจังหวัด" แทนตัวเลขรายสถานี</div></div>`;
+  html += wrfCard(3);
+  // ความเสี่ยงรายจังหวัด = ดินอิ่มน้ำ (ย้อนหลัง) เป็นฐาน — ให้ผู้ใช้อ่านร่วมกับแผนที่ฝนพยากรณ์
+  html += `<div class="card"><h3>🗺️ ความเสี่ยงพื้นฐานรายจังหวัด (จากดินอิ่มน้ำ)</h3>`;
+  PROVINCES.filter(p=>provFilter==='all'||p.name===provFilter).forEach(p=>{
+    const mm = provRain3d[p.name];
+    const c = mm==null?'#9ca3af': mm>=200?'#dc2626': mm>=100?'#f97316': mm>=50?'#eab308':'#22c55e';
+    const lb = mm==null?'ไม่มีข้อมูล': mm>=200?'เสี่ยงสูง หากฝนตกเพิ่ม':'' || (mm>=100?'เฝ้าระวัง':'') || (mm>=50?'ปานกลาง':'ต่ำ');
+    html += `<div class="provcard"><span>${p.name}</span><span><b>${mm!=null?fmt(mm,0)+' มม./3วัน':'—'}</b> <span class="badge" style="background:${c}">${lb||'เฝ้าระวัง'}</span></span></div>`;
+  });
+  html += `<div style="font-size:10.5px;color:#94a3b8">อ่านร่วมกับแผนที่ฝนพยากรณ์ด้านบน: จังหวัดที่ดินอิ่มน้ำสูง + ฝนพยากรณ์หนัก = เสี่ยงน้ำท่วมมากที่สุด</div></div>`;
+  if(damBanglang){
+    const c = damBanglang.pct>=80?'#f97316': damBanglang.pct>=100?'#dc2626':'#22c55e';
+    html += `<div class="card"><h3>🔻 เขื่อนบางลาง (ต้นน้ำแม่น้ำปัตตานี)</h3>
+      <div class="provcard"><span>น้ำในอ่าง</span><span><b>${fmt(damBanglang.pct,1)}% รนก.</b> <span class="badge" style="background:${c}">${damBanglang.pct>=80?'เฝ้าระวังการระบาย':'ปกติ'}</span></span></div>
+      <div style="font-size:11.5px;color:#475569">ไหลเข้า ${fmt(damBanglang.inflow,1)} · ระบาย ${fmt(damBanglang.released,1)} ล้าน ม³/วัน — หากระบายเพิ่ม จะกระทบ ยะลา–ปัตตานี ตามลำน้ำภายใน 12–48 ชม.</div></div>`;
+  }
+  html += ffpiCard();
+  html += `<div class="card"><h3>📋 แนวปฏิบัติเมื่อเสี่ยงสูง</h3><div style="font-size:12px;color:#475569;line-height:1.7">
+    • ติดตามประกาศ ปภ.จังหวัด / สทนช. / กรมอุตุฯ อย่างใกล้ชิด<br>
+    • ตรวจความพร้อมเครื่องสูบน้ำ เรือ และจุดอพยพในอำเภอเสี่ยง<br>
+    • แจ้งเตือนชุมชนริมน้ำล่วงหน้าผ่านกำนัน/ผู้ใหญ่บ้าน/อส.<br>
+    • กลับมาดูหน้านี้ซ้ำทุก 6–12 ชม. แนวโน้มจะชัดขึ้นเรื่อย ๆ</div></div>`;
+  panel.innerHTML = html;
+}
+
+function wrfCard(days){
+  if(!wrfImgs.length) return `<div class="card"><h3>🌧️ แผนที่ฝนพยากรณ์ (WRF-ROMS)</h3><div style="font-size:12px;color:#94a3b8">โหลดภาพพยากรณ์ไม่สำเร็จ — ดูที่ thaiwater.net</div></div>`;
+  const imgs = wrfImgs.slice(0, days);
+  return `<div class="card"><h3>🌧️ แผนที่ฝนพยากรณ์รายวัน (แบบจำลอง WRF-ROMS สสน.)</h3>
+    ${imgs.map(im=>`<div style="margin:6px 0"><div style="font-size:11.5px;font-weight:600;color:#475569;margin-bottom:2px">${im.date||''}</div><img class="wrfimg" src="${im.url}" onclick="window.open(this.src,'_blank')" alt="แผนที่ฝนพยากรณ์รายวัน"></div>`).join('')}
+    <div style="font-size:10.5px;color:#94a3b8">ที่มา: แบบจำลอง WRF-ROMS สสน. — ปริมาณฝนสะสมรายวัน (มม./วัน) · คลิกภาพเพื่อดูขนาดเต็มพร้อมแถบสี</div></div>`;
+}
+
+loadBoundaries();
+loadAll();
+</script>
+</body>
+</html>

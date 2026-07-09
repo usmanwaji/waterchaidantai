@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>น้ำท่วมซ้ำซาก (GISTDA) | One Map ชายแดนใต้</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--bg:#fdeacb;--ink:#0f172a;--muted:#64748b;--orange:#f97316;--orange-d:#ea580c;--navy:#1e40af;--navy-d:#1e3a8a;--peach:#f2d3a0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden}
+header{background:linear-gradient(180deg,#fb923c,#f97316 45%,#ea580c);color:#fff;padding:8px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+header h1{font-size:16px;font-weight:700;line-height:1.2}
+header h1 small{display:block;font-size:10.5px;font-weight:400;opacity:.9}
+.navtab{display:flex;gap:4px;background:rgba(255,255,255,.15);border-radius:9px;padding:3px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+.navtab a{color:#fff;text-decoration:none;font-size:12px;font-weight:600;padding:4px 10px;border-radius:7px;opacity:.85;white-space:nowrap}
+.navtab a.on{background:#fff;color:#ea580c;opacity:1}
+#bar{display:flex;gap:5px;padding:7px 12px;background:#fff;border-bottom:2px solid var(--peach);flex-wrap:wrap;align-items:center}
+.chip{padding:6px 13px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-family:inherit;font-size:12.5px;font-weight:600;border-radius:9px;cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--orange);border-color:var(--orange);color:#fff}
+#opa{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+#wrap{flex:1;display:flex;min-height:0}
+#map{flex:1;min-width:0}
+#side{width:330px;background:#fff;border-left:2px solid var(--peach);overflow-y:auto;padding:10px}
+@media(max-width:820px){
+  #wrap{flex-direction:column}
+  #map{min-height:52vh}
+  #side{width:100%;flex:1;border-left:none;border-top:2px solid var(--peach)}
+  header h1{font-size:14px}
+  #opa{display:none}
+}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.card h3{font-size:13.5px;color:var(--navy-d);margin-bottom:6px}
+.provcard{display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;margin-bottom:5px;font-size:12.5px;cursor:pointer}
+.provcard:hover{background:#fff7ed}
+.badge{padding:1px 9px;border-radius:99px;color:#fff;font-size:10.5px;font-weight:600}
+.disc{background:#fefce8;border:1px solid #eab308;border-radius:9px;padding:8px 10px;font-size:11.5px;line-height:1.55;color:#713f12;margin-bottom:10px}
+footer{background:var(--navy-d);color:#c7d2fe;font-size:10.5px;padding:4px 12px;display:flex;gap:10px;flex-wrap:wrap}
+footer a{color:#fdba74;text-decoration:none}
+.spin{display:inline-block;width:11px;height:11px;border:2px solid #cbd5e1;border-top-color:var(--orange);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-1px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.leaflet-popup-content{font-family:'Noto Sans Thai',Tahoma,sans-serif;font-size:12.5px}
+.yrs{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.yr{background:#1e40af;color:#fff;border-radius:5px;padding:0 6px;font-size:10.5px}
+
+/* ===== Command Center theme (override) ===== */
+:root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--panel:#ffffff;--orange:#fe6e00;--orange-d:#ff6b00;--orange-warm:#ffb74d;--navy:#57504a;--navy-d:#423d38;--peach:#e3e0dd;--outline:#e3e0dd;--outline-strong:#d1d5dc;--elevated:#ffffff;--surface:#f3f4f6;--shell:rgba(0,0,0,.72)}
+header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);border-bottom:1px solid rgba(255,255,255,.12)}
+.navtab{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09)}
+.navtab a{color:rgba(255,255,255,.72)}
+.navtab a.on{background:var(--orange);color:#fff;opacity:1}
+#bar{border-bottom:1px solid var(--outline)}
+#side{border-left:1px solid var(--outline)}
+.card,.provcard{border-color:var(--outline)}
+.yr{background:var(--navy)}
+footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔁 พื้นที่น้ำท่วมซ้ำซาก<small>วิเคราะห์จากดาวเทียม 14 ปี (2554–2567) — GISTDA</small></h1>
+  <nav class="navtab">
+    <a href="index.html">🌤️ หน้าแรก</a>
+    <a href="map.html">🗺️ สถานการณ์</a>
+    <a href="forecast.html">🔮 คาดการณ์</a>
+    <a href="history.html">🛰️ ย้อนหลัง</a>
+    <a href="repeat.html" class="on">🔁 ซ้ำซาก</a>
+    <a href="sim.html">🌊 แบบจำลอง</a>
+    <a href="shelter.html">🏠 ศูนย์พักพิง</a>
+    <a href="route.html">🚗 เส้นทาง</a>
+  </nav>
+</header>
+
+<div id="bar">
+  <button class="chip on" data-prov="all">ทั้งหมด</button>
+  <button class="chip" data-prov="91">สตูล</button>
+  <button class="chip" data-prov="90">สงขลา</button>
+  <button class="chip" data-prov="94">ปัตตานี</button>
+  <button class="chip" data-prov="95">ยะลา</button>
+  <button class="chip" data-prov="96">นราธิวาส</button>
+  <label id="opa">ความทึบ <input type="range" id="opaSlider" min="20" max="100" value="75" style="width:90px"></label>
+</div>
+
+<div id="wrap">
+  <div id="map"></div>
+  <aside id="side">
+    <div class="disc">🔁 <b>น้ำท่วมซ้ำซาก</b> = พื้นที่ที่ดาวเทียมพบน้ำท่วมขังซ้ำหลายปีในรอบ 14 ปี (2554–2567) เหมาะใช้วางแผนป้องกันล่วงหน้า จัดลำดับพื้นที่เฝ้าระวัง และพิจารณาจุดตั้งเครื่องสูบน้ำ/ศูนย์พักพิง — <b>คลิกบนพื้นที่สี</b>เพื่อดูตำบล ความถี่ และปีที่เคยท่วม</div>
+    <div class="card"><h3>📊 จำนวนแปลงพื้นที่ซ้ำซาก (ทั้งจังหวัด)</h3><div id="stats"><span class="spin"></span> กำลังนับ…</div></div>
+    <div class="card"><h3>🎯 จุดที่คลิกล่าสุด</h3><div id="pick" style="font-size:12.5px;color:#64748b">ยังไม่ได้เลือก — คลิกพื้นที่สีบนแผนที่</div></div>
+  </aside>
+</div>
+
+<footer>
+  <span>ข้อมูล: GISTDA Disaster Platform (Open API) — flood-freq 2554–2567</span>
+  <span style="margin-left:auto"><a href="https://disaster.gistda.or.th/flood/" target="_blank">เปิดระบบ GISTDA ↗</a></span>
+</footer>
+
+<script>
+'use strict';
+const KEY = 'm4bUUjGDPc3rdxyb8JHcL8SDhgLHPgRjq2NBeibPIucJkpxuoHahMVwXwRjKTOq6';
+const B = 'https://api-gateway.gistda.or.th/api/2.0/resources';
+const PROVINCES = [
+  {code:'91', name:'สตูล',     view:[[6.75,100.05],10]},
+  {code:'90', name:'สงขลา',    view:[[7.10,100.60],9]},
+  {code:'94', name:'ปัตตานี',  view:[[6.70,101.30],10]},
+  {code:'95', name:'ยะลา',     view:[[6.30,101.25],10]},
+  {code:'96', name:'นราธิวาส', view:[[6.20,101.75],10]}
+];
+const map = L.map('map', {zoomControl:false}).setView([6.85,100.85], 8);
+L.control.zoom({position:'topright'}).addTo(map);
+L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap | GISTDA'}).addTo(map);
+const tms = L.tileLayer(`${B}/maps/flood-freq/tms/{z}/{x}/{y}?api_key=${KEY}`, {opacity:.75, maxZoom:18}).addTo(map);  // endpoint ชื่อ tms แต่ใช้ลำดับ y แบบ XYZ มาตรฐาน
+document.getElementById('opaSlider').oninput = e => tms.setOpacity(e.target.value/100);
+
+async function loadStats(){
+  const el = document.getElementById('stats');
+  const parts = await Promise.all(PROVINCES.map(async p=>{
+    try{
+      const j = await fetch(`${B}/features/flood-freq?api_key=${KEY}&pv_code=${p.code}&limit=1`).then(r=>r.json());
+      return {p, n: j?.numberMatched ?? j?.total ?? null};
+    }catch(e){ return {p, n:null}; }
+  }));
+  const mx = Math.max(...parts.map(x=>x.n||0), 1);
+  el.innerHTML = parts.map(({p,n})=>{
+    const c = n==null?'#9ca3af': n>mx*0.6?'#dc2626': n>mx*0.25?'#f97316':'#eab308';
+    return `<div class="provcard" onclick="goProv('${p.code}')"><span>${p.name}</span><span class="badge" style="background:${c}">${n!=null?n.toLocaleString('th-TH')+' แปลง':'—'}</span></div>`;
+  }).join('') + `<div style="font-size:10.5px;color:#94a3b8;margin-top:3px">จำนวนแปลง (polygon) ที่เคยพบน้ำท่วมซ้ำ — มากไม่เท่ากับรุนแรง แต่บ่งชี้ขอบเขต</div>`;
+}
+function goProv(code){
+  const p = PROVINCES.find(x=>x.code===code);
+  if(p) map.flyTo(p.view[0], p.view[1], {duration:.6});
+  document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on', x.dataset.prov===code));
+}
+document.querySelectorAll('.chip').forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    if(b.dataset.prov==='all') map.flyTo([6.85,100.85], 8, {duration:.6});
+    else goProv(b.dataset.prov);
+  };
+});
+
+map.on('click', async e=>{
+  const d = 0.004;
+  const bbox = [e.latlng.lng-d, e.latlng.lat-d, e.latlng.lng+d, e.latlng.lat+d].join(',');
+  const pick = document.getElementById('pick');
+  pick.innerHTML = '<span class="spin"></span> กำลังตรวจสอบ…';
+  const pop = L.popup().setLatLng(e.latlng).setContent('<span class="spin"></span> กำลังตรวจสอบ…').openOn(map);
+  try{
+    const j = await fetch(`${B}/features/flood-freq?api_key=${KEY}&bbox=${bbox}&limit=8`).then(r=>r.json());
+    const fs = j?.features || [];
+    if(!fs.length){
+      pop.setContent('จุดนี้ไม่อยู่ในพื้นที่น้ำท่วมซ้ำซาก');
+      pick.innerHTML = '<span style="color:#16a34a">✅ จุดที่คลิกไม่อยู่ในพื้นที่ซ้ำซาก</span>';
+      return;
+    }
+    // เลือกแปลงที่ freq สูงสุดบริเวณนั้น
+    const best = fs.reduce((a,b)=> (b.properties?.freq||0) > (a.properties?.freq||0) ? b : a);
+    const pr = best.properties || {};
+    const years = Object.keys(pr).filter(k=>/^y_\d{4}$/.test(k) && pr[k]).map(k=>+k.slice(2)+543); // ค.ศ.→พ.ศ.
+    const yrsHtml = years.map(y=>`<span class="yr">${y}</span>`).join('');
+    const info = `
+      <b>${esc(pr.tb_tn||'')} ${esc(pr.ap_tn||'')}</b><br>${esc(pr.pv_tn||'')}<br>
+      ท่วมซ้ำ <b style="color:#dc2626">${pr.freq||years.length} ครั้ง</b> ใน 14 ปี<br>
+      <div class="yrs">${yrsHtml}</div>`;
+    pop.setContent(info);
+    pick.innerHTML = info + `<div style="font-size:10.5px;color:#94a3b8;margin-top:4px">พบ ${j.numberMatched ?? fs.length} แปลงบริเวณนี้ — แสดงแปลงที่ความถี่สูงสุด</div>`;
+  }catch(err){
+    pop.setContent('ตรวจสอบไม่สำเร็จ ลองใหม่อีกครั้ง');
+    pick.innerHTML = '<span style="color:#dc2626">โหลดไม่สำเร็จ</span>';
+  }
+});
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+loadStats();
+</script>
+</body>
+</html>

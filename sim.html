@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แบบจำลองน้ำท่วม (DEM 30m) | One Map ชายแดนใต้</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fdeacb;--ink:#0f172a;--orange:#f97316;--orange-d:#ea580c;--navy:#1e40af;--navy-d:#1e3a8a;--peach:#f2d3a0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden}
+header{background:linear-gradient(180deg,#fb923c,#f97316 45%,#ea580c);color:#fff;padding:8px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+header h1{font-size:16px;font-weight:700;line-height:1.2}
+header h1 small{display:block;font-size:10.5px;font-weight:400;opacity:.9}
+.navtab{display:flex;gap:4px;background:rgba(255,255,255,.15);border-radius:9px;padding:3px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+.navtab a{color:#fff;text-decoration:none;font-size:12px;font-weight:600;padding:4px 10px;border-radius:7px;opacity:.85;white-space:nowrap}
+.navtab a.on{background:#fff;color:#ea580c;opacity:1}
+#bar{display:flex;gap:5px;padding:7px 12px;background:#fff;border-bottom:2px solid var(--peach);flex-wrap:wrap;align-items:center}
+.chip{padding:6px 13px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-family:inherit;font-size:12.5px;font-weight:600;border-radius:9px;cursor:pointer;white-space:nowrap;text-decoration:none}
+.chip.on{background:var(--orange);border-color:var(--orange);color:#fff}
+#openFull{margin-left:auto;background:var(--navy);color:#fff;border-color:var(--navy)}
+#howto{background:#eff6ff;border-bottom:2px solid var(--peach);padding:7px 12px;font-size:11.5px;color:#1e3a8a;line-height:1.5}
+#howto b{color:#ea580c}
+#frameWrap{flex:1;min-height:0;position:relative}
+#simFrame{width:100%;height:100%;border:0;display:block}
+footer{background:var(--navy-d);color:#c7d2fe;font-size:10.5px;padding:4px 12px;display:flex;gap:10px;flex-wrap:wrap}
+footer a{color:#fdba74;text-decoration:none}
+@media(max-width:820px){ header h1{font-size:14px} #howto{font-size:11px} }
+
+/* ===== Command Center theme (override) ===== */
+:root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--orange:#fe6e00;--orange-d:#ff6b00;--orange-warm:#ffb74d;--navy:#57504a;--navy-d:#423d38;--peach:#e3e0dd;--outline:#e3e0dd;--outline-strong:#d1d5dc;--surface:#f3f4f6;--shell:rgba(0,0,0,.72)}
+header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);border-bottom:1px solid rgba(255,255,255,.12)}
+.navtab{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09)}
+.navtab a{color:rgba(255,255,255,.72)}
+.navtab a.on{background:var(--orange);color:#fff;opacity:1}
+#bar{border-bottom:1px solid var(--outline)}
+#howto{background:#f3f4f6;border-bottom:1px solid var(--outline);color:var(--ink)}
+#howto b{color:var(--orange-d)}
+#openFull{background:var(--navy);color:#fff;border-color:var(--navy)}
+footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌊 แบบจำลองน้ำท่วมตามระดับน้ำ<small>DEM 30 ม. (GEDTM30) — ปรับระดับน้ำดูพื้นที่จมได้เอง</small></h1>
+  <nav class="navtab">
+    <a href="index.html">🌤️ หน้าแรก</a>
+    <a href="map.html">🗺️ สถานการณ์</a>
+    <a href="forecast.html">🔮 คาดการณ์</a>
+    <a href="history.html">🛰️ ย้อนหลัง</a>
+    <a href="repeat.html">🔁 ซ้ำซาก</a>
+    <a href="sim.html" class="on">🌊 แบบจำลอง</a>
+    <a href="shelter.html">🏠 ศูนย์พักพิง</a>
+    <a href="route.html">🚗 เส้นทาง</a>
+  </nav>
+</header>
+
+<div id="bar">
+  <button class="chip" data-prov="satun">สตูล (ละงู)</button>
+  <button class="chip" data-prov="songkhla">สงขลา (หาดใหญ่)</button>
+  <button class="chip" data-prov="pattani">ปัตตานี (เมือง)</button>
+  <button class="chip" data-prov="yala">ยะลา (เมือง)</button>
+  <button class="chip on" data-prov="narathiwat">นราธิวาส (สุไหงโก-ลก)</button>
+  <a id="openFull" class="chip" href="dtm-th/index.html" target="_blank">เปิดเต็มจอ ↗</a>
+</div>
+
+<div id="howto">
+  <b>วิธีใช้:</b> ① คลิกช่องตารางบนแผนที่เพื่อโหลดข้อมูลความสูงภูมิประเทศ (DEM) บริเวณนั้น → ② เลื่อนแถบ <b>Water height</b> เพื่อจำลองระดับน้ำสูงขึ้น พื้นที่สีฟ้า = คาดว่าจม พร้อมแสดงความลึก → ③ ปรับ Base river level ให้ตรงกับระดับน้ำจริงจากหน้า 🏠 สถานการณ์ · ใช้ดาต้าจริง 30 ม./พิกเซล เหมาะดูภาพรวมชุมชน ไม่ใช่รายหลังคาเรือน
+</div>
+
+<div id="frameWrap">
+  <iframe id="simFrame" src="" allow="geolocation" loading="eager"></iframe>
+</div>
+
+<footer>
+  <span>แบบจำลอง: <a href="https://github.com/gain9999/dtm" target="_blank">gain9999/dtm</a> (open source) · DEM: GEDTM30 (OpenGeoHub)</span>
+  <span style="margin-left:auto">ระดับน้ำสถานีจริง: <a href="https://gain9999.github.io/dtm/waterlevel.html" target="_blank">Water Level Explorer ↗</a></span>
+</footer>
+
+<script>
+'use strict';
+/* จุดโฟกัสรายจังหวัด: เมือง/ย่านเสี่ยงน้ำท่วมริมแม่น้ำสายหลัก
+   พารามิเตอร์ของ dtm: lat, lon, z, water, base, seed, opacity, max, tiles (เลือกไว้ล่วงหน้าให้โหลด DEM ทันที) */
+const SPOTS = {
+  satun:      {lat:6.8930, lon:99.8100,  z:13, base:1,  water:3, tiles:tile(6.8930,99.8100)},   // คลองละงู
+  songkhla:   {lat:7.0086, lon:100.4747, z:13, base:2,  water:4, tiles:tile(7.0086,100.4747)},  // หาดใหญ่ คลองอู่ตะเภา
+  pattani:    {lat:6.8600, lon:101.2500, z:13, base:1,  water:3, tiles:tile(6.8600,101.2500)},  // เมืองปัตตานี แม่น้ำปัตตานี
+  yala:       {lat:6.5420, lon:101.2800, z:13, base:6,  water:8, tiles:tile(6.5420,101.2800)},  // เมืองยะลา แม่น้ำปัตตานี
+  narathiwat: {lat:6.0300, lon:101.9650, z:13, base:4,  water:6, tiles:tile(6.0300,101.9650)}   // สุไหงโก-ลก แม่น้ำโก-ลก
+};
+function tile(lat, lon){
+  // สร้างพารามิเตอร์ tiles 4 ช่อง (0.02°) รอบจุดโฟกัส ให้ dtm โหลด DEM อัตโนมัติ
+  const s = 0.02, f = v => v.toFixed(5);
+  const la = Math.floor(lat/s)*s, lo = Math.floor(lon/s)*s;
+  const cells = [[la,lo],[la,lo-s],[la-s,lo],[la-s,lo-s]];
+  return cells.map(([a,b])=>`${f(a)},${f(b)},${f(a+s)},${f(b+s)}`).join('|');
+}
+function go(key){
+  const p = SPOTS[key];
+  const url = `dtm-th/index.html?lat=${p.lat}&lon=${p.lon}&z=${p.z}&base=${p.base}&water=${p.water}&opacity=65&tiles=${encodeURIComponent(p.tiles)}`;
+  document.getElementById('simFrame').src = url;
+  document.querySelectorAll('.chip[data-prov]').forEach(x=>x.classList.toggle('on', x.dataset.prov===key));
+}
+document.querySelectorAll('.chip[data-prov]').forEach(b=>{ b.onclick = ()=>go(b.dataset.prov); });
+go('narathiwat');
+</script>
+</body>
+</html>
