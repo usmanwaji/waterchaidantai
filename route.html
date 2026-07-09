@@ -75,6 +75,13 @@ input[type=text], input[type=number], input[type=tel], input[type=file], select,
 .gate.signedout{background:#f3f4f6;color:var(--muted)}
 .gate button{margin-top:6px}
 
+.rtype{display:flex;gap:6px;margin-bottom:8px}
+.rtype button{flex:1;padding:7px 4px;border:1.5px solid var(--outline-strong);background:#fff;border-radius:9px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted)}
+.rtype button.on{border-color:var(--orange);background:#fff3ea;color:var(--orange-d)}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:4px}
+.pbtn{border:1.5px solid var(--outline-strong);background:#fff;border-radius:9px;padding:7px 3px;text-align:center;cursor:pointer;font-size:10.5px;color:var(--ink)}
+.pbtn .ic{font-size:16px;display:block}
+.pbtn.on{border-color:var(--ok);background:#dcfce7;color:#15803d;font-weight:700}
 .pin-btn { flex: 1; padding:8px; border:1.5px dashed var(--orange);background:#fff8f2;color:var(--orange-d);font-family:inherit;font-weight:600;font-size:11px;border-radius:9px;cursor:pointer; }
 .pin-btn.active { background:var(--orange);color:#fff;border-style:solid; }
 .pin-btn.done { background:#dcfce7;color:#15803d;border:1.5px solid #15803d; }
@@ -126,7 +133,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
     <a href="map.html">🗺️ สถานการณ์</a>
     <a href="forecast.html">🔮 คาดการณ์</a>
     <a href="history.html">🛰️ ย้อนหลัง</a>
-    <a href="repeat.html">🔁 ซ้ำซาก</a>
+    <a href="repeat.html">⚠️ พื้นที่เสี่ยง</a>
     <a href="sim.html">🌊 แบบจำลอง</a>
     <a href="shelter.html">🏠 ศูนย์พักพิง</a>
     <a href="route.html" class="on">🚗 เส้นทาง</a>
@@ -155,7 +162,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
     <div id="resultBox"></div>
 
     <div class="sec" style="border-bottom:none;padding-bottom:6px">
-      <h3>⚠️ จุดน้ำท่วมที่รายงานล่าสุด <span id="floodCount" style="font-weight:400;color:var(--muted)"></span></h3>
+      <h3>⚠️ จุดน้ำท่วม / ถนนชำรุดล่าสุด <span id="floodCount" style="font-weight:400;color:var(--muted)"></span></h3>
     </div>
     <div id="floodList"><span style="font-size:12px;color:var(--muted)">กำลังโหลด…</span></div>
 
@@ -351,6 +358,16 @@ function distM(lat1,lon1,lat2,lon2){
 
 const FLOOD_BUFFER_M = 60;
 
+/** จุดนี้ขวางรถประเภทที่เลือกหรือไม่
+ *  - flood: ความลึกเกินเกณฑ์ปลอดภัยของรถ
+ *  - damage: รถประเภทนี้ไม่อยู่ในรายการ "ผ่านได้" (ไม่ระบุ = ปิดถนน ขวางทุกประเภท) */
+function isBlockedFor(f, veh){
+  if (f.report_type === 'damage') {
+    return !(Array.isArray(f.passable_vehicles) && f.passable_vehicles.includes(veh.id));
+  }
+  return +f.depth_cm > veh.safeDepthCm;
+}
+
 function floodsOnRoute(route){
   const coords = route.coordinates;
   const hits = [];
@@ -382,7 +399,7 @@ function floodsOnRoute(route){
 function evaluateAndRender(){
   const evaluated = lastRoutes.map(r => {
     const hits = floodsOnRoute(r);
-    const blocking = hits.filter(h => +h.depth_cm > vehicle.safeDepthCm);
+    const blocking = hits.filter(h => isBlockedFor(h, vehicle));
     return { route: r, hits, blocking, passable: blocking.length === 0 };
   });
   let bestIdx = evaluated.findIndex(e => e.passable);
@@ -425,9 +442,10 @@ function renderFloodListOnMap(){
 
   allFloodReports.forEach(f => {
     if (f.status !== 'active') return;
-    const blocked = +f.depth_cm > vehicle.safeDepthCm;
-    const color = blocked ? '#dc2626' : '#f59e0b';
-    
+    const blocked = isBlockedFor(f, vehicle);
+    const isDamage = f.report_type === 'damage';
+    const color = isDamage ? (blocked ? '#7c3aed' : '#a78bfa') : (blocked ? '#dc2626' : '#f59e0b');
+
     if (f.polyline) {
       const path = google.maps.geometry.encoding.decodePath(f.polyline);
       const poly = new google.maps.Polyline({
@@ -444,7 +462,7 @@ function renderFloodListOnMap(){
       const markerEl = document.createElement('div');
       markerEl.className = 'gm-flood-marker';
       markerEl.style.background = color;
-      markerEl.innerHTML = `<span>${f.depth_cm}</span>`;
+      markerEl.innerHTML = `<span>${isDamage ? '🚧' : f.depth_cm}</span>`;
       const marker = new google.maps.marker.AdvancedMarkerElement({
         position: { lat: f.lat, lng: f.lon }, map: gMap, content: markerEl, zIndex: 20
       });
@@ -463,13 +481,17 @@ function popupForReport(f, blocked){
     updatedStr = `<br><span style="color:var(--muted)">อัปเดตล่าสุด: ${new Date(f.updated_at).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'})}</span>`;
   }
   let photoStr = f.photo_url ? `<br><img src="${esc(f.photo_url)}" style="max-width:100%;height:auto;max-height:120px;border-radius:6px;margin-top:6px">` : '';
-  
+  const isDamage = f.report_type === 'damage';
+
   let updateBtn = '';
   if (window.currentUserProfile && (window.currentUserProfile.role === 'admin' || window.currentUserProfile.status === 'approved')) {
+    const updField = isDamage
+      ? `<textarea id="upd_desc_${f.id}" rows="2" placeholder="สภาพล่าสุด เช่น ซ่อมแล้ว / ชำรุดมากขึ้น" style="width:100%;margin-top:4px;font-family:inherit;font-size:11.5px"></textarea>`
+      : `<input type="number" id="upd_depth_${f.id}" placeholder="ความลึกใหม่ (ซม.)" style="width:100px;margin-top:4px"><br>`;
     updateBtn = `<hr style="margin:8px 0;border:none;border-top:1px solid #ddd">
       <div style="background:#f9f9f9;padding:6px;border-radius:6px">
         <b>อัปเดตสถานการณ์</b><br>
-        <input type="number" id="upd_depth_${f.id}" placeholder="ความลึกใหม่ (ซม.)" style="width:100px;margin-top:4px"><br>
+        ${updField}
         <input type="file" id="upd_photo_${f.id}" accept="image/*" style="width:100%;margin-top:4px"><br>
         <button onclick="submitUpdate('${f.id}')" style="margin-top:6px;padding:4px 8px;background:var(--navy);color:#fff;border:none;border-radius:4px;cursor:pointer">บันทึกอัปเดต</button>
         <button onclick="viewHistory('${f.id}')" style="margin-top:6px;margin-left:4px;padding:4px 8px;background:#e2e8f0;color:#333;border:none;border-radius:4px;cursor:pointer">ดูประวัติ</button>
@@ -479,9 +501,19 @@ function popupForReport(f, blocked){
       <button onclick="viewHistory('${f.id}')" style="padding:4px 8px;background:#e2e8f0;color:#333;border:none;border-radius:4px;cursor:pointer">ดูประวัติการอัปเดต</button>`;
   }
 
+  let headline, detailLine;
+  if (isDamage) {
+    const passable = (f.passable_vehicles||[]).map(id => { const v = VEHICLE_TYPES.find(x=>x.id===id); return v ? v.icon+' '+v.label : id; });
+    headline = blocked ? '🚧 ถนนชำรุด — รถประเภทนี้ผ่านไม่ได้' : '🚧 ถนนชำรุด — ผ่านได้แต่ต้องระวัง';
+    detailLine = `${f.road_name?esc(f.road_name)+'<br>':''}สภาพ: ${esc(f.description||'-')}<br>รถที่ผ่านได้: <b>${passable.length ? passable.join(', ') : 'ไม่มี (ปิดถนน)'}</b>`;
+  } else {
+    headline = blocked ? '🔴 รถประเภทนี้ผ่านไม่ได้' : '🟠 ผ่านได้แต่ต้องระวัง';
+    detailLine = `ความลึก: <b>${esc(f.depth_cm)} ซม.</b> ${f.road_name?('· '+esc(f.road_name)):''}`;
+  }
+
   return `<div style="font-family:'Noto Sans Thai',Tahoma,sans-serif;font-size:12.5px;line-height:1.6;padding:4px;width:220px">
-    <b>${blocked?'🔴 รถประเภทนี้ผ่านไม่ได้':'🟠 ผ่านได้แต่ต้องระวัง'}</b><br>
-    ความลึก: <b>${esc(f.depth_cm)} ซม.</b> ${f.road_name?('· '+esc(f.road_name)):''}<br>
+    <b>${headline}</b><br>
+    ${detailLine}<br>
     เวลา: ${new Date(f.reported_at).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'})}
     ${updatedStr}
     <br>ผู้รายงาน: ${esc(f.reporter_name)} (${esc(f.reporter_phone)})
@@ -492,24 +524,32 @@ function popupForReport(f, blocked){
 }
 
 window.submitUpdate = async function(id) {
-  const depth = parseFloat(document.getElementById(`upd_depth_${id}`).value);
+  const depthEl = document.getElementById(`upd_depth_${id}`);
+  const descEl = document.getElementById(`upd_desc_${id}`);
   const file = document.getElementById(`upd_photo_${id}`).files[0];
-  if (isNaN(depth)) { alert('กรุณาใส่ความลึกใหม่เป็นตัวเลข'); return; }
-  
+
+  const depth = depthEl ? parseFloat(depthEl.value) : NaN;
+  const desc = descEl ? descEl.value.trim() : '';
+  if (depthEl && isNaN(depth)) { alert('กรุณาใส่ความลึกใหม่เป็นตัวเลข'); return; }
+  if (descEl && !desc) { alert('กรุณาพิมพ์สภาพถนนล่าสุด'); return; }
+
   try {
     let photo_url = null;
     if (file) photo_url = await uploadFloodPhoto(file);
-    
+
     // Insert into history
     const user = await getUser();
     await sb.from('flood_report_updates').insert({
-      report_id: id, depth_cm: depth, photo_url: photo_url, updated_by: user.id
+      report_id: id,
+      depth_cm: depthEl ? depth : null,
+      description: descEl ? desc : null,
+      photo_url: photo_url, updated_by: user.id
     });
-    
+
     // Update main report
-    let updates = { depth_cm: depth };
+    let updates = depthEl ? { depth_cm: depth } : { description: desc };
     if (photo_url) updates.photo_url = photo_url;
-    
+
     await sb.from('flood_reports').update(updates).eq('id', id);
     alert('อัปเดตสำเร็จ!');
     gInfoWindow.close();
@@ -528,9 +568,10 @@ window.viewHistory = async function(id) {
   box.innerHTML = '<b>ประวัติการเปลี่ยนแปลง:</b><br>' + data.map(h => {
     let p = h.photo_url ? ` <a href="${esc(h.photo_url)}" target="_blank">[รูปภาพ]</a>` : '';
     let name = h.profiles ? h.profiles.full_name : 'แอดมิน';
+    const what = h.depth_cm != null ? `ปรับเป็น <b>${h.depth_cm} ซม.</b>` : `สภาพ: <b>${esc(h.description||'-')}</b>`;
     return `<div style="margin-top:4px;padding:4px;background:#f1f5f9;border-radius:4px;font-size:11px">
       ${new Date(h.updated_at).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'})}<br>
-      ปรับเป็น <b>${h.depth_cm} ซม.</b> โดย ${esc(name)}${p}
+      ${what} โดย ${esc(name)}${p}
     </div>`;
   }).join('');
 };
@@ -544,7 +585,7 @@ function renderResultBox(evaluated){
   if (active.blocking.length === 0 && active.hits.length === 0) {
     verdictClass='ok'; verdictText=`✅ ${vehicle.label} ผ่านได้ปกติ`;
   } else if (active.blocking.length === 0) {
-    verdictClass='warn'; verdictText=`🟠 ${vehicle.label} ผ่านได้ แต่มี ${active.hits.length} จุดน้ำท่วม`;
+    verdictClass='warn'; verdictText=`🟠 ${vehicle.label} ผ่านได้ แต่มี ${active.hits.length} จุดต้องระวัง (น้ำท่วม/ชำรุด)`;
   } else {
     verdictClass='bad'; verdictText=`🔴 ${vehicle.label} ผ่าน "ไม่ได้" — เจอ ${active.blocking.length} จุดกีดขวาง`;
   }
@@ -557,7 +598,7 @@ function pickAltRoute(i){ activeRouteIdx = i; evaluateAndRender(); }
 async function ensureFloodReports(){ if (!allFloodReports.length) await loadFloodReports(); }
 
 async function loadFloodReports(){
-  const { data, error } = await sb.from('flood_reports').select('id, lat, lon, start_lat, start_lon, end_lat, end_lon, polyline, photo_url, road_name, depth_cm, reported_at, updated_at, reporter_name, reporter_phone, status').eq('status','active').order('reported_at', { ascending:false });
+  const { data, error } = await sb.from('flood_reports').select('id, lat, lon, start_lat, start_lon, end_lat, end_lon, polyline, photo_url, road_name, depth_cm, report_type, description, passable_vehicles, reported_at, updated_at, reporter_name, reporter_phone, status').eq('status','active').order('reported_at', { ascending:false });
   if (error) { console.error(error); allFloodReports = []; }
   else { allFloodReports = data || []; }
   renderFloodList();
@@ -568,13 +609,17 @@ async function loadFloodReports(){
 function renderFloodList(){
   const el = document.getElementById('floodList');
   document.getElementById('floodCount').textContent = allFloodReports.length ? `(${allFloodReports.length})` : '';
-  if (!allFloodReports.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:6px 0">✅ ยังไม่มีรายงานจุดน้ำท่วมที่ใช้งานอยู่</div>'; return; }
+  if (!allFloodReports.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:6px 0">✅ ยังไม่มีรายงานที่ใช้งานอยู่</div>'; return; }
   el.innerHTML = allFloodReports.map(f=>{
-    const c = f.depth_cm>=50?'#dc2626':f.depth_cm>=20?'#f59e0b':'#16a34a';
+    const isDamage = f.report_type === 'damage';
+    const c = isDamage ? '#7c3aed' : (f.depth_cm>=50?'#dc2626':f.depth_cm>=20?'#f59e0b':'#16a34a');
+    const badge = isDamage ? '🚧 ชำรุด' : esc(f.depth_cm)+' ซม.';
+    const name = f.road_name || (isDamage ? 'ถนนชำรุด' : 'จุดน้ำท่วมบนถนน');
+    const sub = isDamage && f.description ? esc(f.description.length>60 ? f.description.slice(0,60)+'…' : f.description)+'<br>' : '';
     const focusLat = f.start_lat || f.lat; const focusLon = f.start_lon || f.lon;
     return `<div class="frow" style="border-left-color:${c}" onclick="gMap.setCenter({lat:${focusLat},lng:${focusLon}});gMap.setZoom(15)">
-      <div class="nm">${esc(f.road_name||'จุดน้ำท่วมบนถนน')} <span class="badge" style="background:${c}">${esc(f.depth_cm)} ซม.</span></div>
-      <div class="sub">${new Date(f.reported_at).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'})} · ${esc(f.reporter_name)}</div>
+      <div class="nm">${esc(name)} <span class="badge" style="background:${c}">${badge}</span></div>
+      <div class="sub">${sub}${new Date(f.reported_at).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'})} · ${esc(f.reporter_name)}</div>
     </div>`;
   }).join('');
 }
@@ -664,18 +709,30 @@ function renderReportSection(state, profile){
   if (state==='rejected') { el.innerHTML = `<div class="gate rejected">🚫 บัญชีของคุณไม่ได้รับอนุมัติให้บันทึกข้อมูล</div>`; return; }
   
   el.innerHTML = `
-    <h3>📝 รายงานแนวถนนที่น้ำท่วม</h3>
+    <h3>📝 รายงานสภาพถนน</h3>
+    <div class="rtype">
+      <button id="rtFlood" class="on" onclick="setReportType('flood')">🌊 น้ำท่วม</button>
+      <button id="rtDamage" onclick="setReportType('damage')">🚧 ถนนชำรุด</button>
+    </div>
     <div style="display:flex;gap:6px">
       <button id="pinStartBtn" onclick="togglePinMode('start')" class="pin-btn">📍 1. จุดเริ่มต้น</button>
       <button id="pinEndBtn" onclick="togglePinMode('end')" class="pin-btn">📍 2. จุดสิ้นสุด</button>
     </div>
     <div id="distanceWarn" style="color:var(--danger);font-size:11.5px;display:none;margin-top:4px">⚠️ ระยะทางเกิน 10 กม. กรุณาปักหมุดให้สั้นลง</div>
-    <div id="reportLatLon" style="font-size:11.5px;color:var(--muted);margin-top:4px">เลือกจุดเริ่มต้นและสิ้นสุดของช่วงที่น้ำท่วม</div>
-    
+    <div id="reportLatLon" style="font-size:11.5px;color:var(--muted);margin-top:4px">เลือกจุดเริ่มต้นและสิ้นสุดของช่วงที่มีปัญหา</div>
+
     <label class="f">ชื่อถนน / บริเวณ</label>
     <input type="text" id="rRoad" placeholder="เช่น ถ.เพชรเกษม หน้าโรงพยาบาล">
-    <label class="f">ความลึกน้ำท่วม (ซม.)</label>
-    <input type="number" id="rDepth" min="0" max="500" step="1" placeholder="เช่น 25">
+    <div id="rFloodFields">
+      <label class="f">ความลึกน้ำท่วม (ซม.)</label>
+      <input type="number" id="rDepth" min="0" max="500" step="1" placeholder="เช่น 25">
+    </div>
+    <div id="rDamageFields" style="display:none">
+      <label class="f">รายละเอียดความชำรุด *</label>
+      <textarea id="rDesc" rows="3" placeholder="เช่น ถนนทรุดเป็นหลุมลึกครึ่งเลน / คอสะพานขาด / ดินสไลด์ทับผิวทาง"></textarea>
+      <label class="f">รถที่ยัง "ผ่านได้" (กดเลือก — ไม่เลือกเลย = ปิดถนนทุกประเภท)</label>
+      <div class="pgrid" id="pgrid"></div>
+    </div>
     <label class="f">รูปภาพประกอบ (ถ้ามี)</label>
     <input type="file" id="rPhoto" accept="image/*">
     <label class="f">ชื่อผู้รายงาน</label>
@@ -684,17 +741,49 @@ function renderReportSection(state, profile){
     <input type="tel" id="rPhone" placeholder="เช่น 073-xxxxxx">
     <button id="btnSubmitReport" onclick="submitReport()">✅ บันทึกรายงาน</button>
   `;
+  renderPassablePicker();
+  setReportType(reportType);
+}
+
+/* ---------- ประเภทรายงาน: น้ำท่วม (flood) / ถนนชำรุด (damage) ---------- */
+let reportType = 'flood';
+let passableSet = new Set();
+
+window.setReportType = function(t){
+  reportType = t;
+  document.getElementById('rtFlood').className = t==='flood' ? 'on' : '';
+  document.getElementById('rtDamage').className = t==='damage' ? 'on' : '';
+  document.getElementById('rFloodFields').style.display = t==='flood' ? '' : 'none';
+  document.getElementById('rDamageFields').style.display = t==='damage' ? '' : 'none';
+};
+
+function renderPassablePicker(){
+  const el = document.getElementById('pgrid');
+  if (!el) return;
+  el.innerHTML = VEHICLE_TYPES.map(v => `
+    <div class="pbtn ${passableSet.has(v.id)?'on':''}" data-p="${v.id}">
+      <span class="ic">${v.icon}</span>${v.label}
+    </div>`).join('');
+  el.querySelectorAll('.pbtn').forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.p;
+      passableSet.has(id) ? passableSet.delete(id) : passableSet.add(id);
+      renderPassablePicker();
+    };
+  });
 }
 
 window.submitReport = async function(){
   if (!reportStart || !reportEnd || !reportPolylineString) { alert('กรุณาปักหมุดจุดเริ่มต้นและสิ้นสุด และรอให้ระบบวาดเส้นทางบนถนนก่อนครับ (ระยะทางต้องไม่เกิน 10 กม.)'); return; }
   const depth = parseFloat(document.getElementById('rDepth').value);
+  const desc = document.getElementById('rDesc').value.trim();
   const name = document.getElementById('rName').value.trim();
   const phone = document.getElementById('rPhone').value.trim();
   const road = document.getElementById('rRoad').value.trim();
   const file = document.getElementById('rPhoto').files[0];
 
-  if (isNaN(depth) || depth < 0) { alert('กรุณาระบุความลึกน้ำเป็นตัวเลข'); return; }
+  if (reportType === 'flood' && (isNaN(depth) || depth < 0)) { alert('กรุณาระบุความลึกน้ำเป็นตัวเลข'); return; }
+  if (reportType === 'damage' && !desc) { alert('กรุณาพิมพ์รายละเอียดความชำรุดของถนน'); return; }
   if (!name || !phone) { alert('กรุณาระบุชื่อผู้รายงานและเบอร์โทรติดต่อ'); return; }
 
   const btn = document.getElementById('btnSubmitReport');
@@ -714,7 +803,11 @@ window.submitReport = async function(){
       polyline: reportPolylineString,
       photo_url: photoUrl,
       road_name: road || null,
-      depth_cm: depth, reporter_name: name, reporter_phone: phone,
+      report_type: reportType,
+      depth_cm: reportType === 'flood' ? depth : null,
+      description: reportType === 'damage' ? desc : null,
+      passable_vehicles: reportType === 'damage' ? [...passableSet] : null,
+      reporter_name: name, reporter_phone: phone,
       created_by: user.id
     });
     if (error) throw error;
@@ -730,10 +823,13 @@ window.submitReport = async function(){
     
     document.getElementById('rRoad').value = '';
     document.getElementById('rDepth').value = '';
+    document.getElementById('rDesc').value = '';
     document.getElementById('rPhone').value = '';
     document.getElementById('rPhoto').value = '';
+    passableSet = new Set();
+    renderPassablePicker();
     togglePinMode(null);
-    document.getElementById('reportLatLon').innerHTML = 'เลือกจุดเริ่มต้นและสิ้นสุดของช่วงที่น้ำท่วม';
+    document.getElementById('reportLatLon').innerHTML = 'เลือกจุดเริ่มต้นและสิ้นสุดของช่วงที่มีปัญหา';
     
     loadFloodReports();
   } catch(e) {
