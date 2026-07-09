@@ -52,6 +52,7 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
   <nav class="navtab">
     <a href="index.html">🌤️ หน้าแรก</a>
     <a href="route.html">🚗 เส้นทาง</a>
+    <a href="resources.html">🚜 ทรัพยากร</a>
   </nav>
   <div id="authBox"></div>
 </header>
@@ -121,6 +122,7 @@ async function loadAllProfiles(){
       <div class="btns">
         <button class="btn-approve" onclick="setStatus('${p.id}','approved')">✓ อนุมัติ</button>
         <button class="btn-reject" onclick="setStatus('${p.id}','rejected')">✕ ปฏิเสธ</button>
+        ${p.role==='admin' ? '' : `<button class="btn-reject" onclick="deleteUser('${p.id}','${esc(p.email)}')">🗑️ ลบ</button>`}
       </div>
     </div>`).join('') : '<div class="empty">ไม่มีคำขอรออนุมัติ</div>';
 
@@ -132,7 +134,8 @@ async function loadAllProfiles(){
         <div class="when">อนุมัติเมื่อ ${fmtWhen(p.approved_at)}</div>
       </div>
       <div class="btns">
-        ${p.role==='admin' ? '' : `<button class="btn-revoke" onclick="setStatus('${p.id}','rejected')">เพิกถอนสิทธิ์</button>`}
+        ${p.role==='admin' ? '' : `<button class="btn-revoke" onclick="setStatus('${p.id}','rejected')">เพิกถอนสิทธิ์</button>
+        <button class="btn-reject" onclick="deleteUser('${p.id}','${esc(p.email)}')">🗑️ ลบ</button>`}
       </div>
     </div>`).join('') : '<div class="empty">ยังไม่มีผู้ใช้ที่อนุมัติแล้ว</div>';
 
@@ -144,6 +147,7 @@ async function loadAllProfiles(){
       </div>
       <div class="btns">
         <button class="btn-approve" onclick="setStatus('${p.id}','approved')">✓ อนุมัติแทน</button>
+        <button class="btn-reject" onclick="deleteUser('${p.id}','${esc(p.email)}')">🗑️ ลบ</button>
       </div>
     </div>`).join('') : '<div class="empty">ไม่มี</div>';
 }
@@ -157,6 +161,13 @@ async function setStatus(id, status){
   }
   const { error } = await sb.from('profiles').update(patch).eq('id', id);
   if (error) { alert('ไม่สำเร็จ: ' + error.message); return; }
+  loadAllProfiles();
+}
+
+async function deleteUser(id, email){
+  if (!confirm(`ยืนยันลบผู้ใช้ ${email} ออกจากระบบ?\n\nหมายเหตุ: ถ้าผู้ใช้นี้ sign-in ด้วย Google อีกครั้ง จะกลับมาเป็นสถานะ "รออนุมัติ" (ไม่สามารถบันทึกข้อมูลได้จนกว่าจะอนุมัติใหม่)`)) return;
+  const { error } = await sb.from('profiles').delete().eq('id', id);
+  if (error) { alert('ลบไม่สำเร็จ: ' + error.message); return; }
   loadAllProfiles();
 }
 
