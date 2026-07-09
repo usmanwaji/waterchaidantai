@@ -147,9 +147,9 @@ footer a{color:var(--orange-warm);text-decoration:none}
 
   <div id="pageGate">
     <div class="gbox">
-      <h2>🔒 หน้าทรัพยากรสำหรับสมาชิกเท่านั้น</h2>
-      <p>ข้อมูลจักรกลสาธารณภัยและผู้ประสานงานจะแสดงเฉพาะผู้ที่เข้าสู่ระบบสำเร็จแล้ว เพื่อความปลอดภัยของข้อมูลติดต่อเจ้าหน้าที่</p>
-      <button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button>
+      <h2 id="gateTitle">🔒 หน้าทรัพยากรสำหรับสมาชิกที่ได้รับอนุมัติเท่านั้น</h2>
+      <p id="gateMsg">ข้อมูลจักรกลสาธารณภัยและผู้ประสานงานจะแสดงเฉพาะสมาชิกที่ได้รับอนุมัติจากผู้ดูแลระบบแล้ว เพื่อความปลอดภัยของข้อมูลติดต่อเจ้าหน้าที่</p>
+      <div id="gateAction"><button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button></div>
     </div>
   </div>
 </div>
@@ -526,19 +526,47 @@ function unlockPage(){
   if (!loadTimer) loadTimer = setInterval(loadMachines, 5 * 60 * 1000);
   setTimeout(()=>map.invalidateSize(), 100);
 }
-function lockPage(){
-  document.getElementById('pageGate').style.display = 'flex';
+function lockPage(title, msg, actionHTML){
+  const gate = document.getElementById('pageGate');
+  gate.style.display = 'flex';
+  if (title) document.getElementById('gateTitle').textContent = title;
+  if (msg) document.getElementById('gateMsg').textContent = msg;
+  if (actionHTML !== undefined) document.getElementById('gateAction').innerHTML = actionHTML;
   if (loadTimer) { clearInterval(loadTimer); loadTimer = null; }
   allMachines = [];
   renderAll();
 }
 
 watchAuthState({
-  onSignedOut: () => { renderAuthHeader('signedout'); renderReportSection('signedout'); lockPage(); },
-  onPending:   (p) => { renderAuthHeader('pending', p); renderReportSection('pending', p); unlockPage(); },
-  onRejected:  (p) => { renderAuthHeader('rejected', p); renderReportSection('rejected', p); unlockPage(); },
-  onApproved:  (p) => { renderAuthHeader('approved', p); renderReportSection('approved', p); unlockPage(); },
-  onAdmin:     (p) => { renderAuthHeader('approved', p); renderReportSection('approved', p); unlockPage(); }
+  onSignedOut: () => {
+    renderAuthHeader('signedout');
+    renderReportSection('signedout');
+    lockPage(
+      '🔒 หน้าทรัพยากรสำหรับสมาชิกที่ได้รับอนุมัติเท่านั้น',
+      'ข้อมูลจักรกลสาธารณภัยและผู้ประสานงานจะแสดงเฉพาะสมาชิกที่ได้รับอนุมัติจากผู้ดูแลระบบแล้ว เพื่อความปลอดภัยของข้อมูลติดต่อเจ้าหน้าที่',
+      '<button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button>'
+    );
+  },
+  onPending: (p) => {
+    renderAuthHeader('pending', p);
+    renderReportSection('pending', p);
+    lockPage(
+      '⏳ บัญชีของคุณกำลังรออนุมัติ',
+      'ผู้ดูแลระบบจะตรวจสอบและอนุมัติบัญชีของคุณ กรุณารอสักครู่ หรือติดต่อผู้ดูแลระบบเพื่อเร่งการอนุมัติ',
+      '<button onclick="signOut()" style="background:#94a3b8">ออกจากระบบ</button>'
+    );
+  },
+  onRejected: (p) => {
+    renderAuthHeader('rejected', p);
+    renderReportSection('rejected', p);
+    lockPage(
+      '🚫 บัญชีของคุณไม่ได้รับอนุมัติ',
+      'บัญชีของคุณถูกปฏิเสธการเข้าถึงหน้าทรัพยากร หากเชื่อว่าเป็นข้อผิดพลาด กรุณาติดต่อผู้ดูแลระบบ',
+      '<button onclick="signOut()" style="background:#94a3b8">ออกจากระบบ</button>'
+    );
+  },
+  onApproved: (p) => { renderAuthHeader('approved', p); renderReportSection('approved', p); unlockPage(); },
+  onAdmin:    (p) => { renderAuthHeader('approved', p); renderReportSection('approved', p); unlockPage(); }
 });
 </script>
 </body>
