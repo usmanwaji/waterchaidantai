@@ -283,6 +283,8 @@ function statusCell(r){
 function initMap(){
   map = L.map('map',{scrollWheelZoom:true}).setView([6.42,101.82],10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+map.createPane('hydro'); map.getPane('hydro').style.zIndex = 250;
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Hydro_Reference_Overlay/MapServer/tile/{z}/{y}/{x}', {pane:'hydro', opacity:1, maxZoom:19, attribution:'Hydro: Esri'}).addTo(map);
 }
 
 function current(){

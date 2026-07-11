@@ -234,6 +234,8 @@ const baseSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/service
   maxZoom:18, attribution:'© Esri | สสน./สทนช./ชป./HII'
 });
 L.control.layers({'แผนที่ถนน / Road':baseOSM,'ดาวเทียม / Satellite':baseSat}, null, {position:'topright'}).addTo(map);
+map.createPane('hydro'); map.getPane('hydro').style.zIndex = 250;
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Hydro_Reference_Overlay/MapServer/tile/{z}/{y}/{x}', {pane:'hydro', opacity:1, maxZoom:19, attribution:'Hydro: Esri'}).addTo(map);
 
 // ค่า default: แสดงเฉพาะชั้น "ระดับน้ำ" เท่านั้น ส่วนชั้นอื่น (ฝน/เขื่อน/น้ำทะเล/CCTV/โทรมาตร/จุดเสี่ยง) ผู้ใช้กดติ๊กเปิดเองทีหลัง
 const gWL=L.layerGroup().addTo(map), gRain=L.layerGroup(),
