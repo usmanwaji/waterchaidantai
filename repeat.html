@@ -127,12 +127,12 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
 
   <!-- GISTDA province chips -->
   <div id="gistda-chips">
-    <button class="chip on" data-prov="all">ทั้งหมด</button>
+    <button class="chip" data-prov="all">ทั้งหมด</button>
     <button class="chip" data-prov="91">สตูล</button>
     <button class="chip" data-prov="90">สงขลา</button>
     <button class="chip" data-prov="94">ปัตตานี</button>
     <button class="chip" data-prov="95">ยะลา</button>
-    <button class="chip" data-prov="96">นราธิวาส</button>
+    <button class="chip on" data-prov="96">นราธิวาส</button>
   </div>
 
   <!-- ปภ province/district selectors (hidden by default) -->
@@ -262,7 +262,7 @@ const DDPM_PROVS = [
 
 async function initDdpmMap() {
   if (!ddpmMap) {
-    ddpmMap = L.map('ddpm-map', {zoomControl:false}).setView([6.85,100.85], 8);
+    ddpmMap = L.map('ddpm-map', {zoomControl:false}).setView([6.20,101.75], 10);
     L.control.zoom({position:'topright'}).addTo(ddpmMap);
     L.control.scale({imperial:false, position:'bottomright'}).addTo(ddpmMap);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap | ปภ.'}).addTo(ddpmMap);
@@ -403,7 +403,7 @@ const PROVINCES = [
   {code:'95', name:'ยะลา',     view:[[6.30,101.25],10]},
   {code:'96', name:'นราธิวาส', view:[[6.20,101.75],10]}
 ];
-const map = L.map('map', {zoomControl:false}).setView([6.85,100.85], 8);
+const map = L.map('map', {zoomControl:false}).setView([6.20,101.75], 10);
 L.control.zoom({position:'topright'}).addTo(map);
 L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap | GISTDA'}).addTo(map);

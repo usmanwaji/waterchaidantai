@@ -223,7 +223,7 @@ async function fetchJSON(url, timeout=25000){
 }
 
 /* ================= แผนที่ ================= */
-const map = L.map('map', {zoomControl:false}).setView([6.85, 100.85], 8);
+const map = L.map('map', {zoomControl:false}).setView([6.20, 101.75], 10);
 L.control.zoom({position:'topright'}).addTo(map);
 L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 map.createPane('bnd'); map.getPane('bnd').style.zIndex = 350;   // ขอบจังหวัดอยู่ใต้ marker
@@ -340,7 +340,7 @@ function buildLegend(){
 /* ---------- สถานะรวม ---------- */
 let wlStations = [], rainSpots = [], damList = [], riskAreas = [];
 let markersById = {};
-let filterProv = 'all';
+let filterProv = 'นราธิวาส';
 let filterClass = null;
 let lastGraphReq = 0;
 /* ================= โหลดข้อมูลทั้งหมด ================= */

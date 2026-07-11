@@ -130,12 +130,12 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
   <button class="hbtn" data-h="24">+24 ชม.</button>
   <button class="hbtn" data-h="72">+72 ชม.</button>
   <span style="width:1px;height:22px;background:#e2e8f0;margin:0 2px"></span>
-  <button class="pbtn on" data-prov="all">ทั้งหมด</button>
+  <button class="pbtn" data-prov="all">ทั้งหมด</button>
   <button class="pbtn" data-prov="สตูล">สตูล</button>
   <button class="pbtn" data-prov="สงขลา">สงขลา</button>
   <button class="pbtn" data-prov="ปัตตานี">ปัตตานี</button>
   <button class="pbtn" data-prov="ยะลา">ยะลา</button>
-  <button class="pbtn" data-prov="นราธิวาส">นราธิวาส</button>
+  <button class="pbtn on" data-prov="นราธิวาส">นราธิวาส</button>
   <span id="conf"></span>
 </div>
 
@@ -198,7 +198,7 @@ const CLS = {
 };
 
 /* ---------- แผนที่ ---------- */
-const map = L.map('map', {zoomControl:false}).setView([6.85, 100.85], 8);
+const map = L.map('map', {zoomControl:false}).setView([6.20, 101.75], 10);
 L.control.zoom({position:'topright'}).addTo(map);
 L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 map.createPane('bnd'); map.getPane('bnd').style.zIndex = 350;
@@ -240,7 +240,7 @@ let wrfImgs = [];       // [{date,url}]
 let ffpiRows = [];      // ตำบลเสี่ยงฉับพลัน
 let damBanglang = null; // {pct, storage}
 let horizon = 6;
-let provFilter = 'all';
+let provFilter = 'นราธิวาส';
 const PROV_VIEWS = {
   'all':[[6.85,100.85],8], 'สตูล':[[6.75,100.05],10], 'สงขลา':[[7.10,100.60],9],
   'ปัตตานี':[[6.70,101.30],10], 'ยะลา':[[6.30,101.25],10], 'นราธิวาส':[[6.20,101.75],10]

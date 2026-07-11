@@ -91,12 +91,12 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
   <button class="chip" data-p="7days">7 วัน</button>
   <button class="chip" data-p="30days">30 วัน</button>
   <span class="sep"></span>
-  <button class="chip prov on" data-prov="all">ทั้งหมด</button>
+  <button class="chip prov" data-prov="all">ทั้งหมด</button>
   <button class="chip prov" data-prov="91">สตูล</button>
   <button class="chip prov" data-prov="90">สงขลา</button>
   <button class="chip prov" data-prov="94">ปัตตานี</button>
   <button class="chip prov" data-prov="95">ยะลา</button>
-  <button class="chip prov" data-prov="96">นราธิวาส</button>
+  <button class="chip prov on" data-prov="96">นราธิวาส</button>
   <span class="sep"></span>
   <button class="chip" id="cmpToggle" title="เปรียบเทียบสองช่วงเวลา">🔀 เทียบช่วง</button>
   <span id="cmpBar" style="display:none">
@@ -137,7 +137,7 @@ const PROVINCES = [
 ];
 let period = '1day', tms = null;
 
-const map = L.map('map', {zoomControl:false}).setView([6.85,100.85], 8);
+const map = L.map('map', {zoomControl:false}).setView([6.20,101.75], 10);
 L.control.zoom({position:'topright'}).addTo(map);
 L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap | GISTDA'}).addTo(map);
