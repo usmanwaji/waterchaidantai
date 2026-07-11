@@ -1,11 +1,11 @@
 /* sw.js — Service Worker สำหรับ One Map ชายแดนใต้ (PWA + offline)
  * กลยุทธ์:
- *   • App shell (หน้า/สคริปต์/CSS ในโดเมนเดียวกัน) → cache-first
+ *   • App shell (หน้า/สคริปต์/CSS ในโดเมนเดียวกัน) → stale-while-revalidate
  *   • การนำทาง (navigation) → network-first, ล้มเหลวใช้แคช, สุดท้าย index.html
  *   • ข้อมูล API (GET) → network-first แล้วเก็บชุดล่าสุดไว้ ใช้ตอนออฟไลน์ ("last good data")
  * เพิ่มเลขเวอร์ชันเมื่อแก้ไฟล์เพื่อบังคับอัปเดตแคช
  */
-const VERSION = 'oms-v1';
+const VERSION = 'oms-v3';
 const SHELL = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 
@@ -74,16 +74,14 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // ทรัพยากรในโดเมนเดียวกัน → cache-first
+  // ทรัพยากรในโดเมนเดียวกัน (html/js/css) → stale-while-revalidate
+  // คืนแคชทันทีเพื่อความเร็ว แต่ดึงเวอร์ชันใหม่มาอัปเดตแคชเบื้องหลังเสมอ → รอบหน้าจะได้ของใหม่
   if (url.origin === self.location.origin) {
     event.respondWith((async () => {
+      const cache = await caches.open(RUNTIME);
       const cached = await caches.match(req);
-      if (cached) return cached;
-      try {
-        const net = await fetch(req);
-        if (net && net.ok) { const c = await caches.open(RUNTIME); c.put(req, net.clone()); }
-        return net;
-      } catch (e) { return cached || Response.error(); }
+      const netFetch = fetch(req).then(net => { if (net && net.ok) cache.put(req, net.clone()); return net; }).catch(() => null);
+      return cached || (await netFetch) || Response.error();
     })());
   }
 });

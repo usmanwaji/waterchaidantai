@@ -203,8 +203,8 @@ L.control.zoom({position:'topright'}).addTo(map);
 L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 map.createPane('bnd'); map.getPane('bnd').style.zIndex = 350;
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18, attribution:'© OpenStreetMap | สสน./HII'}).addTo(map);
-map.createPane('hydro'); map.getPane('hydro').style.zIndex = 250; map.getPane('hydro').style.filter = 'saturate(2.8) contrast(1.5) brightness(0.9)';
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Hydro_Reference_Overlay/MapServer/tile/{z}/{y}/{x}', {pane:'hydro', opacity:1, maxZoom:19, attribution:'Hydro: Esri'}).addTo(map);
+map.createPane('hydro'); map.getPane('hydro').style.zIndex = 250; map.getPane('hydro').style.filter = 'saturate(3.4) contrast(2) brightness(0.8)';
+for (let _h = 0; _h < 3; _h++) L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Hydro_Reference_Overlay/MapServer/tile/{z}/{y}/{x}', {pane:'hydro', opacity:1, maxZoom:19, attribution:'Hydro: Esri'}).addTo(map);
 const gMk = L.layerGroup().addTo(map), gBnd = L.layerGroup().addTo(map);
 
 const legend = L.control({position:'bottomleft'});
