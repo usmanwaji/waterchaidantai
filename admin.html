@@ -2,7 +2,8 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#423d38">
 <title>ผู้ดูแลระบบ | One Map ชายแดนใต้</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
@@ -43,16 +44,38 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
 .btn-revoke{background:var(--muted)}.btn-revoke:hover{background:#5c564f}
 .empty{color:var(--muted);font-size:12.5px;padding:6px 0}
 .pill{padding:1px 9px;border-radius:99px;font-size:10.5px;font-weight:600;color:#fff}
+
+/* ===== Mobile & touch enhancements ===== */
+a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
+.navtab{scrollbar-width:none}
+.navtab::-webkit-scrollbar{display:none}
+.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
+@media(pointer:coarse){.navtab a{padding:9px 13px;font-size:13px}}
+@media(max-width:768px){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}}
+@media(max-width:640px){
+  header{padding:8px 10px;gap:8px}
+  header h1{font-size:15px}
+  .navtab{order:5;flex-basis:100%}
+  #authBox{margin-left:0;width:100%;justify-content:flex-end}
+  #content{padding:14px 10px 32px}
+  .urow{flex-direction:column;align-items:flex-start}
+  .urow .btns{width:100%;justify-content:flex-end}
+  .urow button{padding:9px 14px;min-height:40px}
+  .gatebox{margin:32px auto;padding:22px 16px}
+}
 </style>
 </head>
 <body>
 
 <header>
   <h1>🛠️ ผู้ดูแลระบบ<small>อนุมัติผู้ใช้งาน — One Map ชายแดนใต้</small></h1>
-  <nav class="navtab">
+  <nav class="navtab" aria-label="เมนูหลัก">
     <a href="index.html">🌤️ หน้าแรก</a>
     <a href="route.html">🚗 เส้นทาง</a>
     <a href="resources.html">🚜 ทรัพยากร</a>
+    <a href="eoc.html">🎛️ EOC</a>
+    <a href="people.html">🧓 กลุ่มเปราะบาง</a>
   </nav>
   <div id="authBox"></div>
 </header>
@@ -76,6 +99,17 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
       <div id="listRejected"></div>
     </div>
 
+    <div class="card">
+      <h2>💓 สุขภาพแหล่งข้อมูล (Data Health) <button onclick="checkHealth()" style="margin-left:auto;border:1px solid var(--outline-strong);background:#fff;border-radius:7px;padding:4px 10px;font-family:inherit;font-size:12px;cursor:pointer">↻ ตรวจใหม่</button></h2>
+      <div id="healthList"><div class="empty">กำลังตรวจสอบ…</div></div>
+      <div class="when" id="healthUpd" style="margin-top:4px"></div>
+    </div>
+
+    <div class="card">
+      <h2>🧾 บันทึกการดำเนินการ (Audit Log) <span class="cnt" id="cntAudit">0</span></h2>
+      <div id="auditList"></div>
+    </div>
+
   </div>
 </div>
 
@@ -84,6 +118,58 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
 'use strict';
 const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmtWhen = t => t ? new Date(t).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}) : '—';
+
+const PROVS = ['นราธิวาส','ปัตตานี','ยะลา','สงขลา','สตูล'];
+function scopeSelect(p){
+  if(p.role==='admin' && !p.province_scope){ /* super-admin: ทุกจังหวัด ปรับได้เช่นกัน */ }
+  const opts = `<option value="">ทุกจังหวัด</option>` + PROVS.map(v=>`<option value="${v}" ${p.province_scope===v?'selected':''}>${v}</option>`).join('');
+  return `<div class="when">ขอบเขตจังหวัด: <select onchange="setScope('${p.id}',this.value)" style="font-family:inherit;font-size:11px;padding:2px 5px;border:1px solid var(--outline-strong);border-radius:6px">${opts}</select></div>`;
+}
+async function setScope(id, scope){
+  const { error } = await sb.from('profiles').update({ province_scope: scope||null }).eq('id', id);
+  if(error){ alert('ตั้งขอบเขตไม่สำเร็จ: '+error.message); return; }
+  logAudit('set_scope', id, { province_scope: scope||null });
+}
+async function logAudit(action, target, detail){
+  try{ const me = await getUser(); await sb.from('audit_log').insert({ actor: me?.id, actor_email: me?.email, action, target, detail: detail||null }); }catch(e){}
+  if(document.getElementById('auditList')) loadAudit();
+}
+
+/* ---------- Data Health: ตรวจแหล่งข้อมูลต้นทาง ---------- */
+const HEALTH_SRC = [
+  {n:'สสน. ระดับน้ำ (thaiwater)', u:'https://api-v3.thaiwater.net/api/v1/thaiwater30/public/waterlevel?province_code=96'},
+  {n:'สสน. ฝนสะสม 3 วัน',        u:'https://api-v3.thaiwater.net/api/v1/thaiwater30/provinces/rain3d'},
+  {n:'Open-Meteo พยากรณ์',       u:'https://api.open-meteo.com/v1/forecast?latitude=6.4&longitude=101.8&hourly=precipitation&forecast_days=1&timezone=Asia%2FBangkok'},
+  {n:'ปภ. CCTV (ArcGIS)',        u:'https://gis-portal.disaster.go.th/arcgis/rest/services/Map_DDPM_CCTV/DDPM_CCTV_STATION_PROD/FeatureServer/0/query?where=code%3D%27NWT02%27&outFields=code&returnGeometry=false&f=json'},
+  {n:'โทรมาตร ชป. (telerid)',     u:'https://telerid.rid.go.th/restapi/main/station_list/'},
+  {n:'Supabase (ฐานข้อมูลระบบ)',  sb:true}
+];
+async function pingOne(s){
+  const t0 = performance.now();
+  try{
+    if(s.sb){ const { error } = await sb.from('profiles').select('id',{count:'exact',head:true}); if(error) throw error; }
+    else{ const ctl = new AbortController(); const to = setTimeout(()=>ctl.abort(),8000);
+      const r = await fetch(s.u,{signal:ctl.signal}); clearTimeout(to); if(!r.ok) throw new Error('HTTP '+r.status); await r.text(); }
+    return { ok:true, ms:Math.round(performance.now()-t0) };
+  }catch(e){ return { ok:false, ms:Math.round(performance.now()-t0), err:e.message||String(e) }; }
+}
+async function checkHealth(){
+  const el = document.getElementById('healthList'); if(!el) return;
+  el.innerHTML = '<div class="empty">กำลังตรวจสอบ…</div>';
+  const rows = await Promise.all(HEALTH_SRC.map(pingOne));
+  el.innerHTML = HEALTH_SRC.map((s,i)=>{ const r=rows[i];
+    return `<div class="urow"><div><div class="nm">${r.ok?'🟢':'🔴'} ${esc(s.n)}</div><div class="em">${r.ok?('ตอบสนอง '+r.ms+' มิลลิวินาที'):('ล้มเหลว: '+esc(r.err||'ไม่ทราบสาเหตุ'))}</div></div></div>`;
+  }).join('');
+  document.getElementById('healthUpd').textContent = 'ตรวจล่าสุด ' + new Date().toLocaleTimeString('th-TH');
+}
+async function loadAudit(){
+  const el = document.getElementById('auditList'); if(!el) return;
+  const { data, error } = await sb.from('audit_log').select('*').order('ts',{ascending:false}).limit(50);
+  if(error){ el.innerHTML = '<div class="empty">โหลดบันทึกไม่ได้ (โปรดรัน schema-v7.sql เพื่อสร้างตาราง audit_log)</div>'; return; }
+  const A = {approve_user:'✅ อนุมัติผู้ใช้', reject_user:'⛔ เพิกถอน/ปฏิเสธ', delete_user:'🗑️ ลบผู้ใช้', set_scope:'🗺️ ตั้งขอบเขตจังหวัด'};
+  document.getElementById('cntAudit').textContent = (data||[]).length;
+  el.innerHTML = (data||[]).map(x=>`<div class="urow"><div><div class="nm">${esc(A[x.action]||x.action)}</div><div class="em">${esc(x.actor_email||'')} → ${esc(x.target||'')}${x.detail?(' · '+esc(JSON.stringify(x.detail))):''}</div><div class="when">${fmtWhen(x.ts)}</div></div></div>`).join('') || '<div class="empty">ยังไม่มีบันทึก</div>';
+}
 
 function renderAuthHeader(state, profile){
   const el = document.getElementById('authBox');
@@ -100,7 +186,7 @@ function showGateMessage(html){
 async function loadAllProfiles(){
   const { data, error } = await sb
     .from('profiles')
-    .select('id, email, full_name, phone, role, status, created_at, approved_at')
+    .select('id, email, full_name, phone, role, status, created_at, approved_at, province_scope')
     .order('created_at', { ascending:false });
   if (error) { console.error(error); return; }
 
@@ -132,6 +218,7 @@ async function loadAllProfiles(){
         <div class="nm">${esc(p.full_name||'(ไม่ระบุชื่อ)')} ${p.role==='admin'?'<span class=\"pill\" style=\"background:#57504a\">แอดมิน</span>':''}</div>
         <div class="em">${esc(p.email)}</div>
         <div class="when">อนุมัติเมื่อ ${fmtWhen(p.approved_at)}</div>
+        ${scopeSelect(p)}
       </div>
       <div class="btns">
         ${p.role==='admin' ? '' : `<button class="btn-revoke" onclick="setStatus('${p.id}','rejected')">เพิกถอนสิทธิ์</button>
@@ -161,6 +248,7 @@ async function setStatus(id, status){
   }
   const { error } = await sb.from('profiles').update(patch).eq('id', id);
   if (error) { alert('ไม่สำเร็จ: ' + error.message); return; }
+  logAudit(status==='approved'?'approve_user':'reject_user', id, {status});
   loadAllProfiles();
 }
 
@@ -168,6 +256,7 @@ async function deleteUser(id, email){
   if (!confirm(`ยืนยันลบผู้ใช้ ${email} ออกจากระบบ?\n\nหมายเหตุ: ถ้าผู้ใช้นี้ sign-in ด้วย Google อีกครั้ง จะกลับมาเป็นสถานะ "รออนุมัติ" (ไม่สามารถบันทึกข้อมูลได้จนกว่าจะอนุมัติใหม่)`)) return;
   const { error } = await sb.from('profiles').delete().eq('id', id);
   if (error) { alert('ลบไม่สำเร็จ: ' + error.message); return; }
+  logAudit('delete_user', email);
   loadAllProfiles();
 }
 
@@ -195,9 +284,10 @@ watchAuthState({
     renderAuthHeader('admin', p);
     document.getElementById('gate').style.display = 'none';
     document.getElementById('panels').style.display = 'block';
-    loadAllProfiles();
+    loadAllProfiles(); checkHealth(); loadAudit();
   }
 });
 </script>
+<script src="js/pwa.js" defer></script>
 </body>
 </html>

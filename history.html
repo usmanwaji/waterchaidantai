@@ -2,7 +2,8 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#423d38">
 <title>น้ำท่วมย้อนหลัง (ดาวเทียม GISTDA) | One Map ชายแดนใต้</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -56,13 +57,22 @@ header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-
 #side{border-left:1px solid var(--outline)}
 .card,.provcard{border-color:var(--outline)}
 footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
+
+/* ===== Mobile & touch enhancements ===== */
+a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
+.navtab{scrollbar-width:none}
+.navtab::-webkit-scrollbar{display:none}
+.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
+@media(pointer:coarse){.navtab a{padding:9px 13px;font-size:13px}}
+@media(max-width:768px){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}}
 </style>
 </head>
 <body>
 
 <header>
   <h1>🛰️ น้ำท่วมย้อนหลังจากดาวเทียม<small>ข้อมูล SAR — GISTDA Disaster Platform</small></h1>
-  <nav class="navtab">
+  <nav class="navtab" aria-label="เมนูหลัก">
     <a href="index.html">🌤️ หน้าแรก</a>
     <a href="map.html">🗺️ สถานการณ์</a>
     <a href="forecast.html">🔮 คาดการณ์</a>
@@ -87,13 +97,20 @@ footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
   <button class="chip prov" data-prov="94">ปัตตานี</button>
   <button class="chip prov" data-prov="95">ยะลา</button>
   <button class="chip prov" data-prov="96">นราธิวาส</button>
+  <span class="sep"></span>
+  <button class="chip" id="cmpToggle" title="เปรียบเทียบสองช่วงเวลา">🔀 เทียบช่วง</button>
+  <span id="cmpBar" style="display:none">
+    <button class="chip cmpb" data-pb="1day">B: 1 วัน</button>
+    <button class="chip cmpb on" data-pb="7days">B: 7 วัน</button>
+    <button class="chip cmpb" data-pb="30days">B: 30 วัน</button>
+  </span>
 </div>
 
 <div id="wrap">
   <div id="map"></div>
   <aside id="side">
     <div class="disc">🛰️ พื้นที่สีบนแผนที่ = จุดที่ดาวเทียมเรดาร์ (SAR) ตรวจพบน้ำท่วมขังจริงในช่วงเวลาที่เลือก — ข้อมูลอัปเดตหลังดาวเทียมผ่าน 1–3 วัน <b>คลิกบนแผนที่</b>เพื่อดูรายละเอียดตำบลที่ท่วม</div>
-    <div class="card"><h3>📊 จำนวนแปลงพื้นที่ท่วมที่ตรวจพบ</h3><div id="stats"><span class="spin"></span> กำลังนับ…</div></div>
+    <div class="card"><h3>📊 จำนวนแปลงพื้นที่ท่วมที่ตรวจพบ <button id="btnCsv" style="margin-left:auto;border:1px solid #d1d5dc;background:#fff;border-radius:7px;padding:3px 9px;font-family:inherit;font-size:11.5px;cursor:pointer">⬇️ CSV รายอำเภอ</button></h3><div id="stats"><span class="spin"></span> กำลังนับ…</div></div>
     <div class="card"><h3>ℹ️ วิธีอ่านข้อมูล</h3><div style="font-size:12px;color:#475569;line-height:1.65">
       • เลือกช่วงเวลา 1/3/7/30 วันจากแถบด้านบน<br>
       • กดชื่อจังหวัดเพื่อซูมไปยังพื้นที่<br>
@@ -131,22 +148,58 @@ function setLayer(){
   tms.addTo(map);
   loadStats();
 }
+let periodB = '7days', compareMode = false;
+async function countProv(per, code){
+  try{ const j = await fetch(`${B}/features/flood/${per}?api_key=${KEY}&pv_code=${code}&limit=1`).then(r=>r.json());
+    return j?.numberMatched ?? j?.total ?? (j?.features?.length||0);
+  }catch(e){ return null; }
+}
 async function loadStats(){
   const el = document.getElementById('stats');
   el.innerHTML = '<span class="spin"></span> กำลังนับ…';
-  const parts = await Promise.all(PROVINCES.map(async p=>{
-    try{
-      const j = await fetch(`${B}/features/flood/${period}?api_key=${KEY}&pv_code=${p.code}&limit=1`).then(r=>r.json());
-      const n = j?.numberMatched ?? j?.total ?? (j?.features?.length||0);
-      return {p, n};
-    }catch(e){ return {p, n:null}; }
-  }));
+  const parts = await Promise.all(PROVINCES.map(async p=>({ p, n: await countProv(period, p.code) })));
   const anyFlood = parts.some(x=>x.n>0);
-  el.innerHTML = parts.map(({p,n})=>{
+  let html = parts.map(({p,n})=>{
     const c = n==null?'#9ca3af': n>0?'#dc2626':'#22c55e';
     const t = n==null?'โหลดไม่ได้': n>0? n.toLocaleString('th-TH')+' แปลง':'ไม่พบ';
     return `<div class="provcard" onclick="goProv('${p.code}')"><span>${p.name}</span><span class="badge" style="background:${c}">${t}</span></div>`;
   }).join('') + (anyFlood?'' :`<div style="font-size:12px;color:#16a34a;margin-top:4px">✅ ช่วง ${labelOf(period)}ที่ผ่านมา ดาวเทียมไม่พบน้ำท่วมขังใน 5 จังหวัด</div>`);
+  if(compareMode){
+    const partsB = await Promise.all(PROVINCES.map(async p=>({ p, n: await countProv(periodB, p.code) })));
+    const row = (p, a, b)=>{
+      const d = (a!=null&&b!=null)? (a-b) : null;
+      const dTxt = d==null?'—': (d>0?`▲ +${d}`: d<0?`▼ ${d}`:'0');
+      const dc = d>0?'#dc2626': d<0?'#16a34a':'#64748b';
+      return `<tr><td>${p.name}</td><td style="text-align:right">${a==null?'—':a.toLocaleString('th-TH')}</td><td style="text-align:right">${b==null?'—':b.toLocaleString('th-TH')}</td><td style="text-align:right;color:${dc}">${dTxt}</td></tr>`;
+    };
+    html += `<div style="margin-top:10px;border-top:1px dashed #e3e0dd;padding-top:8px">
+      <div style="font-size:12px;font-weight:700;color:#423d38;margin-bottom:4px">🔀 เทียบ: A=${labelOf(period)} vs B=${labelOf(periodB)}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:11.5px">
+        <thead><tr style="color:#64748b"><th style="text-align:left">จังหวัด</th><th style="text-align:right">A</th><th style="text-align:right">B</th><th style="text-align:right">A−B</th></tr></thead>
+        <tbody>${PROVINCES.map((p,i)=>row(p, parts[i].n, partsB[i].n)).join('')}</tbody>
+      </table></div>`;
+  }
+  el.innerHTML = html;
+}
+async function exportCsv(){
+  const btn = document.getElementById('btnCsv'); const o = btn.textContent; btn.textContent = '⏳ กำลังสร้าง…';
+  const rows = [['จังหวัด','อำเภอ','จำนวนแปลงท่วม(ที่ดึงมา)','เนื้อที่รวม(ไร่)','ช่วงเวลา']];
+  for(const p of PROVINCES){
+    try{
+      const j = await fetch(`${B}/features/flood/${period}?api_key=${KEY}&pv_code=${p.code}&limit=2000`).then(r=>r.json());
+      const feats = j?.features || [];
+      const byAmp = {};
+      feats.forEach(f=>{ const pr=f.properties||{}; const a=pr.ap_tn||'(ไม่ระบุอำเภอ)'; if(!byAmp[a])byAmp[a]={n:0,area:0}; byAmp[a].n++; byAmp[a].area += (+pr.area_rai||0); });
+      const keys = Object.keys(byAmp).sort();
+      if(!keys.length) rows.push([p.name,'(ไม่พบน้ำท่วม)',0,'0.0',labelOf(period)]);
+      else keys.forEach(a=>rows.push([p.name,a,byAmp[a].n,byAmp[a].area.toFixed(1),labelOf(period)]));
+    }catch(e){ rows.push([p.name,'(โหลดไม่ได้)','','',labelOf(period)]); }
+  }
+  const csv = '\ufeff' + rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `flood_${period}_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  btn.textContent = o;
 }
 function labelOf(p){ return {'1day':'1 วัน','3days':'3 วัน','7days':'7 วัน','30days':'30 วัน'}[p]; }
 function goProv(code){
@@ -191,7 +244,18 @@ document.querySelectorAll('.chip.prov').forEach(b=>{
     else goProv(b.dataset.prov);
   };
 });
+document.getElementById('cmpToggle').onclick = ()=>{
+  compareMode = !compareMode;
+  document.getElementById('cmpToggle').classList.toggle('on', compareMode);
+  document.getElementById('cmpBar').style.display = compareMode ? '' : 'none';
+  loadStats();
+};
+document.querySelectorAll('.chip.cmpb').forEach(b=>{
+  b.onclick = ()=>{ document.querySelectorAll('.chip.cmpb').forEach(x=>x.classList.remove('on')); b.classList.add('on'); periodB = b.dataset.pb; if(compareMode) loadStats(); };
+});
+document.getElementById('btnCsv').onclick = exportCsv;
 setLayer();
 </script>
+<script src="js/pwa.js" defer></script>
 </body>
 </html>

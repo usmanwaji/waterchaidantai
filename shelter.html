@@ -2,7 +2,8 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#423d38">
 <title>ศูนย์พักพิงชั่วคราว | One Map ชายแดนใต้ — waterchaidantai</title>
 <meta name="description" content="แผนที่และรายชื่อศูนย์พักพิงชั่วคราวรองรับผู้อพยพจากอุทกภัย เลือกดูรายจังหวัด/อำเภอ พร้อมพิกัด ผู้ดูแล เบอร์ติดต่อ และความจุ — สตูล สงขลา ปัตตานี ยะลา นราธิวาส">
 <meta property="og:title" content="ศูนย์พักพิงชั่วคราว 5 จังหวัดชายแดนใต้ — waterchaidantai.com">
@@ -62,6 +63,19 @@ footer a{color:#fdba74;text-decoration:none}
 .leaflet-popup-content{font-family:'Noto Sans Thai',sans-serif;font-size:12.5px;line-height:1.5;margin:10px 12px}
 .leaflet-popup-content b{color:var(--navy-d)}
 .leaflet-popup-content .pnav{display:inline-block;margin-top:6px;background:var(--orange);color:#fff;padding:4px 10px;border-radius:7px;text-decoration:none;font-weight:700;font-size:12px}
+/* live status + occupancy */
+.spill{padding:1px 9px;border-radius:99px;font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap}
+.occwrap{display:flex;align-items:center;gap:6px;margin-top:3px}
+.occbar{flex:1;min-width:70px;max-width:160px;height:7px;background:#eef2f7;border-radius:99px;overflow:hidden}
+.occbar i{display:block;height:100%;border-radius:99px}
+.occnum{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:5px;background:var(--orange);color:#fff;border:none;font-family:inherit;font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer;text-decoration:none}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--outline-strong)}
+.btn.sm{padding:3px 9px;font-size:11.5px}
+#nearBtn{white-space:nowrap}
+#memberBar{background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:6px 10px;font-size:12px;color:#9a3412;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+a.tel2{display:inline-block;margin-top:3px;color:#fff;background:var(--navy);padding:2px 9px;border-radius:7px;text-decoration:none;font-size:11.5px;font-weight:600}
+.leaflet-popup-content .pnav.call{background:var(--navy)}
 @media(max-width:760px){ .stats{grid-template-columns:1fr 1fr} header h1 small{display:none} #map{height:360px} #content{padding:10px 8px 24px} }
 
 /* ===== Command Center theme (override) ===== */
@@ -78,13 +92,22 @@ select,input[type=search]{border:1px solid var(--outline-strong);color:var(--ink
 .stat{border:1px solid var(--outline)}
 th{background:#f7f4f1}
 footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
+
+/* ===== Mobile & touch enhancements ===== */
+a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
+.navtab{scrollbar-width:none}
+.navtab::-webkit-scrollbar{display:none}
+.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
+@media(pointer:coarse){.navtab a{padding:9px 13px;font-size:13px}}
+@media(max-width:768px){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}}
 </style>
 </head>
 <body>
 
 <header>
   <h1>🏠 ศูนย์พักพิงชั่วคราว<small>สตูล · สงขลา · ปัตตานี · ยะลา · นราธิวาส</small></h1>
-  <nav class="navtab">
+  <nav class="navtab" aria-label="เมนูหลัก">
     <a href="index.html">🌤️ หน้าแรก</a>
     <a href="map.html">🗺️ สถานการณ์</a>
     <a href="forecast.html">🔮 คาดการณ์</a>
@@ -105,21 +128,28 @@ footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
   <button class="chip on" data-prov="นราธิวาส">นราธิวาส</button>
   <select id="ampSel"><option value="">ทุกอำเภอ</option></select>
   <input type="search" id="q" placeholder="🔎 ค้นหา ชื่อสถานที่ / ตำบล / ผู้ดูแล / เบอร์โทร">
+  <button class="btn ghost" id="nearBtn">📍 ใกล้ฉัน</button>
   <span id="selCount"></span>
 </div>
 
 <div id="content">
+  <div id="memberBar" style="display:none"></div>
   <div class="stats" id="stats"></div>
 
   <div class="card" id="mapCard">
     <h2>🗺️ แผนที่ศูนย์พักพิง <span class="where" id="mapWhere"></span></h2>
     <div id="map"></div>
     <div class="mlegend">
-      <span><b>ความจุ:</b></span>
-      <span><i class="dot" style="background:#15803d"></i>ใหญ่ (≥300 คน)</span>
-      <span><i class="dot" style="background:#2563eb"></i>กลาง (100–299)</span>
-      <span><i class="dot" style="background:#f97316"></i>เล็ก (&lt;100)</span>
-      <span><i class="dot" style="background:#94a3b8"></i>ไม่ระบุจำนวน</span>
+      <span><b>สถานะสด:</b></span>
+      <span><i class="dot" style="background:#16a34a"></i>เปิดรับ</span>
+      <span><i class="dot" style="background:#f59e0b"></i>ใกล้เต็ม</span>
+      <span><i class="dot" style="background:#dc2626"></i>เต็ม</span>
+      <span><i class="dot" style="background:#64748b"></i>ปิด</span>
+      <span style="margin-left:8px"><b>ความจุ (ยังไม่มีสถานะสด):</b></span>
+      <span><i class="dot" style="background:#15803d"></i>≥300</span>
+      <span><i class="dot" style="background:#2563eb"></i>100–299</span>
+      <span><i class="dot" style="background:#f97316"></i>&lt;100</span>
+      <span><i class="dot" style="background:#94a3b8"></i>ไม่ระบุ</span>
     </div>
     <div class="note" id="mapNote"></div>
   </div>
@@ -129,8 +159,8 @@ footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
     <div class="tblwrap">
       <table id="tbl">
         <thead><tr>
-          <th>อำเภอ / ตำบล</th><th>ชื่อสถานที่</th><th>รองรับ<br>(คน)</th>
-          <th>ไฟฟ้า</th><th>ประปา</th><th>สุขา</th><th>ผู้ดูแล / เบอร์โทร</th><th>พิกัด</th>
+          <th>อำเภอ / ตำบล</th><th>ชื่อสถานที่</th><th>สถานะ / ยอดผู้พักพิง</th>
+          <th>ไฟฟ้า</th><th>ประปา</th><th>สุขา</th><th>ผู้ดูแล / เบอร์โทร</th><th>พิกัด / นำทาง</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
       </table>
@@ -162,19 +192,93 @@ footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js"></script>
 <script>
 const DATA = [{"id": 49, "amphoe": "รือเสาะ", "tambon": "รือเสาะ", "village": "", "name": "หอประชุม อบต.รือเสาะ", "cap": 100, "power": true, "water": true, "toilet": 4, "other": "", "lat": 6.365773761479586, "lon": 101.50364813449903, "gps": "ok", "care": "น.ส.มัยมูน มังสมาน", "phone": "08 2831 7840", "usable": true, "note": ""}, {"id": 69, "amphoe": "รือเสาะ", "tambon": "บาตง", "village": "บลูกาฮูลู", "name": "ศุนย์พัฒนาเด็กเล็กบ้านบลูกาฮูลู", "cap": 500, "power": true, "water": true, "toilet": 10, "other": "", "lat": 6.333994, "lon": 101.47088, "gps": "ok", "care": "นายฮาซานี หมื่นวิเศษ", "phone": "09 5420 7607", "usable": true, "note": ""}, {"id": 70, "amphoe": "รือเสาะ", "tambon": "บาตง", "village": "บลูกาฮูลู", "name": "ตาดีกาบ้านบลูกาฮูลู", "cap": 100, "power": true, "water": true, "toilet": 5, "other": "", "lat": 6.333214, "lon": 101.471152, "gps": "ok", "care": "นายซุลกุรนัย โต๊ะประวัน", "phone": "08 6287 9866", "usable": true, "note": ""}, {"id": 71, "amphoe": "รือเสาะ", "tambon": "บาตง", "village": "บลูกาฮูลู", "name": "บาลาเซาะกําบงบูเก๊ะ ม.7", "cap": 100, "power": true, "water": true, "toilet": 5, "other": "", "lat": 6.357787, "lon": 101.46663, "gps": "ok", "care": "นายอาลียะห์ ดอเล๊าะ", "phone": "08 1098 4882", "usable": true, "note": ""}, {"id": 73, "amphoe": "รือเสาะ", "tambon": "บาตง", "village": "บลูกาฮิเลตะวันตก", "name": "โรงเรียนบ้านบลูกาฮีเล ม.8", "cap": 500, "power": true, "water": true, "toilet": 10, "other": "", "lat": 6.365508, "lon": 101.466107, "gps": "ok", "care": "นายสมาน เจ๊ะแม", "phone": "09 5893 8776", "usable": true, "note": ""}, {"id": 74, "amphoe": "รือเสาะ", "tambon": "บาตง", "village": "", "name": "โรงเรียนพนาทักษิณ ต.บาตง", "cap": 100, "power": true, "water": true, "toilet": 10, "other": "", "lat": 6.336076780428941, "lon": 101.47167118963571, "gps": "ok", "care": "นางนาดีเร๊าะ ฮาแว", "phone": "080-704-8404", "usable": true, "note": ""}, {"id": 86, "amphoe": "รือเสาะ", "tambon": "เรียง", "village": "", "name": "รพ.สต.เรียง", "cap": null, "power": false, "water": false, "toilet": "", "other": "", "lat": 6.413022689352822, "lon": 101.45735119538834, "gps": "ok", "care": "นายฮาซัน เต๊ะมาลอ", "phone": "093-776-6426", "usable": true, "note": ""}, {"id": 87, "amphoe": "รือเสาะ", "tambon": "เรียง", "village": "", "name": "มัสยิดบ้านสอแนะ ม.1 ต.เรียง", "cap": null, "power": false, "water": false, "toilet": "", "other": "", "lat": 6.419879883570024, "lon": 101.46057461628601, "gps": "ok", "care": "นายอาลียะ มามะ", "phone": "089-974-3062", "usable": true, "note": ""}, {"id": 88, "amphoe": "รือเสาะ", "tambon": "เรียง", "village": "", "name": "มัสยิดบ้านกำปงบารู ต.เรียง", "cap": null, "power": false, "water": false, "toilet": "", "other": "", "lat": 6.8258768705319115, "lon": 101.19926625917589, "gps": "ok", "care": "น.ส.รุสนีดา วามิง", "phone": "095-709-5973", "usable": true, "note": ""}, {"id": 89, "amphoe": "รือเสาะ", "tambon": "สุวารี", "village": "", "name": "มัสยิดอัรเราะห์มานียะห์", "cap": null, "power": false, "water": false, "toilet": "", "other": "", "lat": 6.457620996704703, "lon": 101.57177072791153, "gps": "ok", "care": "นายมาหะมะนูรดีน  มะลี", "phone": "080-1128971", "usable": true, "note": ""}, {"id": 90, "amphoe": "เมือง", "tambon": "โคกเคียน", "village": "บ้านบือราเป๊ะ", "name": "ศูนย์พักพิงร่วมใจอุ่นไอรัก", "cap": 400, "power": true, "water": true, "toilet": 20, "other": "", "lat": 6.4701, "lon": 101.7718, "gps": "ok", "care": "นายปิยพงษ์  แทนปั้น", "phone": "080-7098161", "usable": true, "note": ""}, {"id": 94, "amphoe": "เมือง", "tambon": "กะลุวอ", "village": "กาแนะ", "name": "ม.3 ศาลากูโบร์บ้านกาแนะ", "cap": 50, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.35176, "lon": 101.84851, "gps": "ok", "care": "นาย มูหามะอานูวา ตะโละดิง", "phone": "09-8734-4667", "usable": true, "note": ""}, {"id": 95, "amphoe": "เมือง", "tambon": "กะลุวอ", "village": "กาแนะ", "name": "ม.3 สุเหร่าโคกกลาง", "cap": 50, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.349814829126767, "lon": 101.84882416580334, "gps": "ok", "care": "นาย มูหามะอานูวา ตะโละดิง", "phone": "09-8734-4668", "usable": true, "note": ""}, {"id": 96, "amphoe": "เมือง", "tambon": "กะลุวอ", "village": "กาแนะ", "name": "ม.3 สถาบันศึกษาปอเนาะดารุสซอลีฮีน", "cap": 50, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.429216226965945, "lon": 101.83097883820186, "gps": "ok", "care": "นาย มูหามะอานูวา ตะโละดิง", "phone": "09-8734-4668", "usable": true, "note": ""}, {"id": 97, "amphoe": "เมือง", "tambon": "กะลุวอ", "village": "กาแนะ", "name": "ม.3 ตาดีกาบ้านกาแนะ", "cap": 50, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.349814829126767, "lon": 101.84882416580334, "gps": "ok", "care": "นาย มูหามะอานูวา ตะโละดิง", "phone": "09-8734-4668", "usable": true, "note": ""}, {"id": 100, "amphoe": "เมือง", "tambon": "กะลุวอ", "village": "กูแบสาลอ", "name": "ม.4 มัสยิตเขากำปั้น", "cap": 200, "power": true, "water": true, "toilet": 10, "other": "", "lat": 6.33552, "lon": 101.87872, "gps": "fixed", "care": "นายมูหาหมัดอัศรี มามะ", "phone": "09-1814-4304", "usable": true, "note": ""}, {"id": 101, "amphoe": "เมือง", "tambon": "กะลุวอ", "village": "รอตันบาตู", "name": "ม.7 ศูนย์พัฒนาเด็กเล็ก บ้านรอตันบาตู", "cap": 100, "power": true, "water": true, "toilet": 8, "other": "", "lat": 6.36039, "lon": 101.84679, "gps": "ok", "care": "นายอับดุลมายิ มูดอ", "phone": "08-9733-6597", "usable": true, "note": ""}, {"id": 103, "amphoe": "เมือง", "tambon": "กะลุวอ", "village": "รอตันบาตู", "name": "ตาดีการอตันบาตู", "cap": null, "power": false, "water": false, "toilet": "", "other": "", "lat": 6.360619546413637, "lon": 101.8474569441571, "gps": "ok", "care": "", "phone": "", "usable": true, "note": ""}, {"id": 104, "amphoe": "เมือง", "tambon": "กะลุวอ", "village": "รอตันบาตู", "name": "ม.7 มัสยิดบาโงแตแร", "cap": 100, "power": true, "water": true, "toilet": 8, "other": "", "lat": 6.34112, "lon": 101.88471, "gps": "ok", "care": "นายอับดุลมายิ มูดอ", "phone": "08-9733-6597", "usable": true, "note": ""}, {"id": 106, "amphoe": "เมือง", "tambon": "กะลุวอเหนือ", "village": "ม.2 บ้านค่าย", "name": "รร.บ้านค่าย", "cap": 500, "power": true, "water": true, "toilet": 6, "other": "", "lat": 6.413146, "lon": 101.842184, "gps": "ok", "care": "นายกฤษฎา  เพ็ชรพันธ์", "phone": "08-1969-4764", "usable": true, "note": ""}, {"id": 107, "amphoe": "เมือง", "tambon": "กะลุวอเหนือ", "village": "ม.6 บ้านพิกุลทอง", "name": "วัดพิกุลทอง", "cap": 300, "power": true, "water": true, "toilet": 4, "other": "", "lat": 6.398335, "lon": 101.860613, "gps": "ok", "care": "นายกฤษฎา  เพ็ชรพันธ์", "phone": "08-1969-4765", "usable": true, "note": ""}, {"id": 111, "amphoe": "เมือง", "tambon": "บางนาค", "village": "เมาะสือแม", "name": "โรงเรียนเทศบาล 1", "cap": 80, "power": true, "water": true, "toilet": 10, "other": "", "lat": 6.42777, "lon": 101.82495, "gps": "ok", "care": "นายวิรชาติ  เล๊าะยีตา", "phone": "08-9879-2363", "usable": true, "note": ""}, {"id": 113, "amphoe": "เมือง", "tambon": "บางนาค", "village": "จือปอ", "name": "โรงเรียนเทศบาล 4", "cap": 80, "power": true, "water": true, "toilet": 10, "other": "", "lat": 6.415041, "lon": 101.8294, "gps": "ok", "care": "นางอมรรัตน์  คงสุวรรณ", "phone": "09-2561-1052", "usable": true, "note": ""}, {"id": 114, "amphoe": "เมือง", "tambon": "บางนาค", "village": "ประชาภิรมย์", "name": "โรงเรียนเทศบาล 5", "cap": 100, "power": true, "water": true, "toilet": 10, "other": "", "lat": 6.41566, "lon": 101.81851, "gps": "ok", "care": "นางอมรรัตน์  คงสุวรรณ", "phone": "09-2561-1053", "usable": true, "note": ""}, {"id": 115, "amphoe": "เมือง", "tambon": "บางปอ", "village": "ตะเจ๊ะ", "name": "ตาดีกาดารุสซาลัม ต.บางปอ", "cap": null, "power": false, "water": false, "toilet": "", "other": "", "lat": 6.345044155594499, "lon": 101.82283497111474, "gps": "ok", "care": "นายวสันต์  แดงดี", "phone": "06-1208-3657", "usable": true, "note": ""}, {"id": 116, "amphoe": "เมือง", "tambon": "บางปอ", "village": "โคกสุมุ", "name": "อบต.บางปอ", "cap": 100, "power": true, "water": true, "toilet": 5, "other": "", "lat": 6.32413, "lon": 101.79076, "gps": "ok", "care": "นายวสันต์  แดงดี", "phone": "06-1208-3657", "usable": true, "note": ""}, {"id": 118, "amphoe": "เมือง", "tambon": "มะนังตายอ", "village": "ม.1 บ้านมะนังกาหยี", "name": "โรงเรียนบ้านมะนังกาหยี", "cap": 100, "power": true, "water": true, "toilet": 20, "other": "", "lat": 6.35059, "lon": 101.77167, "gps": "fixed", "care": "ผู้ใหญ่บ้าน หมู่ 1", "phone": "08-6959-7700", "usable": true, "note": ""}, {"id": 119, "amphoe": "เมือง", "tambon": "มะนังตายอ", "village": "หมู่ 1 บ้านมะนังกาหยี", "name": "ตาดีกาบาตัสบารู", "cap": 50, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.348510187, "lon": 101.7700968, "gps": "ok", "care": "ผู้ใหญ่บ้าน หมู่ 1", "phone": "08-6959-7700", "usable": true, "note": ""}, {"id": 120, "amphoe": "เมือง", "tambon": "มะนังตายอ", "village": "หมู่ 4 บ้านโต๊ะนอ", "name": "มัสยิดโต๊ะนอ", "cap": 100, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.3664985945, "lon": 101.7587262, "gps": "ok", "care": "ผู้ใหญ่บ้าน หมู่ 4", "phone": "08-9296-4578", "usable": true, "note": ""}, {"id": 121, "amphoe": "เมือง", "tambon": "มะนังตายอ", "village": "ม.5 บ้านสุไหงบาลา", "name": "มัสยิตโต๊ะลง", "cap": 50, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.378276, "lon": 101.76969, "gps": "fixed", "care": "ผู้ใหญ่บ้าน หมู่ที่ 5", "phone": "08-24141307", "usable": true, "note": ""}, {"id": 122, "amphoe": "เมือง", "tambon": "มะนังตายอ", "village": "ม.5 บ้านสุไหงบาลา", "name": "บาลาเซาะห์กรายี", "cap": 50, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.340459648058012, "lon": 101.76814795819855, "gps": "ok", "care": "ผู้ใหญ่บ้าน หมู่ที่ 5", "phone": "08-24141307", "usable": true, "note": ""}, {"id": 123, "amphoe": "เมือง", "tambon": "มะนังตายอ", "village": "หมู่ 7 บ้านจะแลเกาะ", "name": "มัสยิดบ้านจะแลเกาะ", "cap": 50, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.362988854439331, "lon": 101.7809399804855, "gps": "ok", "care": "ผู้ใหญ่บ้าน หมู่ 7", "phone": "09-2823-1081", "usable": true, "note": ""}, {"id": 124, "amphoe": "เมือง", "tambon": "มะนังตายอ", "village": "หมู่ 7 บ้านจะแลเกาะ", "name": "เต๊นบนถนนหลวง", "cap": 200, "power": true, "water": true, "toilet": "-", "other": "", "lat": 6.36141, "lon": 101.777466, "gps": "fixed", "care": "ผู้ใหญ่บ้าน หมู่ 7", "phone": "09-2823-1081", "usable": true, "note": ""}, {"id": 125, "amphoe": "เมือง", "tambon": "มะนังตายอ", "village": "หมู่ 7 บ้านจะแลเกาะ", "name": "เต๊นบนถนนหลวง แห่งที่ 2", "cap": null, "power": false, "water": false, "toilet": "", "other": "", "lat": 6.362963022005021, "lon": 101.77839032237736, "gps": "ok", "care": "ผู้ใหญ่บ้าน หมู่ 7", "phone": "09-2823-1081", "usable": true, "note": ""}, {"id": 127, "amphoe": "เมือง", "tambon": "ลำภู", "village": "บ้านบาโง", "name": "บ้านสวนรีสอร์ท", "cap": 50, "power": true, "water": true, "toilet": 10, "other": "", "lat": 6.41956, "lon": 101.0, "gps": "ok", "care": "พันจ่าตรีปฐมพงศ์ ศรีสังข์", "phone": "08-7633-3558", "usable": true, "note": ""}, {"id": 128, "amphoe": "เมือง", "tambon": "ลำภู", "village": "บ้านทุเรียนนก", "name": "ศูนย์พักพิง วชช", "cap": 400, "power": true, "water": true, "toilet": 100, "other": "", "lat": 6.41622, "lon": 101.79841, "gps": "fixed", "care": "พันจ่าตรีปฐมพงศ์ ศรีสังข์", "phone": "08-7633-3558", "usable": true, "note": ""}, {"id": 129, "amphoe": "เมือง", "tambon": "ลำภู", "village": "บ้านทุ่งขนุน", "name": "บ้านหอมกรุ่นรีสอร์ท", "cap": 50, "power": true, "water": true, "toilet": 10, "other": "", "lat": 6.36893, "lon": 101.79017, "gps": "ok", "care": "พันจ่าตรีปฐมพงศ์ ศรีสังข์", "phone": "08-7633-3558", "usable": true, "note": ""}, {"id": 136, "amphoe": "ศรีสาคร", "tambon": "ตะมะยูง", "village": "คลองหงษ์", "name": "รร.ศรีวารินทร์", "cap": 100, "power": true, "water": true, "toilet": 5, "other": "", "lat": 6.306819, "lon": 101.509844, "gps": "ok", "care": "น.ส.ชิดชนก  เสนแก้ว", "phone": "080-3280429", "usable": true, "note": ""}, {"id": 173, "amphoe": "บาเจาะ", "tambon": "บาเระใต้", "village": "บ้านบูเกะสูดอ", "name": "โรงเรียนบ้านบูเกะสูดอ", "cap": 50, "power": true, "water": true, "toilet": 8, "other": "", "lat": 6.529379, "lon": 101.70909, "gps": "ok", "care": "นายอัฟวาน สาและ", "phone": "088-3944696", "usable": true, "note": ""}, {"id": 175, "amphoe": "บาเจาะ", "tambon": "บาเระใต้", "village": "บ้านตันหยง", "name": "โรงเรียนบ้านตันหยง", "cap": 50, "power": true, "water": true, "toilet": 6, "other": "", "lat": 6.545839, "lon": 101.673725, "gps": "ok", "care": "นายกามารูดิง  นิเฮง", "phone": "089-2977017", "usable": true, "note": ""}, {"id": 182, "amphoe": "บาเจาะ", "tambon": "ปะลุกาสาเมาะ", "village": "หมู่ 6  ชุมชนบาตู", "name": "โรงเรียนบ้านบาตู มิตรภาพที่  66", "cap": 100, "power": true, "water": true, "toilet": 15, "other": "โรงครัว", "lat": 6.616849281809285, "lon": 101.62915839526833, "gps": "ok", "care": "ผู้แทนชุมชน", "phone": "073 - 563 170", "usable": true, "note": ""}, {"id": 185, "amphoe": "บาเจาะ", "tambon": "ปะลุกาสาเมาะ", "village": "หมู่ 1 ชุมชนตลาดต้นไทร", "name": "โรงเรียนอนุบาลเทศบาลต้นไทร", "cap": 100, "power": true, "water": true, "toilet": 3, "other": "โรงครัว", "lat": 6.613533227342343, "lon": 101.63230710876093, "gps": "ok", "care": "ผู้แทนชุมชน", "phone": "073 - 563 170", "usable": true, "note": ""}, {"id": 194, "amphoe": "บาเจาะ", "tambon": "บาเระเหนือ", "village": "บ้านอีโย๊ะ", "name": "โรงเรียนบ้านอีโย๊ะ", "cap": 30, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.591339797046837, "lon": 101.6336480406786, "gps": "ok", "care": "ผอ.รร.บ้านอีโย๊ะ", "phone": "088-7911076", "usable": true, "note": ""}, {"id": 199, "amphoe": "บาเจาะ", "tambon": "ปะลุกาสาเมาะ", "village": "บาตู", "name": "อาคารประชารัฐเทศบาลตำบลต้นไทร", "cap": 50, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.6025282, "lon": 101.629943, "gps": "ok", "care": "เทศบาลตำบลต้นไทร", "phone": "073 - 563 170", "usable": true, "note": ""}, {"id": 200, "amphoe": "บาเจาะ", "tambon": "ปะลุกาสาเมาะ", "village": "บือแนปีแย", "name": "สภ.ปะลุกาสาเมาะ", "cap": 20, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.6020296, "lon": 101.6286414, "gps": "ok", "care": "เทศบาลตำบลต้นไทร", "phone": "073 - 563 170", "usable": true, "note": ""}, {"id": 201, "amphoe": "บาเจาะ", "tambon": "ปะลุกาสาเมาะ", "village": "บาตู", "name": "ตาดีกามัสยิดบาตู", "cap": 80, "power": true, "water": true, "toilet": 4, "other": "", "lat": 6.6020279, "lon": 101.5900167, "gps": "ok", "care": "เทศบาลตำบลต้นไทร", "phone": "073 - 563 170", "usable": true, "note": ""}, {"id": 202, "amphoe": "บาเจาะ", "tambon": "ปะลุกาสาเมาะ", "village": "บือแนปีแย", "name": "มัสยิดบอเวาะลือเมาะ", "cap": 80, "power": true, "water": true, "toilet": 4, "other": "", "lat": 6.6020245, "lon": 101.5900166, "gps": "ok", "care": "เทศบาลตำบลต้นไทร", "phone": "073 - 563 170", "usable": true, "note": ""}, {"id": 203, "amphoe": "บาเจาะ", "tambon": "ปะลุกาสาเมาะ", "village": "บือแนปีแย", "name": "ปั๊มน้ำมันต้นไทร", "cap": 10, "power": true, "water": true, "toilet": 4, "other": "", "lat": 6.6049631, "lon": 101.6290062, "gps": "ok", "care": "เทศบาลตำบลต้นไทร", "phone": "073 - 563 170", "usable": true, "note": ""}, {"id": 204, "amphoe": "บาเจาะ", "tambon": "บาเระใต้", "village": "คลอแระ", "name": "มัสยิดคลอแระ", "cap": 80, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.5487899, "lon": 101.6941869, "gps": "ok", "care": "นายอับดุลราซิ  ดิเยาะ", "phone": "085-6287180", "usable": true, "note": ""}, {"id": 205, "amphoe": "บาเจาะ", "tambon": "บาเระใต้", "village": "คลอแระ", "name": "มูลนิธิอัสลาม (คลอแระ)", "cap": 80, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.5363382, "lon": 101.6986793, "gps": "ok", "care": "นายอับดุลราซิ  ดิเยาะ", "phone": "085-6287180", "usable": true, "note": ""}, {"id": 206, "amphoe": "บาเจาะ", "tambon": "บาเระใต้", "village": "บูเกะสูดอ", "name": "มัสยิดบูเกะสูดอ", "cap": 80, "power": true, "water": true, "toilet": 4, "other": "", "lat": 6.5363381, "lon": 101.6909545, "gps": "ok", "care": "นายอัฟวาน สาและ", "phone": "088-3944696", "usable": true, "note": ""}, {"id": 207, "amphoe": "บาเจาะ", "tambon": "ปะลุกาสาเมาะ", "village": "กือดายือริง", "name": "ศูนย์พักพิง ชรบ.", "cap": 50, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.5949829, "lon": 101.6177368, "gps": "ok", "care": "อบต.ปะลุกาสาเมาะ", "phone": "0612705258", "usable": true, "note": ""}, {"id": 208, "amphoe": "บาเจาะ", "tambon": "ปะลุกาสาเมาะ", "village": "กือดายือริง", "name": "ศูนย์พักพิง อบต.ปะลุกาสาเมาะ", "cap": 30, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.5949829, "lon": 101.6177368, "gps": "ok", "care": "อบต.ปะลุกาสาเมาะ", "phone": "0612705259", "usable": true, "note": ""}, {"id": 209, "amphoe": "บาเจาะ", "tambon": "ปะลุกาสาเมาะ", "village": "บาตู", "name": "มัสยิดบือแนแกมอง", "cap": 50, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.5949812, "lon": 101.5816871, "gps": "ok", "care": "อบต.ปะลุกาสาเมาะ", "phone": "0612705260", "usable": true, "note": ""}, {"id": 210, "amphoe": "บาเจาะ", "tambon": "บาเระเหนือ", "village": "อาตะบือเระ", "name": "โรงเรียนบ้านอาตะบือเระ", "cap": 50, "power": true, "water": true, "toilet": 5, "other": "", "lat": 6.5961318, "lon": 101.6441485, "gps": "ok", "care": "อบต.บาเระเหนือ", "phone": "073 630 844", "usable": true, "note": ""}, {"id": 217, "amphoe": "แว้ง", "tambon": "โละจูด", "village": "บ้านนูโร๊ะ", "name": "อาคารอเนกประสงค์บ้านนูโร๊ะ", "cap": 50, "power": true, "water": true, "toilet": 4, "other": "ห้องครัว", "lat": 5.856709, "lon": 101.924681, "gps": "utm", "care": "นายฮานาฟี เจ๊ะมามะ", "phone": "06 3956 6408", "usable": true, "note": ""}, {"id": 220, "amphoe": "แว้ง", "tambon": "ฆอเลาะ", "village": "บ้านกีแยมัส", "name": "ศาลาอเนกประสงค์บ้านกีแยมัส", "cap": 40, "power": true, "water": true, "toilet": 1, "other": "ห้องครัว", "lat": 5.938486, "lon": 101.927565, "gps": "ok", "care": "นายอุสมาน  เจ๊ะโซ๊ะ", "phone": "08 0396 7653", "usable": true, "note": ""}, {"id": 221, "amphoe": "แว้ง", "tambon": "ฆอเลาะ", "village": "บ้านตำเสา", "name": "ศาลาอเนกประสงค์บ้านตำเสา", "cap": 30, "power": true, "water": true, "toilet": 1, "other": "ห้องครัว", "lat": 5.874457, "lon": 101.935634, "gps": "ok", "care": "นายมะรอบี   อัดดุลรอซิด", "phone": "0818502847", "usable": true, "note": ""}, {"id": 236, "amphoe": "เจาะไอร้อง", "tambon": "บูกิต", "village": "บ้านโต๊ะเล็ง", "name": "อบต.บูกิต", "cap": 150, "power": true, "water": true, "toilet": "", "other": "", "lat": 6.199366883548226, "lon": 101.82675812422266, "gps": "ok", "care": "นายก.อบต.", "phone": "089 966 3099", "usable": true, "note": ""}, {"id": 238, "amphoe": "เจาะไอร้อง", "tambon": "มะรือโบออก", "village": "บ้านปิเหล็ง ม.6", "name": "อบต.มะรือโบออก", "cap": 200, "power": true, "water": true, "toilet": "", "other": "", "lat": 6.253026386939679, "lon": 101.86874220848381, "gps": "ok", "care": "นายอัมรี เจ๊ะเต๊ะ", "phone": "086 292 9016", "usable": true, "note": ""}, {"id": 239, "amphoe": "เจาะไอร้อง", "tambon": "มะรือโบออก", "village": "บ้านปิเหล็ง ม.6", "name": "สหกรณ์นิคมปิเหล็ง", "cap": 120, "power": true, "water": true, "toilet": "", "other": "", "lat": 6.252537749980264, "lon": 101.88655241719644, "gps": "ok", "care": "นายอัมรี เจ๊ะเต๊ะ", "phone": "086 292 9016", "usable": true, "note": ""}, {"id": 240, "amphoe": "เจาะไอร้อง", "tambon": "มะรือโบออก", "village": "บ้านกูเบปูยู ม.8", "name": "โรงเรียนราชประสงค์", "cap": 200, "power": true, "water": true, "toilet": "", "other": "", "lat": 6.250876600254122, "lon": 101.86063558495619, "gps": "ok", "care": "นายอัมรี เจ๊ะเต๊ะ", "phone": "87 292 9016", "usable": true, "note": ""}, {"id": 241, "amphoe": "เจาะไอร้อง", "tambon": "มะรือโบออก", "village": "บ้านปิเหล็ง ม.6", "name": "อาคารศูนย์เด็กเล็ก อบต.มะรือโบออก", "cap": 150, "power": true, "water": true, "toilet": "", "other": "", "lat": 6.253026386939679, "lon": 101.86874220848381, "gps": "ok", "care": "นายอัมรี เจ๊ะเต๊ะ", "phone": "87 292 9016", "usable": true, "note": ""}, {"id": 242, "amphoe": "เจาะไอร้อง", "tambon": "มะรือโบออก", "village": "บ้านปิเหล็ง ม.6", "name": "อาคารผู้สูงอายุ อบต.", "cap": 30, "power": true, "water": true, "toilet": "", "other": "", "lat": 6.253026386939679, "lon": 101.86874220848381, "gps": "ok", "care": "นายอัมรี เจ๊ะเต๊ะ", "phone": "87 292 9016", "usable": true, "note": ""}, {"id": 243, "amphoe": "เจาะไอร้อง", "tambon": "มะรือโบออก", "village": "บ้านปิเหล็ง ม.6", "name": "เต็นท์หน้าร้านพงษ์", "cap": null, "power": true, "water": true, "toilet": "", "other": "", "lat": 6.252994758923347, "lon": 101.87159225305798, "gps": "ok", "care": "นายอัมรี เจ๊ะเต๊ะ", "phone": "88 292 9016", "usable": true, "note": ""}, {"id": 244, "amphoe": "เจาะไอร้อง", "tambon": "มะรือโบออก", "village": "ม.7", "name": "ศาลา ชรบ.", "cap": null, "power": false, "water": false, "toilet": "", "other": "", "lat": 6.249065304969443, "lon": 101.87613672435477, "gps": "ok", "care": "นายอัมรี เจ๊ะเต๊ะ", "phone": "89 292 9016", "usable": true, "note": ""}, {"id": 245, "amphoe": "เจาะไอร้อง", "tambon": "มะรือโบออก", "village": "ม.6", "name": "หัวสะพานหลัง อบต.มะรือโบออก", "cap": null, "power": false, "water": false, "toilet": "", "other": "", "lat": 6.252672740035775, "lon": 101.86863338520376, "gps": "ok", "care": "นายอัมรี เจ๊ะเต๊ะ", "phone": "90 292 9016", "usable": true, "note": ""}, {"id": 246, "amphoe": "ตากใบ", "tambon": "เจ๊ะเห", "village": "ชุมชนตาบาฮิเล", "name": "ศูนย์พัฒนาเด็กเล็กและโรงเรียนอนุบาลเทศบาลเมืองตากใบ", "cap": null, "power": true, "water": true, "toilet": 8, "other": "", "lat": 6.1429, "lon": 102.0503, "gps": "ok", "care": "นายวสันต์ ดาตูมะดา", "phone": "086-963-1290", "usable": true, "note": ""}, {"id": 295, "amphoe": "ตากใบ", "tambon": "ไพรวัน", "village": "หมู่ที่ 7 บ้านโคกยามู", "name": "โรงเรียนบ้านโคกยามู", "cap": 30, "power": true, "water": true, "toilet": 3, "other": "", "lat": 6.280704, "lon": 101.991115, "gps": "ok", "care": "นายก อบต.ไพรวัน", "phone": "073-641-040", "usable": true, "note": ""}, {"id": 343, "amphoe": "สุไหงโก-ลก", "tambon": "ปาเสมัส", "village": "ม.5 น้ำตก", "name": "วิทยาลัยการอาชีพสุไหงโก-ลก สาขา 2", "cap": 200, "power": true, "water": true, "toilet": 5, "other": "", "lat": 6.033336, "lon": 101.965183, "gps": "ok", "care": "นายมะรอดี บินสะมะแอ", "phone": "08 9659 4425", "usable": true, "note": ""}, {"id": 365, "amphoe": "ยี่งอ", "tambon": "ยี่งอ", "village": "กูเล็ง", "name": "อาคารโรงยิมเนเชี่ยมเทศบาลตำบลยี่งอ", "cap": 100, "power": true, "water": true, "toilet": 8, "other": "", "lat": 6.404111374366761, "lon": 101.70160689354209, "gps": "ok", "care": "นายอับดุลเลาะ  ลาเต๊ะ", "phone": "086-489-3442", "usable": true, "note": ""}, {"id": 366, "amphoe": "ยี่งอ", "tambon": "ละหาร", "village": "ปูตะ", "name": "โรงเรียนบ้านปูตะ", "cap": 150, "power": true, "water": true, "toilet": 8, "other": "", "lat": 6.405122573418356, "lon": 101.76942048004759, "gps": "ok", "care": "นายไฮซัม  มูอารีฟ", "phone": "081-071-4217", "usable": true, "note": ""}, {"id": 367, "amphoe": "ยี่งอ", "tambon": "ละหาร", "village": "ทุ่งคา", "name": "ตลาดกลางการเกษตรฯ", "cap": 50, "power": true, "water": true, "toilet": 8, "other": "", "lat": 6.4069786504055255, "lon": 101.75372880998586, "gps": "ok", "care": "นายไฮซัม  มูอารีฟ", "phone": "081-071-4217", "usable": true, "note": ""}, {"id": 368, "amphoe": "ยี่งอ", "tambon": "ละหาร", "village": "ทุ่งคา", "name": "อาคารผู้ประกอบการในพื้นที่บ้านบาโง", "cap": 50, "power": true, "water": true, "toilet": 8, "other": "", "lat": 6.406797270702037, "lon": 101.75346729385157, "gps": "ok", "care": "", "phone": "", "usable": true, "note": ""}, {"id": 369, "amphoe": "ยี่งอ", "tambon": "ละหาร", "village": "กูแบลิบิส", "name": "มัสยิดอัลเราะห์มานียะห์", "cap": 30, "power": true, "water": true, "toilet": 3, "other": "", "lat": 6.392439, "lon": 101.745116, "gps": "ok", "care": "นายไฮซัม  มูอารีฟ", "phone": "081-071-4217", "usable": true, "note": ""}, {"id": 422, "amphoe": "สุไหงปาดี", "tambon": "สุไหงปาดี", "village": "ม.7 บ้านปิเหล็ง", "name": "โรงเรียนราชภักดี", "cap": 200, "power": true, "water": true, "toilet": 6, "other": "", "lat": null, "lon": null, "gps": "nofix", "care": "อบต.สุไหงปาดี/รร.ราชภักดี", "phone": "073-653055", "usable": true, "note": ""}, {"id": 423, "amphoe": "สุไหงปาดี", "tambon": "สุไหงปาดี", "village": "ม.7 บ้านปิเหล็ง", "name": "โรงเรียนตาดีกา บ้านโคกสะตอ", "cap": 50, "power": true, "water": true, "toilet": "-", "other": "", "lat": null, "lon": null, "gps": "nofix", "care": "อบต.สุไหงปาดี/ผญบ. ม.7", "phone": "073-653055", "usable": true, "note": ""}, {"id": 424, "amphoe": "สุไหงปาดี", "tambon": "สุไหงปาดี", "village": "ม.7 บ้านปิเหล็ง", "name": "ประตูน้ำบ้านท่าแพ (เต้นชั่วคราว)", "cap": 100, "power": false, "water": false, "toilet": "-", "other": "", "lat": null, "lon": null, "gps": "nofix", "care": "อบต.สุไหงปาดี/ผญบ. ม.7", "phone": "073-653055", "usable": true, "note": ""}, {"id": 425, "amphoe": "สุไหงปาดี", "tambon": "สุไหงปาดี", "village": "ม.7 บ้านปิเหล็ง", "name": "เต้นท์พักหัวสะพาน รร.ราชภักดี", "cap": 100, "power": false, "water": false, "toilet": "-", "other": "", "lat": 6.259384897898205, "lon": 101.91821493466436, "gps": "ok", "care": "อบต.สุไหงปาดี/ผญบ. ม.7", "phone": "073-653055", "usable": true, "note": ""}, {"id": 426, "amphoe": "สุไหงปาดี", "tambon": "สุไหงปาดี", "village": "ม.7 บ้านปิเหล็ง", "name": "เต้นท์พักแยกบ้านโคกสะตอ", "cap": 100, "power": false, "water": false, "toilet": "-", "other": "", "lat": 6.258272804879136, "lon": 101.9185786106077, "gps": "ok", "care": "อบต.สุไหงปาดี/ผญบ. ม.7", "phone": "073-653055", "usable": true, "note": ""}, {"id": 427, "amphoe": "ระแงะ", "tambon": "รพ.ระแงะ", "village": "หมู่ที่ 1", "name": "โรงพยาบาลระแงะ", "cap": 30, "power": true, "water": true, "toilet": 10, "other": "", "lat": 6.29745, "lon": 101.7273, "gps": "ok", "care": "นางรติวรรณ ไชยกุล", "phone": "085-1312485", "usable": true, "note": ""}, {"id": 428, "amphoe": "ระแงะ", "tambon": "ทต.ตันหยงมัส", "village": "หมู่ที่ 1", "name": "อาคารศูนย์ศิลปาชีพฯ เทศบาลตำบลตันหยงมัส", "cap": 50, "power": true, "water": true, "toilet": 2, "other": "", "lat": 6.294157, "lon": 101.722245, "gps": "ok", "care": "นางนวพร แซ่เฮง", "phone": "087 293 3853", "usable": true, "note": ""}, {"id": 429, "amphoe": "ระแงะ", "tambon": "ทต.ตันหยงมัส", "village": "หมู่ที่ 1", "name": "ศูนย์มัสยิดตันหยงมัส", "cap": 50, "power": true, "water": true, "toilet": 8, "other": "", "lat": 6.29792, "lon": 101.72979, "gps": "ok", "care": "นางนวพร แซ่เฮง", "phone": "88 293 3853", "usable": true, "note": ""}, {"id": 430, "amphoe": "ระแงะ", "tambon": "ทต.ตันหยงมัส", "village": "หมู่ที่ 7", "name": "ศูนย์มัสยิดบือแนมิส", "cap": 20, "power": true, "water": true, "toilet": 8, "other": "", "lat": 6.28917, "lon": 101.70875, "gps": "ok", "care": "นางนวพร แซ่เฮง", "phone": "89 293 3853", "usable": true, "note": ""}, {"id": 431, "amphoe": "ระแงะ", "tambon": "ทต.ตันหยงมัส", "village": "หมู่ที่ 7", "name": "โรงเรียนบ้านเขาพระ", "cap": 100, "power": true, "water": true, "toilet": 10, "other": "", "lat": 6.26415, "lon": 101.69463, "gps": "ok", "care": "นางนวพร แซ่เฮง", "phone": "90 293 3853", "usable": true, "note": ""}, {"id": 452, "amphoe": "ระแงะ", "tambon": "อบต.บาโงสะโต", "village": "หมู่ที่ 2 บ้านเจ๊ะเก", "name": "โรงเรียนบ้านเจ๊ะเก", "cap": 100, "power": true, "water": true, "toilet": 8, "other": "", "lat": 6.264142, "lon": 101.6942, "gps": "ok", "care": "นายนูรีฮีซัม  เจ๊ะฆอ", "phone": "065-0940690", "usable": true, "note": ""}, {"id": 456, "amphoe": "ระแงะ", "tambon": "อบต.บาโงสะโต", "village": "หมู่ที่ 6 บ้านบาตูบือซา", "name": "โรงเรียนบ้านประชาบำรุง", "cap": 100, "power": true, "water": true, "toilet": 10, "other": "", "lat": 6.283957, "lon": 101.675557, "gps": "ok", "care": "นางสาวโซไรยา วาจิ", "phone": "", "usable": true, "note": ""}, {"id": 457, "amphoe": "ระแงะ", "tambon": "อบต.บาโงสะโต", "village": "หมู่ที่ 7 บ้านบาโงสะโต", "name": "โรงเรียนบ้านบาโงสะโต", "cap": 100, "power": true, "water": true, "toilet": 7, "other": "", "lat": 6.287, "lon": 101.696386, "gps": "ok", "care": "นางสาวสุนีย์ อาแว", "phone": "089-9746938", "usable": true, "note": ""}];
 const SUMM = {"rows": [{"amphoe": "เมืองนราธิวาส", "n_places": 7, "n_centers": 40, "cap": 5370, "power": true, "water": true, "toilet": 350}, {"amphoe": "บาเจาะ", "n_places": 6, "n_centers": 39, "cap": 3020, "power": true, "water": true, "toilet": 183}, {"amphoe": "แว้ง", "n_places": 5, "n_centers": 11, "cap": 960, "power": true, "water": true, "toilet": 84}, {"amphoe": "จะแนะ", "n_places": 4, "n_centers": 44, "cap": 3180, "power": true, "water": true, "toilet": 244}, {"amphoe": "รือเสาะ", "n_places": 8, "n_centers": 45, "cap": 13211, "power": true, "water": true, "toilet": 225}, {"amphoe": "ศรีสาคร", "n_places": 6, "n_centers": 42, "cap": 2350, "power": true, "water": true, "toilet": 154}, {"amphoe": "สุไหงปาดี", "n_places": 6, "n_centers": 36, "cap": 8690, "power": true, "water": true, "toilet": 230}, {"amphoe": "สุคิริน", "n_places": 5, "n_centers": 38, "cap": 3960, "power": true, "water": true, "toilet": 167}, {"amphoe": "สุไหงโก-ลก", "n_places": 4, "n_centers": 27, "cap": 4480, "power": true, "water": true, "toilet": 219}, {"amphoe": "เจาะไอร้อง", "n_places": 3, "n_centers": 24, "cap": 2010, "power": true, "water": true, "toilet": "ไม่มีข้อมูล"}, {"amphoe": "ระแงะ", "n_places": 7, "n_centers": 48, "cap": 3240, "power": true, "water": true, "toilet": 220}, {"amphoe": "ตากใบ", "n_places": 8, "n_centers": 52, "cap": 8540, "power": true, "water": true, "toilet": 205}, {"amphoe": "ยี่งอ", "n_places": 6, "n_centers": 28, "cap": 1800, "power": true, "water": true, "toilet": 136}], "total_places": 75, "total_centers": 474, "total_cap": 60811, "total_toilet": 2417};
 const PROVS = ['สตูล','สงขลา','ปัตตานี','ยะลา','นราธิวาส'];
-// เฉพาะนราธิวาสที่มีข้อมูลในไฟล์ (อำเภอทั้งหมดในไฟล์อยู่ในนราธิวาส)
-const PROV_DATA = { 'นราธิวาส': DATA };
+// นราธิวาส = ชุดข้อมูลตั้งต้นในไฟล์ (DATA) · จังหวัดอื่นเติมผ่านตาราง Supabase 'shelters'
 let prov = 'นราธิวาส', amp = '', q = '';
-let map, markers = [], byId = {};
+let map, markers = [], byId = {}, userMarker = null, userPos = null;
+let liveRows = [], liveByExt = {}, curByKey = {}, memberActive = false;
+
+// Supabase อาจโหลดไม่สำเร็จ (ออฟไลน์) — กันไม่ให้หน้าเว็บพัง
+let SB = null;
+try { if (window.supabase && typeof sb !== 'undefined') SB = sb; } catch(e) { SB = null; }
+
+const SH_STATUS = {
+  standby:{c:'#94a3b8', l:'เตรียมพร้อม'},
+  open:   {c:'#16a34a', l:'เปิดรับ'},
+  full:   {c:'#dc2626', l:'เต็ม'},
+  closed: {c:'#64748b', l:'ปิด'}
+};
 
 function capColor(c){ if(c==null) return '#94a3b8'; if(c>=300) return '#15803d'; if(c>=100) return '#2563eb'; return '#f97316'; }
 function capRadius(c){ if(c==null) return 6; return Math.max(5, Math.min(16, 5 + Math.sqrt(c)/2.6)); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
 const fmt = n => (n==null?'—':Number(n).toLocaleString('th-TH'));
+const telHref = p => 'tel:'+String(p).replace(/[^0-9]/g,'');
+function haversine(a,b,c,d){ const R=6371,r=x=>x*Math.PI/180; const dLa=r(c-a),dLo=r(d-b);
+  const s=Math.sin(dLa/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(s)); }
+
+/* ---------- โหลดสถานะสดจาก Supabase ---------- */
+async function loadLive(){
+  if(!SB) return;
+  try{
+    const { data, error } = await SB.from('shelters').select('*');
+    if(error) throw error;
+    liveRows = data||[]; liveByExt = {};
+    liveRows.forEach(r=>{ if(r.ext_id) liveByExt[r.ext_id] = r; });
+  }catch(e){ liveRows = []; liveByExt = {}; }
+}
+
+/* ---------- รวมข้อมูลตั้งต้น + สถานะสด → แถวมาตรฐาน ---------- */
+function mergedRows(p){
+  const out = [];
+  const staticRows = (p==='นราธิวาส') ? DATA : [];
+  staticRows.forEach(s=>{
+    const ext = 'NWT-'+s.id, L = liveByExt[ext];
+    const row = { key:ext, ext, name:s.name, amphoe:s.amphoe, tambon:s.tambon, village:s.village,
+      lat:s.lat, lon:s.lon, cap:s.cap, power:s.power, water:s.water, toilet:s.toilet,
+      care:s.care, phone:s.phone, other:s.other, status:'standby', occ:0, source:'static', live:false, sbId:null };
+    if(L){ row.status=L.status; row.occ=L.occupancy||0; if(L.capacity!=null)row.cap=L.capacity;
+      if(L.contact_phone)row.phone=L.contact_phone; if(L.contact_name)row.care=L.contact_name;
+      row.sbId=L.id; row.live=true; }
+    out.push(row);
+  });
+  liveRows.filter(r=>r.province===p).forEach(L=>{
+    if(String(L.ext_id||'').startsWith('NWT-') && p==='นราธิวาส') return;  // รวมกับ static แล้ว
+    const f = L.facilities||{};
+    out.push({ key:'sb-'+L.id, ext:L.ext_id, name:L.name, amphoe:L.amphoe, tambon:L.tambon, village:L.village,
+      lat:L.lat, lon:L.lon, cap:L.capacity, power:f.power, water:f.water, toilet:f.toilet,
+      care:L.contact_name, phone:L.contact_phone, other:L.note, status:L.status, occ:L.occupancy||0,
+      source:'live', live:true, sbId:L.id });
+  });
+  return out;
+}
+function hasData(p){ return (p==='นราธิวาส' && DATA.length>0) || liveRows.some(r=>r.province===p); }
+
+function statusColor(r){
+  if(!r.live) return null;
+  if(r.status==='closed') return '#64748b';
+  if(r.status==='full') return '#dc2626';
+  if(r.cap && r.occ/r.cap>=0.8) return '#f59e0b';
+  if(r.status==='open') return '#16a34a';
+  return null;
+}
+function markerColor(r){ return statusColor(r) || capColor(r.cap); }
+function occBar(r){
+  if(!r.live || r.cap==null) return '';
+  const pct = Math.min(100, Math.round((r.occ||0)/r.cap*100));
+  const c = pct>=100?'#dc2626':pct>=80?'#f59e0b':'#16a34a';
+  return `<div class="occwrap"><div class="occbar"><i style="width:${pct}%;background:${c}"></i></div><span class="occnum">${fmt(r.occ||0)}/${fmt(r.cap)} (${pct}%)</span></div>`;
+}
+function statusCell(r){
+  if(r.live){ const s=SH_STATUS[r.status]||SH_STATUS.standby;
+    return `<span class="spill" style="background:${s.c}">${s.l}</span>${occBar(r)}`; }
+  return `<span class="occnum">รองรับ ${r.cap!=null?fmt(r.cap)+' คน':'ไม่ระบุ'}</span><div class="occnum" style="color:#cbd5e1">— ยังไม่มีสถานะสด —</div>`;
+}
 
 function initMap(){
   map = L.map('map',{scrollWheelZoom:true}).setView([6.42,101.82],10);
@@ -182,18 +286,20 @@ function initMap(){
 }
 
 function current(){
-  let rows = (PROV_DATA[prov]||[]).slice();
+  let rows = mergedRows(prov);
   if(amp) rows = rows.filter(r=>r.amphoe===amp);
   if(q){ const s=q.toLowerCase();
     rows = rows.filter(r => [r.name,r.tambon,r.amphoe,r.village,r.care,r.phone].join(' ').toLowerCase().includes(s)); }
+  if(userPos){ rows.forEach(r=>{ r._d = (r.lat!=null)?haversine(userPos[0],userPos[1],r.lat,r.lon):1e9; });
+    rows.sort((a,b)=>a._d-b._d); }
   return rows;
 }
 
 function render(){
-  const has = (PROV_DATA[prov]||[]).length>0;
+  const has = hasData(prov);
   document.getElementById('mapCard').style.display = has?'':'none';
   document.getElementById('tblCard').style.display = has?'':'none';
-  document.getElementById('officialCard').style.display = (has)?'':'none';
+  document.getElementById('officialCard').style.display = (prov==='นราธิวาส')?'':'none';
   document.getElementById('emptyCard').style.display = has?'none':'';
   if(!has){
     document.getElementById('emptyMsg').textContent = 'ยังไม่มีข้อมูลศูนย์พักพิงของจังหวัด'+prov+'ในระบบ';
@@ -202,22 +308,23 @@ function render(){
     return;
   }
   const rows = current();
-  const all = PROV_DATA[prov];
-  // stats (ตามที่กรองอยู่)
+  const allCount = mergedRows(prov).length;
   const cap = rows.reduce((a,r)=>a+(r.cap||0),0);
+  const occ = rows.reduce((a,r)=>a+(r.live?(r.occ||0):0),0);
+  const openN = rows.filter(r=>r.live && r.status==='open').length;
   const amps = new Set(rows.map(r=>r.amphoe));
-  const geo = rows.filter(r=>r.lat!=null).length;
   document.getElementById('stats').innerHTML = [
     ['จำนวนศูนย์ (ที่แสดง)', rows.length, ''],
-    ['รองรับผู้อพยพรวม', fmt(cap)+' คน', 'o'],
-    ['ครอบคลุมอำเภอ', amps.size+' อำเภอ', ''],
-    ['ระบุพิกัดแล้ว', geo+' / '+rows.length, '']
-  ].map(s=>`<div class="stat ${s[2]}"><div class="n">${typeof s[1]==='number'?s[1]:s[1]}</div><div class="l">${s[0]}</div></div>`).join('');
-  document.getElementById('selCount').textContent = 'แสดง '+rows.length+' / '+all.length+' แห่ง';
+    ['เปิดรับอยู่ตอนนี้', openN+' แห่ง', 'o'],
+    ['รองรับรวม', fmt(cap)+' คน', ''],
+    ['ผู้พักพิงขณะนี้', fmt(occ)+' คน', 'o']
+  ].map(s=>`<div class="stat ${s[2]}"><div class="n">${s[1]}</div><div class="l">${s[0]}</div></div>`).join('');
+  document.getElementById('selCount').textContent = 'แสดง '+rows.length+' / '+allCount+' แห่ง';
   document.getElementById('mapWhere').textContent = document.getElementById('tblWhere').textContent = 'จ.'+prov+(amp?' · อ.'+amp:'');
   renderMap(rows); renderTable(rows);
-  const noGeo = rows.length-geo;
-  document.getElementById('mapNote').textContent = 'ที่มา: ข้อมูลศูนย์พักพิงชั่วคราว ปภ.จ.นราธิวาส' + (noGeo>0? ' · '+noGeo+' แห่งยังไม่มีพิกัด (แสดงเฉพาะในตาราง)':'');
+  const noGeo = rows.filter(r=>r.lat==null).length;
+  const src = prov==='นราธิวาส' ? 'ข้อมูลตั้งต้น ปภ.จ.นราธิวาส + สถานะสดจากเจ้าหน้าที่' : 'ข้อมูลจากเจ้าหน้าที่ในระบบ';
+  document.getElementById('mapNote').textContent = 'ที่มา: '+src + (noGeo>0? ' · '+noGeo+' แห่งยังไม่มีพิกัด (แสดงเฉพาะในตาราง)':'');
 }
 
 function renderMap(rows){
@@ -225,30 +332,36 @@ function renderMap(rows){
   const pts=[];
   rows.forEach(r=>{
     if(r.lat==null) return;
-    const m = L.circleMarker([r.lat,r.lon],{radius:capRadius(r.cap),color:'#fff',weight:1.5,fillColor:capColor(r.cap),fillOpacity:.9});
+    const m = L.circleMarker([r.lat,r.lon],{radius:capRadius(r.cap),color:'#fff',weight:1.5,fillColor:markerColor(r),fillOpacity:.9});
     const g = 'https://www.google.com/maps/search/?api=1&query='+r.lat+','+r.lon;
+    const s = r.live ? SH_STATUS[r.status]||SH_STATUS.standby : null;
     m.bindPopup(`<b>${esc(r.name)}</b><br>อ.${esc(r.amphoe)} · ต.${esc(r.tambon)}${r.village?' · '+esc(r.village):''}<br>`+
-      `👥 รองรับ ${r.cap!=null?fmt(r.cap)+' คน':'ไม่ระบุ'} · 🚻 ${r.toilet||'—'} ห้อง<br>`+
+      (s?`<span class="spill" style="background:${s.c}">${s.l}</span>${r.cap?` ${fmt(r.occ||0)}/${fmt(r.cap)} คน`:''}<br>`:`👥 รองรับ ${r.cap!=null?fmt(r.cap)+' คน':'ไม่ระบุ'} · 🚻 ${r.toilet||'—'}<br>`)+
       `${r.power?'⚡ไฟฟ้า ':''}${r.water?'🚰ประปา':''}<br>`+
-      (r.care?`👤 ${esc(r.care)}<br>`:'')+(r.phone?`📞 <a href="tel:${esc(String(r.phone).replace(/[^0-9]/g,''))}">${esc(r.phone)}</a><br>`:'')+
-      `<a class="pnav" target="_blank" href="${g}">📍 นำทาง</a>`);
-    m.addTo(map); markers.push(m); byId[r.id]=m; pts.push([r.lat,r.lon]);
+      (r.care?`👤 ${esc(r.care)}<br>`:'')+
+      `<a class="pnav" target="_blank" href="${g}">📍 นำทาง</a>`+
+      (r.phone?` <a class="pnav call" href="${telHref(r.phone)}">📞 โทร</a>`:'')+
+      (memberActive?`<br><a class="pnav" style="background:#57504a" href="#" onclick="openUpdate('${r.key}');return false;">✏️ อัปเดตสถานะ</a>`:''));
+    m.addTo(map); markers.push(m); byId[r.key]=m; pts.push([r.lat,r.lon]);
   });
-  if(pts.length){ map.fitBounds(pts,{padding:[30,30],maxZoom:13}); }
+  if(pts.length && !userPos){ map.fitBounds(pts,{padding:[30,30],maxZoom:13}); }
 }
 
 function facil(v){ return v?'<span class="yes">✓</span>':'<span class="no">✗</span>'; }
 function renderTable(rows){
+  curByKey = {}; rows.forEach(r=>curByKey[r.key]=r);
   const tb=document.getElementById('tbody');
   tb.innerHTML = rows.map(r=>{
     const g = r.lat!=null?`<a class="gmap" target="_blank" href="https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lon}">📍 นำทาง</a>`:'<span class="no">ไม่มีพิกัด</span>';
-    const tel = r.phone?`<a class="tel" href="tel:${esc(String(r.phone).replace(/[^0-9]/g,''))}">${esc(r.phone)}</a>`:'';
-    return `<tr data-id="${r.id}">
-      <td><b>${esc(r.amphoe)}</b><div class="sub">${esc(r.tambon)}${r.village?' · '+esc(r.village):''}</div></td>
+    const tel = r.phone?`<a class="tel" href="${telHref(r.phone)}">${esc(r.phone)}</a>`:'';
+    const upd = memberActive?`<div><button class="btn sm ghost" onclick="event.stopPropagation();openUpdate('${r.key}')">✏️ อัปเดต</button></div>`:'';
+    const dist = (userPos&&r._d!=null&&r._d<1e9)?`<div class="sub">~${r._d<1?Math.round(r._d*1000)+' ม.':r._d.toFixed(1)+' กม.'}</div>`:'';
+    return `<tr data-id="${r.key}">
+      <td><b>${esc(r.amphoe)}</b><div class="sub">${esc(r.tambon)}${r.village?' · '+esc(r.village):''}</div>${dist}</td>
       <td>${esc(r.name)}${r.other?'<div class="sub">'+esc(r.other)+'</div>':''}</td>
-      <td>${r.cap!=null?fmt(r.cap):'<span class="no">—</span>'}</td>
+      <td>${statusCell(r)}${upd}</td>
       <td>${facil(r.power)}</td><td>${facil(r.water)}</td><td>${r.toilet||'<span class="no">—</span>'}</td>
-      <td>${esc(r.care)||'<span class="no">—</span>'}<div class="sub">${tel}</div></td>
+      <td>${esc(r.care)||'<span class="no">—</span>'}<div class="sub">${tel?`<a class="tel2" href="${telHref(r.phone)}">📞 ${esc(r.phone)}</a>`:''}</div></td>
       <td>${g}</td></tr>`;
   }).join('') || '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:20px">ไม่พบศูนย์พักพิงตามเงื่อนไขที่ค้นหา</td></tr>';
   tb.querySelectorAll('tr[data-id]').forEach(tr=>tr.addEventListener('click',()=>{
@@ -257,9 +370,56 @@ function renderTable(rows){
   }));
 }
 
+document.getElementById('nearBtn').addEventListener('click',()=>{
+  if(!navigator.geolocation){ alert('อุปกรณ์นี้ไม่รองรับการหาตำแหน่ง'); return; }
+  const btn=document.getElementById('nearBtn'); btn.textContent='⏳ กำลังหา…';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    userPos=[pos.coords.latitude,pos.coords.longitude]; btn.textContent='📍 ใกล้ฉัน';
+    if(userMarker) map.removeLayer(userMarker);
+    userMarker=L.circleMarker(userPos,{radius:8,color:'#2563eb',weight:3,fillColor:'#3b82f6',fillOpacity:.9}).addTo(map).bindPopup('ตำแหน่งของคุณ');
+    render(); map.setView(userPos,12,{animate:true});
+  }, err=>{ btn.textContent='📍 ใกล้ฉัน'; alert('ไม่สามารถหาตำแหน่งได้: '+err.message); }, {enableHighAccuracy:true,timeout:10000});
+});
+
+async function openUpdate(key){
+  const r = curByKey[key]; if(!r || !SB) return;
+  const st = prompt('สถานะศูนย์ (open=เปิดรับ / full=เต็ม / closed=ปิด / standby=เตรียมพร้อม):', r.status||'open');
+  if(st===null) return;
+  if(!['open','full','closed','standby'].includes(st)){ alert('พิมพ์สถานะให้ถูก: open / full / closed / standby'); return; }
+  const occStr = prompt('ยอดผู้พักพิงปัจจุบัน (คน):', r.occ||0);
+  if(occStr===null) return;
+  const occ = Math.max(0, parseInt(occStr)||0);
+  await saveStatus(r, st, occ);
+}
+async function saveStatus(r, status, occupancy){
+  const user = await getUser(); if(!user){ alert('กรุณาเข้าสู่ระบบ'); return; }
+  try{
+    if(r.sbId){
+      const { error } = await SB.from('shelters').update({status, occupancy, updated_by:user.id}).eq('id', r.sbId);
+      if(error) throw error;
+    }else{
+      let existing=null;
+      if(r.ext){ const { data } = await SB.from('shelters').select('id').eq('ext_id', r.ext).maybeSingle(); existing=data; }
+      if(existing){
+        const { error } = await SB.from('shelters').update({status, occupancy, updated_by:user.id}).eq('id', existing.id);
+        if(error) throw error;
+      }else{
+        const { error } = await SB.from('shelters').insert({
+          ext_id:r.ext||null, name:r.name, province:prov, amphoe:r.amphoe, tambon:r.tambon, village:r.village,
+          lat:r.lat, lon:r.lon, capacity:r.cap, occupancy, status,
+          facilities:{power:!!r.power, water:!!r.water, toilet:r.toilet}, contact_name:r.care, contact_phone:r.phone,
+          created_by:user.id, updated_by:user.id });
+        if(error) throw error;
+      }
+    }
+    await loadLive(); render();
+  }catch(e){ alert('บันทึกไม่สำเร็จ: '+(e.message||e)); }
+}
+window.openUpdate = openUpdate;
+
 function fillAmp(){
   const sel=document.getElementById('ampSel');
-  const amps=[...new Set((PROV_DATA[prov]||[]).map(r=>r.amphoe))].sort();
+  const amps=[...new Set(mergedRows(prov).map(r=>r.amphoe))].filter(Boolean).sort();
   sel.innerHTML='<option value="">ทุกอำเภอ</option>'+amps.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('');
 }
 function renderOfficial(){
@@ -270,10 +430,16 @@ function renderOfficial(){
     `<tr><td><b>${esc(r.amphoe)}</b></td><td>${fmt(r.n_places)}</td><td>${fmt(r.n_centers)}</td><td>${fmt(r.cap)}</td><td>${r.toilet==null?'—':(typeof r.toilet==='number'?fmt(r.toilet):esc(r.toilet))}</td></tr>`
   ).join('');
 }
+function refreshChips(){
+  document.querySelectorAll('.chip').forEach(c=>{
+    const p=c.dataset.prov;
+    c.classList.toggle('empty', !hasData(p));
+  });
+}
 
 document.querySelectorAll('.chip').forEach(c=>{
   const p=c.dataset.prov;
-  if(!(PROV_DATA[p]&&PROV_DATA[p].length)) c.classList.add('empty');
+  if(!hasData(p)) c.classList.add('empty');
   c.addEventListener('click',()=>{
     document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
     c.classList.add('on'); prov=p; amp=''; q='';
@@ -284,8 +450,29 @@ document.querySelectorAll('.chip').forEach(c=>{
 document.getElementById('ampSel').addEventListener('change',e=>{ amp=e.target.value; render(); });
 document.getElementById('q').addEventListener('input',e=>{ q=e.target.value.trim(); render(); });
 
+function updateMemberBar(p){
+  const bar=document.getElementById('memberBar');
+  if(p && p!=='pending'){ memberActive=true; bar.style.display='flex';
+    bar.innerHTML=`✅ เข้าสู่ระบบในฐานะเจ้าหน้าที่ — กด ✏️ ในตารางหรือหมุดเพื่ออัปเดตสถานะ/ยอดผู้พักพิง <button class="btn sm ghost" onclick="signOut()">ออกจากระบบ</button>`;
+  }else{ memberActive=false; bar.style.display='none'; }
+  render();
+}
+try{
+  if(SB && typeof watchAuthState==='function'){
+    watchAuthState({
+      onSignedOut(){ updateMemberBar(null); },
+      onPending(){ updateMemberBar('pending'); },
+      onRejected(){ updateMemberBar(null); },
+      onApproved(p){ updateMemberBar(p); },
+      onAdmin(p){ updateMemberBar(p); }
+    });
+  }
+}catch(e){}
+
 initMap(); fillAmp(); renderOfficial(); render();
 setTimeout(()=>map.invalidateSize(),200);
+loadLive().then(()=>{ refreshChips(); fillAmp(); render(); });
 </script>
+<script src="js/pwa.js" defer></script>
 </body>
 </html>

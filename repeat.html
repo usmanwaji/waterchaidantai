@@ -2,7 +2,8 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#423d38">
 <title>พื้นที่เสี่ยงอุทกภัย | One Map ชายแดนใต้</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -89,13 +90,22 @@ footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
 .src-btn.on{background:var(--navy)}
 .src-btn{color:var(--navy)}
 .ddpm-filters select{border-color:var(--navy);color:var(--navy)}
+
+/* ===== Mobile & touch enhancements ===== */
+a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
+.navtab{scrollbar-width:none}
+.navtab::-webkit-scrollbar{display:none}
+.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
+@media(pointer:coarse){.navtab a{padding:9px 13px;font-size:13px}}
+@media(max-width:768px){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}}
 </style>
 </head>
 <body>
 
 <header>
   <h1>⚠️ พื้นที่เสี่ยงอุทกภัย<small id="headerSub">วิเคราะห์จากดาวเทียม 14 ปี (2554–2567) — GISTDA</small></h1>
-  <nav class="navtab">
+  <nav class="navtab" aria-label="เมนูหลัก">
     <a href="index.html">🌤️ หน้าแรก</a>
     <a href="map.html">🗺️ สถานการณ์</a>
     <a href="forecast.html">🔮 คาดการณ์</a>
@@ -160,6 +170,7 @@ footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
     <aside id="ddpm-side">
       <div class="disc">🏛️ <b>ข้อมูลพื้นที่เสี่ยงอุทกภัย</b> จากกรมป้องกันและบรรเทาสาธารณภัย (ปภ.) สำรวจจากการประกาศเขตภัยพิบัติ 9 ปี (2560–2568)<br><b>คลิกจุดบนแผนที่</b>เพื่อดูรายละเอียดหมู่บ้าน/ชุมชน</div>
       <div class="card"><h3>📊 สรุปหมู่บ้าน/ชุมชนเสี่ยง</h3><div id="ddpm-stats"><span class="spin"></span> กำลังโหลด…</div></div>
+      <div class="card"><h3 style="display:flex;align-items:center;gap:6px">🧩 วิเคราะห์ช่องว่าง: เสี่ยงสูง × ไกลศูนย์พักพิง <button onclick="gapCsv()" style="margin-left:auto;border:1px solid #d1d5dc;background:#fff;border-radius:7px;padding:3px 8px;font-family:inherit;font-size:11px;cursor:pointer">⬇️ CSV</button></h3><div id="gapBody"><span class="spin"></span> กำลังวิเคราะห์…</div><div style="font-size:10.5px;color:#94a3b8;margin-top:4px">*ใช้พิกัดศูนย์พักพิงตั้งต้น จ.นราธิวาส — จังหวัดอื่นวิเคราะห์ได้เมื่อนำเข้าข้อมูลศูนย์พักพิง</div></div>
       <div class="card">
         <h3>🎨 ระดับความถี่ (จำนวนปีที่ประกาศภัย)</h3>
         <div class="freq-legend" id="ddpm-legend"></div>
@@ -175,6 +186,7 @@ footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
 </footer>
 
 <script src="js/ddpm_risk_data.js"></script>
+<script src="js/shelters_nwt.js"></script>
 <script>
 'use strict';
 
@@ -456,6 +468,36 @@ map.on('click', async e=>{
   }
 });
 loadStats();
+
+/* ---------- Gap Analysis: หมู่บ้านเสี่ยงสูงที่อยู่ไกลศูนย์พักพิง ---------- */
+function _hav(a,b,c,d){const R=6371,r=x=>x*Math.PI/180;const dLa=r(c-a),dLo=r(d-b);const s=Math.sin(dLa/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dLo/2)**2;return 2*R*Math.asin(Math.sqrt(s));}
+let _gapRows=[];
+function buildGap(){
+  const el=document.getElementById('gapBody'); if(!el) return;
+  const shelters=(window.SHELTERS_NWT||[]);
+  if(!shelters.length){ el.innerHTML='<div style="font-size:12px;color:#94a3b8">ยังไม่มีพิกัดศูนย์พักพิงในระบบ</div>'; return; }
+  const FREQ_MIN=5, DIST_KM=5;
+  const villages=(typeof DDPM_RISK_DATA!=='undefined'?DDPM_RISK_DATA:[]).filter(d=>d.pv==='96'&&d.freq>=FREQ_MIN&&d.lat&&d.lng);
+  const rows=villages.map(d=>{ let best=1e9; for(const s of shelters){ const km=_hav(d.lat,d.lng,s.lat,s.lon); if(km<best) best=km; }
+    return {ap:d.ap,tb:d.tb,mu:d.mu,freq:d.freq,km:best}; }).sort((a,b)=>b.km-a.km);
+  _gapRows=rows;
+  const under=rows.filter(r=>r.km>DIST_KM);
+  const head=`<div style="font-size:12px;color:#475569;margin-bottom:6px">หมู่บ้านเสี่ยงสูง (≥${FREQ_MIN} ปี) ใน จ.นราธิวาส: <b>${rows.length}</b> · ไกลศูนย์พักพิง >${DIST_KM} กม.: <b style="color:#dc2626">${under.length}</b></div>`;
+  const table=under.length?`<table style="width:100%;border-collapse:collapse;font-size:11.5px">
+    <thead><tr style="color:#64748b"><th style="text-align:left">ต. / อ.</th><th>ม.</th><th>ปีเสี่ยง</th><th style="text-align:right">ศูนย์ใกล้สุด</th></tr></thead>
+    <tbody>${under.slice(0,30).map(r=>`<tr><td>${esc(r.tb)} / ${esc(r.ap)}</td><td style="text-align:center">${esc(r.mu||'-')}</td><td style="text-align:center">${r.freq}</td><td style="text-align:right;color:#dc2626">${r.km.toFixed(1)} กม.</td></tr>`).join('')}</tbody></table>`
+    :`<div style="font-size:12px;color:#16a34a">✅ หมู่บ้านเสี่ยงสูงทุกแห่งอยู่ในระยะ ${DIST_KM} กม. จากศูนย์พักพิง</div>`;
+  el.innerHTML=head+table;
+}
+function gapCsv(){
+  if(!_gapRows.length){ alert('ยังไม่มีข้อมูลให้ส่งออก'); return; }
+  const rows=[['ตำบล','อำเภอ','หมู่','ปีที่เสี่ยง','ศูนย์พักพิงใกล้สุด(กม.)','เกิน5กม.']];
+  _gapRows.forEach(r=>rows.push([r.tb,r.ap,r.mu||'',r.freq,r.km.toFixed(2),r.km>5?'ใช่':'ไม่']));
+  const csv='\ufeff'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download='gap_analysis_narathiwat.csv'; a.click();
+}
+buildGap();
 </script>
+<script src="js/pwa.js" defer></script>
 </body>
 </html>

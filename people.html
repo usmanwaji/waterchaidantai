@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#423d38">
+<meta name="robots" content="noindex, nofollow">
+<title>ทะเบียนกลุ่มเปราะบาง | One Map ชายแดนใต้</title>
+<meta name="description" content="ทะเบียนผู้ป่วยติดเตียง ผู้สูงอายุ ผู้พิการ ในพื้นที่เสี่ยง เพื่อวางแผนอพยพ — เข้าถึงได้เฉพาะแอดมินจังหวัด (ข้อมูลอ่อนไหว PDPA)">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧓</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--orange:#fe6e00;--orange-d:#ff6b00;--navy:#57504a;--navy-d:#423d38;--outline:#e3e0dd;--outline-strong:#d1d5dc;--shell:rgba(0,0,0,.72);--bad:#dc2626}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.12)}
+header h1{font-size:17px;font-weight:700}
+header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
+.navtab{display:flex;gap:4px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:3px;overflow-x:auto;scrollbar-width:none}
+.navtab::-webkit-scrollbar{display:none}
+.navtab a{color:rgba(255,255,255,.72);text-decoration:none;font-size:12px;font-weight:600;padding:4px 10px;border-radius:7px;white-space:nowrap}
+.navtab a.on{background:var(--orange);color:#fff}
+#authBox{margin-left:auto;font-size:12px}
+#authBox button{background:var(--orange);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-family:inherit;font-weight:600;cursor:pointer}
+#content{flex:1;max-width:1000px;width:100%;margin:0 auto;padding:16px}
+.pdpa{background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px 14px;color:#991b1b;font-size:12.5px;line-height:1.6;margin-bottom:14px}
+.card{background:#fff;border:1px solid var(--outline);border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:14px}
+.card h2{font-size:14.5px;color:var(--navy-d);margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.gatebox{max-width:460px;margin:50px auto;text-align:center;background:#fff;border:1px solid var(--outline);border-radius:14px;padding:26px 22px}
+.gatebox button{margin-top:12px;background:var(--orange);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-family:inherit;font-weight:700;cursor:pointer}
+label{display:block;font-size:11.5px;color:var(--muted);margin:6px 0 2px}
+input,select,textarea{width:100%;padding:7px 10px;border:1px solid var(--outline-strong);border-radius:8px;font-family:inherit;font-size:13px;color:var(--ink);background:#fff}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;margin-top:8px}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--outline-strong)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:6px 8px;text-align:left;border-bottom:1px solid #eef2f7;vertical-align:top}
+th{background:#f7f4f1;color:var(--navy-d);font-weight:700;white-space:nowrap}
+.pill{padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:700;color:#fff}
+.empty{color:var(--muted);font-size:12.5px;padding:8px 0}
+.hide{display:none!important}
+footer{background:var(--navy-d);color:#cfc8c0;font-size:10.5px;padding:6px 14px}
+@media(max-width:700px){.row2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧓 ทะเบียนกลุ่มเปราะบาง<small>วางแผนอพยพผู้ป่วยติดเตียง/ผู้สูงอายุ/ผู้พิการ — เฉพาะแอดมินจังหวัด</small></h1>
+  <nav class="navtab" aria-label="เมนูหลัก">
+    <a href="index.html">🌤️ หน้าแรก</a>
+    <a href="eoc.html">🎛️ ศูนย์บัญชาการ</a>
+    <a href="admin.html">🛠️ ผู้ดูแล</a>
+    <a href="people.html" class="on">🧓 กลุ่มเปราะบาง</a>
+  </nav>
+  <div id="authBox"></div>
+</header>
+
+<div id="content">
+  <div id="gate"></div>
+  <div id="panels" class="hide">
+    <div class="pdpa">
+      🔒 <b>ข้อมูลอ่อนไหวตาม PDPA</b> — หน้านี้มีข้อมูลสุขภาพและที่อยู่ของบุคคล เข้าถึงได้เฉพาะแอดมินของจังหวัดที่รับผิดชอบเท่านั้น
+      โปรดเก็บข้อมูล<b>เท่าที่จำเป็น</b>ต่อการวางแผนอพยพ ใช้ตามวัตถุประสงค์ที่แจ้ง และประสานรูปแบบข้อมูลกับ อบต./รพ.สต. ก่อนใช้งานจริง
+      ห้ามเผยแพร่หรือส่งต่อข้อมูลนอกภารกิจ
+    </div>
+
+    <div class="card">
+      <h2>➕ เพิ่มบุคคลในทะเบียน</h2>
+      <div class="row2">
+        <div><label>ประเภท *</label>
+          <select id="fCat">
+            <option value="bedridden">ผู้ป่วยติดเตียง</option>
+            <option value="elderly">ผู้สูงอายุ</option>
+            <option value="disabled">ผู้พิการ</option>
+            <option value="chronic">ผู้ป่วยเรื้อรัง</option>
+            <option value="pregnant">หญิงตั้งครรภ์</option>
+            <option value="child">เด็กเล็ก</option>
+            <option value="other">อื่นๆ</option>
+          </select>
+        </div>
+        <div><label>จังหวัด *</label><select id="fProv"></select></div>
+      </div>
+      <div class="row2">
+        <div><label>อำเภอ</label><input id="fAmphoe"></div>
+        <div><label>ตำบล</label><input id="fTambon"></div>
+      </div>
+      <div class="row2">
+        <div><label>หมู่บ้าน/ชุมชน</label><input id="fVillage"></div>
+        <div><label>ชื่อ-สกุล (ถ้าจำเป็น)</label><input id="fName" placeholder="เว้นว่างได้ตามหลักเก็บข้อมูลน้อยที่สุด"></div>
+      </div>
+      <div><label>ความช่วยเหลือที่ต้องการ</label><input id="fNeeds" placeholder="เช่น ต้องใช้รถเข็น/เปลหาม/ออกซิเจน อพยพก่อน"></div>
+      <div class="row2">
+        <div><label>ผู้ดูแล/ญาติ</label><input id="fContactName"></div>
+        <div><label>เบอร์ติดต่อ</label><input id="fContactPhone"></div>
+      </div>
+      <div><label>หมายเหตุ</label><input id="fNote"></div>
+      <button class="btn" id="btnAdd">บันทึกเข้าทะเบียน</button>
+    </div>
+
+    <div class="card">
+      <h2>📋 รายชื่อในทะเบียน <span class="pill" id="cntPeople" style="background:#57504a">0</span>
+        <select id="fFilter" style="width:auto;margin-left:auto"><option value="">ทุกประเภท</option>
+          <option value="bedridden">ผู้ป่วยติดเตียง</option><option value="elderly">ผู้สูงอายุ</option>
+          <option value="disabled">ผู้พิการ</option><option value="chronic">ผู้ป่วยเรื้อรัง</option>
+          <option value="pregnant">หญิงตั้งครรภ์</option><option value="child">เด็กเล็ก</option><option value="other">อื่นๆ</option>
+        </select>
+      </h2>
+      <div style="overflow:auto"><table>
+        <thead><tr><th>ประเภท</th><th>พื้นที่</th><th>ชื่อ</th><th>ความช่วยเหลือ</th><th>ติดต่อ</th><th></th></tr></thead>
+        <tbody id="peopleBody"></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+<footer><span>🌊 waterchaidantai — ข้อมูลกลุ่มเปราะบางใช้เพื่อการวางแผนอพยพเท่านั้น (PDPA)</span></footer>
+
+<script src="js/supabase-client.js"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const PROVS = ['นราธิวาส','ปัตตานี','ยะลา','สงขลา','สตูล'];
+const CAT = {bedridden:{l:'ติดเตียง',c:'#dc2626'},elderly:{l:'ผู้สูงอายุ',c:'#ea580c'},disabled:{l:'ผู้พิการ',c:'#7c3aed'},chronic:{l:'เรื้อรัง',c:'#0891b2'},pregnant:{l:'ตั้งครรภ์',c:'#db2777'},child:{l:'เด็กเล็ก',c:'#2563eb'},other:{l:'อื่นๆ',c:'#64748b'}};
+let SB=null; try{ if(window.supabase && typeof sb!=='undefined') SB=sb; }catch(e){ SB=null; }
+let myProfile=null, allPeople=[];
+
+$('fProv').innerHTML = PROVS.map(p=>`<option>${p}</option>`).join('');
+function showGate(html){ $('gate').innerHTML=`<div class="gatebox">${html}</div>`; $('gate').style.display='block'; $('panels').classList.add('hide'); }
+
+async function loadPeople(){
+  if(!SB) return;
+  const { data, error } = await SB.from('vulnerable_people').select('*').order('created_at',{ascending:false});
+  if(error){ $('peopleBody').innerHTML=`<tr><td colspan="6" class="empty">โหลดไม่ได้: ${esc(error.message)}</td></tr>`; return; }
+  allPeople = data||[]; renderPeople();
+}
+function renderPeople(){
+  const filt = $('fFilter').value;
+  const rows = allPeople.filter(r=>!filt || r.category===filt);
+  $('cntPeople').textContent = rows.length;
+  $('peopleBody').innerHTML = rows.map(r=>{
+    const c = CAT[r.category]||CAT.other;
+    const area = [r.village,r.tambon&&('ต.'+r.tambon),r.amphoe&&('อ.'+r.amphoe),r.province].filter(Boolean).map(esc).join(' ');
+    const tel = r.contact_phone?`<a href="tel:${String(r.contact_phone).replace(/[^0-9]/g,'')}">${esc(r.contact_phone)}</a>`:'';
+    return `<tr>
+      <td><span class="pill" style="background:${c.c}">${c.l}</span></td>
+      <td>${area||'—'}</td>
+      <td>${esc(r.full_name)||'<span style="color:#cbd5e1">(ไม่ระบุ)</span>'}</td>
+      <td>${esc(r.needs)||'—'}</td>
+      <td>${esc(r.contact_name)||''}<div style="font-size:11px">${tel}</div></td>
+      <td><button class="btn ghost" style="margin:0;padding:3px 8px;font-size:11px" onclick="delPerson('${r.id}')">ลบ</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">ยังไม่มีข้อมูลในทะเบียน (ในจังหวัดที่คุณรับผิดชอบ)</td></tr>';
+}
+window.delPerson = async function(id){
+  if(!confirm('ลบรายการนี้ออกจากทะเบียน?')) return;
+  const { error } = await SB.from('vulnerable_people').delete().eq('id',id);
+  if(error){ alert('ลบไม่สำเร็จ: '+error.message); return; }
+  loadPeople();
+};
+async function addPerson(){
+  const user = await getUser(); if(!user) return;
+  const rec = { province:$('fProv').value, amphoe:$('fAmphoe').value.trim()||null, tambon:$('fTambon').value.trim()||null,
+    village:$('fVillage').value.trim()||null, category:$('fCat').value, full_name:$('fName').value.trim()||null,
+    needs:$('fNeeds').value.trim()||null, contact_name:$('fContactName').value.trim()||null,
+    contact_phone:$('fContactPhone').value.trim()||null, note:$('fNote').value.trim()||null,
+    created_by:user.id, updated_by:user.id };
+  const { error } = await SB.from('vulnerable_people').insert(rec);
+  if(error){ alert('บันทึกไม่สำเร็จ: '+error.message+'\n(ตรวจสอบว่าเป็นแอดมินของจังหวัดนี้ และรัน schema-v8.sql แล้ว)'); return; }
+  ['fAmphoe','fTambon','fVillage','fName','fNeeds','fContactName','fContactPhone','fNote'].forEach(id=>$(id).value='');
+  loadPeople();
+}
+$('btnAdd').onclick = addPerson;
+$('fFilter').onchange = renderPeople;
+
+function enterAdmin(p){
+  myProfile=p; $('gate').style.display='none'; $('panels').classList.remove('hide');
+  $('authBox').innerHTML = `<span style="opacity:.9">${esc(p.full_name||p.email)}${p.province_scope?(' · '+esc(p.province_scope)):' · ทุกจังหวัด'}</span> <button onclick="signOut()">ออกจากระบบ</button>`;
+  if(p.province_scope){ $('fProv').value=p.province_scope; }
+  loadPeople();
+}
+try{
+  if(SB && typeof watchAuthState==='function'){
+    watchAuthState({
+      onSignedOut(){ $('authBox').innerHTML=''; showGate('<h2>🔒 หน้านี้สำหรับแอดมินจังหวัด</h2><p style="color:#797067;font-size:13px;margin-top:6px">ข้อมูลกลุ่มเปราะบางเป็นข้อมูลอ่อนไหว เข้าถึงได้เฉพาะแอดมิน</p><button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button>'); },
+      onPending(){ showGate('<h2>⏳ รออนุมัติ</h2>'); },
+      onRejected(){ showGate('<h2>🚫 ไม่มีสิทธิ์</h2>'); },
+      onApproved(){ showGate('<h2>🚫 เฉพาะแอดมินเท่านั้น</h2><p style="color:#797067;font-size:13px;margin-top:6px">บัญชีของคุณได้รับอนุมัติแล้ว แต่ข้อมูลกลุ่มเปราะบางสงวนสำหรับแอดมินจังหวัด</p>'); },
+      onAdmin(p){ enterAdmin(p); }
+    });
+  } else { showGate('<h2>ระบบสมาชิกไม่พร้อมใช้งาน</h2>'); }
+}catch(e){ showGate('<h2>เกิดข้อผิดพลาด</h2>'); }
+</script>
+<script src="js/pwa.js" defer></script>
+</body>
+</html>

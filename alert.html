@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#423d38">
+<title>แจ้งเตือนน้ำ | One Map ชายแดนใต้ — waterchaidantai</title>
+<meta name="description" content="รับแจ้งเตือนระดับน้ำ/ฝนของอำเภอคุณผ่าน LINE — และจัดการกติกาการแจ้งเตือนสำหรับสมาชิก">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔔</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--orange:#fe6e00;--orange-d:#ff6b00;--navy:#57504a;--navy-d:#423d38;--peach:#e3e0dd;--outline:#e3e0dd;--outline-strong:#d1d5dc;--shell:rgba(0,0,0,.72)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.12)}
+header h1{font-size:17px;font-weight:700;line-height:1.2}
+header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
+.navtab{display:flex;gap:4px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:3px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.navtab::-webkit-scrollbar{display:none}
+.navtab a{color:rgba(255,255,255,.72);text-decoration:none;font-size:12px;font-weight:600;padding:4px 10px;border-radius:7px;white-space:nowrap}
+.navtab a.on{background:var(--orange);color:#fff}
+#content{flex:1;max-width:1000px;width:100%;margin:0 auto;padding:14px}
+.card{background:#fff;border:1px solid var(--outline);border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:14px}
+.card h2{font-size:15px;color:var(--navy-d);margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+p{line-height:1.65;margin-bottom:8px}
+.muted{color:var(--muted);font-size:12.5px}
+.btn{display:inline-flex;align-items:center;gap:6px;background:var(--orange);color:#fff;border:none;font-family:inherit;font-size:13.5px;font-weight:700;padding:9px 16px;border-radius:9px;cursor:pointer;text-decoration:none}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--outline-strong)}
+.btn.sm{padding:5px 10px;font-size:12px}
+.step{display:flex;gap:12px;align-items:flex-start;margin:10px 0}
+.step .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--orange);color:#fff;font-weight:700;display:grid;place-items:center;font-size:13px}
+.tblwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:7px 8px;text-align:left;border-bottom:1px solid #eef2f7;vertical-align:middle}
+th{background:#f7f4f1;color:var(--navy-d);font-weight:700;white-space:nowrap}
+.pill{padding:1px 9px;border-radius:99px;font-size:10.5px;font-weight:700;color:#fff}
+input,select{padding:7px 10px;border:1px solid var(--outline-strong);border-radius:8px;font-family:inherit;font-size:13px;color:var(--ink);background:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hide{display:none!important}
+.notice{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 12px;font-size:12.5px;color:#9a3412}
+footer{background:var(--navy-d);color:#cfc8c0;font-size:10.5px;padding:6px 14px;display:flex;gap:10px;flex-wrap:wrap}
+footer a{color:#ffb74d;text-decoration:none}
+@media(max-width:760px){header h1 small{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔔 แจ้งเตือนน้ำ<small>รับเตือนอำเภอของคุณผ่าน LINE</small></h1>
+  <nav class="navtab" aria-label="เมนูหลัก">
+    <a href="index.html">🌤️ หน้าแรก</a>
+    <a href="check.html">📍 เช็คพื้นที่ฉัน</a>
+    <a href="map.html">🗺️ สถานการณ์</a>
+    <a href="forecast.html">🔮 คาดการณ์</a>
+    <a href="shelter.html">🏠 ศูนย์พักพิง</a>
+    <a href="route.html">🚗 เส้นทาง</a>
+    <a href="resources.html">🚜 ทรัพยากร</a>
+    <a href="eoc.html">🎛️ ศูนย์บัญชาการ</a>
+    <a href="alert.html" class="on">🔔 แจ้งเตือน</a>
+  </nav>
+</header>
+
+<div id="content">
+  <!-- ประชาชน -->
+  <div class="card">
+    <h2>📣 รับแจ้งเตือนระดับน้ำของอำเภอคุณ</h2>
+    <p>เมื่อสถานีน้ำใกล้บ้านคุณระดับสูงถึงเกณฑ์เฝ้าระวัง ระบบจะส่งข้อความเข้า LINE ให้ทันที — ไม่ต้องเปิดเว็บเฝ้าเอง เหมาะเวลาน้ำมาตอนกลางคืน</p>
+    <div class="step"><div class="n">1</div><div>เพิ่มเพื่อน <b>LINE Official Account</b> ของระบบ หรือเข้ากลุ่ม LINE ของอำเภอคุณ (ลิงก์/QR ด้านล่าง)</div></div>
+    <div class="step"><div class="n">2</div><div>กด <b>เพิ่มเพื่อน</b> — เท่านี้ก็จะได้รับข้อความเตือนอัตโนมัติ</div></div>
+    <div class="step"><div class="n">3</div><div>ต้องการหยุด บล็อก OA หรือออกจากกลุ่มได้ทุกเมื่อ</div></div>
+    <div class="row" style="margin-top:10px">
+      <a class="btn" id="tgLink" href="#" target="_blank" rel="noopener">💚 เพิ่มเพื่อน LINE OA</a>
+      <span class="muted">ยังไม่ได้ตั้งค่าลิงก์ — สมาชิกตั้งได้ในส่วนจัดการด้านล่าง</span>
+    </div>
+    <p class="muted" style="margin-top:10px">หมายเหตุ: LINE Notify ปิดบริการแล้ว (มี.ค. 2025) ระบบจึงใช้ LINE Messaging API (LINE OA) ในการส่งแจ้งเตือน</p>
+  </div>
+
+  <!-- สมาชิก: จัดการกติกา -->
+  <div class="card" id="authGate">
+    <h2>🔐 จัดการกติกาแจ้งเตือน (สำหรับเจ้าหน้าที่)</h2>
+    <p class="muted" id="authMsg">กำลังตรวจสอบสถานะเข้าสู่ระบบ…</p>
+    <div id="signinBox" class="hide"><button class="btn" id="btnSignin">เข้าสู่ระบบด้วย Google</button></div>
+  </div>
+
+  <div class="card hide" id="rulesCard">
+    <h2>⚙️ กติกาแจ้งเตือน <button class="btn sm" id="btnAddRule" style="margin-left:auto">+ เพิ่มกฎ</button></h2>
+    <div class="notice hide" id="ruleForm">
+      <div class="row">
+        <input id="fLabel" placeholder="ชื่อกฎ (เช่น สุไหงโก-ลก เฝ้าระวัง)" style="flex:1;min-width:160px">
+        <select id="fProv"><option>นราธิวาส</option><option>ปัตตานี</option><option>ยะลา</option><option>สงขลา</option><option>สตูล</option></select>
+        <input id="fStation" placeholder="รหัสสถานี (เว้นว่าง=ทั้งจังหวัด)" style="width:180px">
+      </div>
+      <div class="row" style="margin-top:8px">
+        <select id="fMetric"><option value="wl_pct_bank">% ของตลิ่ง</option><option value="rain_24h">ฝน 24 ชม. (มม.)</option></select>
+        <input id="fThreshold" type="number" placeholder="เกณฑ์ เช่น 80" style="width:120px">
+        <input id="fChannel" placeholder="ช่องทาง เช่น line:Uxxxx หรือ line:Cxxxx (กลุ่ม)" style="flex:1;min-width:180px">
+        <input id="fCooldown" type="number" value="180" title="cooldown (นาที)" style="width:90px">
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn sm" id="btnSaveRule">บันทึก</button>
+        <button class="btn sm ghost" id="btnCancelRule">ยกเลิก</button>
+      </div>
+    </div>
+    <div class="tblwrap" style="margin-top:10px">
+      <table><thead><tr><th>กฎ</th><th>จังหวัด/สถานี</th><th>เกณฑ์</th><th>ช่องทาง</th><th>สถานะ</th><th></th></tr></thead>
+      <tbody id="rulesBody"></tbody></table>
+    </div>
+  </div>
+
+  <div class="card hide" id="logCard">
+    <h2>🕓 ประวัติการเตือนล่าสุด</h2>
+    <div class="tblwrap"><table><thead><tr><th>เวลา</th><th>รายละเอียด</th></tr></thead><tbody id="logBody"></tbody></table></div>
+  </div>
+</div>
+
+<footer>
+  <span>🌊 waterchaidantai — One Map ชายแดนใต้</span>
+  <a href="index.html">หน้าแรก</a><a href="map.html">สถานการณ์น้ำ</a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const STATUS = {enabled:{c:'#16a34a',l:'เปิด'}, disabled:{c:'#94a3b8',l:'ปิด'}};
+let editingId = null;
+
+function metricLabel(m){ return m==='rain_24h' ? 'ฝน 24 ชม.' : '% ตลิ่ง'; }
+
+async function loadRules(){
+  const { data, error } = await sb.from('alert_rules').select('*').order('created_at',{ascending:false});
+  const tb = $('rulesBody');
+  if(error){ tb.innerHTML = `<tr><td colspan="6" style="color:#dc2626">โหลดกฎไม่สำเร็จ: ${esc(error.message)}</td></tr>`; return; }
+  tb.innerHTML = (data||[]).map(r=>{
+    const st = r.enabled ? STATUS.enabled : STATUS.disabled;
+    return `<tr>
+      <td>${esc(r.label||'—')}</td>
+      <td>${esc(r.province||'ทุกจังหวัด')}${r.station_code?` · ${esc(r.station_code)}`:''}</td>
+      <td>${metricLabel(r.metric)} ≥ ${esc(r.threshold)}</td>
+      <td style="font-family:monospace;font-size:11px">${esc(r.channel)}</td>
+      <td><span class="pill" style="background:${st.c}">${st.l}</span></td>
+      <td class="row">
+        <button class="btn sm ghost" onclick="toggleRule('${r.id}',${!r.enabled})">${r.enabled?'ปิด':'เปิด'}</button>
+        <button class="btn sm ghost" onclick="delRule('${r.id}')">ลบ</button>
+      </td></tr>`;
+  }).join('') || '<tr><td colspan="6" class="muted">ยังไม่มีกฎ — กด “+ เพิ่มกฎ”</td></tr>';
+}
+async function loadLog(){
+  const { data } = await sb.from('alert_log').select('*').order('fired_at',{ascending:false}).limit(50);
+  $('logBody').innerHTML = (data||[]).map(x=>{
+    const t = new Date(x.fired_at).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+    const p = x.payload||{};
+    return `<tr><td style="white-space:nowrap">${t}</td><td>${esc(p.message||JSON.stringify(p))}</td></tr>`;
+  }).join('') || '<tr><td colspan="2" class="muted">ยังไม่มีประวัติการเตือน</td></tr>';
+}
+async function toggleRule(id, en){ await sb.from('alert_rules').update({enabled:en}).eq('id',id); loadRules(); }
+async function delRule(id){ if(confirm('ลบกฎนี้?')){ await sb.from('alert_rules').delete().eq('id',id); loadRules(); } }
+window.toggleRule = toggleRule; window.delRule = delRule;
+
+async function saveRule(){
+  const user = await getUser();
+  const payload = {
+    label:$('fLabel').value.trim()||null, province:$('fProv').value,
+    station_code:$('fStation').value.trim()||null, metric:$('fMetric').value,
+    threshold:parseFloat($('fThreshold').value), channel:$('fChannel').value.trim(),
+    cooldown_min:parseInt($('fCooldown').value)||180, enabled:true, created_by:user?.id
+  };
+  if(!payload.threshold || !payload.channel){ alert('กรอกเกณฑ์และช่องทางให้ครบ'); return; }
+  const { error } = await sb.from('alert_rules').insert(payload);
+  if(error){ alert('บันทึกไม่สำเร็จ: '+error.message); return; }
+  $('ruleForm').classList.add('hide'); loadRules();
+}
+
+$('btnAddRule').onclick = ()=> $('ruleForm').classList.toggle('hide');
+$('btnCancelRule').onclick = ()=> $('ruleForm').classList.add('hide');
+$('btnSaveRule').onclick = saveRule;
+$('btnSignin').onclick = ()=> signInWithGoogle();
+
+watchAuthState({
+  onSignedOut(){ $('authMsg').textContent='เข้าสู่ระบบเพื่อจัดการกติกาแจ้งเตือน'; $('signinBox').classList.remove('hide'); },
+  onPending(){ $('authMsg').textContent='บัญชีของคุณรอการอนุมัติจากผู้ดูแลระบบ'; },
+  onRejected(){ $('authMsg').textContent='บัญชีนี้ไม่ได้รับสิทธิ์'; },
+  onApproved: showMember, onAdmin: showMember
+});
+function showMember(profile){
+  $('authGate').classList.add('hide');
+  $('rulesCard').classList.remove('hide');
+  $('logCard').classList.remove('hide');
+  loadRules(); loadLog();
+}
+</script>
+<script src="js/pwa.js" defer></script>
+</body>
+</html>

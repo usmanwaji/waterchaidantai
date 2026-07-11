@@ -2,7 +2,8 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#423d38">
 <title>ทรัพยากร จักรกลสาธารณภัย | One Map ชายแดนใต้</title>
 <meta name="description" content="แผนที่จักรกลสาธารณภัยที่ประจำการในพื้นที่ — เรือกู้ภัย เครื่องสูบส่งน้ำระยะไกล รถผลิตน้ำดื่ม ฯลฯ — สตูล สงขลา ปัตตานี ยะลา นราธิวาส">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚜</text></svg>">
@@ -92,13 +93,23 @@ footer a{color:var(--orange-warm);text-decoration:none}
   #btnCollapse{display:none}
   footer{display:none}
 }
+
+/* ===== Mobile & touch enhancements ===== */
+a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
+.navtab{scrollbar-width:none}
+.navtab::-webkit-scrollbar{display:none}
+.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
+@media(pointer:coarse){.navtab a{padding:9px 13px;font-size:13px}}
+@media(max-width:768px){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}}
+@supports(height:100dvh){html,body{height:100dvh}}
 </style>
 </head>
 <body>
 
 <header>
   <h1>🚜 ทรัพยากร<small>จักรกลสาธารณภัย · สตูล สงขลา ปัตตานี ยะลา นราธิวาส</small></h1>
-  <nav class="navtab">
+  <nav class="navtab" aria-label="เมนูหลัก">
     <a href="index.html">🌤️ หน้าแรก</a>
     <a href="map.html">🗺️ สถานการณ์</a>
     <a href="forecast.html">🔮 คาดการณ์</a>
@@ -139,6 +150,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
     <div id="mList"><span style="font-size:12px;color:var(--muted)">กำลังโหลด…</span></div>
 
     <div id="reportSec"></div>
+    <div class="sec" id="reqSec"></div>
     <div class="note">ข้อมูลจักรกลสาธารณภัยบันทึกโดยเจ้าหน้าที่ที่ได้รับอนุมัติ เพื่อการประสานทรัพยากรระหว่างหน่วยงานและแจ้งประชาชน โปรดตรวจสอบกับผู้ประสานงานก่อนเข้ารับบริการ</div>
   </aside>
 
@@ -258,7 +270,7 @@ function visibleMachines(){
   return allMachines.filter(m => (!fT || m.type === fT) && (fS === 'all' || m.status !== 'demobilized'));
 }
 
-function renderAll(){ renderList(); renderMarkers(); }
+function renderAll(){ renderList(); renderMarkers(); renderRequests(); }
 
 function renderList(){
   const el = document.getElementById('mList');
@@ -513,6 +525,76 @@ function renderReportSection(state, profile){
   document.getElementById('mFrom').value = todayStr();
 }
 
+/* ---------- คำขอสนับสนุนทรัพยากร (resource_requests) ---------- */
+let allRequests = [];
+const REQ_STATUS = {
+  requested:{l:'ขอแล้ว',    c:'#ca8a04', next:'approved',  nextL:'อนุมัติ'},
+  approved: {l:'อนุมัติแล้ว', c:'#2563eb', next:'dispatched', nextL:'ส่งแล้ว'},
+  dispatched:{l:'ส่งแล้ว',   c:'#7c3aed', next:'returned',   nextL:'คืนแล้ว'},
+  returned: {l:'คืนแล้ว',    c:'#16a34a', next:null},
+  cancelled:{l:'ยกเลิก',     c:'#94a3b8', next:null}
+};
+const URG = {normal:{l:'ปกติ',c:'#64748b'}, urgent:{l:'ด่วน',c:'#ea580c'}, critical:{l:'ด่วนที่สุด',c:'#dc2626'}};
+async function loadRequests(){
+  const { data, error } = await sb.from('resource_requests').select('*').order('created_at',{ascending:false});
+  allRequests = error ? [] : (data||[]);
+  renderRequests();
+}
+function reqAvailability(){
+  const by = {}; MACHINE_TYPES.forEach(t=>by[t.id]={total:0,active:0});
+  allMachines.forEach(m=>{ if(!by[m.type]) by[m.type]={total:0,active:0}; by[m.type].total++; if(m.status!=='demobilized') by[m.type].active++; });
+  return by;
+}
+function renderRequests(){
+  const el = document.getElementById('reqSec'); if(!el) return;
+  const av = reqAvailability();
+  const avHtml = MACHINE_TYPES.filter(t=>av[t.id]&&av[t.id].total>0).map(t=>
+    `<span style="display:inline-block;background:#f3f4f6;border:1px solid #e3e0dd;border-radius:7px;padding:2px 7px;margin:2px;font-size:11px">${t.icon} <b>${av[t.id].active}</b>/${av[t.id].total}</span>`
+  ).join('') || '<span style="font-size:11px;color:var(--muted)">ยังไม่มีข้อมูลจักรกล</span>';
+  const canReq = !!window.currentUserProfile;
+  const opts = MACHINE_TYPES.map(t=>`<option value="${t.id}">${t.icon} ${t.label}</option>`).join('');
+  const form = canReq ? `
+    <details style="margin:6px 0"><summary style="cursor:pointer;font-weight:700;color:var(--navy-d,#423d38);font-size:12.5px">➕ สร้างคำขอสนับสนุน</summary>
+      <input id="rqRequester" placeholder="หน่วยที่ขอ เช่น อบต.บางปอ" style="width:100%;margin-top:5px">
+      <div class="row2"><div><input id="rqProv" placeholder="จังหวัด" style="width:100%"></div><div><input id="rqAmphoe" placeholder="อำเภอ" style="width:100%"></div></div>
+      <div class="row2"><div><select id="rqType" style="width:100%">${opts}</select></div><div><input id="rqQty" type="number" min="1" value="1" placeholder="จำนวน" style="width:100%"></div></div>
+      <div class="row2"><div><select id="rqUrg" style="width:100%"><option value="normal">ปกติ</option><option value="urgent">ด่วน</option><option value="critical">ด่วนที่สุด</option></select></div><div><input id="rqPhone" placeholder="เบอร์ติดต่อ" style="width:100%"></div></div>
+      <input id="rqNote" placeholder="หมายเหตุ" style="width:100%;margin-top:4px">
+      <button id="btnReqSubmit" style="margin-top:6px;background:var(--orange);color:#fff;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;font-family:inherit;font-weight:700">ส่งคำขอ</button>
+    </details>` : '';
+  const list = allRequests.map(r=>{
+    const st = REQ_STATUS[r.status]||REQ_STATUS.requested, u = URG[r.urgency]||URG.normal, t = typeOf(r.resource_type);
+    const adv = (canReq && st.next) ? `<button onclick="updateReqStatus('${r.id}','${st.next}')" style="font-size:10.5px;border:1px solid #d1d5dc;background:#fff;border-radius:6px;padding:2px 7px;cursor:pointer">→ ${st.nextL}</button>` : '';
+    const cancel = (canReq && r.status!=='returned' && r.status!=='cancelled') ? `<button onclick="updateReqStatus('${r.id}','cancelled')" style="font-size:10.5px;border:1px solid #d1d5dc;background:#fff;border-radius:6px;padding:2px 7px;cursor:pointer">ยกเลิก</button>` : '';
+    return `<div class="mrow" style="border-left-color:${st.c}">
+      <div class="nm">${t.icon} ${esc(t.label.split(' ')[0])} × ${esc(r.quantity)} <span class="badge" style="background:${st.c}">${st.l}</span> <span class="badge" style="background:${u.c}">${u.l}</span></div>
+      <div class="sub">${esc(r.requester||'-')}${r.province?' · '+esc(r.province):''}${r.amphoe?' อ.'+esc(r.amphoe):''}${r.contact_phone?' · ☎ '+esc(r.contact_phone):''}</div>
+      ${r.note?`<div class="sub">${esc(r.note)}</div>`:''}
+      <div style="margin-top:4px;display:flex;gap:5px">${adv}${cancel}</div>
+    </div>`;
+  }).join('') || '<div style="font-size:12px;color:var(--muted);padding:6px 0">ยังไม่มีคำขอสนับสนุน</div>';
+  el.innerHTML = `<h3>🆘 คำขอสนับสนุนทรัพยากร <span style="font-weight:400;color:var(--muted)">${allRequests.filter(r=>['requested','approved','dispatched'].includes(r.status)).length? '('+allRequests.filter(r=>['requested','approved','dispatched'].includes(r.status)).length+' ค้าง)':''}</span></h3>
+    <div style="margin:4px 0">${avHtml}</div>${form}<div style="margin-top:6px">${list}</div>`;
+  const b = document.getElementById('btnReqSubmit'); if(b) b.onclick = submitRequest;
+}
+window.updateReqStatus = async function(id, status){
+  const { error } = await sb.from('resource_requests').update({ status }).eq('id', id);
+  if(error){ alert('อัปเดตไม่สำเร็จ: '+error.message); return; }
+  loadRequests();
+};
+async function submitRequest(){
+  const g=id=>document.getElementById(id);
+  const rec = { requester:g('rqRequester').value.trim(), province:g('rqProv').value.trim()||null,
+    amphoe:g('rqAmphoe').value.trim()||null, resource_type:g('rqType').value,
+    quantity:Math.max(1,parseInt(g('rqQty').value)||1), urgency:g('rqUrg').value,
+    contact_phone:g('rqPhone').value.trim()||null, note:g('rqNote').value.trim()||null,
+    created_by:(window.currentUserProfile||{}).id };
+  if(!rec.requester){ alert('กรุณาระบุหน่วยที่ขอ'); return; }
+  const { error } = await sb.from('resource_requests').insert(rec);
+  if(error){ alert('ส่งคำขอไม่สำเร็จ: '+error.message); return; }
+  loadRequests();
+}
+
 /* ---------- ตัวกรอง ---------- */
 document.getElementById('fType').innerHTML = '<option value="">ทุกประเภท</option>' + MACHINE_TYPES.map(t=>`<option value="${t.id}">${t.icon} ${t.label}</option>`).join('');
 document.getElementById('fType').onchange = renderAll;
@@ -522,8 +604,8 @@ document.getElementById('fStatus').onchange = renderAll;
 let loadTimer = null;
 function unlockPage(){
   document.getElementById('pageGate').style.display = 'none';
-  loadMachines();
-  if (!loadTimer) loadTimer = setInterval(loadMachines, 5 * 60 * 1000);
+  loadMachines(); loadRequests();
+  if (!loadTimer) loadTimer = setInterval(()=>{ loadMachines(); loadRequests(); }, 5 * 60 * 1000);
   setTimeout(()=>map.invalidateSize(), 100);
 }
 function lockPage(title, msg, actionHTML){
@@ -569,5 +651,6 @@ watchAuthState({
   onAdmin:    (p) => { renderAuthHeader('approved', p); renderReportSection('approved', p); unlockPage(); }
 });
 </script>
+<script src="js/pwa.js" defer></script>
 </body>
 </html>

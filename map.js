@@ -246,6 +246,68 @@ const gWL=L.layerGroup().addTo(map), gRain=L.layerGroup(),
   cb.onchange = e => e.target.checked ? map.addLayer(g) : map.removeLayer(g);
 });
 
+/* ---------- ปุ่มลัดบนแผนที่: ใกล้ฉัน · เฉพาะผิดปกติ · แชร์สรุป ---------- */
+(function(){
+  const st=document.createElement('style');
+  st.textContent='.maptools{display:flex;flex-direction:column;gap:4px}.maptools button{width:34px;height:34px;border:none;border-radius:8px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.28);font-size:16px;cursor:pointer;line-height:1}.maptools button.on{background:#fe6e00;color:#fff}';
+  document.head.appendChild(st);
+})();
+let wlFilterAbnormal=false, meMarker=null;
+const toolCtl=L.control({position:'topleft'});
+toolCtl.onAdd=()=>{ const d=L.DomUtil.create('div','maptools');
+  d.innerHTML='<button id="btnNear" title="ใกล้ฉัน">📍</button><button id="btnAbn" title="เฉพาะสถานีผิดปกติ">⚠</button><button id="btnShare" title="แชร์สรุปสถานการณ์">📷</button>';
+  L.DomEvent.disableClickPropagation(d); return d; };
+toolCtl.addTo(map);
+document.getElementById('btnNear').onclick=locateMe;
+document.getElementById('btnAbn').onclick=toggleAbnormal;
+document.getElementById('btnShare').onclick=shareSnapshot;
+
+function locateMe(){
+  if(!navigator.geolocation){ alert('อุปกรณ์ไม่รองรับการหาตำแหน่ง'); return; }
+  const b=document.getElementById('btnNear'); b.textContent='⏳';
+  navigator.geolocation.getCurrentPosition(p=>{
+    b.textContent='📍'; const ll=[p.coords.latitude,p.coords.longitude];
+    if(meMarker) map.removeLayer(meMarker);
+    meMarker=L.circleMarker(ll,{radius:9,color:'#2563eb',weight:3,fillColor:'#3b82f6',fillOpacity:.9}).addTo(map).bindPopup('ตำแหน่งของคุณ').openPopup();
+    map.setView(ll,12,{animate:true});
+  }, e=>{ b.textContent='📍'; alert('หาตำแหน่งไม่ได้: '+e.message); }, {enableHighAccuracy:true,timeout:10000});
+}
+function toggleAbnormal(){
+  wlFilterAbnormal=!wlFilterAbnormal;
+  document.getElementById('btnAbn').classList.toggle('on',wlFilterAbnormal);
+  if(wlFilterAbnormal && !map.hasLayer(gWL)){ map.addLayer(gWL); const cb=document.getElementById('lyWL'); if(cb)cb.checked=true; }
+  applyWlFilter();
+}
+function applyWlFilter(){
+  wlStations.forEach(s=>{ const m=markersById[s.id]; if(!m) return;
+    const show=!wlFilterAbnormal || s.cls==='overflow' || s.cls==='high';
+    if(show){ if(!gWL.hasLayer(m)) m.addTo(gWL); } else if(gWL.hasLayer(m)) gWL.removeLayer(m); });
+}
+function shareSnapshot(){
+  const over=wlStations.filter(s=>s.cls==='overflow'), high=wlStations.filter(s=>s.cls==='high');
+  const top=[...over,...high].sort((a,b)=>(b.pct??-1)-(a.pct??-1)).slice(0,6);
+  const W=720,H=210+top.length*28+40, c=document.createElement('canvas'); c.width=W; c.height=H;
+  const x=c.getContext('2d');
+  x.fillStyle='#0f172a'; x.fillRect(0,0,W,H);
+  x.fillStyle='#fb923c'; x.fillRect(0,0,W,60);
+  x.fillStyle='#fff'; x.font='bold 23px sans-serif'; x.fillText('🌊 สรุปสถานการณ์น้ำ ชายแดนใต้', 20, 39);
+  x.font='13px sans-serif'; x.fillStyle='#94a3b8';
+  x.fillText('ณ '+new Date().toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'}), 20, 84);
+  x.font='bold 38px sans-serif'; x.fillStyle='#f87171'; x.fillText(String(over.length), 40, 142);
+  x.fillStyle='#fbbf24'; x.fillText(String(high.length), 240, 142);
+  x.font='13px sans-serif'; x.fillStyle='#cbd5e1';
+  x.fillText('สถานีล้นตลิ่ง', 40, 166); x.fillText('เฝ้าระวังสูง (≥70%)', 240, 166);
+  let yy=208; x.font='14px sans-serif';
+  top.forEach(s=>{ x.fillStyle=(WL_CLASSES[s.cls]||{color:'#888'}).color; x.fillRect(20,yy-12,10,10);
+    x.fillStyle='#e2e8f0'; x.fillText(`${s.code||''} ${s.name} (อ.${s.amphoe}) ${s.pct!=null?Math.round(s.pct)+'%':''}`.slice(0,58), 38, yy); yy+=28; });
+  x.fillStyle='#64748b'; x.font='12px sans-serif'; x.fillText('waterchaidantai.com/map.html', 20, H-14);
+  c.toBlob(b=>{ if(!b){ alert('สร้างภาพไม่สำเร็จ'); return; }
+    const f=new File([b],'situation.png',{type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[f]})){ navigator.share({files:[f],title:'สรุปสถานการณ์น้ำ',text:'สรุปสถานการณ์น้ำ ชายแดนใต้'}).catch(()=>{}); }
+    else { const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='situation.png'; a.click(); }
+  });
+}
+
 function mkIcon(cls, color, size, text, blink){
   return L.divIcon({
     className:'',
@@ -339,6 +401,7 @@ async function loadWaterLevel(){
     wlStations.push(s);
   });
   renderSidebar();
+  if(typeof applyWlFilter==='function') applyWlFilter();
 }
 
 function trendArrow(s){

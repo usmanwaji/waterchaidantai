@@ -2,7 +2,8 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#423d38">
 <title>คาดการณ์น้ำท่วม | One Map ระดับน้ำชายแดนใต้</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -93,13 +94,22 @@ header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-
 #side{border-left:1px solid var(--outline)}
 .card,.item,.provcard{border-color:var(--outline)}
 footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
+
+/* ===== Mobile & touch enhancements ===== */
+a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
+.navtab{scrollbar-width:none}
+.navtab::-webkit-scrollbar{display:none}
+.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
+@media(pointer:coarse){.navtab a{padding:9px 13px;font-size:13px}}
+@media(max-width:768px){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}}
 </style>
 </head>
 <body>
 
 <header>
   <h1>🔮 คาดการณ์น้ำท่วม<small>สตูล · สงขลา · ปัตตานี · ยะลา · นราธิวาส</small></h1>
-  <nav class="navtab">
+  <nav class="navtab" aria-label="เมนูหลัก">
     <a href="index.html">🌤️ หน้าแรก</a>
     <a href="map.html">🗺️ สถานการณ์</a>
     <a href="forecast.html" class="on">🔮 คาดการณ์</a>
@@ -367,6 +377,30 @@ function rateTxt(r){
   if(Math.abs(cm) < 0.5) return 'ทรงตัว';
   return (cm>0?'▲ +':'▼ ') + fmt(cm,1) + ' ซม./ชม.';
 }
+/* เวลานาฬิกาโดยประมาณจากจำนวนชั่วโมง (เวลาไทย) */
+function ttaClock(h){
+  const d = new Date(Date.now() + h*3600e3 + 7*3600e3);
+  const hh = String(d.getUTCHours()).padStart(2,'0'), mm = String(d.getUTCMinutes()).padStart(2,'0');
+  const today = new Date(Date.now()+7*3600e3).getUTCDate();
+  const day = d.getUTCDate()===today ? 'คืนนี้/วันนี้' : (d.getUTCDate()===((today%31)+1) ? 'พรุ่งนี้' : '');
+  return 'ราว '+hh+':'+mm+' น.'+(day?' '+day:'');
+}
+/* สร้างข้อความแจ้งเตือนรูปแบบราชการ พร้อมคัดลอกส่งกลุ่มไลน์ */
+function alertMsg(s,p){
+  const lvl = p.cls==='over'?'🔴 [ล้นตลิ่ง]':p.cls==='risk'?'🟠 [เฝ้าระวังสูง]':'🟡 [เฝ้าระวัง]';
+  let m = lvl+' สถานี '+(s.code?s.code+' ':'')+s.name+' อ.'+s.amphoe+' จ.'+s.prov;
+  m += ' | ระดับน้ำ '+fmt(s.msl)+' ม.รทก. (ตลิ่ง '+fmt(s.bank)+')';
+  m += ' | แนวโน้ม '+rateTxt(s.rate).replace(/[▲▼]/g,'').trim();
+  if(p.tta!=null&&p.tta>0&&p.tta<48) m += ' | คาดถึงตลิ่ง '+ttaClock(p.tta)+' (~'+fmt(p.tta,1)+' ชม.)';
+  m += ' | ดูสด: waterchaidantai.com/map.html';
+  return m;
+}
+function copyAlert(ev,i){
+  ev.stopPropagation();
+  const t=(window._amsg||[])[i]||'';
+  if(navigator.clipboard) navigator.clipboard.writeText(t); else { const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  const b=ev.currentTarget, o=b.textContent; b.textContent='✓ คัดลอกแล้ว'; setTimeout(()=>b.textContent=o,1500);
+}
 
 /* ---------- แสดงผล ---------- */
 function render(){
@@ -394,7 +428,7 @@ function render(){
           <tr><td style="color:#64748b">ระดับตลิ่ง</td><td style="text-align:right">${fmt(s.bank)} ม.รทก.</td></tr>
           <tr><td style="color:#64748b">แนวโน้ม</td><td style="text-align:right">${rateTxt(s.rate)}</td></tr>
           ${pp.pred!=null?`<tr><td style="color:#64748b">คาดระดับ +${horizon} ชม.</td><td style="text-align:right"><b>${fmt(pp.pred)}</b> ม.รทก.</td></tr>`:''}
-          ${pp.tta!=null&&pp.tta>0&&pp.tta<48?`<tr><td style="color:#dc2626">คาดถึงตลิ่งใน</td><td style="text-align:right;color:#dc2626"><b>~${fmt(pp.tta,1)} ชม.</b></td></tr>`:''}
+          ${pp.tta!=null&&pp.tta>0&&pp.tta<48?`<tr><td style="color:#dc2626">คาดถึงตลิ่งใน</td><td style="text-align:right;color:#dc2626"><b>~${fmt(pp.tta,1)} ชม.</b><br><span style="font-size:10.5px">${ttaClock(pp.tta)}</span></td></tr>`:''}
         </table>`;
       }, {maxWidth:290})
       .addTo(gMk);
@@ -406,11 +440,15 @@ function render(){
   let html = `<div class="card"><h3>📌 วิธีคาดการณ์ช่วง +${horizon} ชม.</h3><div style="font-size:12px;color:#475569">${HORIZON_INFO[horizon].method}</div></div>`;
   html += `<div class="card"><h3>⚠️ สถานีเฝ้าระวัง (${hot.length})</h3>`;
   if(!hot.length) html += `<div style="font-size:12.5px;color:#16a34a">✅ ไม่มีสถานีที่คาดว่าจะถึงระดับเสี่ยงในช่วง +${horizon} ชม.</div>`;
+  window._amsg = [];
   hot.slice(0,25).forEach(({s,p})=>{
     const C = CLS[p.cls];
-    html += `<div class="item" style="border-left-color:${C.color}" onclick="fly(${s.lat},${s.lon})">
-      <div style="display:flex;justify-content:space-between;gap:6px"><span class="nm">${esc(s.name)}</span><span class="badge" style="background:${C.color}">${C.label}</span></div>
-      <div class="sub">${esc(s.amphoe)} · ${esc(s.prov)} · ${rateTxt(s.rate)}${p.tta!=null&&p.tta>0&&p.tta<48?` · <b style="color:#dc2626">ถึงตลิ่ง ~${fmt(p.tta,1)} ชม.</b>`:''}</div>
+    const i = window._amsg.length; window._amsg.push(alertMsg(s,p));
+    const ttaTxt = (p.tta!=null&&p.tta>0&&p.tta<48) ? ` · <b style="color:#dc2626">ถึงตลิ่ง ~${fmt(p.tta,1)} ชม. (${ttaClock(p.tta)})</b>` : '';
+    html += `<div class="item" style="border-left-color:${C.color}">
+      <div style="display:flex;justify-content:space-between;gap:6px;cursor:pointer" onclick="fly(${s.lat},${s.lon})"><span class="nm">${esc(s.name)}</span><span class="badge" style="background:${C.color}">${C.label}</span></div>
+      <div class="sub" style="cursor:pointer" onclick="fly(${s.lat},${s.lon})">${esc(s.amphoe)} · ${esc(s.prov)} · ${rateTxt(s.rate)}${ttaTxt}</div>
+      <button style="margin-top:5px;font-family:inherit;font-size:11px;font-weight:600;background:#fff;color:#57504a;border:1px solid #d1d5dc;border-radius:7px;padding:3px 9px;cursor:pointer" onclick="copyAlert(event,${i})">📋 คัดลอกข้อความแจ้งเตือน</button>
     </div>`;
   });
   html += `</div>`;
@@ -477,5 +515,6 @@ function wrfCard(days){
 loadBoundaries();
 loadAll();
 </script>
+<script src="js/pwa.js" defer></script>
 </body>
 </html>
