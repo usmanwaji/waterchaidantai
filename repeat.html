@@ -266,7 +266,7 @@ async function initDdpmMap() {
     L.control.zoom({position:'topright'}).addTo(ddpmMap);
     L.control.scale({imperial:false, position:'bottomright'}).addTo(ddpmMap);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap | ปภ.'}).addTo(ddpmMap);
-ddpmMap.createPane('hydro'); ddpmMap.getPane('hydro').style.zIndex = 250;
+ddpmMap.createPane('hydro'); ddpmMap.getPane('hydro').style.zIndex = 250; ddpmMap.getPane('hydro').style.filter = 'saturate(2.8) contrast(1.5) brightness(0.9)';
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Hydro_Reference_Overlay/MapServer/tile/{z}/{y}/{x}', {pane:'hydro', opacity:1, maxZoom:19, attribution:'Hydro: Esri'}).addTo(ddpmMap);
     ddpmMarkers = L.layerGroup().addTo(ddpmMap);
     // Build legend
@@ -409,7 +409,7 @@ const map = L.map('map', {zoomControl:false}).setView([6.20,101.75], 10);
 L.control.zoom({position:'topright'}).addTo(map);
 L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap | GISTDA'}).addTo(map);
-map.createPane('hydro'); map.getPane('hydro').style.zIndex = 250;
+map.createPane('hydro'); map.getPane('hydro').style.zIndex = 250; map.getPane('hydro').style.filter = 'saturate(2.8) contrast(1.5) brightness(0.9)';
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Hydro_Reference_Overlay/MapServer/tile/{z}/{y}/{x}', {pane:'hydro', opacity:1, maxZoom:19, attribution:'Hydro: Esri'}).addTo(map);
 const tms = L.tileLayer(`${B}/maps/flood-freq/tms/{z}/{x}/{y}?api_key=${KEY}`, {opacity:.75, maxZoom:18}).addTo(map);
 document.getElementById('opaSlider').oninput = e => tms.setOpacity(e.target.value/100);

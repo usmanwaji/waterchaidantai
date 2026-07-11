@@ -243,7 +243,7 @@ window.initMap = function() {
   });
 
   // แม่น้ำ/ลำน้ำให้เห็นชัด: overlay อุทกศาสตร์ (Esri Hydro) เหนือแผนที่ฐาน ใต้หมุด
-  gMap.overlayMapTypes.push(new google.maps.ImageMapType({
+  for (let _i = 0; _i < 3; _i++) gMap.overlayMapTypes.push(new google.maps.ImageMapType({
     getTileUrl: (c, z) => `https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Hydro_Reference_Overlay/MapServer/tile/${z}/${c.y}/${c.x}`,
     tileSize: new google.maps.Size(256, 256), opacity: 1, name: 'hydro'
   }));
