@@ -5,7 +5,7 @@
  *   • ข้อมูล API (GET) → network-first แล้วเก็บชุดล่าสุดไว้ ใช้ตอนออฟไลน์ ("last good data")
  * เพิ่มเลขเวอร์ชันเมื่อแก้ไฟล์เพื่อบังคับอัปเดตแคช
  */
-const VERSION = 'oms-v3';
+const VERSION = 'oms-v4';
 const SHELL = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 
@@ -13,7 +13,7 @@ const SHELL_ASSETS = [
   'index.html','map.html','map.js','forecast.html','history.html','repeat.html',
   'sim.html','shelter.html','route.html','resources.html','admin.html',
   'check.html','alert.html','eoc.html',
-  'js/supabase-client.js','js/shelters_nwt.js','js/ddpm_risk_data.js',
+  'js/supabase-client.js','js/shelters_nwt.js','js/ddpm_risk_data.js','js/rivers.js','js/pwa.js',
   'manifest.json','icon.svg'
 ];
 

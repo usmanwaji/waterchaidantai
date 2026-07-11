@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/rivers.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--panel:#ffffff;--orange:#fe6e00;--orange-d:#ff6b00;--orange-warm:#ffb74d;--navy:#57504a;--navy-d:#423d38;--peach:#e3e0dd;--outline:#e3e0dd;--outline-strong:#d1d5dc;--shell:rgba(0,0,0,.72);--danger:#dc2626;--warn:#f59e0b;--ok:#16a34a}
@@ -220,8 +221,7 @@ const map = L.map('map', { zoomControl:true }).setView([6.6, 101.4], 9);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19, attribution: '&copy; OpenStreetMap'
 }).addTo(map);
-map.createPane('hydro'); map.getPane('hydro').style.zIndex = 250; map.getPane('hydro').style.filter = 'saturate(3.4) contrast(2) brightness(0.8)';
-for (let _h = 0; _h < 3; _h++) L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Hydro_Reference_Overlay/MapServer/tile/{z}/{y}/{x}', {pane:'hydro', opacity:1, maxZoom:19, attribution:'Hydro: Esri'}).addTo(map);
+if (window.OMSRivers) window.OMSRivers.drawLeaflet(map);
 
 let allMachines = [];
 let markers = {};          // id -> L.marker

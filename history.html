@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/rivers.js"></script>
 <style>
 :root{--bg:#fdeacb;--ink:#0f172a;--muted:#64748b;--orange:#f97316;--orange-d:#ea580c;--navy:#1e40af;--navy-d:#1e3a8a;--peach:#f2d3a0}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -141,8 +142,7 @@ const map = L.map('map', {zoomControl:false}).setView([6.20,101.75], 10);
 L.control.zoom({position:'topright'}).addTo(map);
 L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap | GISTDA'}).addTo(map);
-map.createPane('hydro'); map.getPane('hydro').style.zIndex = 250; map.getPane('hydro').style.filter = 'saturate(3.4) contrast(2) brightness(0.8)';
-for (let _h = 0; _h < 3; _h++) L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Hydro_Reference_Overlay/MapServer/tile/{z}/{y}/{x}', {pane:'hydro', opacity:1, maxZoom:19, attribution:'Hydro: Esri'}).addTo(map);
+if (window.OMSRivers) window.OMSRivers.drawLeaflet(map);
 
 function setLayer(){
   if(tms) map.removeLayer(tms);

@@ -192,6 +192,7 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/rivers.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js"></script>
 <script>
@@ -283,8 +284,7 @@ function statusCell(r){
 function initMap(){
   map = L.map('map',{scrollWheelZoom:true}).setView([6.42,101.82],10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
-map.createPane('hydro'); map.getPane('hydro').style.zIndex = 250; map.getPane('hydro').style.filter = 'saturate(3.4) contrast(2) brightness(0.8)';
-for (let _h = 0; _h < 3; _h++) L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Hydro_Reference_Overlay/MapServer/tile/{z}/{y}/{x}', {pane:'hydro', opacity:1, maxZoom:19, attribution:'Hydro: Esri'}).addTo(map);
+  if (window.OMSRivers) window.OMSRivers.drawLeaflet(map);
 }
 
 function current(){
