@@ -512,6 +512,29 @@ function wrfCard(days){
     <div style="font-size:10.5px;color:#94a3b8">ที่มา: แบบจำลอง WRF-ROMS สสน. — ปริมาณฝนสะสมรายวัน (มม./วัน) · คลิกภาพเพื่อดูขนาดเต็มพร้อมแถบสี</div></div>`;
 }
 
+/* ---------- ปุ่มเลือกช่วงเวลา (+6/12/24/72) และจังหวัด ---------- */
+function fly(lat, lon){ if(lat!=null && lon!=null) map.flyTo([lat, lon], 12, {duration:.6}); }
+window.fly = fly;
+
+document.querySelectorAll('.hbtn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.hbtn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    horizon = +b.dataset.h;
+    render();
+  });
+});
+document.querySelectorAll('.pbtn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.pbtn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    provFilter = b.dataset.prov;
+    const v = PROV_VIEWS[provFilter];
+    if(v && map) map.flyTo(v[0], v[1], {duration:.6});
+    render();
+  });
+});
+
 loadBoundaries();
 loadAll();
 </script>
