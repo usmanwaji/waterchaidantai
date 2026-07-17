@@ -5,7 +5,7 @@
  *   • ข้อมูล API (GET) → network-first แล้วเก็บชุดล่าสุดไว้ ใช้ตอนออฟไลน์ ("last good data")
  * เพิ่มเลขเวอร์ชันเมื่อแก้ไฟล์เพื่อบังคับอัปเดตแคช
  */
-const VERSION = 'oms-hatyai-v3';
+const VERSION = 'oms-hatyai-v4';
 const SHELL = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 
