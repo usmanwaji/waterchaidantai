@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#423d38">
+<title>ศูนย์บัญชาการ (EOC) | One Map หาดใหญ่</title>
+<meta name="description" content="หน้าสรุปสถานการณ์รวมสำหรับเจ้าหน้าที่ ปภ. — สถานีวิกฤต ศูนย์พักพิงที่เปิด รายงานประชาชน ไทม์ไลน์เหตุการณ์ และปุ่มสร้างรายงานสถานการณ์ (SITREP)">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎛️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--orange:#fe6e00;--navy:#57504a;--navy-d:#423d38;--outline:#e3e0dd;--outline-strong:#d1d5dc;--shell:rgba(0,0,0,.72)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.12)}
+header h1{font-size:17px;font-weight:700}
+header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
+.navtab{display:flex;gap:4px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:3px;overflow-x:auto;max-width:100%;scrollbar-width:none}
+.navtab::-webkit-scrollbar{display:none}
+.navtab a{color:rgba(255,255,255,.72);text-decoration:none;font-size:12px;font-weight:600;padding:4px 10px;border-radius:7px;white-space:nowrap}
+.navtab a.on{background:var(--orange);color:#fff}
+#content{flex:1;max-width:1200px;width:100%;margin:0 auto;padding:14px}
+.statusbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--outline);border-radius:12px;padding:10px 14px;margin-bottom:14px}
+.statusbar .lvl{font-weight:700;font-size:15px}
+.statusbar .upd{color:var(--muted);font-size:12px;margin-left:auto}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.tile{background:#fff;border:1px solid var(--outline);border-radius:12px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.tile .n{font-size:28px;font-weight:700;line-height:1.1}
+.tile .l{font-size:12px;color:var(--muted);margin-top:3px}
+.tile.red .n{color:#dc2626}.tile.orange .n{color:#ea580c}.tile.green .n{color:#16a34a}.tile.navy .n{color:#1e40af}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:#fff;border:1px solid var(--outline);border-radius:12px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:14px}
+.card h2{font-size:14.5px;color:var(--navy-d);margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:6px 8px;text-align:left;border-bottom:1px solid #eef2f7;vertical-align:top}
+th{background:#f7f4f1;color:var(--navy-d);font-weight:700;white-space:nowrap}
+.pill{padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:700;color:#fff}
+.tl{list-style:none;max-height:340px;overflow:auto}
+.tl li{padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:12.5px}
+.tl .t{color:var(--muted);font-size:11px}
+.btn{display:inline-flex;align-items:center;gap:6px;background:var(--orange);color:#fff;border:none;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;border-radius:9px;cursor:pointer;text-decoration:none}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--outline-strong)}
+.btn.sm{padding:4px 10px;font-size:12px}
+input,select,textarea{padding:7px 10px;border:1px solid var(--outline-strong);border-radius:8px;font-family:inherit;font-size:13px;color:var(--ink);background:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted);font-size:12px}
+.hide{display:none!important}
+footer{background:var(--navy-d);color:#cfc8c0;font-size:10.5px;padding:6px 14px;display:flex;gap:10px;flex-wrap:wrap}
+footer a{color:#ffb74d;text-decoration:none}
+@media(max-width:900px){.tiles{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}header h1 small{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎛️ ศูนย์บัญชาการเหตุการณ์<small>สรุปสถานการณ์ อ.หาดใหญ่ จ.สงขลา (EOC)</small></h1>
+  <nav class="navtab" aria-label="เมนูหลัก">
+    <a href="index.html">🌤️ หน้าแรก</a>
+    <a href="map.html">🗺️ สถานการณ์</a>
+    <a href="forecast.html">🔮 คาดการณ์</a>
+    <a href="shelter.html">🏠 ศูนย์พักพิง</a>
+    <a href="route.html">🚗 เส้นทาง</a>
+    <a href="resources.html">🚜 ทรัพยากร</a>
+    <a href="alert.html">🔔 แจ้งเตือน</a>
+    <a href="eoc.html" class="on">🎛️ ศูนย์บัญชาการ</a>
+  </nav>
+</header>
+
+<div id="content">
+  <div id="eocGate" class="card hide"></div>
+  <div id="eocMain" class="hide">
+  <div class="statusbar">
+    <span class="lvl" id="ovLevel">⏳ กำลังประเมินสถานการณ์…</span>
+    <span class="upd" id="ovUpd"></span>
+    <button class="btn sm ghost" onclick="loadAll()">↻ รีเฟรช</button>
+    <button class="btn sm" id="btnSitrep">📋 สร้าง SITREP</button>
+  </div>
+
+  <div class="tiles">
+    <div class="tile red"><div class="n" id="tCrit">—</div><div class="l">สถานีล้นตลิ่ง / เฝ้าระวัง (≥80%)</div></div>
+    <div class="tile orange"><div class="n" id="tRain">—</div><div class="l">ระดับน้ำสูงสุด (% ตลิ่ง)</div></div>
+    <div class="tile green"><div class="n" id="tShelter">—</div><div class="l">ศูนย์พักพิงเปิด (ผู้พักพิง)</div></div>
+    <div class="tile navy"><div class="n" id="tReport">—</div><div class="l">รายงานถนนน้ำท่วม (active)</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>🌊 สถานีที่ต้องเฝ้าระวัง <span class="muted" id="critWhere"></span></h2>
+      <div style="overflow:auto;max-height:360px">
+        <table><thead><tr><th>สถานี</th><th>อำเภอ</th><th>% ตลิ่ง</th><th>สถานะ</th></tr></thead>
+        <tbody id="critBody"><tr><td colspan="4" class="muted">กำลังโหลด…</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>⏱️ ไทม์ไลน์เหตุการณ์ / ข้อสั่งการ</h2>
+      <div id="incAdd" class="hide" style="margin-bottom:8px">
+        <div class="row">
+          <select id="incType"><option value="order">ข้อสั่งการ</option><option value="station">สถานี</option><option value="shelter">ศูนย์พักพิง</option><option value="road">ถนน</option><option value="other">อื่นๆ</option></select>
+          <input id="incArea" placeholder="พื้นที่ (อำเภอ/จุด)" style="width:150px">
+          <input id="incDetail" placeholder="รายละเอียด" style="flex:1;min-width:160px">
+          <button class="btn sm" id="btnIncSave">บันทึก</button>
+        </div>
+      </div>
+      <ul class="tl" id="tl"><li class="muted">— เข้าสู่ระบบเพื่อดู/บันทึกเหตุการณ์ —</li></ul>
+    </div>
+  </div>
+
+  <div class="card hide" id="sitrepCard">
+    <h2>📋 รายงานสถานการณ์ (SITREP) <button class="btn sm ghost" style="margin-left:auto" onclick="copySitrep()">📄 คัดลอก</button></h2>
+    <textarea id="sitrepText" style="width:100%;height:280px;font-family:monospace;font-size:12px;line-height:1.6"></textarea>
+  </div>
+  </div>
+</div>
+
+<footer>
+  <span>🌊 waterchaidantai — One Map หาดใหญ่</span>
+  <span class="muted">ข้อมูลรวมจาก thaiwater.net (สสน.) + ระบบสมาชิก</span>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/auth-ui.js"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => { const n=parseFloat(v); return isNaN(n)?null:n; };
+const thName = o => (o&&typeof o==='object')?(o.th||o.en||''):(o||'');
+const fmt = n => (n==null?'—':Number(n).toLocaleString('th-TH'));
+const TW_API='https://api-v3.thaiwater.net/api/v1/thaiwater30';
+const PROV_CODE={'สงขลา':'90'};
+const BASIN_AMPHOE = new Set(['หาดใหญ่','สะเดา','คลองหอยโข่ง','นาหม่อม','บางกล่ำ','ควนเนียง']);
+let SB=null; try{ if(window.supabase && typeof sb!=='undefined') SB=sb; }catch(e){ SB=null; }
+let memberActive=false;
+let stats={crit:0,warn:0,maxPct:null,shelterOpen:0,shelterOcc:0,reports:0,critList:[]};
+
+async function loadWater(){
+  const res = await Promise.allSettled(Object.values(PROV_CODE).map(c=>
+    fetch(`${TW_API}/public/waterlevel?province_code=${c}`).then(r=>r.json())));
+  const rows=[];
+  res.forEach(r=>{ if(r.status!=='fulfilled'||!Array.isArray(r.value?.data))return;
+    r.value.data.forEach(d=>{ const st=d.station||{};
+      const _amp=thName(d.geocode?.amphoe_name);
+      if(!BASIN_AMPHOE.has(String(_amp).trim())) return;   // เฉพาะลุ่มน้ำคลองอู่ตะเภา
+      rows.push({ code:st.tele_station_oldcode||'', name:thName(st.tele_station_name).trim(),
+        amphoe:_amp, prov:thName(d.geocode?.province_name), pct:num(d.storage_percent) }); });
+  });
+  const withPct = rows.filter(r=>r.pct!=null);
+  stats.crit = withPct.filter(r=>r.pct>=100).length;
+  stats.warn = withPct.filter(r=>r.pct>=80).length;
+  stats.maxPct = withPct.reduce((m,r)=>Math.max(m,r.pct),0);
+  stats.critList = withPct.filter(r=>r.pct>=80).sort((a,b)=>b.pct-a.pct).slice(0,25);
+}
+async function loadSupabaseStats(){
+  if(!SB) return;
+  try{ const { data } = await SB.from('shelters').select('status,occupancy').eq('status','open');
+    stats.shelterOpen=(data||[]).length; stats.shelterOcc=(data||[]).reduce((a,r)=>a+(r.occupancy||0),0);
+  }catch(e){}
+  try{ const { count } = await SB.from('flood_reports').select('id',{count:'exact',head:true}).eq('status','active');
+    stats.reports=count||0; }catch(e){}
+}
+function overallLevel(){
+  if(stats.crit>0) return {l:'🔴 สถานะ: วิกฤต (มีสถานีล้นตลิ่ง)', c:'#dc2626'};
+  if(stats.warn>=3||stats.maxPct>=90) return {l:'🟠 สถานะ: เฝ้าระวังพิเศษ', c:'#ea580c'};
+  if(stats.warn>0) return {l:'🟡 สถานะ: เฝ้าระวัง', c:'#ca8a04'};
+  return {l:'🟢 สถานะ: ปกติ', c:'#16a34a'};
+}
+function renderStats(){
+  const lv=overallLevel(); $('ovLevel').textContent=lv.l; $('ovLevel').style.color=lv.c;
+  $('ovUpd').textContent='อัปเดต '+new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+  $('tCrit').textContent=stats.crit+' / '+stats.warn;
+  $('tRain').textContent=stats.maxPct!=null?Math.round(stats.maxPct)+'%':'—';
+  $('tShelter').textContent=stats.shelterOpen+' ('+fmt(stats.shelterOcc)+')';
+  $('tReport').textContent=fmt(stats.reports);
+  $('critWhere').textContent='('+stats.critList.length+' แห่ง ≥80%)';
+  $('critBody').innerHTML = stats.critList.map(r=>{
+    const c=r.pct>=100?'#dc2626':'#ca8a04', l=r.pct>=100?'ล้นตลิ่ง':'เฝ้าระวัง';
+    return `<tr><td>${esc(r.code)} ${esc(r.name)}</td><td>${esc(r.amphoe)}</td><td>${Math.round(r.pct)}%</td><td><span class="pill" style="background:${c}">${l}</span></td></tr>`;
+  }).join('') || '<tr><td colspan="4" class="muted">ไม่มีสถานีเกินเกณฑ์เฝ้าระวังขณะนี้ 🟢</td></tr>';
+}
+async function loadIncidents(){
+  if(!SB) return;
+  try{ const { data } = await SB.from('incidents').select('*').order('ts',{ascending:false}).limit(50);
+    $('tl').innerHTML=(data||[]).map(x=>{
+      const t=new Date(x.ts).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+      return `<li><span class="t">${t} · ${esc(x.type||'')}${x.area?' · '+esc(x.area):''}</span><br>${esc(x.detail)}</li>`;
+    }).join('') || '<li class="muted">ยังไม่มีเหตุการณ์บันทึก</li>';
+  }catch(e){ $('tl').innerHTML='<li class="muted">โหลดไทม์ไลน์ไม่ได้</li>'; }
+}
+async function loadAll(){ await Promise.allSettled([loadWater(), loadSupabaseStats()]); renderStats(); if(memberActive) loadIncidents(); }
+
+function buildSitrep(){
+  const now=new Date().toLocaleString('th-TH',{dateStyle:'long',timeStyle:'short'});
+  const lv=overallLevel().l.replace(/^[^ ]+ /,'');
+  let s=`รายงานสถานการณ์อุทกภัย (SITREP)\n`;
+  s+=`พื้นที่: อ.หาดใหญ่ จ.สงขลา และอำเภอลุ่มน้ำคลองอู่ตะเภา (สะเดา คลองหอยโข่ง นาหม่อม บางกล่ำ ควนเนียง)\n`;
+  s+=`ณ ${now}\n`;
+  s+=`สถานะรวม: ${lv}\n`;
+  s+=`\n1) สถานการณ์น้ำ\n`;
+  s+=`   - สถานีล้นตลิ่ง: ${stats.crit} แห่ง · เฝ้าระวัง (≥80% ตลิ่ง): ${stats.warn} แห่ง\n`;
+  s+=`   - ระดับสูงสุด: ${stats.maxPct!=null?Math.round(stats.maxPct)+'% ของตลิ่ง':'ไม่มีข้อมูล'}\n`;
+  if(stats.critList.length){ s+=`   - สถานีเด่น:\n`;
+    stats.critList.slice(0,8).forEach(r=>{ s+=`     • ${r.code} ${r.name} (อ.${r.amphoe}) ${Math.round(r.pct)}%\n`; }); }
+  s+=`\n2) ศูนย์พักพิง\n   - เปิดรับ: ${stats.shelterOpen} แห่ง · ผู้พักพิงปัจจุบัน ${fmt(stats.shelterOcc)} คน\n`;
+  s+=`\n3) เส้นทาง/ถนน\n   - รายงานถนนน้ำท่วมที่ยัง active: ${stats.reports} จุด\n`;
+  s+=`\n4) ข้อสั่งการ/หมายเหตุ\n   - (เพิ่มเติมโดยเจ้าหน้าที่)\n`;
+  s+=`\nจัดทำโดยระบบ One Map หาดใหญ่ (waterchaidantai) — โปรดตรวจสอบก่อนเผยแพร่`;
+  return s;
+}
+$('btnSitrep').onclick=()=>{ $('sitrepCard').classList.remove('hide'); $('sitrepText').value=buildSitrep(); $('sitrepCard').scrollIntoView({behavior:'smooth'}); };
+function copySitrep(){ const t=$('sitrepText'); t.select(); document.execCommand&&document.execCommand('copy'); navigator.clipboard&&navigator.clipboard.writeText(t.value); }
+window.copySitrep=copySitrep;
+
+async function saveIncident(){
+  const user=await getUser(); if(!user) return;
+  const rec={ type:$('incType').value, area:$('incArea').value.trim()||null, detail:$('incDetail').value.trim(), created_by:user.id };
+  if(!rec.detail){ alert('กรอกรายละเอียด'); return; }
+  const { error }=await SB.from('incidents').insert(rec);
+  if(error){ alert('บันทึกไม่สำเร็จ: '+error.message); return; }
+  $('incArea').value=''; $('incDetail').value=''; loadIncidents();
+}
+$('btnIncSave').onclick=saveIncident;
+
+function showGate(html){ const g=$('eocGate'); g.classList.remove('hide'); g.innerHTML=html; $('eocMain').classList.add('hide'); }
+function unlock(){ memberActive=true; $('eocGate').classList.add('hide'); $('eocMain').classList.remove('hide'); $('incAdd').classList.remove('hide'); loadAll(); }
+try{
+  if(SB && typeof watchAuthState==='function'){
+    watchAuthState({
+      onSignedOut(){ showGate('<h2>🔒 ศูนย์บัญชาการสำหรับเจ้าหน้าที่ที่ได้รับอนุมัติ</h2><p class="muted">หน้านี้แสดงข้อมูลรวมสถานการณ์และเครื่องมือสำหรับเจ้าหน้าที่ กรุณาเข้าสู่ระบบด้วยบัญชีที่ได้รับอนุมัติ</p><div style="margin-top:8px"><button class="btn" onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button></div>'); },
+      onPending(){ showGate('<h2>⏳ บัญชีของคุณกำลังรออนุมัติ</h2><p class="muted">ผู้ดูแลระบบจะตรวจสอบและอนุมัติบัญชีของคุณ กรุณารอสักครู่</p><div style="margin-top:8px"><button class="btn ghost" onclick="signOut()">ออกจากระบบ</button></div>'); },
+      onRejected(){ showGate('<h2>🚫 บัญชีของคุณไม่ได้รับอนุมัติ</h2><p class="muted">หากเชื่อว่าเป็นข้อผิดพลาด กรุณาติดต่อผู้ดูแลระบบ</p><div style="margin-top:8px"><button class="btn ghost" onclick="signOut()">ออกจากระบบ</button></div>'); },
+      onApproved:unlock, onAdmin:unlock
+    });
+  } else { showGate('<h2>ระบบสมาชิกไม่พร้อมใช้งาน (ออฟไลน์)</h2>'); }
+}catch(e){}
+</script>
+<script src="js/pwa.js" defer></script>
+<script src="js/print.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="96" fill="#423d38"/>
+  <circle cx="256" cy="256" r="150" fill="#fe6e00" opacity="0.15"/>
+  <path d="M64 320 q48 -40 96 0 t96 0 t96 0 t96 0 v112 H64 Z" fill="#3b82f6" opacity="0.85"/>
+  <path d="M64 360 q48 -40 96 0 t96 0 t96 0 t96 0 v72 H64 Z" fill="#1e40af" opacity="0.9"/>
+  <text x="256" y="230" font-size="180" text-anchor="middle" font-family="sans-serif">🌊</text>
+</svg>

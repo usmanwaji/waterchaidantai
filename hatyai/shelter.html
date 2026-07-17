@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#423d38">
+<title>ศูนย์พักพิงชั่วคราว | One Map หาดใหญ่</title>
+<meta name="description" content="แผนที่และรายชื่อศูนย์พักพิงชั่วคราว อ.หาดใหญ่ จ.สงขลา และอำเภอลุ่มน้ำคลองอู่ตะเภา">
+<meta property="og:title" content="ศูนย์พักพิงชั่วคราว อ.หาดใหญ่ จ.สงขลา">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#fdeacb;--ink:#0f172a;--muted:#64748b;--orange:#f97316;--orange-d:#ea580c;--navy:#1e40af;--navy-d:#1e3a8a;--peach:#f2d3a0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+header{background:linear-gradient(180deg,#fb923c,#f97316 45%,#ea580c);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100}
+header h1{font-size:17px;font-weight:700;line-height:1.2}
+header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
+.navtab{display:flex;gap:4px;background:rgba(255,255,255,.15);border-radius:9px;padding:3px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+.navtab a{color:#fff;text-decoration:none;font-size:12px;font-weight:600;padding:4px 10px;border-radius:7px;opacity:.85;white-space:nowrap}
+.navtab a.on{background:#fff;color:#ea580c;opacity:1}
+#selbar{background:#fff;border-bottom:2px solid var(--peach);padding:8px 14px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:90}
+.chip{padding:6px 14px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-family:inherit;font-size:13px;font-weight:600;border-radius:9px;cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--orange);border-color:var(--orange);color:#fff}
+.chip.empty{opacity:.55}
+select,input[type=search]{padding:7px 10px;border:1.5px solid var(--navy);border-radius:9px;font-family:inherit;font-size:13px;font-weight:600;color:var(--navy);background:#fff}
+input[type=search]{font-weight:400;min-width:180px;flex:1;max-width:280px}
+#selCount{font-size:12px;color:var(--muted);margin-left:auto;font-weight:600}
+#content{flex:1;max-width:1200px;width:100%;margin:0 auto;padding:12px 14px 30px}
+.card{background:#fff;border:1px solid #e8d9be;border-radius:12px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px}
+.card h2{font-size:14.5px;color:var(--navy-d);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
+.card h2 .where{font-size:11px;color:var(--muted);font-weight:400}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.stat{background:#fff;border:1px solid #e8d9be;border-radius:12px;padding:10px 12px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.stat .n{font-size:26px;font-weight:700;line-height:1.1;color:var(--navy)}
+.stat .l{font-size:11.5px;color:var(--muted);margin-top:2px}
+.stat.o .n{color:var(--orange-d)}
+#map{height:460px;border-radius:10px;z-index:1}
+.mlegend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:#475569;align-items:center}
+.mlegend b{font-weight:700;color:#334155;margin-right:2px}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:3px;border:1.5px solid #fff;box-shadow:0 0 0 1px #cbd5e1}
+.tblwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:6px 8px;text-align:left;border-bottom:1px solid #eef2f7;vertical-align:top}
+th{background:#f8fafc;color:var(--navy-d);font-weight:700;position:sticky;top:0;white-space:nowrap;font-size:12px}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:#fff7ed}
+td .sub{color:var(--muted);font-size:11px}
+.yes{color:#16a34a;font-weight:700}.no{color:#cbd5e1}
+.pill{padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:600;white-space:nowrap;color:#fff}
+a.gmap{color:var(--navy);text-decoration:none;font-weight:600;white-space:nowrap}
+a.gmap:hover{text-decoration:underline}
+a.tel{color:var(--navy-d);text-decoration:none}
+.note{font-size:11px;color:#94a3b8;margin-top:8px;line-height:1.6}
+.empty{text-align:center;padding:40px 16px;color:var(--muted)}
+.empty .big{font-size:40px}
+details summary{cursor:pointer;font-weight:700;color:var(--navy-d);font-size:13px;padding:4px 0}
+footer{background:var(--navy-d);color:#c7d2fe;font-size:10.5px;padding:5px 14px;display:flex;gap:10px;flex-wrap:wrap}
+footer a{color:#fdba74;text-decoration:none}
+.leaflet-popup-content{font-family:'Noto Sans Thai',sans-serif;font-size:12.5px;line-height:1.5;margin:10px 12px}
+.leaflet-popup-content b{color:var(--navy-d)}
+.leaflet-popup-content .pnav{display:inline-block;margin-top:6px;background:var(--orange);color:#fff;padding:4px 10px;border-radius:7px;text-decoration:none;font-weight:700;font-size:12px}
+/* live status + occupancy */
+.spill{padding:1px 9px;border-radius:99px;font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap}
+.occwrap{display:flex;align-items:center;gap:6px;margin-top:3px}
+.occbar{flex:1;min-width:70px;max-width:160px;height:7px;background:#eef2f7;border-radius:99px;overflow:hidden}
+.occbar i{display:block;height:100%;border-radius:99px}
+.occnum{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:5px;background:var(--orange);color:#fff;border:none;font-family:inherit;font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer;text-decoration:none}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--outline-strong)}
+.btn.sm{padding:3px 9px;font-size:11.5px}
+#nearBtn{white-space:nowrap}
+#memberBar{background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:6px 10px;font-size:12px;color:#9a3412;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+a.tel2{display:inline-block;margin-top:3px;color:#fff;background:var(--navy);padding:2px 9px;border-radius:7px;text-decoration:none;font-size:11.5px;font-weight:600}
+.leaflet-popup-content .pnav.call{background:var(--navy)}
+@media(max-width:760px){ .stats{grid-template-columns:1fr 1fr} header h1 small{display:none} #map{height:360px} #content{padding:10px 8px 24px} }
+
+/* ===== Command Center theme (override) ===== */
+:root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--orange:#fe6e00;--orange-d:#ff6b00;--orange-warm:#ffb74d;--navy:#57504a;--navy-d:#423d38;--peach:#e3e0dd;--outline:#e3e0dd;--outline-strong:#d1d5dc;--elevated:#ffffff;--surface:#f3f4f6;--shell:rgba(0,0,0,.72)}
+header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);border-bottom:1px solid rgba(255,255,255,.12)}
+.navtab{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09)}
+.navtab a{color:rgba(255,255,255,.72)}
+.navtab a.on{background:var(--orange);color:#fff;opacity:1}
+#selbar{border-bottom:1px solid var(--outline)}
+.chip{border:1px solid var(--outline-strong);color:var(--ink);border-radius:8px}
+.chip.on{background:var(--orange);border-color:var(--orange);color:#fff}
+select,input[type=search]{border:1px solid var(--outline-strong);color:var(--ink);border-radius:8px}
+.card{border:1px solid var(--outline)}
+.stat{border:1px solid var(--outline)}
+th{background:#f7f4f1}
+footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
+
+/* ===== Modal เพิ่ม/แก้ไขศูนย์พักพิง ===== */
+#shModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:1500;align-items:flex-start;justify-content:center;padding:20px 12px;overflow-y:auto}
+#shModal.show{display:flex}
+.shBox{background:#fff;border-radius:14px;padding:16px;width:100%;max-width:520px;box-shadow:0 10px 40px rgba(0,0,0,.25);margin:auto 0}
+.shBox h3{font-size:15px;color:var(--navy-d);margin-bottom:10px}
+.shBox label{display:block;font-size:12px;font-weight:600;color:var(--navy-d);margin-top:8px}
+.shBox input:not([type=checkbox]),.shBox select{width:100%;padding:7px 9px;border:1px solid var(--outline-strong);border-radius:8px;font-family:inherit;font-size:13px;margin-top:3px;background:#fff;color:var(--ink)}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.frow2.chk{grid-template-columns:1fr 1fr 1fr;margin-top:10px}
+.frow2.chk label{display:flex;align-items:center;gap:5px;margin-top:0;font-weight:500;cursor:pointer}
+.pickrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.factions{display:flex;gap:8px;align-items:center;margin-top:14px}
+#shMsg{min-height:14px;margin-top:6px;color:#dc2626}
+#shMore summary{font-size:12.5px;padding:6px 0;margin-top:6px}
+body.picking #shModal{display:none}
+body.picking #map{cursor:crosshair;outline:3px solid var(--orange)}
+#pickBanner{display:none;position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:1600;background:var(--orange);color:#fff;font-weight:700;font-size:13px;padding:8px 16px;border-radius:99px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+body.picking #pickBanner{display:block}
+
+/* ===== Mobile & touch enhancements ===== */
+a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
+.navtab{scrollbar-width:none}
+.navtab::-webkit-scrollbar{display:none}
+.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
+@media(pointer:coarse){.navtab a{padding:9px 13px;font-size:13px}}
+@media(max-width:768px){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏠 ศูนย์พักพิงชั่วคราว<small>อ.หาดใหญ่ จ.สงขลา · ลุ่มน้ำคลองอู่ตะเภา</small></h1>
+  <nav class="navtab" aria-label="เมนูหลัก">
+    <a href="index.html">🌤️ หน้าแรก</a>
+    <a href="map.html">🗺️ สถานการณ์</a>
+    <a href="forecast.html">🔮 คาดการณ์</a>
+    <a href="history.html">🛰️ ย้อนหลัง</a>
+    <a href="repeat.html">⚠️ พื้นที่เสี่ยง</a>
+    <a href="sim.html">🌊 แบบจำลอง</a>
+    <a href="shelter.html" class="on">🏠 ศูนย์พักพิง</a>
+    <a href="route.html">🚗 เส้นทาง</a>
+    <a href="resources.html">🚜 ทรัพยากร</a>
+  </nav>
+</header>
+
+<div id="selbar">
+  <button class="chip on" data-prov="สงขลา">สงขลา (ลุ่มน้ำอู่ตะเภา)</button>
+  <select id="ampSel"><option value="">ทุกอำเภอ</option></select>
+  <input type="search" id="q" placeholder="🔎 ค้นหา ชื่อสถานที่ / ตำบล / ผู้ดูแล / เบอร์โทร">
+  <button class="btn ghost" id="nearBtn">📍 ใกล้ฉัน</button>
+  <span id="selCount"></span>
+</div>
+
+<div id="content">
+  <div id="memberBar" style="display:none"></div>
+  <div class="stats" id="stats"></div>
+
+  <div class="card" id="mapCard">
+    <h2>🗺️ แผนที่ศูนย์พักพิง <span class="where" id="mapWhere"></span></h2>
+    <div id="map"></div>
+    <div class="mlegend">
+      <span><b>สถานะสด:</b></span>
+      <span><i class="dot" style="background:#16a34a"></i>เปิดรับ</span>
+      <span><i class="dot" style="background:#f59e0b"></i>ใกล้เต็ม</span>
+      <span><i class="dot" style="background:#dc2626"></i>เต็ม</span>
+      <span><i class="dot" style="background:#64748b"></i>ปิด</span>
+      <span style="margin-left:8px"><b>ความจุ (ยังไม่มีสถานะสด):</b></span>
+      <span><i class="dot" style="background:#15803d"></i>≥300</span>
+      <span><i class="dot" style="background:#2563eb"></i>100–299</span>
+      <span><i class="dot" style="background:#f97316"></i>&lt;100</span>
+      <span><i class="dot" style="background:#94a3b8"></i>ไม่ระบุ</span>
+    </div>
+    <div class="note" id="mapNote"></div>
+  </div>
+
+  <div class="card" id="tblCard">
+    <h2>📋 รายชื่อศูนย์พักพิง <span class="where" id="tblWhere"></span></h2>
+    <div class="tblwrap">
+      <table id="tbl">
+        <thead><tr>
+          <th>อำเภอ / ตำบล</th><th>ชื่อสถานที่</th><th>สถานะ / ยอดผู้พักพิง</th>
+          <th>ไฟฟ้า</th><th>ประปา</th><th>สุขา</th><th>ผู้ดูแล / เบอร์โทร</th><th>พิกัด / นำทาง</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="note">คลิกแถวเพื่อดูตำแหน่งบนแผนที่ · แตะเบอร์โทรเพื่อโทรออก · “นำทาง” เปิด Google Maps</div>
+  </div>
+
+  <div class="card" id="emptyCard" style="display:none">
+    <div class="empty"><div class="big">🗂️</div><p id="emptyMsg" style="margin-top:8px;font-weight:600"></p>
+    <p class="note">ระบบพร้อมรองรับข้อมูลจังหวัดอื่นเมื่อมีการนำเข้าเพิ่มเติม</p></div>
+  </div>
+
+  <div class="card" id="officialCard">
+    <details>
+      <summary>📊 สรุปข้อมูลทางการทั้งจังหวัด (แยกรายอำเภอ)</summary>
+      <div class="note" id="offIntro"></div>
+      <div class="tblwrap" style="margin-top:6px">
+        <table><thead><tr><th>อำเภอ</th><th>ตำบล</th><th>ศูนย์พักพิง (แห่ง)</th><th>รองรับ (คน)</th><th>สุขา (ห้อง)</th></tr></thead>
+        <tbody id="offBody"></tbody></table>
+      </div>
+    </details>
+  </div>
+</div>
+
+<div id="pickBanner">🗺️ แตะตำแหน่งบนแผนที่เพื่อปักหมุด (Esc = ยกเลิก)</div>
+
+<div id="shModal">
+  <div class="shBox">
+    <h3 id="shTitle">✏️ อัปเดตศูนย์พักพิง</h3>
+    <form id="shForm">
+      <div class="frow2">
+        <label>สถานะ
+          <select id="f_status">
+            <option value="standby">⚪ เตรียมพร้อม</option>
+            <option value="open">🟢 เปิดรับ</option>
+            <option value="full">🔴 เต็ม</option>
+            <option value="closed">⚫ ปิด</option>
+          </select>
+        </label>
+        <label>ยอดผู้พักพิงขณะนี้ (คน)<input type="number" id="f_occ" min="0" inputmode="numeric" value="0"></label>
+      </div>
+      <details id="shMore">
+        <summary>📋 ข้อมูลศูนย์ (ชื่อ · ที่ตั้ง · ความจุ · ผู้ดูแล)</summary>
+        <label>ชื่อสถานที่ *<input id="f_name" required maxlength="200"></label>
+        <div class="frow2">
+          <label>จังหวัด
+            <select id="f_prov">
+              <option>สงขลา</option>
+            </select>
+          </label>
+          <label>อำเภอ *<input id="f_amphoe" required maxlength="100"></label>
+        </div>
+        <div class="frow2">
+          <label>ตำบล<input id="f_tambon" maxlength="100"></label>
+          <label>หมู่บ้าน<input id="f_village" maxlength="150"></label>
+        </div>
+        <div class="frow2">
+          <label>ละติจูด<input id="f_lat" type="number" step="any" min="-90" max="90"></label>
+          <label>ลองจิจูด<input id="f_lon" type="number" step="any" min="-180" max="180"></label>
+        </div>
+        <div class="pickrow">
+          <button type="button" class="btn sm ghost" id="btnPick">🗺️ จิ้มจากแผนที่</button>
+          <button type="button" class="btn sm ghost" id="btnGps">📍 ใช้ตำแหน่งฉัน</button>
+        </div>
+        <div class="frow2">
+          <label>ความจุรองรับ (คน)<input id="f_cap" type="number" min="0" inputmode="numeric"></label>
+          <label>สุขา (ห้อง)<input id="f_toilet" type="number" min="0" inputmode="numeric"></label>
+        </div>
+        <div class="frow2 chk">
+          <label><input type="checkbox" id="f_power"> ⚡ ไฟฟ้า</label>
+          <label><input type="checkbox" id="f_water"> 🚰 ประปา</label>
+          <label><input type="checkbox" id="f_kitchen"> 🍳 โรงครัว</label>
+        </div>
+        <div class="frow2">
+          <label>ผู้ดูแล<input id="f_care" maxlength="150"></label>
+          <label>เบอร์โทร<input id="f_phone" maxlength="30" inputmode="tel"></label>
+        </div>
+        <label>หมายเหตุ<input id="f_note" maxlength="300"></label>
+      </details>
+      <div class="factions">
+        <button type="submit" class="btn" id="btnSave">💾 บันทึก</button>
+        <button type="button" class="btn ghost" id="btnCancel">ยกเลิก</button>
+        <button type="button" class="btn" id="btnDel" style="background:#dc2626;margin-left:auto;display:none">🗑️ ลบ</button>
+      </div>
+      <div id="shMsg"></div>
+    </form>
+  </div>
+</div>
+
+<footer>
+  <span>🌊 waterchaidantai — One Map หาดใหญ่</span>
+  <a href="index.html">หน้าแรก</a><a href="map.html">สถานการณ์น้ำ</a>
+  <span>ข้อมูลศูนย์พักพิง: เจ้าหน้าที่ในพื้นที่ อ.หาดใหญ่</span>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/rivers.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/auth-ui.js"></script>
+<script>
+/* ข้อมูลตั้งต้น จ.นราธิวาส ถูกลบออก — ศูนย์พักพิงหาดใหญ่มาจากระบบสด (Supabase) หรือเพิ่มผ่านฟอร์มในหน้านี้ */
+const DATA = [];
+const SUMM = {"rows": [], "total_places": 0, "total_centers": 0, "total_cap": 0, "total_toilet": 0};
+const PROVS = ['สงขลา'];
+// ศูนย์พักพิงทั้งหมดมาจากตาราง Supabase 'shelters' (จ.สงขลา — อำเภอลุ่มน้ำอู่ตะเภา)
+let prov = 'สงขลา', amp = '', q = '';
+const BASIN_AMPHOE = new Set(['หาดใหญ่','สะเดา','คลองหอยโข่ง','นาหม่อม','บางกล่ำ','ควนเนียง']);
+let map, markers = [], byId = {}, userMarker = null, userPos = null;
+let liveRows = [], liveByExt = {}, curByKey = {}, memberActive = false;
+
+// Supabase อาจโหลดไม่สำเร็จ (ออฟไลน์) — กันไม่ให้หน้าเว็บพัง
+let SB = null;
+try { if (window.supabase && typeof sb !== 'undefined') SB = sb; } catch(e) { SB = null; }
+
+const SH_STATUS = {
+  standby:{c:'#94a3b8', l:'เตรียมพร้อม'},
+  open:   {c:'#16a34a', l:'เปิดรับ'},
+  full:   {c:'#dc2626', l:'เต็ม'},
+  closed: {c:'#64748b', l:'ปิด'}
+};
+
+function capColor(c){ if(c==null) return '#94a3b8'; if(c>=300) return '#15803d'; if(c>=100) return '#2563eb'; return '#f97316'; }
+function capRadius(c){ if(c==null) return 6; return Math.max(5, Math.min(16, 5 + Math.sqrt(c)/2.6)); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+const fmt = n => (n==null?'—':Number(n).toLocaleString('th-TH'));
+const telHref = p => 'tel:'+String(p).replace(/[^0-9]/g,'');
+function haversine(a,b,c,d){ const R=6371,r=x=>x*Math.PI/180; const dLa=r(c-a),dLo=r(d-b);
+  const s=Math.sin(dLa/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(s)); }
+
+/* ---------- โหลดสถานะสดจาก Supabase ---------- */
+async function loadLive(){
+  if(!SB) return;
+  try{
+    const { data, error } = await SB.from('shelters').select('*');
+    if(error) throw error;
+    liveRows = data||[]; liveByExt = {};
+    liveRows.forEach(r=>{ if(r.ext_id) liveByExt[r.ext_id] = r; });
+  }catch(e){ liveRows = []; liveByExt = {}; }
+}
+
+/* ---------- รวมข้อมูลตั้งต้น + สถานะสด → แถวมาตรฐาน ---------- */
+function mergedRows(p){
+  const out = [];
+  const staticRows = (p==='นราธิวาส') ? DATA : [];
+  staticRows.forEach(s=>{
+    const ext = 'NWT-'+s.id, L = liveByExt[ext];
+    const row = { key:ext, ext, name:s.name, amphoe:s.amphoe, tambon:s.tambon, village:s.village,
+      lat:s.lat, lon:s.lon, cap:s.cap, power:s.power, water:s.water, toilet:s.toilet,
+      care:s.care, phone:s.phone, other:s.other, status:'standby', occ:0, source:'static', live:false, sbId:null };
+    if(L){ const f=L.facilities||{};
+      row.status=L.status; row.occ=L.occupancy||0;
+      if(L.capacity!=null)row.cap=L.capacity;
+      if(L.name)row.name=L.name;
+      if(L.lat!=null){ row.lat=L.lat; row.lon=L.lon; }
+      if(L.tambon)row.tambon=L.tambon; if(L.village)row.village=L.village;
+      if(f.power!=null)row.power=f.power; if(f.water!=null)row.water=f.water;
+      if(f.toilet!=null)row.toilet=f.toilet; row.kitchen=!!f.kitchen;
+      if(L.contact_phone)row.phone=L.contact_phone; if(L.contact_name)row.care=L.contact_name;
+      if(L.note)row.other=L.note;
+      row.sbId=L.id; row.live=true; }
+    out.push(row);
+  });
+  liveRows.filter(r=>r.province===p && (!r.amphoe || BASIN_AMPHOE.has(String(r.amphoe).trim()))).forEach(L=>{
+    if(String(L.ext_id||'').startsWith('NWT-') && p==='นราธิวาส') return;  // รวมกับ static แล้ว
+    const f = L.facilities||{};
+    out.push({ key:'sb-'+L.id, ext:L.ext_id, name:L.name, amphoe:L.amphoe, tambon:L.tambon, village:L.village,
+      lat:L.lat, lon:L.lon, cap:L.capacity, power:f.power, water:f.water, toilet:f.toilet, kitchen:!!f.kitchen,
+      care:L.contact_name, phone:L.contact_phone, other:L.note, status:L.status, occ:L.occupancy||0,
+      source:'live', live:true, sbId:L.id });
+  });
+  return out;
+}
+function hasData(p){ return (p==='นราธิวาส' && DATA.length>0) || liveRows.some(r=>r.province===p); }
+
+function statusColor(r){
+  if(!r.live) return null;
+  if(r.status==='closed') return '#64748b';
+  if(r.status==='full') return '#dc2626';
+  if(r.cap && r.occ/r.cap>=0.8) return '#f59e0b';
+  if(r.status==='open') return '#16a34a';
+  return null;
+}
+function markerColor(r){ return statusColor(r) || capColor(r.cap); }
+function occBar(r){
+  if(!r.live || r.cap==null) return '';
+  const pct = Math.min(100, Math.round((r.occ||0)/r.cap*100));
+  const c = pct>=100?'#dc2626':pct>=80?'#f59e0b':'#16a34a';
+  return `<div class="occwrap"><div class="occbar"><i style="width:${pct}%;background:${c}"></i></div><span class="occnum">${fmt(r.occ||0)}/${fmt(r.cap)} (${pct}%)</span></div>`;
+}
+function statusCell(r){
+  if(r.live){ const s=SH_STATUS[r.status]||SH_STATUS.standby;
+    return `<span class="spill" style="background:${s.c}">${s.l}</span>${occBar(r)}`; }
+  return `<span class="occnum">รองรับ ${r.cap!=null?fmt(r.cap)+' คน':'ไม่ระบุ'}</span><div class="occnum" style="color:#cbd5e1">— ยังไม่มีสถานะสด —</div>`;
+}
+
+function initMap(){
+  map = L.map('map',{scrollWheelZoom:true}).setView([6.99,100.45],12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+  if (window.OMSRivers) window.OMSRivers.drawLeaflet(map);
+}
+
+function current(){
+  let rows = mergedRows(prov);
+  if(amp) rows = rows.filter(r=>r.amphoe===amp);
+  if(q){ const s=q.toLowerCase();
+    rows = rows.filter(r => [r.name,r.tambon,r.amphoe,r.village,r.care,r.phone].join(' ').toLowerCase().includes(s)); }
+  if(userPos){ rows.forEach(r=>{ r._d = (r.lat!=null)?haversine(userPos[0],userPos[1],r.lat,r.lon):1e9; });
+    rows.sort((a,b)=>a._d-b._d); }
+  return rows;
+}
+
+function render(){
+  const has = hasData(prov);
+  document.getElementById('mapCard').style.display = has?'':'none';
+  document.getElementById('tblCard').style.display = has?'':'none';
+  document.getElementById('officialCard').style.display = 'none';
+  document.getElementById('emptyCard').style.display = has?'none':'';
+  if(!has){
+    document.getElementById('emptyMsg').textContent = 'ยังไม่มีข้อมูลศูนย์พักพิงของจังหวัด'+prov+'ในระบบ';
+    document.getElementById('stats').innerHTML='';
+    document.getElementById('selCount').textContent='';
+    return;
+  }
+  const rows = current();
+  const allCount = mergedRows(prov).length;
+  const cap = rows.reduce((a,r)=>a+(r.cap||0),0);
+  const occ = rows.reduce((a,r)=>a+(r.live?(r.occ||0):0),0);
+  const openN = rows.filter(r=>r.live && r.status==='open').length;
+  const amps = new Set(rows.map(r=>r.amphoe));
+  document.getElementById('stats').innerHTML = [
+    ['จำนวนศูนย์ (ที่แสดง)', rows.length, ''],
+    ['เปิดรับอยู่ตอนนี้', openN+' แห่ง', 'o'],
+    ['รองรับรวม', fmt(cap)+' คน', ''],
+    ['ผู้พักพิงขณะนี้', fmt(occ)+' คน', 'o']
+  ].map(s=>`<div class="stat ${s[2]}"><div class="n">${s[1]}</div><div class="l">${s[0]}</div></div>`).join('');
+  document.getElementById('selCount').textContent = 'แสดง '+rows.length+' / '+allCount+' แห่ง';
+  document.getElementById('mapWhere').textContent = document.getElementById('tblWhere').textContent = 'จ.'+prov+(amp?' · อ.'+amp:'');
+  renderMap(rows); renderTable(rows);
+  const noGeo = rows.filter(r=>r.lat==null).length;
+  const src = prov==='นราธิวาส' ? 'ข้อมูลตั้งต้น ปภ.จ.นราธิวาส + สถานะสดจากเจ้าหน้าที่' : 'ข้อมูลจากเจ้าหน้าที่ในระบบ';
+  document.getElementById('mapNote').textContent = 'ที่มา: '+src + (noGeo>0? ' · '+noGeo+' แห่งยังไม่มีพิกัด (แสดงเฉพาะในตาราง)':'');
+}
+
+function renderMap(rows){
+  markers.forEach(m=>map.removeLayer(m)); markers=[]; byId={};
+  const pts=[];
+  rows.forEach(r=>{
+    if(r.lat==null) return;
+    const m = L.circleMarker([r.lat,r.lon],{radius:capRadius(r.cap),color:'#fff',weight:1.5,fillColor:markerColor(r),fillOpacity:.9});
+    const g = 'https://www.google.com/maps/search/?api=1&query='+r.lat+','+r.lon;
+    const s = r.live ? SH_STATUS[r.status]||SH_STATUS.standby : null;
+    m.bindPopup(`<b>${esc(r.name)}</b><br>อ.${esc(r.amphoe)} · ต.${esc(r.tambon)}${r.village?' · '+esc(r.village):''}<br>`+
+      (s?`<span class="spill" style="background:${s.c}">${s.l}</span>${r.cap?` ${fmt(r.occ||0)}/${fmt(r.cap)} คน`:''}<br>`:`👥 รองรับ ${r.cap!=null?fmt(r.cap)+' คน':'ไม่ระบุ'} · 🚻 ${r.toilet||'—'}<br>`)+
+      `${r.power?'⚡ไฟฟ้า ':''}${r.water?'🚰ประปา ':''}${r.kitchen?'🍳โรงครัว':''}<br>`+
+      (r.care?`👤 ${esc(r.care)}<br>`:'')+
+      `<a class="pnav" target="_blank" href="${g}">📍 นำทาง</a>`+
+      (r.phone?` <a class="pnav call" href="${telHref(r.phone)}">📞 โทร</a>`:'')+
+      (memberActive?`<br><a class="pnav" style="background:#57504a" href="#" onclick="openUpdate('${r.key}');return false;">✏️ อัปเดตสถานะ</a>`:''));
+    m.addTo(map); markers.push(m); byId[r.key]=m; pts.push([r.lat,r.lon]);
+  });
+  if(pts.length && !userPos){ map.fitBounds(pts,{padding:[30,30],maxZoom:13}); }
+}
+
+function facil(v){ return v?'<span class="yes">✓</span>':'<span class="no">✗</span>'; }
+function renderTable(rows){
+  curByKey = {}; rows.forEach(r=>curByKey[r.key]=r);
+  const tb=document.getElementById('tbody');
+  tb.innerHTML = rows.map(r=>{
+    const g = r.lat!=null?`<a class="gmap" target="_blank" href="https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lon}">📍 นำทาง</a>`:'<span class="no">ไม่มีพิกัด</span>';
+    const tel = r.phone?`<a class="tel" href="${telHref(r.phone)}">${esc(r.phone)}</a>`:'';
+    const upd = memberActive?`<div><button class="btn sm ghost" onclick="event.stopPropagation();openUpdate('${r.key}')">✏️ อัปเดต</button></div>`:'';
+    const dist = (userPos&&r._d!=null&&r._d<1e9)?`<div class="sub">~${r._d<1?Math.round(r._d*1000)+' ม.':r._d.toFixed(1)+' กม.'}</div>`:'';
+    return `<tr data-id="${r.key}">
+      <td><b>${esc(r.amphoe)}</b><div class="sub">${esc(r.tambon)}${r.village?' · '+esc(r.village):''}</div>${dist}</td>
+      <td>${esc(r.name)}${r.other?'<div class="sub">'+esc(r.other)+'</div>':''}</td>
+      <td>${statusCell(r)}${upd}</td>
+      <td>${facil(r.power)}</td><td>${facil(r.water)}</td><td>${r.toilet||'<span class="no">—</span>'}</td>
+      <td>${esc(r.care)||'<span class="no">—</span>'}<div class="sub">${tel?`<a class="tel2" href="${telHref(r.phone)}">📞 ${esc(r.phone)}</a>`:''}</div></td>
+      <td>${g}</td></tr>`;
+  }).join('') || '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:20px">ไม่พบศูนย์พักพิงตามเงื่อนไขที่ค้นหา</td></tr>';
+  tb.querySelectorAll('tr[data-id]').forEach(tr=>tr.addEventListener('click',()=>{
+    const m=byId[tr.dataset.id];
+    if(m){ map.setView(m.getLatLng(),14,{animate:true}); m.openPopup(); document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'}); }
+  }));
+}
+
+document.getElementById('nearBtn').addEventListener('click',()=>{
+  if(!navigator.geolocation){ alert('อุปกรณ์นี้ไม่รองรับการหาตำแหน่ง'); return; }
+  const btn=document.getElementById('nearBtn'); btn.textContent='⏳ กำลังหา…';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    userPos=[pos.coords.latitude,pos.coords.longitude]; btn.textContent='📍 ใกล้ฉัน';
+    if(userMarker) map.removeLayer(userMarker);
+    userMarker=L.circleMarker(userPos,{radius:8,color:'#2563eb',weight:3,fillColor:'#3b82f6',fillOpacity:.9}).addTo(map).bindPopup('ตำแหน่งของคุณ');
+    render(); map.setView(userPos,12,{animate:true});
+  }, err=>{ btn.textContent='📍 ใกล้ฉัน'; alert('ไม่สามารถหาตำแหน่งได้: '+err.message); }, {enableHighAccuracy:true,timeout:10000});
+});
+
+/* ---------- Modal เพิ่ม/แก้ไข/ลบ ศูนย์พักพิง (สมาชิกอนุมัติ) ---------- */
+let editing = null;   // null = โหมดเพิ่มใหม่ · object = แถวที่กำลังแก้
+const $f = id => document.getElementById(id);
+
+function openUpdate(key){ const r = curByKey[key]; if(r) openShModal(r); }
+function openAdd(){ openShModal(null); }
+
+function openShModal(r){
+  if(!SB){ alert('ไม่สามารถเชื่อมต่อฐานข้อมูลได้ในขณะนี้'); return; }
+  editing = r;
+  $f('shMsg').textContent = '';
+  $f('shTitle').textContent = r ? '✏️ อัปเดต: '+r.name : '➕ เพิ่มศูนย์พักพิงใหม่';
+  $f('f_status').value = (r && r.status) || 'standby';
+  $f('f_occ').value    = (r && r.occ) || 0;
+  $f('f_name').value   = r ? (r.name||'') : '';
+  $f('f_prov').value   = prov;
+  $f('f_amphoe').value = r ? (r.amphoe||'') : (amp||'');
+  $f('f_tambon').value = r ? (r.tambon||'') : '';
+  $f('f_village').value= r ? (r.village||'') : '';
+  $f('f_lat').value    = (r && r.lat!=null) ? r.lat : '';
+  $f('f_lon').value    = (r && r.lon!=null) ? r.lon : '';
+  $f('f_cap').value    = (r && r.cap!=null) ? r.cap : '';
+  const t = r ? parseInt(r.toilet) : NaN;
+  $f('f_toilet').value = isNaN(t) ? '' : t;
+  $f('f_power').checked   = !!(r && r.power);
+  $f('f_water').checked   = !!(r && r.water);
+  $f('f_kitchen').checked = !!(r && r.kitchen);
+  $f('f_care').value   = r ? (r.care||'') : '';
+  $f('f_phone').value  = r ? (r.phone||'') : '';
+  $f('f_note').value   = (r && r.source==='live') ? (r.other||'') : '';
+  // เพิ่มใหม่ = กางฟอร์มเต็ม · แก้ไข = โฟกัสสถานะ/ยอด (กางเองได้)
+  $f('shMore').open = !r;
+  // ปุ่มลบ: เฉพาะแถวที่มีข้อมูลในฐานแล้ว
+  $f('btnDel').style.display = (r && r.sbId) ? '' : 'none';
+  document.getElementById('shModal').classList.add('show');
+}
+function closeShModal(){ document.getElementById('shModal').classList.remove('show'); editing = null; }
+
+$f('btnCancel').addEventListener('click', closeShModal);
+document.getElementById('shModal').addEventListener('click', e=>{ if(e.target.id==='shModal') closeShModal(); });
+
+/* จิ้มพิกัดจากแผนที่ */
+$f('btnPick').addEventListener('click', ()=>{
+  document.body.classList.add('picking');
+  document.getElementById('map').scrollIntoView({behavior:'smooth', block:'center'});
+  map.once('click', e=>{
+    $f('f_lat').value = e.latlng.lat.toFixed(6);
+    $f('f_lon').value = e.latlng.lng.toFixed(6);
+    document.body.classList.remove('picking');
+  });
+});
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && document.body.classList.contains('picking')){
+    map.off('click'); document.body.classList.remove('picking');
+  }
+});
+$f('btnGps').addEventListener('click', ()=>{
+  if(!navigator.geolocation){ $f('shMsg').textContent='อุปกรณ์นี้ไม่รองรับการหาตำแหน่ง'; return; }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    $f('f_lat').value = pos.coords.latitude.toFixed(6);
+    $f('f_lon').value = pos.coords.longitude.toFixed(6);
+  }, err=>{ $f('shMsg').textContent='หาตำแหน่งไม่ได้: '+err.message; }, {enableHighAccuracy:true, timeout:10000});
+});
+
+function formPayload(userId){
+  const num = v => v===''||v==null ? null : Number(v);
+  const lat = num($f('f_lat').value), lon = num($f('f_lon').value);
+  if((lat==null) !== (lon==null)) return { err:'กรอกละติจูดและลองจิจูดให้ครบทั้งคู่ หรือเว้นว่างทั้งคู่' };
+  const name = $f('f_name').value.trim(), amphoe = $f('f_amphoe').value.trim();
+  if(!name) return { err:'กรุณากรอกชื่อสถานที่' };
+  if(!amphoe) return { err:'กรุณากรอกอำเภอ' };
+  return { data:{
+    name, province:$f('f_prov').value, amphoe,
+    tambon:$f('f_tambon').value.trim()||null, village:$f('f_village').value.trim()||null,
+    lat, lon,
+    capacity:num($f('f_cap').value), occupancy:Math.max(0, parseInt($f('f_occ').value)||0),
+    status:$f('f_status').value,
+    facilities:{ power:$f('f_power').checked, water:$f('f_water').checked,
+                 kitchen:$f('f_kitchen').checked, toilet:num($f('f_toilet').value) },
+    contact_name:$f('f_care').value.trim()||null, contact_phone:$f('f_phone').value.trim()||null,
+    note:$f('f_note').value.trim()||null, updated_by:userId
+  }};
+}
+
+document.getElementById('shForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const user = await getUser(); if(!user){ $f('shMsg').textContent='กรุณาเข้าสู่ระบบก่อน'; return; }
+  const p = formPayload(user.id);
+  if(p.err){ $f('shMsg').textContent = p.err; $f('shMore').open = true; return; }
+  $f('btnSave').disabled = true; $f('shMsg').textContent = '';
+  try{
+    if(editing && editing.sbId){
+      const { error } = await SB.from('shelters').update(p.data).eq('id', editing.sbId);
+      if(error) throw error;
+    }else if(editing && editing.ext){
+      // แถวตั้งต้น (static) ที่ยังไม่มีในฐาน — เช็คซ้ำก่อนกันชนกัน
+      const { data:existing } = await SB.from('shelters').select('id').eq('ext_id', editing.ext).maybeSingle();
+      if(existing){
+        const { error } = await SB.from('shelters').update(p.data).eq('id', existing.id);
+        if(error) throw error;
+      }else{
+        const { error } = await SB.from('shelters').insert({ ...p.data, ext_id:editing.ext, created_by:user.id });
+        if(error) throw error;
+      }
+    }else{
+      const { error } = await SB.from('shelters').insert({ ...p.data, created_by:user.id });
+      if(error) throw error;
+    }
+    closeShModal();
+    await loadLive(); refreshChips(); fillAmp(); render();
+  }catch(err){ $f('shMsg').textContent = 'บันทึกไม่สำเร็จ: '+(err.message||err); }
+  finally{ $f('btnSave').disabled = false; }
+});
+
+$f('btnDel').addEventListener('click', async ()=>{
+  if(!editing || !editing.sbId) return;
+  const isStatic = String(editing.ext||'').startsWith('NWT-');
+  const msg = isStatic
+    ? 'ลบข้อมูลสดของศูนย์นี้? (ข้อมูลตั้งต้นของ ปภ.จ.นราธิวาส จะยังแสดงอยู่ แต่สถานะสด/ยอดผู้พักพิงจะหายไป)'
+    : 'ลบศูนย์พักพิง "'+editing.name+'" ออกจากระบบถาวร?';
+  if(!confirm(msg)) return;
+  $f('btnDel').disabled = true;
+  try{
+    const { error } = await SB.from('shelters').delete().eq('id', editing.sbId);
+    if(error) throw error;
+    closeShModal();
+    await loadLive(); refreshChips(); fillAmp(); render();
+  }catch(err){ $f('shMsg').textContent = 'ลบไม่สำเร็จ: '+(err.message||err)+' (ต้องเป็นสมาชิกที่ได้รับอนุมัติในจังหวัดนี้)'; }
+  finally{ $f('btnDel').disabled = false; }
+});
+
+window.openUpdate = openUpdate;
+window.openAdd = openAdd;
+
+function fillAmp(){
+  const sel=document.getElementById('ampSel');
+  const amps=[...new Set(mergedRows(prov).map(r=>r.amphoe))].filter(Boolean).sort();
+  sel.innerHTML='<option value="">ทุกอำเภอ</option>'+amps.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('');
+}
+function renderOfficial(){
+  document.getElementById('offIntro').innerHTML =
+    `ข้อมูลทางการรวมทั้งจังหวัดนราธิวาส: <b>${fmt(SUMM.total_centers)} แห่ง</b> ใน ${fmt(SUMM.total_places)} ตำบล รองรับได้ <b>${fmt(SUMM.total_cap)} คน</b> — ` +
+    `ในระบบแผนที่นี้ระบุพิกัด/ผู้ดูแลแล้ว ${DATA.length} แห่ง (กำลังทยอยเพิ่ม)`;
+  document.getElementById('offBody').innerHTML = SUMM.rows.map(r=>
+    `<tr><td><b>${esc(r.amphoe)}</b></td><td>${fmt(r.n_places)}</td><td>${fmt(r.n_centers)}</td><td>${fmt(r.cap)}</td><td>${r.toilet==null?'—':(typeof r.toilet==='number'?fmt(r.toilet):esc(r.toilet))}</td></tr>`
+  ).join('');
+}
+function refreshChips(){
+  document.querySelectorAll('.chip').forEach(c=>{
+    const p=c.dataset.prov;
+    c.classList.toggle('empty', !hasData(p));
+  });
+}
+
+document.querySelectorAll('.chip').forEach(c=>{
+  const p=c.dataset.prov;
+  if(!hasData(p)) c.classList.add('empty');
+  c.addEventListener('click',()=>{
+    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+    c.classList.add('on'); prov=p; amp=''; q='';
+    document.getElementById('q').value=''; fillAmp(); render();
+    setTimeout(()=>{ if(map) map.invalidateSize(); },100);
+  });
+});
+document.getElementById('ampSel').addEventListener('change',e=>{ amp=e.target.value; render(); });
+document.getElementById('q').addEventListener('input',e=>{ q=e.target.value.trim(); render(); });
+
+function updateMemberBar(p){
+  const bar=document.getElementById('memberBar');
+  if(p && p!=='pending'){ memberActive=true; bar.style.display='flex';
+    bar.innerHTML=`✅ เข้าสู่ระบบในฐานะเจ้าหน้าที่ — กด ✏️ เพื่อแก้ไข/ลบ หรือเพิ่มศูนย์ใหม่
+      <button class="btn sm" onclick="openAdd()">➕ เพิ่มศูนย์พักพิง</button>
+      <button class="btn sm ghost" onclick="signOut()">ออกจากระบบ</button>`;
+  }else{ memberActive=false; bar.style.display='none'; }
+  render();
+}
+try{
+  if(SB && typeof watchAuthState==='function'){
+    watchAuthState({
+      onSignedOut(){ updateMemberBar(null); },
+      onPending(){ updateMemberBar('pending'); },
+      onRejected(){ updateMemberBar(null); },
+      onApproved(p){ updateMemberBar(p); },
+      onAdmin(p){ updateMemberBar(p); }
+    });
+  }
+}catch(e){}
+
+initMap(); fillAmp(); renderOfficial(); render();
+setTimeout(()=>map.invalidateSize(),200);
+loadLive().then(()=>{ refreshChips(); fillAmp(); render(); });
+</script>
+<script src="js/pwa.js" defer></script>
+<script src="js/print.js" defer></script>
+</body>
+</html>

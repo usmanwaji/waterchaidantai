@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#423d38">
+<title>ทรัพยากร จักรกลสาธารณภัย | One Map หาดใหญ่</title>
+<meta name="description" content="แผนที่จักรกลสาธารณภัยที่ประจำการในพื้นที่ อ.หาดใหญ่ จ.สงขลา และลุ่มน้ำคลองอู่ตะเภา">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚜</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/rivers.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--panel:#ffffff;--orange:#fe6e00;--orange-d:#ff6b00;--orange-warm:#ffb74d;--navy:#57504a;--navy-d:#423d38;--peach:#e3e0dd;--outline:#e3e0dd;--outline-strong:#d1d5dc;--shell:rgba(0,0,0,.72);--danger:#dc2626;--warn:#f59e0b;--ok:#16a34a}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden}
+
+header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:1200;border-bottom:1px solid rgba(255,255,255,.12)}
+header h1{font-size:17px;font-weight:700;line-height:1.2}
+header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
+.navtab{display:flex;gap:4px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:3px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+.navtab a{color:rgba(255,255,255,.72);text-decoration:none;font-size:12px;font-weight:600;padding:5px 11px;border-radius:6px;white-space:nowrap;transition:background .15s,color .15s}
+.navtab a:hover{color:#fff;background:rgba(255,255,255,.10)}
+.navtab a.on{background:var(--orange);color:#fff;opacity:1}
+#authBox{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px}
+#authBox button{background:var(--orange);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-family:inherit;font-weight:600;font-size:12.5px;cursor:pointer}
+#authBox button:hover{background:var(--orange-d)}
+#authBox .pill{padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600}
+
+#wrap{flex:1;display:flex;min-height:0;position:relative}
+#sidebar{width:370px;background:var(--panel);display:flex;flex-direction:column;border-right:1px solid var(--outline);z-index:1100;overflow-y:auto}
+#btnCollapse{position:absolute;left:370px;top:50%;transform:translateY(-50%);z-index:1120;width:22px;height:56px;border:none;border-radius:0 10px 10px 0;background:var(--orange);color:#fff;cursor:pointer;font-size:13px;box-shadow:2px 0 6px rgba(0,0,0,.25);transition:left .2s}
+#btnCollapse.closed{left:0}
+#map{flex:1;min-width:0;z-index:1}
+
+.sec{padding:12px 14px;border-bottom:1px solid var(--outline)}
+.sec h3{font-size:12.5px;color:var(--navy-d);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+label.f{display:block;font-size:11.5px;color:var(--muted);margin:8px 0 3px}
+input[type=text], input[type=number], input[type=tel], input[type=date], input[type=file], select, textarea{
+  width:100%;padding:7px 9px;border:1px solid var(--outline-strong);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;color:var(--ink)
+}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+#mList{padding:6px 14px}
+.mrow{border:1px solid var(--outline);border-left-width:5px;border-radius:8px;padding:7px 10px;margin-bottom:6px;cursor:pointer;background:#fff;font-size:12px}
+.mrow:hover{background:#f8fafc}
+.mrow .nm{font-weight:700;font-size:12.5px}
+.mrow .sub{color:var(--muted);font-size:11px;margin-top:1px}
+.badge{padding:1px 8px;border-radius:99px;color:#fff;font-size:10.5px;font-weight:600;display:inline-block}
+
+#reportSec{padding:12px 14px;border-top:2px solid var(--peach)}
+#reportSec h3{font-size:12.5px;color:var(--navy-d);margin-bottom:6px}
+.gate{font-size:12.5px;line-height:1.7;padding:10px;border-radius:9px}
+.gate.pending{background:#fef3c7;color:#92400e}
+.gate.rejected{background:#fee2e2;color:#b91c1c}
+.gate.signedout{background:#f3f4f6;color:var(--muted)}
+
+.pin-btn{width:100%;padding:8px;border:1.5px dashed var(--orange);background:#fff8f2;color:var(--orange-d);font-family:inherit;font-weight:600;font-size:11.5px;border-radius:9px;cursor:pointer}
+.pin-btn.active{background:var(--orange);color:#fff;border-style:solid}
+.pin-btn.done{background:#dcfce7;color:#15803d;border:1.5px solid #15803d}
+#btnSubmitM{width:100%;margin-top:10px;padding:9px;border:none;background:var(--navy);color:#fff;font-family:inherit;font-weight:700;font-size:13px;border-radius:9px;cursor:pointer}
+#btnSubmitM:hover{background:#3a352f}
+#btnCancelEdit{width:100%;margin-top:6px;padding:7px;border:1px solid var(--outline-strong);background:#fff;color:var(--muted);font-family:inherit;font-weight:600;font-size:12px;border-radius:9px;cursor:pointer;display:none}
+.note{font-size:10.5px;color:#94a3b8;margin-top:6px;line-height:1.5;padding:0 14px 10px}
+
+.m-pin{display:flex;align-items:center;justify-content:center;font-size:16px;width:30px;height:30px;border-radius:50%;background:#fff;border:3px solid #16a34a;box-shadow:0 1px 5px rgba(0,0,0,.4)}
+.leaflet-popup-content{font-family:'Noto Sans Thai',Tahoma,sans-serif!important;font-size:12.5px;line-height:1.6;margin:10px 12px;width:230px!important}
+.leaflet-popup-content b.hd{font-size:13px}
+.pop-btn{padding:4px 8px;border:none;border-radius:4px;cursor:pointer;font-family:inherit;font-size:11.5px;margin:4px 4px 0 0;color:#fff}
+
+footer{background:var(--navy-d);color:#cfc8c0;font-size:10.5px;padding:5px 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+footer a{color:var(--orange-warm);text-decoration:none}
+
+#pageGate{position:absolute;inset:0;z-index:2000;background:rgba(252,250,247,.96);display:flex;align-items:center;justify-content:center;padding:20px}
+#pageGate .gbox{max-width:420px;text-align:center;background:#fff;border:1px solid var(--outline);border-radius:14px;padding:28px 24px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+#pageGate .gbox h2{font-size:16px;color:var(--navy-d);margin-bottom:8px}
+#pageGate .gbox p{color:var(--muted);font-size:13px;line-height:1.7}
+#pageGate .gbox button{margin-top:14px;background:var(--orange);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer}
+#pageGate .gbox button:hover{background:var(--orange-d)}
+
+#btnSidebar{display:none}
+@media(max-width:768px){
+  header{padding:6px 8px;gap:6px}
+  header h1{font-size:14px}
+  header h1 small{display:none}
+  .navtab{order:5;flex-basis:100%}
+  #sidebar{position:absolute;left:0;top:0;bottom:0;transform:translateX(-100%);transition:transform .25s;width:88%;max-width:340px;box-shadow:2px 0 12px rgba(0,0,0,.3)}
+  #sidebar.open{transform:translateX(0)}
+  #btnSidebar{display:block;position:absolute;left:10px;top:10px;z-index:1150;background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-family:inherit;font-weight:600;font-size:13px;box-shadow:0 1px 6px rgba(0,0,0,.3);cursor:pointer}
+  #btnCollapse{display:none}
+  footer{display:none}
+}
+
+/* ===== Mobile & touch enhancements ===== */
+a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
+.navtab{scrollbar-width:none}
+.navtab::-webkit-scrollbar{display:none}
+.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
+@media(pointer:coarse){.navtab a{padding:9px 13px;font-size:13px}}
+@media(max-width:768px){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}}
+@supports(height:100dvh){html,body{height:100dvh}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🚜 ทรัพยากร<small>จักรกลสาธารณภัย · อ.หาดใหญ่ จ.สงขลา</small></h1>
+  <nav class="navtab" aria-label="เมนูหลัก">
+    <a href="index.html">🌤️ หน้าแรก</a>
+    <a href="map.html">🗺️ สถานการณ์</a>
+    <a href="forecast.html">🔮 คาดการณ์</a>
+    <a href="history.html">🛰️ ย้อนหลัง</a>
+    <a href="repeat.html">⚠️ พื้นที่เสี่ยง</a>
+    <a href="sim.html">🌊 แบบจำลอง</a>
+    <a href="shelter.html">🏠 ศูนย์พักพิง</a>
+    <a href="route.html">🚗 เส้นทาง</a>
+    <a href="resources.html" class="on">🚜 ทรัพยากร</a>
+  </nav>
+  <div id="authBox"><span class="pill" style="background:rgba(255,255,255,.15)">กำลังตรวจสอบ…</span></div>
+</header>
+
+<div id="wrap">
+  <button id="btnSidebar" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+  <aside id="sidebar">
+
+    <div class="sec">
+      <h3>🔎 ค้นหาทรัพยากร</h3>
+      <div class="row2">
+        <div>
+          <label class="f">ประเภท</label>
+          <select id="fType"><option value="">ทุกประเภท</option></select>
+        </div>
+        <div>
+          <label class="f">สถานะ</label>
+          <select id="fStatus">
+            <option value="active">ปฏิบัติงานอยู่</option>
+            <option value="all">ทั้งหมด (รวมถอนกลับแล้ว)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec" style="border-bottom:none;padding-bottom:6px">
+      <h3>🚜 จักรกลในพื้นที่ <span id="mCount" style="font-weight:400;color:var(--muted)"></span></h3>
+    </div>
+    <div id="mList"><span style="font-size:12px;color:var(--muted)">กำลังโหลด…</span></div>
+
+    <div id="reportSec"></div>
+    <div class="sec" id="reqSec"></div>
+    <div class="note">ข้อมูลจักรกลสาธารณภัยบันทึกโดยเจ้าหน้าที่ที่ได้รับอนุมัติ เพื่อการประสานทรัพยากรระหว่างหน่วยงานและแจ้งประชาชน โปรดตรวจสอบกับผู้ประสานงานก่อนเข้ารับบริการ</div>
+  </aside>
+
+  <button id="btnCollapse" onclick="toggleSidebar()">◀</button>
+  <div id="map"></div>
+
+  <div id="pageGate">
+    <div class="gbox">
+      <h2 id="gateTitle">🔒 หน้าทรัพยากรสำหรับสมาชิกที่ได้รับอนุมัติเท่านั้น</h2>
+      <p id="gateMsg">ข้อมูลจักรกลสาธารณภัยและผู้ประสานงานจะแสดงเฉพาะสมาชิกที่ได้รับอนุมัติจากผู้ดูแลระบบแล้ว เพื่อความปลอดภัยของข้อมูลติดต่อเจ้าหน้าที่</p>
+      <div id="gateAction"><button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>แผนที่: OpenStreetMap · จักรกล: บันทึกโดยเจ้าหน้าที่ที่ได้รับอนุมัติ</span>
+  <span style="margin-left:auto">อยู่ระหว่างการทดลองปรับปรุง — <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a></span>
+</footer>
+
+<script src="js/supabase-client.js?v=2"></script>
+<script src="js/auth-ui.js"></script>
+<script>
+'use strict';
+
+/* ---------- ประเภทจักรกลสาธารณภัย (แก้/เพิ่มได้ที่นี่) ---------- */
+const MACHINE_TYPES = [
+  { id:'boat',         label:'เรือกู้ภัย / เรือท้องแบน',        icon:'🚤' },
+  { id:'jetski',       label:'เจ็ตสกีกู้ภัย',                   icon:'🌊' },
+  { id:'pump_long',    label:'เครื่องสูบส่งน้ำระยะไกล',          icon:'🐍' },
+  { id:'pump',         label:'เครื่องสูบน้ำ',                    icon:'💧' },
+  { id:'water_truck',  label:'รถผลิตน้ำดื่ม',                    icon:'🚰' },
+  { id:'light_truck',  label:'รถไฟฟ้าส่องสว่าง',                 icon:'💡' },
+  { id:'generator',    label:'เครื่องกำเนิดไฟฟ้า',               icon:'🔌' },
+  { id:'excavator',    label:'รถขุดตัก / แบคโฮ',                 icon:'🚜' },
+  { id:'truck',        label:'รถบรรทุก / รถลำเลียง',             icon:'🚛' },
+  { id:'hightruck',    label:'รถยกสูงกู้ภัย (เคลื่อนย้ายผู้ประสบภัย)', icon:'🛻' },
+  { id:'rescue_truck', label:'รถกู้ภัยเคลื่อนที่เร็ว',            icon:'🚨' },
+  { id:'ambulance',    label:'รถพยาบาล',                        icon:'🚑' },
+  { id:'kitchen',      label:'รถครัวสนาม / รถประกอบอาหาร',       icon:'🍚' },
+  { id:'toilet',       label:'รถสุขาเคลื่อนที่',                  icon:'🚻' },
+  { id:'comm',         label:'รถสื่อสารดาวเทียม',                icon:'📡' },
+  { id:'drone',        label:'โดรน / อากาศยานไร้คนขับ',          icon:'🛸' },
+  { id:'helicopter',   label:'เฮลิคอปเตอร์',                     icon:'🚁' },
+  { id:'other',        label:'อื่นๆ',                            icon:'⚙️' }
+];
+const typeOf = id => MACHINE_TYPES.find(t=>t.id===id) || MACHINE_TYPES[MACHINE_TYPES.length-1];
+
+const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtD = d => d ? new Date(d+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}) : '—';
+const todayStr = () => { const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); };
+
+/* ---------- สถานะเครื่องจักร (คำนวณจากวันที่) ---------- */
+function machineStatus(m){
+  if (m.status === 'demobilized') return { k:'demob',  label:'ถอนกลับที่ตั้งแล้ว', color:'#94a3b8' };
+  const t = todayStr();
+  if (m.deployed_until && m.deployed_until < t) return { k:'over', label:'เกินกำหนดประจำจุด', color:'#dc2626' };
+  if (m.demob_date) {
+    const diff = Math.round((new Date(m.demob_date) - new Date(t)) / 86400000);
+    if (diff < 0)  return { k:'over', label:'เกินกำหนดถอนกลับ', color:'#dc2626' };
+    if (diff <= 3) return { k:'soon', label:`ใกล้ถอนกลับ (อีก ${diff} วัน)`, color:'#f59e0b' };
+  }
+  return { k:'active', label:'ปฏิบัติงานอยู่', color:'#16a34a' };
+}
+
+/* ---------- แผนที่ ---------- */
+const map = L.map('map', { zoomControl:true }).setView([6.95, 100.42], 11);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19, attribution: '&copy; OpenStreetMap'
+}).addTo(map);
+if (window.OMSRivers) window.OMSRivers.drawLeaflet(map);
+
+let allMachines = [];
+let markers = {};          // id -> L.marker
+let pinMode = false;
+let pinLatLng = null;      // {lat, lng}
+let pinTempMarker = null;
+let editingId = null;
+
+map.on('click', e => {
+  if (!pinMode) return;
+  pinLatLng = { lat: e.latlng.lat, lng: e.latlng.lng };
+  if (pinTempMarker) map.removeLayer(pinTempMarker);
+  pinTempMarker = L.marker(e.latlng, { icon: L.divIcon({ className:'', html:'<div class="m-pin" style="border-color:#3b82f6">📍</div>', iconSize:[30,30], iconAnchor:[15,15] }) }).addTo(map);
+  pinMode = false;
+  updatePinBtn();
+});
+
+function updatePinBtn(){
+  const b = document.getElementById('btnPinM');
+  if (!b) return;
+  b.className = 'pin-btn ' + (pinMode ? 'active' : (pinLatLng ? 'done' : ''));
+  b.textContent = pinMode ? '👆 คลิกตำแหน่งบนแผนที่…' : (pinLatLng ? `✅ ปักหมุดแล้ว (${pinLatLng.lat.toFixed(5)}, ${pinLatLng.lng.toFixed(5)}) — กดเพื่อย้าย` : '📍 ปักหมุดตำแหน่งบนแผนที่');
+  map.getContainer().style.cursor = pinMode ? 'crosshair' : '';
+}
+window.togglePinM = function(){ pinMode = !pinMode; updatePinBtn(); };
+
+function toggleSidebar(){
+  const sb = document.getElementById('sidebar'), btn = document.getElementById('btnCollapse');
+  const hidden = sb.style.display === 'none';
+  sb.style.display = hidden ? 'flex' : 'none';
+  btn.classList.toggle('closed', !hidden);
+  setTimeout(()=>map.invalidateSize(), 250);
+}
+
+/* ---------- โหลด + แสดงผล ---------- */
+async function loadMachines(){
+  const { data, error } = await sb.from('machinery')
+    .select('id, lat, lon, name, type, details, photo_url, location_name, deployed_from, deployed_until, first_deployed, demob_date, coordinator_name, coordinator_phone, agency, status, created_by, created_at, updated_at')
+    .order('created_at', { ascending:false });
+  if (error) { console.error(error); allMachines = []; }
+  else allMachines = data || [];
+  renderAll();
+}
+
+function visibleMachines(){
+  const fT = document.getElementById('fType').value;
+  const fS = document.getElementById('fStatus').value;
+  return allMachines.filter(m => (!fT || m.type === fT) && (fS === 'all' || m.status !== 'demobilized'));
+}
+
+function renderAll(){ renderList(); renderMarkers(); renderRequests(); }
+
+function renderList(){
+  const el = document.getElementById('mList');
+  const list = visibleMachines();
+  document.getElementById('mCount').textContent = list.length ? `(${list.length})` : '';
+  if (!list.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:6px 0">ยังไม่มีจักรกลตามเงื่อนไขที่เลือก</div>'; return; }
+  el.innerHTML = list.map(m=>{
+    const t = typeOf(m.type), st = machineStatus(m);
+    return `<div class="mrow" style="border-left-color:${st.color}" onclick="focusMachine('${m.id}')">
+      <div class="nm">${t.icon} ${esc(m.name)} <span class="badge" style="background:${st.color}">${st.label}</span></div>
+      <div class="sub">${esc(t.label)}${m.agency?' · '+esc(m.agency):''}${m.location_name?' · 📌 '+esc(m.location_name):''}</div>
+      <div class="sub">ประจำจุด: ${fmtD(m.deployed_from)} → ${fmtD(m.deployed_until)} · ☎ ${esc(m.coordinator_phone)}</div>
+    </div>`;
+  }).join('');
+}
+
+window.focusMachine = function(id){
+  const m = allMachines.find(x=>x.id===id);
+  if (!m) return;
+  map.setView([m.lat, m.lon], 15);
+  if (markers[id]) markers[id].openPopup();
+};
+
+function renderMarkers(){
+  Object.values(markers).forEach(mk => map.removeLayer(mk));
+  markers = {};
+  visibleMachines().forEach(m => {
+    const t = typeOf(m.type), st = machineStatus(m);
+    const icon = L.divIcon({ className:'', html:`<div class="m-pin" style="border-color:${st.color}">${t.icon}</div>`, iconSize:[30,30], iconAnchor:[15,15], popupAnchor:[0,-14] });
+    const mk = L.marker([m.lat, m.lon], { icon }).addTo(map);
+    mk.bindPopup(popupHTML(m), { maxWidth: 260 });
+    markers[m.id] = mk;
+  });
+}
+
+function popupHTML(m){
+  const t = typeOf(m.type), st = machineStatus(m);
+  const me = window.currentUserProfile;
+  const canEdit = !!me && (me.role === 'admin' || m.created_by === me.id);
+  const photo = m.photo_url ? `<a href="${esc(m.photo_url)}" target="_blank"><img src="${esc(m.photo_url)}" style="max-width:100%;max-height:110px;border-radius:6px;margin-top:5px"></a>` : '';
+  const btns = canEdit ? `<hr style="margin:7px 0;border:none;border-top:1px solid #ddd">
+      <button class="pop-btn" style="background:var(--navy)" onclick="editMachine('${m.id}')">✏️ แก้ไข</button>
+      ${m.status==='deployed' ? `<button class="pop-btn" style="background:#94a3b8" onclick="demobMachine('${m.id}')">↩️ ถอนกลับที่ตั้ง</button>` : `<button class="pop-btn" style="background:var(--ok)" onclick="redeployMachine('${m.id}')">▶️ กลับมาปฏิบัติงาน</button>`}
+      <button class="pop-btn" style="background:var(--danger)" onclick="deleteMachine('${m.id}')">🗑️ ลบ</button>` : '';
+  return `<b class="hd">${t.icon} ${esc(m.name)}</b><br>
+    <span class="badge" style="background:${st.color}">${st.label}</span><br>
+    ประเภท: ${esc(t.label)}<br>
+    ${m.agency ? 'หน่วยงาน: '+esc(m.agency)+'<br>' : ''}
+    ${m.location_name ? 'จุดประจำการ: '+esc(m.location_name)+'<br>' : ''}
+    ${m.details ? 'รายละเอียด: '+esc(m.details)+'<br>' : ''}
+    ประจำจุดนี้: <b>${fmtD(m.deployed_from)} → ${fmtD(m.deployed_until)}</b><br>
+    เริ่มภารกิจครั้งแรก: ${fmtD(m.first_deployed)}<br>
+    กำหนดถอนกลับที่ตั้ง: ${fmtD(m.demob_date)}<br>
+    ผู้ประสานงาน: ${esc(m.coordinator_name)}<br>
+    ☎ <a href="tel:${esc(m.coordinator_phone)}">${esc(m.coordinator_phone)}</a>
+    ${photo}${btns}`;
+}
+
+/* ---------- เพิ่ม / แก้ไข / ลบ ---------- */
+window.editMachine = function(id){
+  const m = allMachines.find(x=>x.id===id);
+  if (!m) return;
+  editingId = id;
+  pinLatLng = { lat: m.lat, lng: m.lon };
+  if (pinTempMarker) map.removeLayer(pinTempMarker);
+  pinTempMarker = L.marker([m.lat, m.lon], { icon: L.divIcon({ className:'', html:'<div class="m-pin" style="border-color:#3b82f6">📍</div>', iconSize:[30,30], iconAnchor:[15,15] }) }).addTo(map);
+  const g = x => document.getElementById(x);
+  g('mName').value = m.name || '';
+  g('mType').value = m.type || 'other';
+  g('mAgency').value = m.agency || '';
+  g('mLoc').value = m.location_name || '';
+  g('mDetails').value = m.details || '';
+  g('mFrom').value = m.deployed_from || '';
+  g('mUntil').value = m.deployed_until || '';
+  g('mFirst').value = m.first_deployed || '';
+  g('mDemob').value = m.demob_date || '';
+  g('mCoord').value = m.coordinator_name || '';
+  g('mPhone').value = m.coordinator_phone || '';
+  g('btnSubmitM').textContent = '💾 บันทึกการแก้ไข';
+  g('btnCancelEdit').style.display = 'block';
+  updatePinBtn();
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('reportSec').scrollIntoView({ behavior:'smooth' });
+  map.closePopup();
+};
+
+window.cancelEdit = function(){
+  editingId = null;
+  pinLatLng = null;
+  if (pinTempMarker) { map.removeLayer(pinTempMarker); pinTempMarker = null; }
+  resetForm();
+};
+
+function resetForm(){
+  const g = x => document.getElementById(x);
+  ['mName','mAgency','mLoc','mDetails','mUntil','mFirst','mDemob','mPhone'].forEach(i => { if (g(i)) g(i).value = ''; });
+  if (g('mType')) g('mType').value = 'boat';
+  if (g('mFrom')) g('mFrom').value = todayStr();
+  if (g('mPhoto')) g('mPhoto').value = '';
+  if (g('mCoord') && window.currentUserProfile) g('mCoord').value = window.currentUserProfile.full_name || '';
+  if (g('btnSubmitM')) g('btnSubmitM').textContent = '✅ บันทึกจักรกล';
+  if (g('btnCancelEdit')) g('btnCancelEdit').style.display = 'none';
+  updatePinBtn();
+}
+
+window.demobMachine = async function(id){
+  if (!confirm('ยืนยันบันทึกว่าเครื่องจักรนี้ "ถอนกลับที่ตั้งแล้ว"? (หมุดจะเปลี่ยนเป็นสีเทา)')) return;
+  const { error } = await sb.from('machinery').update({ status:'demobilized' }).eq('id', id);
+  if (error) { alert('ไม่สำเร็จ: ' + error.message); return; }
+  map.closePopup(); loadMachines();
+};
+
+window.redeployMachine = async function(id){
+  const { error } = await sb.from('machinery').update({ status:'deployed' }).eq('id', id);
+  if (error) { alert('ไม่สำเร็จ: ' + error.message); return; }
+  map.closePopup(); loadMachines();
+};
+
+window.deleteMachine = async function(id){
+  if (!confirm('ยืนยันลบหมุดเครื่องจักรนี้? (ลบแล้วกู้คืนไม่ได้)')) return;
+  const { error } = await sb.from('machinery').delete().eq('id', id);
+  if (error) { alert('ลบไม่สำเร็จ: ' + error.message); return; }
+  map.closePopup(); loadMachines();
+};
+
+window.submitMachine = async function(){
+  if (!pinLatLng) { alert('กรุณาปักหมุดตำแหน่งเครื่องจักรบนแผนที่ก่อนครับ'); return; }
+  const g = x => document.getElementById(x);
+  const name = g('mName').value.trim();
+  const coord = g('mCoord').value.trim();
+  const phone = g('mPhone').value.trim();
+  const from = g('mFrom').value;
+  if (!name) { alert('กรุณาระบุชื่อเครื่องจักร'); return; }
+  if (!from) { alert('กรุณาระบุวันที่เริ่มประจำจุดนี้'); return; }
+  if (!coord || !phone) { alert('กรุณาระบุผู้ประสานงานและหมายเลขโทรศัพท์'); return; }
+
+  const btn = g('btnSubmitM');
+  btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
+  try {
+    let photoUrl = null;
+    const file = g('mPhoto').files[0];
+    if (file) photoUrl = await uploadFloodPhoto(file);
+
+    const payload = {
+      lat: pinLatLng.lat, lon: pinLatLng.lng,
+      name, type: g('mType').value,
+      agency: g('mAgency').value.trim() || null,
+      location_name: g('mLoc').value.trim() || null,
+      details: g('mDetails').value.trim() || null,
+      deployed_from: from,
+      deployed_until: g('mUntil').value || null,
+      first_deployed: g('mFirst').value || null,
+      demob_date: g('mDemob').value || null,
+      coordinator_name: coord, coordinator_phone: phone
+    };
+    if (photoUrl) payload.photo_url = photoUrl;
+
+    let error;
+    if (editingId) {
+      ({ error } = await sb.from('machinery').update(payload).eq('id', editingId));
+    } else {
+      const user = await getUser();
+      payload.created_by = user.id;
+      ({ error } = await sb.from('machinery').insert(payload));
+    }
+    if (error) throw error;
+
+    alert(editingId ? 'บันทึกการแก้ไขเรียบร้อย' : 'บันทึกจักรกลเรียบร้อย');
+    editingId = null;
+    pinLatLng = null;
+    if (pinTempMarker) { map.removeLayer(pinTempMarker); pinTempMarker = null; }
+    resetForm();
+    loadMachines();
+  } catch(e) {
+    alert('บันทึกไม่สำเร็จ: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = editingId ? '💾 บันทึกการแก้ไข' : '✅ บันทึกจักรกล';
+  }
+};
+
+/* ---------- Auth ---------- */
+function renderAuthHeader(state, profile){
+  const el = document.getElementById('authBox');
+  if (state==='signedout') el.innerHTML = `<button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button>`;
+  else if (state==='pending') el.innerHTML = `<span class="pill" style="background:#fef3c7;color:#92400e">รออนุมัติ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
+  else if (state==='rejected') el.innerHTML = `<span class="pill" style="background:#fee2e2;color:#b91c1c">ถูกปฏิเสธ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
+  else el.innerHTML = `<span class="pill" style="background:#dcfce7;color:#15803d">${esc(profile.full_name||profile.email)}${profile.role==='admin'?' · แอดมิน':''}</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
+}
+
+function renderReportSection(state, profile){
+  window.currentUserProfile = (state === 'approved') ? profile : null;
+  const el = document.getElementById('reportSec');
+  if (state==='signedout') { el.innerHTML = `<div class="gate signedout">🔒 ต้องเข้าสู่ระบบก่อน จึงจะบันทึกจักรกลสาธารณภัยได้<br><button onclick="signInWithGoogle()" style="margin-top:8px;background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 14px;cursor:pointer">เข้าสู่ระบบด้วย Google</button></div>`; return; }
+  if (state==='pending') { el.innerHTML = `<div class="gate pending">⏳ บัญชีรออนุมัติจากผู้ดูแลระบบ</div>`; return; }
+  if (state==='rejected') { el.innerHTML = `<div class="gate rejected">🚫 บัญชีของคุณไม่ได้รับอนุมัติให้บันทึกข้อมูล</div>`; return; }
+
+  el.innerHTML = `
+    <h3>📝 เพิ่ม / แก้ไขจักรกลสาธารณภัย</h3>
+    <button id="btnPinM" class="pin-btn" onclick="togglePinM()">📍 ปักหมุดตำแหน่งบนแผนที่</button>
+
+    <label class="f">ชื่อเครื่องจักร *</label>
+    <input type="text" id="mName" placeholder="เช่น เรือท้องแบน ปภ.นธ-01">
+    <div class="row2">
+      <div>
+        <label class="f">ประเภท *</label>
+        <select id="mType">${MACHINE_TYPES.map(t=>`<option value="${t.id}">${t.icon} ${t.label}</option>`).join('')}</select>
+      </div>
+      <div>
+        <label class="f">หน่วยงานเจ้าของ</label>
+        <input type="text" id="mAgency" placeholder="เช่น ปภ. / อบต. / ทหาร">
+      </div>
+    </div>
+    <label class="f">ชื่อจุดประจำการ</label>
+    <input type="text" id="mLoc" placeholder="เช่น วัดบางนรา / สะพานลันตู">
+    <label class="f">รายละเอียด / ขีดความสามารถ</label>
+    <textarea id="mDetails" rows="2" placeholder="เช่น สูบน้ำได้ 30,000 ลิตร/นาที ระยะส่ง 10 กม. / บรรทุกได้ 10 คน"></textarea>
+    <div class="row2">
+      <div>
+        <label class="f">ประจำจุดนี้ตั้งแต่ *</label>
+        <input type="date" id="mFrom">
+      </div>
+      <div>
+        <label class="f">ประจำจุดนี้ถึง</label>
+        <input type="date" id="mUntil">
+      </div>
+    </div>
+    <div class="row2">
+      <div>
+        <label class="f">เริ่มภารกิจครั้งแรกเมื่อ</label>
+        <input type="date" id="mFirst">
+      </div>
+      <div>
+        <label class="f">กำหนดถอนกลับที่ตั้ง</label>
+        <input type="date" id="mDemob">
+      </div>
+    </div>
+    <div class="row2">
+      <div>
+        <label class="f">ผู้ประสานงาน *</label>
+        <input type="text" id="mCoord" value="${esc(profile.full_name||'')}">
+      </div>
+      <div>
+        <label class="f">หมายเลขโทรศัพท์ *</label>
+        <input type="tel" id="mPhone" placeholder="เช่น 073-xxxxxx">
+      </div>
+    </div>
+    <label class="f">รูปภาพเครื่องจักร (ถ้ามี)</label>
+    <input type="file" id="mPhoto" accept="image/*">
+    <button id="btnSubmitM" onclick="submitMachine()">✅ บันทึกจักรกล</button>
+    <button id="btnCancelEdit" onclick="cancelEdit()">ยกเลิกการแก้ไข</button>
+  `;
+  document.getElementById('mFrom').value = todayStr();
+}
+
+/* ---------- คำขอสนับสนุนทรัพยากร (resource_requests) ---------- */
+let allRequests = [];
+const REQ_STATUS = {
+  requested:{l:'ขอแล้ว',    c:'#ca8a04', next:'approved',  nextL:'อนุมัติ'},
+  approved: {l:'อนุมัติแล้ว', c:'#2563eb', next:'dispatched', nextL:'ส่งแล้ว'},
+  dispatched:{l:'ส่งแล้ว',   c:'#7c3aed', next:'returned',   nextL:'คืนแล้ว'},
+  returned: {l:'คืนแล้ว',    c:'#16a34a', next:null},
+  cancelled:{l:'ยกเลิก',     c:'#94a3b8', next:null}
+};
+const URG = {normal:{l:'ปกติ',c:'#64748b'}, urgent:{l:'ด่วน',c:'#ea580c'}, critical:{l:'ด่วนที่สุด',c:'#dc2626'}};
+async function loadRequests(){
+  const { data, error } = await sb.from('resource_requests').select('*').order('created_at',{ascending:false});
+  allRequests = error ? [] : (data||[]);
+  renderRequests();
+}
+function reqAvailability(){
+  const by = {}; MACHINE_TYPES.forEach(t=>by[t.id]={total:0,active:0});
+  allMachines.forEach(m=>{ if(!by[m.type]) by[m.type]={total:0,active:0}; by[m.type].total++; if(m.status!=='demobilized') by[m.type].active++; });
+  return by;
+}
+function renderRequests(){
+  const el = document.getElementById('reqSec'); if(!el) return;
+  const av = reqAvailability();
+  const avHtml = MACHINE_TYPES.filter(t=>av[t.id]&&av[t.id].total>0).map(t=>
+    `<span style="display:inline-block;background:#f3f4f6;border:1px solid #e3e0dd;border-radius:7px;padding:2px 7px;margin:2px;font-size:11px">${t.icon} <b>${av[t.id].active}</b>/${av[t.id].total}</span>`
+  ).join('') || '<span style="font-size:11px;color:var(--muted)">ยังไม่มีข้อมูลจักรกล</span>';
+  const canReq = !!window.currentUserProfile;
+  const opts = MACHINE_TYPES.map(t=>`<option value="${t.id}">${t.icon} ${t.label}</option>`).join('');
+  const form = canReq ? `
+    <details style="margin:6px 0"><summary style="cursor:pointer;font-weight:700;color:var(--navy-d,#423d38);font-size:12.5px">➕ สร้างคำขอสนับสนุน</summary>
+      <input id="rqRequester" placeholder="หน่วยที่ขอ เช่น อบต.บางปอ" style="width:100%;margin-top:5px">
+      <div class="row2"><div><input id="rqProv" placeholder="จังหวัด" style="width:100%"></div><div><input id="rqAmphoe" placeholder="อำเภอ" style="width:100%"></div></div>
+      <div class="row2"><div><select id="rqType" style="width:100%">${opts}</select></div><div><input id="rqQty" type="number" min="1" value="1" placeholder="จำนวน" style="width:100%"></div></div>
+      <div class="row2"><div><select id="rqUrg" style="width:100%"><option value="normal">ปกติ</option><option value="urgent">ด่วน</option><option value="critical">ด่วนที่สุด</option></select></div><div><input id="rqPhone" placeholder="เบอร์ติดต่อ" style="width:100%"></div></div>
+      <input id="rqNote" placeholder="หมายเหตุ" style="width:100%;margin-top:4px">
+      <button id="btnReqSubmit" style="margin-top:6px;background:var(--orange);color:#fff;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;font-family:inherit;font-weight:700">ส่งคำขอ</button>
+    </details>` : '';
+  const list = allRequests.map(r=>{
+    const st = REQ_STATUS[r.status]||REQ_STATUS.requested, u = URG[r.urgency]||URG.normal, t = typeOf(r.resource_type);
+    const adv = (canReq && st.next) ? `<button onclick="updateReqStatus('${r.id}','${st.next}')" style="font-size:10.5px;border:1px solid #d1d5dc;background:#fff;border-radius:6px;padding:2px 7px;cursor:pointer">→ ${st.nextL}</button>` : '';
+    const cancel = (canReq && r.status!=='returned' && r.status!=='cancelled') ? `<button onclick="updateReqStatus('${r.id}','cancelled')" style="font-size:10.5px;border:1px solid #d1d5dc;background:#fff;border-radius:6px;padding:2px 7px;cursor:pointer">ยกเลิก</button>` : '';
+    return `<div class="mrow" style="border-left-color:${st.c}">
+      <div class="nm">${t.icon} ${esc(t.label.split(' ')[0])} × ${esc(r.quantity)} <span class="badge" style="background:${st.c}">${st.l}</span> <span class="badge" style="background:${u.c}">${u.l}</span></div>
+      <div class="sub">${esc(r.requester||'-')}${r.province?' · '+esc(r.province):''}${r.amphoe?' อ.'+esc(r.amphoe):''}${r.contact_phone?' · ☎ '+esc(r.contact_phone):''}</div>
+      ${r.note?`<div class="sub">${esc(r.note)}</div>`:''}
+      <div style="margin-top:4px;display:flex;gap:5px">${adv}${cancel}</div>
+    </div>`;
+  }).join('') || '<div style="font-size:12px;color:var(--muted);padding:6px 0">ยังไม่มีคำขอสนับสนุน</div>';
+  el.innerHTML = `<h3>🆘 คำขอสนับสนุนทรัพยากร <span style="font-weight:400;color:var(--muted)">${allRequests.filter(r=>['requested','approved','dispatched'].includes(r.status)).length? '('+allRequests.filter(r=>['requested','approved','dispatched'].includes(r.status)).length+' ค้าง)':''}</span></h3>
+    <div style="margin:4px 0">${avHtml}</div>${form}<div style="margin-top:6px">${list}</div>`;
+  const b = document.getElementById('btnReqSubmit'); if(b) b.onclick = submitRequest;
+}
+window.updateReqStatus = async function(id, status){
+  const { error } = await sb.from('resource_requests').update({ status }).eq('id', id);
+  if(error){ alert('อัปเดตไม่สำเร็จ: '+error.message); return; }
+  loadRequests();
+};
+async function submitRequest(){
+  const g=id=>document.getElementById(id);
+  const rec = { requester:g('rqRequester').value.trim(), province:g('rqProv').value.trim()||null,
+    amphoe:g('rqAmphoe').value.trim()||null, resource_type:g('rqType').value,
+    quantity:Math.max(1,parseInt(g('rqQty').value)||1), urgency:g('rqUrg').value,
+    contact_phone:g('rqPhone').value.trim()||null, note:g('rqNote').value.trim()||null,
+    created_by:(window.currentUserProfile||{}).id };
+  if(!rec.requester){ alert('กรุณาระบุหน่วยที่ขอ'); return; }
+  const { error } = await sb.from('resource_requests').insert(rec);
+  if(error){ alert('ส่งคำขอไม่สำเร็จ: '+error.message); return; }
+  loadRequests();
+}
+
+/* ---------- ตัวกรอง ---------- */
+document.getElementById('fType').innerHTML = '<option value="">ทุกประเภท</option>' + MACHINE_TYPES.map(t=>`<option value="${t.id}">${t.icon} ${t.label}</option>`).join('');
+document.getElementById('fType').onchange = renderAll;
+document.getElementById('fStatus').onchange = renderAll;
+
+/* หน้านี้เปิดดูได้เฉพาะผู้ที่ log in สำเร็จเท่านั้น */
+let loadTimer = null;
+function unlockPage(){
+  document.getElementById('pageGate').style.display = 'none';
+  loadMachines(); loadRequests();
+  if (!loadTimer) loadTimer = setInterval(()=>{ loadMachines(); loadRequests(); }, 5 * 60 * 1000);
+  setTimeout(()=>map.invalidateSize(), 100);
+}
+function lockPage(title, msg, actionHTML){
+  const gate = document.getElementById('pageGate');
+  gate.style.display = 'flex';
+  if (title) document.getElementById('gateTitle').textContent = title;
+  if (msg) document.getElementById('gateMsg').textContent = msg;
+  if (actionHTML !== undefined) document.getElementById('gateAction').innerHTML = actionHTML;
+  if (loadTimer) { clearInterval(loadTimer); loadTimer = null; }
+  allMachines = [];
+  renderAll();
+}
+
+watchAuthState({
+  onSignedOut: () => {
+    renderAuthHeader('signedout');
+    renderReportSection('signedout');
+    lockPage(
+      '🔒 หน้าทรัพยากรสำหรับสมาชิกที่ได้รับอนุมัติเท่านั้น',
+      'ข้อมูลจักรกลสาธารณภัยและผู้ประสานงานจะแสดงเฉพาะสมาชิกที่ได้รับอนุมัติจากผู้ดูแลระบบแล้ว เพื่อความปลอดภัยของข้อมูลติดต่อเจ้าหน้าที่',
+      '<button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button>'
+    );
+  },
+  onPending: (p) => {
+    renderAuthHeader('pending', p);
+    renderReportSection('pending', p);
+    lockPage(
+      '⏳ บัญชีของคุณกำลังรออนุมัติ',
+      'ผู้ดูแลระบบจะตรวจสอบและอนุมัติบัญชีของคุณ กรุณารอสักครู่ หรือติดต่อผู้ดูแลระบบเพื่อเร่งการอนุมัติ',
+      '<button onclick="signOut()" style="background:#94a3b8">ออกจากระบบ</button>'
+    );
+  },
+  onRejected: (p) => {
+    renderAuthHeader('rejected', p);
+    renderReportSection('rejected', p);
+    lockPage(
+      '🚫 บัญชีของคุณไม่ได้รับอนุมัติ',
+      'บัญชีของคุณถูกปฏิเสธการเข้าถึงหน้าทรัพยากร หากเชื่อว่าเป็นข้อผิดพลาด กรุณาติดต่อผู้ดูแลระบบ',
+      '<button onclick="signOut()" style="background:#94a3b8">ออกจากระบบ</button>'
+    );
+  },
+  onApproved: (p) => { renderAuthHeader('approved', p); renderReportSection('approved', p); unlockPage(); },
+  onAdmin:    (p) => { renderAuthHeader('approved', p); renderReportSection('approved', p); unlockPage(); }
+});
+</script>
+<script src="js/pwa.js" defer></script>
+<script src="js/print.js" defer></script>
+</body>
+</html>
