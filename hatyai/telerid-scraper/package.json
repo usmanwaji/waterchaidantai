@@ -1,0 +1,13 @@
+{
+  "name": "telerid-scraper",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Playwright scraper: telerid.rid.go.th CCTV + water level for 5 southern-border provinces",
+  "scripts": {
+    "scrape": "node scrape.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0"
+  }
+}

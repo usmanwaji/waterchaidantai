@@ -20,6 +20,7 @@ th:{
   search:'🔍 ค้นหาสถานี / แม่น้ำ / อำเภอ…', all:'ทั้งหมด', listEmpty:'ไม่พบสถานีตามเงื่อนไข',
   lyWL:'⚫ ระดับน้ำ', lyRain:'◼ ฝน 24 ชม.', lyDam:'🔻 เขื่อน', lySea:'🌊 น้ำทะเล', lyCctv:'📷 CCTV', lyTele:'▲ โทรมาตร ชป.', lyRisk:'⚠ จุดเสี่ยงฉับพลัน',
   teleSrc:'กรมชลประทาน', teleProj:'โครงการชลประทาน', teleView:'เปิดระบบโทรมาตร ชป. ↗',
+  teleWL:'ระดับน้ำปัจจุบัน', teleRain:'ฝนสะสม', teleUpd:'อัปเดต', teleNoData:'ยังไม่มีค่าสด — รัน telerid-scraper บนเครื่องเน็ตไทย', teleMSL:'ม.รทก.', teleMM:'มม.',
   extDdpm:'📹 CCTV ปภ. ↗', extTelerid:'▲ โทรมาตร ชป. ↗',
   lyDdpm:'📹 CCTV ปภ.', ddpmSrc:'ระบบเฝ้าระวังภัยพิบัติ ปภ.', ddpmCoord:'พิกัด (ละติจูด, ลองจิจูด)',
   ddpmWL:'ระดับน้ำปัจจุบัน (ม.)', ddpmCam:'สถานะกล้อง', camOn:'🟢 ออนไลน์', camOff:'🔴 ออฟไลน์', ddpmTel:'โทรศัพท์',
@@ -69,6 +70,7 @@ en:{
   search:'🔍 Search station / river / district…', all:'All', listEmpty:'No stations match',
   lyWL:'⚫ Water level', lyRain:'◼ Rain 24 h', lyDam:'🔻 Dams', lySea:'🌊 Sea level', lyCctv:'📷 CCTV', lyTele:'▲ RID telemetry', lyRisk:'⚠ Flash-flood risk',
   teleSrc:'Royal Irrigation Dept', teleProj:'Irrigation project', teleView:'Open RID telemetry ↗',
+  teleWL:'Current water level', teleRain:'Rain accumulated', teleUpd:'Updated', teleNoData:'No live value yet — run telerid-scraper on a Thai-IP machine', teleMSL:'m MSL', teleMM:'mm',
   extDdpm:'📹 DDPM CCTV ↗', extTelerid:'▲ RID telemetry ↗',
   lyDdpm:'📹 DDPM CCTV', ddpmSrc:'DDPM disaster surveillance system', ddpmCoord:'Coordinates (lat, lon)',
   ddpmWL:'Current water level (m)', ddpmCam:'Camera status', camOn:'🟢 Online', camOff:'🔴 Offline', ddpmTel:'Phone',
@@ -118,6 +120,7 @@ ms:{
   search:'🔍 Cari stesen / sungai / daerah…', all:'Semua', listEmpty:'Tiada stesen sepadan',
   lyWL:'⚫ Paras air', lyRain:'◼ Hujan 24 j', lyDam:'🔻 Empangan', lySea:'🌊 Paras laut', lyCctv:'📷 CCTV', lyTele:'▲ Telemetri RID', lyRisk:'⚠ Risiko banjir kilat',
   teleSrc:'Jabatan Pengairan', teleProj:'Projek pengairan', teleView:'Buka telemetri RID ↗',
+  teleWL:'Paras air semasa', teleRain:'Hujan terkumpul', teleUpd:'Dikemas kini', teleNoData:'Belum ada nilai langsung — jalankan telerid-scraper di mesin IP Thai', teleMSL:'m MSL', teleMM:'mm',
   extDdpm:'📹 CCTV DDPM ↗', extTelerid:'▲ Telemetri RID ↗',
   lyDdpm:'📹 CCTV DDPM', ddpmSrc:'Sistem pemantauan bencana DDPM', ddpmCoord:'Koordinat (lat, lon)',
   ddpmWL:'Paras air semasa (m)', ddpmCam:'Status kamera', camOn:'🟢 Dalam talian', camOff:'🔴 Luar talian', ddpmTel:'Telefon',
@@ -799,10 +802,11 @@ async function loadTelerid(){
           <div class="pp-sub">${esc(d.basin||'')} · ${esc(d.amphur||'')} · ${tProv(String(d.province||'').trim())} · ${t('teleSrc')}</div>
           ${img}
           <dl class="pp-grid">
-            ${d.level!=null?`<dt>${t('ddpmWL')}</dt><dd>${fmt(d.level)} ม.</dd>`:''}
-            ${d.bank!=null?`<dt>ระดับตลิ่ง</dt><dd>${fmt(d.bank)} ม.</dd>`:''}
+            ${d.level!=null?`<dt>${t('teleWL')}</dt><dd><b>${fmt(d.level)}</b> ${t('teleMSL')}</dd>`:''}
+            ${d.rain!=null?`<dt>${t('teleRain')}</dt><dd>${fmt(d.rain)} ${t('teleMM')}</dd>`:''}
           </dl>
-          <div style="font-size:10px;color:#94a3b8">${img?'📷 ภาพล่าสุด ':'อัปเดต '}${esc(upd)}</div>
+          ${(d.level==null&&d.rain==null)?`<div style="font-size:11px;color:#b45309">${t('teleNoData')}</div>`:''}
+          <div style="font-size:10px;color:#94a3b8">${d.dt?(t('teleUpd')+' '+esc(d.dt)):(img?'📷 ภาพล่าสุด '+esc(upd):(t('teleUpd')+' '+esc(upd)))}</div>
           <a class="pp-link" href="https://telerid.rid.go.th/#/" target="_blank">${t('teleView')}</a>`;
         }, {maxWidth:300})
         .addTo(gTele);
@@ -823,7 +827,12 @@ async function loadTelerid(){
         .bindPopup(()=>`
           <div class="pp-title">▲ ${esc(d.name||d.code||'')} ${d.code&&d.name?`(${esc(d.code)})`:''}</div>
           <div class="pp-sub">${esc(d.basin_name||'')} · ${esc(d.amphur_name||'')} · ${tProv(String(d.province_name||'').trim())} · ${t('teleSrc')}</div>
-          ${d.project_name?`<dl class="pp-grid"><dt>${t('teleProj')}</dt><dd>${esc(d.project_name)}</dd></dl>`:''}
+          <dl class="pp-grid">
+            ${d.tambon_name?`<dt>ตำบล</dt><dd>${esc(d.tambon_name)}</dd>`:''}
+            ${d.project_name?`<dt>${t('teleProj')}</dt><dd>${esc(d.project_name)}</dd>`:''}
+          </dl>
+          <div style="font-size:11px;color:#b45309;margin:2px 0">${t('teleNoData')}</div>
+          <a class="pp-link" href="https://www.google.com/maps/search/?api=1&query=${lat},${lon}" target="_blank">📍 นำทาง</a>
           <a class="pp-link" href="https://telerid.rid.go.th/#/" target="_blank">${t('teleView')}</a>`, {maxWidth:280})
         .addTo(gTele);
     });
@@ -1052,17 +1061,16 @@ document.querySelectorAll('.langbtn').forEach(b=>{
     lang = b.dataset.lang;
     try{ localStorage.setItem('onemap_lang', lang); }catch(e){}
     applyLang();
-    loadBoundaries();        // วาดป้ายชื่อจังหวัดใหม่ตามภาษา (ใช้ cache เบราว์เซอร์)
-    loadFlashFlood();        // แบนเนอร์ตามภาษา
+    loadBoundaries();
+    loadFlashFlood();
   };
 });
 document.querySelectorAll('.langbtn').forEach(b=>b.classList.toggle('active', b.dataset.lang===lang));
 
-/* ================= เริ่มทำงาน ================= */
+/* start */
 applyLang();
 loadAll();
 loadBoundaries();
 setInterval(loadAll, 10*60*1000);
 
-/* วาดแม่น้ำสายหลัก (thick blue) */
 if (window.OMSRivers) window.OMSRivers.drawLeaflet(map);
