@@ -786,24 +786,35 @@ async function loadTelerid(){
       if(lat==null || lon==null) return;
       if(PROV_SET.size && !PROV_SET.has(String(d.province||'').trim())) return;
       n++;
-      L.marker([lat,lon], {icon: mkIcon('mk-tele', '#1e40af', 18, '▲', false), zIndexOffset:80})
+      const mk = L.marker([lat,lon], {icon: mkIcon('mk-tele', '#1e40af', 18, '▲', false), zIndexOffset:80})
         .bindPopup(()=>{
           const upd = j.updated ? new Date(j.updated).toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}) : '';
           const img = d.hasImage
             ? `<img src="${TELERID_CAM}/${esc(d.code)}.jpg?v=${encodeURIComponent(j.updated||'')}" alt="กล้อง ${esc(d.code)}" style="width:100%;border-radius:8px;border:1px solid #e3e0dd;cursor:zoom-in;background:#eef1ee;margin:6px 0" onclick="window.open(this.src,'_blank')">`
             : '';
+          const crit = d.critical ?? d.bank;
           return `
           <div class="pp-title">▲ ${esc(d.name||d.code||'')} (${esc(d.code)})</div>
           <div class="pp-sub">${esc(d.basin||'')} · ${esc(d.amphur||'')} · ${tProv(String(d.province||'').trim())} · ${t('teleSrc')}</div>
           ${img}
           <dl class="pp-grid">
-            ${d.level!=null?`<dt>${t('ddpmWL')}</dt><dd>${fmt(d.level)} ม.</dd>`:''}
-            ${d.bank!=null?`<dt>ระดับตลิ่ง</dt><dd>${fmt(d.bank)} ม.</dd>`:''}
+            ${d.level!=null?`<dt>${t('ddpmWL')}</dt><dd><b>${fmt(d.level)}</b> ม.</dd>`:''}
+            ${d.warning!=null?`<dt style="color:#ea9a16">ระดับเฝ้าระวัง</dt><dd>${fmt(d.warning)} ม.</dd>`:''}
+            ${crit!=null?`<dt style="color:#dc2626">ระดับวิกฤต</dt><dd>${fmt(crit)} ม.</dd>`:''}
           </dl>
+          ${d.hasDetail?`<div class="tele-detail" data-code="${esc(d.code)}" style="font-size:11px;color:#94a3b8;margin:4px 0">กำลังโหลดกราฟ…</div>`:''}
           <div style="font-size:10px;color:#94a3b8">${img?'📷 ภาพล่าสุด ':'อัปเดต '}${esc(upd)}</div>
           <a class="pp-link" href="https://telerid.rid.go.th/#/" target="_blank">${t('teleView')}</a>`;
-        }, {maxWidth:300})
+        }, {maxWidth:320})
         .addTo(gTele);
+      if(d.hasDetail){
+        mk.on('popupopen', (ev)=>{
+          const el = ev.popup.getElement().querySelector('.tele-detail');
+          if(!el || el.dataset.loaded) return;
+          el.dataset.loaded = '1';
+          renderTeleDetail(el, d.code);
+        });
+      }
     });
     if(n>0) return;   // ใช้ข้อมูล scraper สำเร็จ
   }catch(e){ /* ยังไม่มีสาขา cam / scraper ยังไม่รัน → ใช้ station_list สดแบบเดิม */ }
@@ -826,6 +837,87 @@ async function loadTelerid(){
         .addTo(gTele);
     });
   }catch(e){ /* ถูกบล็อก CORS — ใช้ลิงก์โทรมาตรในหมุดสถานี ชป. แทน */ }
+}
+
+/* ---------- 6.6) รายละเอียดสถานีโทรมาตร: กราฟระดับน้ำ + น้ำฝน + ภาพตัดลำน้ำ ----------
+   ดึงไฟล์ {code}.detail.json (จาก scraper) ตอนเปิด popup แล้ววาดเป็น SVG ในตัว */
+async function renderTeleDetail(el, code){
+  try{
+    const det = await fetchJSON(`${TELERID_CAM}/${encodeURIComponent(code)}.detail.json`, 15000);
+    const html = teleDetailHTML(det);
+    el.style.color=''; el.innerHTML = html || '';
+  }catch(e){ el.innerHTML=''; }
+}
+function teleDetailHTML(det){
+  let h='';
+  if(det.wl && Array.isArray(det.wl.v)) h += teleWLChart(det);
+  if(det.rain && Array.isArray(det.rain.v)) h += teleRainChart(det);
+  if(det.cross) h += teleCrossSection(det);
+  return h;
+}
+function teleWLChart(det){
+  const W=284,H=96,pl=36,pr=8,pt=8,pb=8;
+  const v=det.wl.v, n=v.length;
+  const pts=v.map((y,i)=>({i,y})).filter(p=>p.y!=null);
+  if(pts.length<2) return '';
+  const warn=det.warning, crit=det.critical;
+  const ys=pts.map(p=>p.y);
+  let ymin=Math.min(...ys), ymax=Math.max(...ys);
+  if(warn!=null){ymin=Math.min(ymin,warn);ymax=Math.max(ymax,warn);}
+  if(crit!=null){ymin=Math.min(ymin,crit);ymax=Math.max(ymax,crit);}
+  const pad=(ymax-ymin)*0.12||0.2; ymin-=pad; ymax+=pad;
+  const X=i=> pl+(W-pl-pr)*(i/(n-1));
+  const Y=y=> pt+(H-pt-pb)*(1-(y-ymin)/(ymax-ymin));
+  const line=pts.map((p,k)=>`${k?'L':'M'}${X(p.i).toFixed(1)},${Y(p.y).toFixed(1)}`).join('');
+  const gl=(y,c)=> (y!=null&&y>=ymin&&y<=ymax)?`<line x1="${pl}" y1="${Y(y).toFixed(1)}" x2="${W-pr}" y2="${Y(y).toFixed(1)}" stroke="${c}" stroke-width="1" stroke-dasharray="3 2"/>`:'';
+  const yt=y=>`<text x="${pl-4}" y="${(Y(y)+3).toFixed(1)}" font-size="9" fill="#94a3b8" text-anchor="end">${y.toFixed(2)}</text>`;
+  const last=pts[pts.length-1].y;
+  return `<div style="font-size:11px;color:#475569;margin:6px 0 2px">ระดับน้ำ 48 ชม. <b style="color:#0369a1">${last.toFixed(2)} ม.</b></div>
+  <svg viewBox="0 0 ${W} ${H}" style="width:100%;background:#f8fafc;border:1px solid #e3e0dd;border-radius:6px">
+    ${gl(warn,'#ea9a16')}${gl(crit,'#dc2626')}
+    <path d="${line}" fill="none" stroke="#0ea5e9" stroke-width="1.6"/>
+    ${yt(ymax)}${yt(ymin)}
+  </svg>`;
+}
+function teleRainChart(det){
+  const v=det.rain.v.map(x=>x==null?0:x), n=v.length;
+  if(!n) return '';
+  const W=284,H=42,pl=36,pr=8,pt=6,pb=8;
+  const ymax=Math.max(0.5,...v);
+  const bw=(W-pl-pr)/n;
+  const X=i=> pl+bw*i;
+  const Y=y=> pt+(H-pt-pb)*(1-y/ymax);
+  const bars=v.map((y,i)=> y>0?`<rect x="${X(i).toFixed(1)}" y="${Y(y).toFixed(1)}" width="${Math.max(0.8,bw-0.4).toFixed(1)}" height="${(H-pb-Y(y)).toFixed(1)}" fill="#2563eb"/>`:'').join('');
+  const sum24=v.slice(-96).reduce((a,b)=>a+b,0);
+  return `<div style="font-size:11px;color:#475569;margin:6px 0 2px">ฝนสะสม 24 ชม. <b style="color:#2563eb">${sum24.toFixed(1)} มม.</b></div>
+  <svg viewBox="0 0 ${W} ${H}" style="width:100%;background:#f8fafc;border:1px solid #e3e0dd;border-radius:6px">
+    <text x="${pl-4}" y="${pt+6}" font-size="9" fill="#94a3b8" text-anchor="end">${ymax.toFixed(0)}</text>
+    ${bars}
+  </svg>`;
+}
+function teleCrossSection(det){
+  const cs=det.cross;
+  if(!cs||!Array.isArray(cs.distance)||!Array.isArray(cs.high)||cs.distance.length<2) return '';
+  const W=284,H=118,pl=32,pr=8,pt=10,pb=14;
+  const dist=cs.distance, high=cs.high;
+  const xmin=Math.min(...dist), xmax=Math.max(...dist);
+  const level=det.level, warn=cs.warning??det.warning, crit=cs.critical??det.critical;
+  const ys=high.slice(); [level,warn,crit].forEach(y=>{if(y!=null)ys.push(y);});
+  let ymin=Math.min(...ys), ymax=Math.max(...ys);
+  const pad=(ymax-ymin)*0.1||0.3; ymin-=pad; ymax+=pad;
+  const X=x=> pl+(W-pl-pr)*((x-xmin)/(xmax-xmin||1));
+  const Y=y=> pt+(H-pt-pb)*(1-(y-ymin)/(ymax-ymin));
+  const prof=dist.map((x,i)=>`${i?'L':'M'}${X(x).toFixed(1)},${Y(high[i]).toFixed(1)}`).join('');
+  const earth=`${prof} L${X(xmax).toFixed(1)},${(H-pb).toFixed(1)} L${X(xmin).toFixed(1)},${(H-pb).toFixed(1)} Z`;
+  const water=(level!=null&&level>ymin)?`<rect x="${pl}" y="${Y(level).toFixed(1)}" width="${(W-pl-pr).toFixed(1)}" height="${(H-pb-Y(level)).toFixed(1)}" fill="#7dd3fc" opacity="0.7"/>`:'';
+  const hl=(y,c,lbl)=> (y!=null&&y>=ymin&&y<=ymax)?`<line x1="${pl}" y1="${Y(y).toFixed(1)}" x2="${W-pr}" y2="${Y(y).toFixed(1)}" stroke="${c}" stroke-width="1" stroke-dasharray="3 2"/><text x="${W-pr}" y="${(Y(y)-2).toFixed(1)}" font-size="8" fill="${c}" text-anchor="end">${lbl}</text>`:'';
+  return `<div style="font-size:11px;color:#475569;margin:6px 0 2px">ภาพตัดลำน้ำ</div>
+  <svg viewBox="0 0 ${W} ${H}" style="width:100%;background:#eef6fb;border:1px solid #e3e0dd;border-radius:6px">
+    ${water}
+    <path d="${earth}" fill="#d6c7a8" stroke="#a1885a" stroke-width="1"/>
+    ${hl(crit,'#dc2626','วิกฤต')}${hl(warn,'#ea9a16','เฝ้าระวัง')}
+    ${(level!=null&&level>=ymin&&level<=ymax)?`<line x1="${pl}" y1="${Y(level).toFixed(1)}" x2="${W-pr}" y2="${Y(level).toFixed(1)}" stroke="#0284c7" stroke-width="1.5"/><text x="${pl}" y="${(Y(level)-2).toFixed(1)}" font-size="8" fill="#0369a1">น้ำ ${level.toFixed(2)}</text>`:''}
+  </svg>`;
 }
 
 /* ---------- 6) จุดเสี่ยงน้ำท่วมฉับพลัน 24 ชม. (HII) ---------- */
