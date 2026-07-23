@@ -124,6 +124,17 @@ footer a{color:var(--orange-warm);text-decoration:none}
 #wrfModal.show{display:flex}
 #wrfModal img{max-width:95%;max-height:92vh;border-radius:8px;background:#fff}
 
+/* การ์ดข้อมูลทางการกรมอุตุฯ */
+#tmdGrid{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}
+@media(max-width:760px){#tmdGrid{grid-template-columns:1fr}}
+.tmdObsRow{display:flex;align-items:center;gap:8px;padding:4px 2px;border-bottom:1px dashed #eef2f7;font-size:12px}
+.tmdObsRow:last-child{border-bottom:none}
+.tmdObsRow .sn{flex:1;font-weight:600}
+.tmdObsRow .sn small{display:block;font-weight:400;color:var(--muted);font-size:10px}
+.tmdObsRow .rv{width:74px;text-align:right;font-weight:700}
+.tmdObsRow .tv{width:86px;text-align:right;color:#475569}
+.tmdObsRow .hv{width:44px;text-align:right;color:#64748b}
+
 /* ===== Mobile & touch enhancements ===== */
 a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
 .navtab{scrollbar-width:none}
@@ -206,6 +217,22 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
     <div class="note">คะแนนรวมจาก: ฝนพยากรณ์ 7 วัน (Open-Meteo รายอำเภอ) + ดินอิ่มน้ำ (ฝน 3 วันที่ผ่านมา สสน.) + สถานีน้ำมาก/ล้นตลิ่งในอำเภอ · คลิกชื่ออำเภอเพื่อดูพยากรณ์เฉพาะจุด</div>
   </div>
 
+  <div class="card full" id="tmdCard">
+    <h2>🏛️ ข้อมูลทางการ กรมอุตุนิยมวิทยา <span class="where" id="tmdUpdated"></span></h2>
+    <div id="tmdGrid">
+      <div>
+        <div style="font-weight:700;font-size:13px;color:var(--navy-d)">📢 พยากรณ์ 7 วัน — ภาคใต้ฝั่งตะวันออก</div>
+        <div id="tmdWarn"></div>
+        <div id="tmdRegion" style="font-size:12.5px;line-height:1.7;color:#334155;margin-top:4px"><span class="spin"></span> กำลังโหลด…</div>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:13px;color:var(--navy-d)">🌡️ ตรวจวัดจริงเช้านี้ (07:00 น.)</div>
+        <div id="tmdObs" style="margin-top:4px"><span class="spin"></span></div>
+      </div>
+    </div>
+    <div class="note">ที่มา: กรมอุตุนิยมวิทยา (TMDAPI ทางการ) — พยากรณ์รายภาคออกใหม่ทุกวัน ~11:00 น. · ค่าตรวจวัด ณ 07:00 น. ฝนคือปริมาณสะสม 24 ชม.ที่ผ่านมา · การ์ดอื่นในหน้านี้เป็นแบบจำลอง Open-Meteo รายอำเภอ ใช้คู่กัน: ตัวเลขละเอียดจากแบบจำลอง + ภาพรวม/คำเตือนทางการจากกรมอุตุฯ · <a href="https://www.tmd.go.th" target="_blank" rel="noopener">เปิดเว็บกรมอุตุฯ ↗</a></div>
+  </div>
+
   <div class="card full">
     <h2>📡 เรดาร์ฝนสทิงพระ (กรมอุตุฯ) <span class="where" id="radarUpdated"></span></h2>
     <div class="radarWrap">
@@ -248,7 +275,7 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
 <div id="wrfModal" onclick="this.classList.remove('show')"><img id="wrfModalImg" src="" alt=""></div>
 
 <footer>
-  <span>ข้อมูล: Open-Meteo · thaiwater.net (สสน.) · ศูนย์กลางอำเภอจาก OpenGISData-Thailand</span>
+  <span>ข้อมูล: กรมอุตุนิยมวิทยา (TMDAPI) · Open-Meteo · thaiwater.net (สสน.) · ศูนย์กลางอำเภอจาก OpenGISData-Thailand</span>
   <span style="margin-left:auto">อยู่ระหว่างการทดลองปรับปรุง — <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a></span>
 </footer>
 
@@ -292,6 +319,59 @@ let soilByAmp = {};           // 'จังหวัด|อำเภอบาง
 
 const ampsOf = p => AMPHOES.filter(a=>a[0]===p);
 const mainAmp = p => ampsOf(p).find(a=>a[1].startsWith('เมือง')) || ampsOf(p)[0];
+
+/* ---------- ข้อมูลทางการกรมอุตุฯ ผ่าน tmd-proxy Worker (CORS) ----------
+   endpoint ตรวจแล้ว 2026-07-19: /region7days (รายภาค อัปเดตทุกวัน ~11:00)
+   + /today (ตรวจวัดจริง 07:00) — ห้ามใช้ WeatherWarningNews (ค้างปี 2022) */
+const TMD_PROXY = 'https://tmd-proxy.newusmanwaji.workers.dev';
+const TMD_SOUTH = ['สงขลา','สตูล','ปัตตานี','ยะลา','นราธิวาส'];
+async function loadTmd(){
+  const rEl = document.getElementById('tmdRegion'), oEl = document.getElementById('tmdObs'),
+        wEl = document.getElementById('tmdWarn');
+  try{
+    const [reg, today] = await Promise.all([
+      fetch(TMD_PROXY+'/region7days').then(r=>{ if(!r.ok) throw new Error('region '+r.status); return r.json(); }),
+      fetch(TMD_PROXY+'/today').then(r=>{ if(!r.ok) throw new Error('today '+r.status); return r.json(); })
+    ]);
+    // ---- พยากรณ์รายภาค: ภาคใต้ฝั่งตะวันออก ----
+    const se = ((reg.WeatherForecast7DaysByRegion||{}).Regions||[])
+      .find(x=>x.RegionNameThai==='ภาคใต้ฝั่งตะวันออก');
+    if(se){
+      rEl.textContent = se.WeatherDescriptionThai || '—';
+      const end = (se.EndForecastDate||'').slice(0,10);
+      if(end) document.getElementById('tmdUpdated').textContent =
+        'พยากรณ์ถึง ' + new Date(end+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short'});
+      const warn = (se.WarningThai||'').trim();
+      wEl.innerHTML = (warn && warn!=='-')
+        ? `<div style="background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:8px;padding:6px 10px;font-size:12.5px;font-weight:600;margin-top:6px">⚠️ ${warn}</div>`
+        : '';
+    }else rEl.textContent = 'ไม่พบข้อมูลภาคใต้ฝั่งตะวันออกในรอบนี้';
+    // ---- ตรวจวัดจริงรายสถานี 5 จังหวัด (จังหวัดที่เลือกขึ้นก่อน) ----
+    const sts = (((today.Stations||{}).Station)||[])
+      .filter(s=>TMD_SOUTH.includes(s.Province))
+      .sort((a,b)=>(a.Province===prov?-1:0)-(b.Province===prov?-1:0));
+    if(sts.length){
+      const dt = (sts[0].Observation.DateTime||'').slice(0,10);
+      oEl.innerHTML = sts.map(s=>{
+        const o = s.Observation||{}, rain = parseFloat(o.Rainfall);
+        const rc = rain>=90?'#dc2626':rain>=35?'#ea580c':rain>=10?'#ca8a04':'#475569';
+        const hot = s.Province===prov;
+        return `<div class="tmdObsRow"${hot?' style="background:#fff7ed"':''}>
+          <span class="sn">${s.StationNameThai}<small>จ.${s.Province}</small></span>
+          <span class="rv" style="color:${rc}">${isNaN(rain)?'—':rain.toFixed(1)} มม.</span>
+          <span class="tv">${o.MinTemperature||'—'}–${o.MaxTemperature||'—'}°C</span>
+          <span class="hv">${o.RelativeHumidity||'—'}%</span>
+        </div>`;
+      }).join('') +
+      `<div class="note" style="margin-top:4px">ฝน 24 ชม. · ต่ำสุด–สูงสุด · ความชื้น — ข้อมูลวันที่ ${dt?new Date(dt+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short'}):''}</div>`;
+    }else oEl.textContent = 'ไม่พบสถานีตรวจวัด';
+  }catch(e){
+    const msg = `<div style="font-size:12px;color:#94a3b8">เชื่อมต่อข้อมูลกรมอุตุฯ ไม่ได้ขณะนี้ —
+      <a href="https://www.tmd.go.th/forecast/region" target="_blank" rel="noopener">เปิดพยากรณ์รายภาคที่เว็บกรมอุตุฯ ↗</a><br>
+      <small>(สำหรับผู้ดูแล: ต้อง deploy tmd-proxy.worker.js บน Cloudflare ก่อน — ดูวิธีในไฟล์)</small></div>`;
+    rEl.innerHTML = msg; oEl.innerHTML = '';
+  }
+}
 
 /* ---------- โหลดข้อมูล ---------- */
 async function loadAll(){
@@ -663,6 +743,8 @@ loadRadarImg();
 renderWrfLegend();
 loadRainForecast();
 loadAll();
+loadTmd();
+setInterval(loadTmd, 60*60*1000);
 setInterval(loadAll, 30*60*1000);
 setInterval(loadRainForecast, 60*60*1000);
 setInterval(loadRadarImg, 10*60*1000);
