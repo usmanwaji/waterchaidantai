@@ -190,16 +190,6 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
   </div>
 
   <div class="card">
-    <h2>🌧️ ฝนรวม 7 วันข้างหน้า</h2>
-    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-      <div><div class="bignum" id="rain7"><span class="spin"></span></div><div style="font-size:11px;color:var(--muted)">มม. (จุดที่เลือก)</div></div>
-      <div id="rain7Label" class="risklabel"></div>
-    </div>
-    <div id="soil" style="margin-top:8px;font-size:12px;color:#475569"></div>
-    <div class="note">เกณฑ์อ้างอิง: ฝนรวมสัปดาห์ >150 มม. ในพื้นที่ลุ่ม/ดินอิ่มน้ำ ควรยกระดับการเฝ้าระวัง</div>
-  </div>
-
-  <div class="card">
     <h2>⚠️ มาตรวัดน้ำต้องระวังเป็นพิเศษ <span class="where" id="whereSt"></span></h2>
     <div id="stList"><span class="spin"></span></div>
     <div class="note">เกณฑ์: ล้นตลิ่ง / ≥70% ความจุลำน้ำ / กำลังขึ้นเร็ว — คลิกเพื่อดูบนแผนที่</div>
@@ -224,6 +214,15 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
         <div style="font-weight:700;font-size:13px;color:var(--navy-d)">📢 พยากรณ์ 7 วัน — ภาคใต้ฝั่งตะวันออก</div>
         <div id="tmdWarn"></div>
         <div id="tmdRegion" style="font-size:12.5px;line-height:1.7;color:#334155;margin-top:4px"><span class="spin"></span> กำลังโหลด…</div>
+        <div style="border-top:1px solid #eef2f7;margin-top:12px;padding-top:10px">
+          <div style="font-weight:700;font-size:13px;color:var(--navy-d)">🌧️ ฝนรวม 7 วันข้างหน้า</div>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:6px">
+            <div><div class="bignum" id="rain7"><span class="spin"></span></div><div style="font-size:11px;color:var(--muted)">มม. (จุดที่เลือก)</div></div>
+            <div id="rain7Label" class="risklabel"></div>
+          </div>
+          <div id="soil" style="margin-top:8px;font-size:12px;color:#475569"></div>
+          <div class="note">เกณฑ์อ้างอิง: ฝนรวมสัปดาห์ >150 มม. ในพื้นที่ลุ่ม/ดินอิ่มน้ำ ควรยกระดับการเฝ้าระวัง</div>
+        </div>
       </div>
       <div>
         <div style="font-weight:700;font-size:13px;color:var(--navy-d)">🗺️ ปริมาณฝนรายอำเภอ นราธิวาส</div>
