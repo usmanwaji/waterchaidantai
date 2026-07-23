@@ -658,7 +658,7 @@ function renderRadarBar(){
 function loadRadarImg(){
   const img = document.getElementById('radarImg');
   if(!img) return;
-  img.src = `https://weather.tmd.go.th/stp/stp240_latest.jpg?v=${Date.now()}`;
+  img.src = `https://semet.uk/jct/latest.png?v=${Date.now()}`;
   const upd = document.getElementById('radarUpdated');
   if(upd) upd.textContent = 'โหลดล่าสุด ' + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
 }
