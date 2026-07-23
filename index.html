@@ -236,7 +236,7 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
   <div class="card full">
     <h2>📡 เรดาร์ฝนสทิงพระ (กรมอุตุฯ) <span class="where" id="radarUpdated"></span></h2>
     <div class="radarWrap">
-      <img id="radarImg" src="" alt="เรดาร์ฝนสทิงพระ ล่าสุด" style="max-width:100%;max-height:520px;border-radius:8px;border:1px solid #e2e8f0;cursor:zoom-in;background:#eef2f7" onclick="bigWrf(this.src)">
+      <img id="radarImg" src="" alt="เรดาร์ฝนสทิงพระ ล่าสุด" style="max-width:100%;max-height:936px;border-radius:8px;border:1px solid #e2e8f0;cursor:zoom-in;background:#eef2f7" onclick="bigWrf(this.src)">
       <div class="rainScale" aria-label="แถบวัดความแรงฝนจากสีบนเรดาร์">
         <div class="rsTitle">ความแรงฝน<br><small>(อ่านจากสีบนภาพ)</small></div>
         <div class="rsBody">
@@ -637,7 +637,8 @@ function renderAmphoes(list){
 /* หมายเหตุ: หน้าเรดาร์ต้นทางส่ง X-Frame-Options และภาพ (lh3.googleusercontent.com) ผูกกับสิทธิ์การเข้าถึงของหน้า Sites เอง
    ฝังเป็น iframe/รูปตรง ๆ จากโดเมนอื่นไม่ได้ (ทดสอบแล้ว 403/ถูกบล็อก) จึงเปิดลิงก์ในแท็บใหม่แทน */
 const RADAR_SLUG = { 'สตูล':'สตล', 'สงขลา':'สงขลา', 'ปัตตานี':'ปตตาน', 'ยะลา':'ยะลา', 'นราธิวาส':'นราธวาส' };
-const radarUrl = p => `https://sites.google.com/view/semet-radar/เรดารตำบล/${encodeURIComponent(RADAR_SLUG[p]||p)}`;
+const RADAR_URL_OVERRIDE = { 'นราธิวาส':'https://sites.google.com/view/naramet-radar/narathiwat?authuser=0' };
+const radarUrl = p => RADAR_URL_OVERRIDE[p] || `https://sites.google.com/view/semet-radar/เรดารตำบล/${encodeURIComponent(RADAR_SLUG[p]||p)}`;
 function renderRadarBar(){
   const bar = document.getElementById('radarBar');
   if(!bar) return;
