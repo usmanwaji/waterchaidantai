@@ -341,7 +341,7 @@ async function loadTmd(){
       const end = (se.EndForecastDate||'').slice(0,10);
       if(end) document.getElementById('tmdUpdated').textContent =
         'พยากรณ์ถึง ' + new Date(end+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short'});
-      const warn = (se.WarningThai||'').trim();
+      const warn = (typeof se.WarningThai==='string' ? se.WarningThai : '').trim();
       wEl.innerHTML = (warn && warn!=='-')
         ? `<div style="background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:8px;padding:6px 10px;font-size:12.5px;font-weight:600;margin-top:6px">⚠️ ${warn}</div>`
         : '';
