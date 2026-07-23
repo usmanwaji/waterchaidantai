@@ -177,6 +177,31 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
 </div>
 
 <div id="content">
+  <div class="card full" id="tmdCard">
+    <h2>🏛️ ข้อมูลทางการ กรมอุตุนิยมวิทยา <span class="where" id="tmdUpdated"></span></h2>
+    <div id="tmdGrid">
+      <div>
+        <div style="font-weight:700;font-size:13px;color:var(--navy-d)">📢 พยากรณ์ 7 วัน — ภาคใต้ฝั่งตะวันออก</div>
+        <div id="tmdWarn"></div>
+        <div id="tmdRegion" style="font-size:12.5px;line-height:1.7;color:#334155;margin-top:4px"><span class="spin"></span> กำลังโหลด…</div>
+        <div style="border-top:1px solid #eef2f7;margin-top:12px;padding-top:10px">
+          <div style="font-weight:700;font-size:13px;color:var(--navy-d)">🌧️ ฝนรวม 7 วันข้างหน้า</div>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:6px">
+            <div><div class="bignum" id="rain7"><span class="spin"></span></div><div style="font-size:11px;color:var(--muted)">มม. (จุดที่เลือก)</div></div>
+            <div id="rain7Label" class="risklabel"></div>
+          </div>
+          <div id="soil" style="margin-top:8px;font-size:12px;color:#475569"></div>
+          <div class="note">เกณฑ์อ้างอิง: ฝนรวมสัปดาห์ >150 มม. ในพื้นที่ลุ่ม/ดินอิ่มน้ำ ควรยกระดับการเฝ้าระวัง</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:13px;color:var(--navy-d)">🗺️ ปริมาณฝนรายอำเภอ นราธิวาส</div>
+        <img src="https://ax4zxr2a81pg.objectstorage.ap-singapore-1.oci.customer-oci.com/n/ax4zxr2a81pg/b/semet-radar/o/naramet%2Fraininfo.png" alt="แผนที่ปริมาณฝนรายอำเภอ นราธิวาส" title="คลิกเพื่อดูภาพเต็ม" style="width:100%;aspect-ratio:1240/1140;object-fit:cover;object-position:50% 57%;border-radius:8px;border:1px solid #e2e8f0;cursor:zoom-in;background:#fff;margin-top:4px" onclick="window.open('https://ax4zxr2a81pg.objectstorage.ap-singapore-1.oci.customer-oci.com/n/ax4zxr2a81pg/b/semet-radar/o/naramet%2Fraininfo.png','_blank')">
+      </div>
+    </div>
+    <div class="note">ที่มา: กรมอุตุนิยมวิทยา (TMDAPI ทางการ) — พยากรณ์รายภาคออกใหม่ทุกวัน ~11:00 น. · ค่าตรวจวัด ณ 07:00 น. ฝนคือปริมาณสะสม 24 ชม.ที่ผ่านมา · การ์ดอื่นในหน้านี้เป็นแบบจำลอง Open-Meteo รายอำเภอ ใช้คู่กัน: ตัวเลขละเอียดจากแบบจำลอง + ภาพรวม/คำเตือนทางการจากกรมอุตุฯ · <a href="https://www.tmd.go.th" target="_blank" rel="noopener">เปิดเว็บกรมอุตุฯ ↗</a></div>
+  </div>
+
   <div class="card full">
     <h2>⏱️ พยากรณ์ 24 ชั่วโมงข้างหน้า (รายชั่วโมง) <span class="where" id="whereHour"></span></h2>
     <div id="nowBox"><span class="spin"></span> กำลังโหลด…</div>
@@ -205,31 +230,6 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
     <h2>🏘️ อำเภอที่ต้องเฝ้าระวังเป็นพิเศษ (7 วันนี้) <span class="where" id="whereAmp"></span></h2>
     <div id="ampList"><span class="spin"></span> กำลังประเมิน…</div>
     <div class="note">คะแนนรวมจาก: ฝนพยากรณ์ 7 วัน (Open-Meteo รายอำเภอ) + ดินอิ่มน้ำ (ฝน 3 วันที่ผ่านมา สสน.) + สถานีน้ำมาก/ล้นตลิ่งในอำเภอ · คลิกชื่ออำเภอเพื่อดูพยากรณ์เฉพาะจุด</div>
-  </div>
-
-  <div class="card full" id="tmdCard">
-    <h2>🏛️ ข้อมูลทางการ กรมอุตุนิยมวิทยา <span class="where" id="tmdUpdated"></span></h2>
-    <div id="tmdGrid">
-      <div>
-        <div style="font-weight:700;font-size:13px;color:var(--navy-d)">📢 พยากรณ์ 7 วัน — ภาคใต้ฝั่งตะวันออก</div>
-        <div id="tmdWarn"></div>
-        <div id="tmdRegion" style="font-size:12.5px;line-height:1.7;color:#334155;margin-top:4px"><span class="spin"></span> กำลังโหลด…</div>
-        <div style="border-top:1px solid #eef2f7;margin-top:12px;padding-top:10px">
-          <div style="font-weight:700;font-size:13px;color:var(--navy-d)">🌧️ ฝนรวม 7 วันข้างหน้า</div>
-          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:6px">
-            <div><div class="bignum" id="rain7"><span class="spin"></span></div><div style="font-size:11px;color:var(--muted)">มม. (จุดที่เลือก)</div></div>
-            <div id="rain7Label" class="risklabel"></div>
-          </div>
-          <div id="soil" style="margin-top:8px;font-size:12px;color:#475569"></div>
-          <div class="note">เกณฑ์อ้างอิง: ฝนรวมสัปดาห์ >150 มม. ในพื้นที่ลุ่ม/ดินอิ่มน้ำ ควรยกระดับการเฝ้าระวัง</div>
-        </div>
-      </div>
-      <div>
-        <div style="font-weight:700;font-size:13px;color:var(--navy-d)">🗺️ ปริมาณฝนรายอำเภอ นราธิวาส</div>
-        <img src="https://ax4zxr2a81pg.objectstorage.ap-singapore-1.oci.customer-oci.com/n/ax4zxr2a81pg/b/semet-radar/o/naramet%2Fraininfo.png" alt="แผนที่ปริมาณฝนรายอำเภอ นราธิวาส" title="คลิกเพื่อดูภาพเต็ม" style="width:100%;aspect-ratio:1240/1140;object-fit:cover;object-position:50% 57%;border-radius:8px;border:1px solid #e2e8f0;cursor:zoom-in;background:#fff;margin-top:4px" onclick="window.open('https://ax4zxr2a81pg.objectstorage.ap-singapore-1.oci.customer-oci.com/n/ax4zxr2a81pg/b/semet-radar/o/naramet%2Fraininfo.png','_blank')">
-      </div>
-    </div>
-    <div class="note">ที่มา: กรมอุตุนิยมวิทยา (TMDAPI ทางการ) — พยากรณ์รายภาคออกใหม่ทุกวัน ~11:00 น. · ค่าตรวจวัด ณ 07:00 น. ฝนคือปริมาณสะสม 24 ชม.ที่ผ่านมา · การ์ดอื่นในหน้านี้เป็นแบบจำลอง Open-Meteo รายอำเภอ ใช้คู่กัน: ตัวเลขละเอียดจากแบบจำลอง + ภาพรวม/คำเตือนทางการจากกรมอุตุฯ · <a href="https://www.tmd.go.th" target="_blank" rel="noopener">เปิดเว็บกรมอุตุฯ ↗</a></div>
   </div>
 
   <div class="card full">
