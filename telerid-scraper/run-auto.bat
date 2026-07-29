@@ -1,0 +1,10 @@
+@echo off
+rem run-auto.bat — เวอร์ชันอัตโนมัติ (ไม่มี pause) สำหรับ Task Scheduler
+rem ดึงภาพ+ระดับน้ำ telerid แล้ว publish ขึ้นสาขา cam — เขียน log ไว้ที่ telerid-auto.log
+chcp 65001 >nul
+cd /d "%~dp0"
+set "LOG=%~dp0telerid-auto.log"
+echo ================ START %date% %time% ================>> "%LOG%"
+call node scrape.mjs >> "%LOG%" 2>&1
+call node publish-github.mjs >> "%LOG%" 2>&1
+echo ---------------- DONE  %date% %time% ----------------->> "%LOG%"
