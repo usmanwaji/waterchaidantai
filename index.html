@@ -254,7 +254,6 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
         </div>
       </div>
     </div>
-    <div id="radarBar" style="margin-top:8px"></div>
   </div>
 
   <div class="card full">
@@ -630,7 +629,7 @@ function renderRadarBar(){
 function loadRadarImg(){
   const img = document.getElementById('radarImg');
   if(!img) return;
-  img.src = `https://semet.uk/jct/latest.png?v=${Date.now()}`;
+  img.src = `https://semet.uk/loop/NTWLoop.gif?v=${Date.now()}`;
   const upd = document.getElementById('radarUpdated');
   if(upd) upd.textContent = 'โหลดล่าสุด ' + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
 }
