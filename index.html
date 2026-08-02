@@ -20,6 +20,8 @@ body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:v
 header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.12)}
 header h1{font-size:17px;font-weight:700;line-height:1.2}
 header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
+.pageBanner{width:100%;background:var(--shell);text-align:center;line-height:0}
+.pageBanner img{width:100%;max-width:1100px;height:auto;display:inline-block}
 .navtab{display:flex;gap:4px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:3px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
 .navtab a{color:rgba(255,255,255,.72);text-decoration:none;font-size:12px;font-weight:600;padding:5px 11px;border-radius:6px;white-space:nowrap;transition:background .15s,color .15s}
 .navtab a:hover{color:#fff;background:rgba(255,255,255,.10)}
@@ -146,6 +148,8 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
 </style>
 </head>
 <body>
+
+<div class="pageBanner"><img src="header.jpg" alt="Dashboard อุทกภัย จังหวัดนราธิวาส" width="1024" height="339"></div>
 
 <header>
   <h1>🌤️ ภาพรวมอากาศ & สถานการณ์น้ำ<small>สตูล · สงขลา · ปัตตานี · ยะลา · นราธิวาส</small></h1>
