@@ -236,10 +236,10 @@ const baseSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/service
 L.control.layers({'แผนที่ถนน / Road':baseOSM,'ดาวเทียม / Satellite':baseSat}, null, {position:'topright'}).addTo(map);
 
 // ค่า default: แสดงเฉพาะชั้น "ระดับน้ำ" เท่านั้น ส่วนชั้นอื่น (ฝน/เขื่อน/น้ำทะเล/CCTV/โทรมาตร/จุดเสี่ยง) ผู้ใช้กดติ๊กเปิดเองทีหลัง
-const gWL=L.layerGroup().addTo(map), gRain=L.layerGroup(),
-      gDam=L.layerGroup(), gSea=L.layerGroup(),
-      gCctv=L.layerGroup(), gDdpm=L.layerGroup().addTo(map), gTele=L.layerGroup(),
-      gRisk=L.layerGroup(), gBnd=L.layerGroup().addTo(map);
+const gWL=L.layerGroup().addTo(map), gRain=L.layerGroup().addTo(map),
+      gDam=L.layerGroup().addTo(map), gSea=L.layerGroup().addTo(map),
+      gCctv=L.layerGroup().addTo(map), gDdpm=L.layerGroup().addTo(map), gTele=L.layerGroup().addTo(map),
+      gRisk=L.layerGroup().addTo(map), gBnd=L.layerGroup().addTo(map);
 [['lyWL',gWL],['lyRain',gRain],['lyDam',gDam],['lySea',gSea],['lyCctv',gCctv],['lyDdpm',gDdpm],['lyTele',gTele],['lyRisk',gRisk]].forEach(([id,g])=>{
   const cb = document.getElementById(id);
   cb.checked = map.hasLayer(g);                       // สถานะติ๊กตรงกับแผนที่เสมอ
