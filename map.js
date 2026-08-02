@@ -15,7 +15,7 @@ const inBbox = (lat,lon)=> lat!=null && lon!=null && lat>=BBOX.latMin && lat<=BB
 /* ================= ภาษา (TH / EN / MS) ================= */
 const STR = {
 th:{
-  title:'🌊 One Map ระดับน้ำชายแดนใต้', sub:'สตูล · สงขลา · ปัตตานี · ยะลา · นราธิวาส — รวมทุกหน่วยงานในแผนที่เดียว',
+  title:'🌊 One Map ระดับน้ำชายแดนใต้', sub:'รวมทุกหน่วยงานในแผนที่เดียว',
   refresh:'รีเฟรช', loading:'กำลังโหลดข้อมูล…', updated:'อัปเดตล่าสุด', partial:'บางแหล่งข้อมูลโหลดไม่สำเร็จ',
   search:'🔍 ค้นหาสถานี / แม่น้ำ / อำเภอ…', all:'ทั้งหมด', listEmpty:'ไม่พบสถานีตามเงื่อนไข',
   lyWL:'⚫ ระดับน้ำ', lyRain:'◼ ฝน 24 ชม.', lyDam:'🔻 เขื่อน', lySea:'🌊 น้ำทะเล', lyCctv:'📷 CCTV', lyTele:'▲ โทรมาตร ชป.', lyRisk:'⚠ จุดเสี่ยงฉับพลัน',
@@ -64,7 +64,7 @@ th:{
   รวบรวมจาก API สาธารณะ: สสน. (thaiwater.net) · กรมชลประทาน · HII · ลิงก์ CCTV ปภ. และโทรมาตรกรมชลฯ ในหมุดกล้อง`
 },
 en:{
-  title:'🌊 One Map — Southern Border Water Watch', sub:'Satun · Songkhla · Pattani · Yala · Narathiwat — all agencies, one map',
+  title:'🌊 One Map — Southern Border Water Watch', sub:'All agencies, one map',
   refresh:'Refresh', loading:'Loading…', updated:'Last updated', partial:'some sources failed to load',
   search:'🔍 Search station / river / district…', all:'All', listEmpty:'No stations match',
   lyWL:'⚫ Water level', lyRain:'◼ Rain 24 h', lyDam:'🔻 Dams', lySea:'🌊 Sea level', lyCctv:'📷 CCTV', lyTele:'▲ RID telemetry', lyRisk:'⚠ Flash-flood risk',
@@ -113,7 +113,7 @@ en:{
   Public APIs: HII (thaiwater.net) · Royal Irrigation Dept · DDPM CCTV & RID telemetry links in camera pins`
 },
 ms:{
-  title:'🌊 One Map — Paras Air Selatan Thai', sub:'Satun · Songkhla · Patani · Yala · Narathiwat — semua agensi, satu peta',
+  title:'🌊 One Map — Paras Air Selatan Thai', sub:'Semua agensi, satu peta',
   refresh:'Muat semula', loading:'Memuatkan…', updated:'Kemas kini terakhir', partial:'sebahagian sumber gagal dimuat',
   search:'🔍 Cari stesen / sungai / daerah…', all:'Semua', listEmpty:'Tiada stesen sepadan',
   lyWL:'⚫ Paras air', lyRain:'◼ Hujan 24 j', lyDam:'🔻 Empangan', lySea:'🌊 Paras laut', lyCctv:'📷 CCTV', lyTele:'▲ Telemetri RID', lyRisk:'⚠ Risiko banjir kilat',
