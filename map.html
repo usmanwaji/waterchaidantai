@@ -184,6 +184,9 @@ footer a:hover{text-decoration:underline}
   #summary{grid-template-columns:repeat(auto-fit,minmax(92px,1fr));padding:10px 8px 6px}
   /* คำอธิบายสัญลักษณ์เดิมสูงได้ถึง 46vh บังแผนที่เกือบครึ่งจอ */
   .legend{max-height:30vh;font-size:11.5px;line-height:1.6}
+  /* กฎ #search ด้านบนแรงกว่า element selector ใน shared.css จึงต้องระบุซ้ำ
+     ต่ำกว่า 16px iOS จะซูมหน้าจอทุกครั้งที่แตะช่องค้นหา */
+  #search{font-size:16px}
   #btnSidebar{display:block;position:absolute;left:10px;top:10px;z-index:1150;background:#ea580c;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-family:inherit;font-weight:600;font-size:13px;box-shadow:0 1px 6px rgba(0,0,0,.3);cursor:pointer}
   #btnCollapse{display:none}
   footer{display:none}

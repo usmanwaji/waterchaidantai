@@ -55,6 +55,9 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
   header{position:static}
   #selbar{top:0;padding:8px}
   .card{padding:13px}
+  /* กฎ #ampSel ด้านบนแรงกว่า element selector ใน shared.css จึงต้องระบุซ้ำ
+     ต่ำกว่า 16px iOS จะซูมหน้าจอทุกครั้งที่แตะ */
+  #ampSel{font-size:16px;max-width:none;flex:1}
 }
 
 /* ตอนนี้ */
