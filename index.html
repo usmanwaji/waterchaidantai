@@ -39,11 +39,23 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 #ampSel{padding:7px 10px;border:1px solid var(--outline-strong);border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;color:var(--ink);background:#fff;max-width:220px}
 
 #content{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:12px 14px 30px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
+/* กล่องในกริดต้องยอมหดได้ ไม่งั้นเนื้อหากว้าง ๆ (แถวเลื่อนแนวนอน/ภาพ) จะดันคอลัมน์
+   จนทั้งหน้าเลื่อนซ้าย-ขวาได้บนมือถือ — grid item ค่าเริ่มต้นคือ min-width:auto */
+#content>*{min-width:0}
 .card{background:var(--elevated);border:1px solid var(--outline);border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.10),0 1px 2px rgba(0,0,0,.06)}
 .card.full{grid-column:1 / -1}
 .card h2{font-size:14.5px;color:var(--navy-d);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
 .card h2 .where{font-size:11px;color:var(--muted);font-weight:400}
-@media(max-width:760px){ #content{grid-template-columns:1fr;padding:10px 8px 24px} header h1 small{display:none} #updated{display:none} }
+@media(max-width:768px){
+  #content{grid-template-columns:1fr;padding:10px 8px 24px}
+  header h1 small{display:none}
+  #updated{display:none}
+  /* header และ #selbar เดิม sticky ที่ top:0 ทั้งคู่ แถบเลือกอำเภอจึงมุดหายใต้ header
+     บนมือถือให้ header เลื่อนขึ้นไปตามปกติ แล้วปักหมุดเฉพาะแถบเลือกอำเภอที่ผู้ใช้ต้องใช้จริง */
+  header{position:static}
+  #selbar{top:0;padding:8px}
+  .card{padding:13px}
+}
 
 /* ตอนนี้ */
 #nowBox{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
@@ -106,6 +118,19 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .rainScale .rsGrp{display:flex;align-items:center;border-left:2px solid #cbd5e1;padding-left:6px}
 .rainScale .rsGrp b{font-weight:800;color:#334155;font-size:11px;line-height:1.1}
 .rainScale .rsGrp small{display:block;font-weight:600;color:#64748b;font-size:9px}
+/* บนมือถือ: วางภาพเรดาร์เต็มความกว้าง แล้วพลิกแถบวัดความแรงฝนเป็นแนวนอนไว้ใต้ภาพ
+   (แบบเดิมเป็นแท่งตั้งสูง 300px ต่อท้ายภาพ ทำให้การ์ดยาวและอ่านยากบนจอแคบ) */
+@media(max-width:768px){
+  .radarWrap{flex-direction:column;gap:10px}
+  .rainScale{min-height:0;width:100%}
+  .rainScale .rsBody{flex-direction:column}
+  .rainScale .rsBar{flex-direction:row;width:100%;height:20px}
+  .rainScale .rsLabels{flex-direction:row;margin-left:0;margin-top:6px}
+  .rainScale .rsGrp{border-left:none;border-top:2px solid #cbd5e1;padding-left:0;padding-top:4px;
+    justify-content:center;text-align:center;margin-right:2px}
+  .rainScale .rsGrp b{font-size:10.5px}
+  #radarImg{max-height:none!important}
+}
 
 /* สถานการณ์น้ำท่า (telemeter gauges) */
 .wtaRow{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-around;align-items:flex-start}
@@ -129,7 +154,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
 
 /* การ์ดข้อมูลทางการกรมอุตุฯ */
 #tmdGrid{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}
-@media(max-width:760px){#tmdGrid{grid-template-columns:1fr}}
+@media(max-width:768px){#tmdGrid{grid-template-columns:1fr}}
 .tmdObsRow{display:flex;align-items:center;gap:8px;padding:4px 2px;border-bottom:1px dashed #eef2f7;font-size:12px}
 .tmdObsRow:last-child{border-bottom:none}
 .tmdObsRow .sn{flex:1;font-weight:600}
@@ -138,15 +163,8 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .tmdObsRow .tv{width:86px;text-align:right;color:#475569}
 .tmdObsRow .hv{width:44px;text-align:right;color:#64748b}
 
-/* ===== Mobile & touch enhancements ===== */
-a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
-.navtab{scrollbar-width:none}
-.navtab::-webkit-scrollbar{display:none}
-.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
-@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
-@media(pointer:coarse){.navtab a{padding:9px 13px;font-size:13px}}
-@media(max-width:768px){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}}
 </style>
+<link rel="stylesheet" href="shared.css?v=1">
 </head>
 <body>
 
@@ -725,5 +743,6 @@ setInterval(loadRadarImg, 10*60*1000);
 <script src="js/supabase-client.js?v=2"></script>
 <script src="js/auth-ui.js"></script>
 <script src="js/pwa.js" defer></script>
+<script src="js/ui.js" defer></script>
 </body>
 </html>

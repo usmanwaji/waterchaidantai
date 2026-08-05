@@ -77,7 +77,20 @@ footer a{color:#fdba74;text-decoration:none}
 #memberBar{background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:6px 10px;font-size:12px;color:#9a3412;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 a.tel2{display:inline-block;margin-top:3px;color:#fff;background:var(--navy);padding:2px 9px;border-radius:7px;text-decoration:none;font-size:11.5px;font-weight:600}
 .leaflet-popup-content .pnav.call{background:var(--navy)}
-@media(max-width:760px){ .stats{grid-template-columns:1fr 1fr} header h1 small{display:none} #map{height:360px} #content{padding:10px 8px 24px} }
+@media(max-width:768px){
+  .stats{grid-template-columns:1fr 1fr;gap:8px}
+  header h1 small{display:none}
+  #map{height:360px}
+  #content{padding:10px 8px 24px}
+  /* header กับ #selbar เดิม sticky ที่ top:0 ทั้งคู่ แถบเลือกอำเภอจึงมุดหายใต้ header */
+  header{position:static}
+  #selbar{top:0;padding:8px}
+  .stat{padding:9px 10px}
+  .stat .n{font-size:22px}
+  /* ตารางยาว: ให้เลื่อนในกรอบตัวเอง หัวตาราง sticky (th) จึงทำงานจริง */
+  .tblwrap{max-height:min(65vh,460px);overflow:auto;-webkit-overflow-scrolling:touch}
+  .tblwrap table{min-width:520px}
+}
 
 /* ===== Command Center theme (override) ===== */
 :root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--orange:#fe6e00;--orange-d:#ff6b00;--orange-warm:#ffb74d;--navy:#57504a;--navy-d:#423d38;--peach:#e3e0dd;--outline:#e3e0dd;--outline-strong:#d1d5dc;--elevated:#ffffff;--surface:#f3f4f6;--shell:rgba(0,0,0,.72)}
@@ -113,15 +126,19 @@ body.picking #map{cursor:crosshair;outline:3px solid var(--orange)}
 #pickBanner{display:none;position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:1600;background:var(--orange);color:#fff;font-weight:700;font-size:13px;padding:8px 16px;border-radius:99px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
 body.picking #pickBanner{display:block}
 
-/* ===== Mobile & touch enhancements ===== */
-a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
-.navtab{scrollbar-width:none}
-.navtab::-webkit-scrollbar{display:none}
-.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
-@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
-@media(pointer:coarse){.navtab a{padding:9px 13px;font-size:13px}}
-@media(max-width:768px){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}}
+/* ===== ปรับสำหรับมือถือ (ต้องอยู่ท้ายสุดเพื่อให้ทับกฎด้านบนที่ specificity เท่ากัน) ===== */
+@media(max-width:768px){
+  /* ป้าย "แตะแผนที่เพื่อปักหมุด": เดิมยึด top:70px กลางจอ ข้อความไทยยาวจึงล้นขอบซ้าย/ขวา
+     ย้ายไปไว้ด้านล่าง พ้นนิ้วโป้งและพ้นขอบจอ iPhone */
+  #pickBanner{left:8px;right:8px;transform:none;width:auto;text-align:center;
+    top:auto;bottom:calc(12px + env(safe-area-inset-bottom))}
+}
+@media(max-width:480px){
+  .frow2.chk{grid-template-columns:1fr}
+  .frow2{grid-template-columns:1fr}
+}
 </style>
+<link rel="stylesheet" href="shared.css?v=1">
 </head>
 <body>
 
@@ -666,5 +683,6 @@ setTimeout(()=>map.invalidateSize(),200);
 loadLive().then(()=>{ refreshChips(); fillAmp(); render(); });
 </script>
 <script src="js/pwa.js" defer></script>
+<script src="js/ui.js" defer></script>
 </body>
 </html>
