@@ -178,23 +178,20 @@ footer a:hover{text-decoration:underline}
   .navtab{order:5;flex-basis:100%}
   #btnHelp{padding:5px 8px;font-size:12px}
   #btnRefresh{padding:5px 10px;font-size:12px}
-  #sidebar{position:absolute;left:0;top:0;bottom:0;transform:translateX(-100%);transition:transform .25s;width:85%;max-width:330px;box-shadow:2px 0 12px rgba(0,0,0,.3)}
+  #sidebar{position:absolute;left:0;top:0;bottom:0;transform:translateX(-100%);transition:transform .25s;width:85%;max-width:330px;box-shadow:2px 0 12px rgba(0,0,0,.3);z-index:999}
   #sidebar.open{transform:translateX(0)}
+  /* การ์ดสรุป 5 ช่องในแผงกว้าง 330px เหลือช่องละ ~60px — ให้ไหลลงแถวใหม่เองแทน */
+  #summary{grid-template-columns:repeat(auto-fit,minmax(92px,1fr));padding:10px 8px 6px}
+  /* คำอธิบายสัญลักษณ์เดิมสูงได้ถึง 46vh บังแผนที่เกือบครึ่งจอ */
+  .legend{max-height:30vh;font-size:11.5px;line-height:1.6}
   #btnSidebar{display:block;position:absolute;left:10px;top:10px;z-index:1150;background:#ea580c;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-family:inherit;font-weight:600;font-size:13px;box-shadow:0 1px 6px rgba(0,0,0,.3);cursor:pointer}
   #btnCollapse{display:none}
   footer{display:none}
 }
 
-/* ===== Mobile & touch enhancements ===== */
-a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
-.navtab{scrollbar-width:none}
-.navtab::-webkit-scrollbar{display:none}
-.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
-@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
-@media(pointer:coarse){.navtab a{padding:9px 13px;font-size:13px}}
-@media(max-width:768px){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}}
 @supports(height:100dvh){html,body{height:100dvh}}
 </style>
+<link rel="stylesheet" href="shared.css?v=1">
 </head>
 <body>
 
@@ -302,5 +299,6 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
 <script src="js/supabase-client.js?v=2"></script>
 <script src="js/auth-ui.js"></script>
 <script src="js/pwa.js" defer></script>
+<script src="js/ui.js" defer></script>
 </body>
 </html>

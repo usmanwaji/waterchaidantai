@@ -117,23 +117,20 @@ footer a{color:var(--orange-warm);text-decoration:none}
   header h1{font-size:14px}
   header h1 small{display:none}
   .navtab{order:5;flex-basis:100%}
-  #sidebar{position:absolute;left:0;top:0;bottom:0;transform:translateX(-100%);transition:transform .25s;width:88%;max-width:340px;box-shadow:2px 0 12px rgba(0,0,0,.3)}
+  #sidebar{position:absolute;left:0;top:0;bottom:0;transform:translateX(-100%);transition:transform .25s;width:88%;max-width:340px;box-shadow:2px 0 12px rgba(0,0,0,.3);z-index:999}
   #sidebar.open{transform:translateX(0)}
+  /* ปุ่มเลือกพาหนะ/ประเภทเดิม 3 ช่องในแผงแคบ เหลือช่องละ ~100px ตัวอักษร 10.5px */
+  .vgrid,.pgrid{grid-template-columns:1fr 1fr}
+  .vbtn,.pbtn{font-size:12.5px;padding:9px 6px;min-height:42px;display:flex;align-items:center;justify-content:center}
+  #btnSwap{width:44px;height:44px;font-size:16px}
   #btnSidebar{display:block;position:absolute;left:10px;top:10px;z-index:1150;background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-family:inherit;font-weight:600;font-size:13px;box-shadow:0 1px 6px rgba(0,0,0,.3);cursor:pointer}
   #btnCollapse{display:none}
   footer{display:none}
 }
 
-/* ===== Mobile & touch enhancements ===== */
-a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
-.navtab{scrollbar-width:none}
-.navtab::-webkit-scrollbar{display:none}
-.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
-@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
-@media(pointer:coarse){.navtab a{padding:9px 13px;font-size:13px}}
-@media(max-width:768px){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}}
 @supports(height:100dvh){html,body{height:100dvh}}
 </style>
+<link rel="stylesheet" href="shared.css?v=1">
 </head>
 <body>
 
@@ -897,5 +894,6 @@ watchAuthState({
 </script>
 <script src="js/rivers.js"></script>
 <script src="js/pwa.js" defer></script>
+<script src="js/ui.js" defer></script>
 </body>
 </html>
