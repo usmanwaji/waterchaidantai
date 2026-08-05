@@ -50,7 +50,16 @@ input,select,textarea{padding:7px 10px;border:1px solid var(--outline-strong);bo
 footer{background:var(--navy-d);color:#cfc8c0;font-size:10.5px;padding:6px 14px;display:flex;gap:10px;flex-wrap:wrap}
 footer a{color:#ffb74d;text-decoration:none}
 @media(max-width:900px){.tiles{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}header h1 small{display:none}}
+@media(max-width:768px){
+  #content{padding:10px 8px 22px}
+  .tiles{gap:8px}
+  .tile{padding:10px}
+  .tile .n{font-size:23px}
+  .statusbar .upd{margin-left:0;flex-basis:100%}
+  #sitrepText{height:210px}
+}
 </style>
+<link rel="stylesheet" href="shared.css?v=1">
 </head>
 <body>
 <header>
@@ -87,7 +96,7 @@ footer a{color:#ffb74d;text-decoration:none}
   <div class="grid2">
     <div class="card">
       <h2>🌊 สถานีที่ต้องเฝ้าระวัง <span class="muted" id="critWhere"></span></h2>
-      <div style="overflow:auto;max-height:360px">
+      <div class="tblwrap-scroll" style="overflow:auto;max-height:360px">
         <table><thead><tr><th>สถานี</th><th>อำเภอ</th><th>% ตลิ่ง</th><th>สถานะ</th></tr></thead>
         <tbody id="critBody"><tr><td colspan="4" class="muted">กำลังโหลด…</td></tr></tbody></table>
       </div>
@@ -109,7 +118,7 @@ footer a{color:#ffb74d;text-decoration:none}
 
   <div class="card hide" id="sitrepCard">
     <h2>📋 รายงานสถานการณ์ (SITREP) <button class="btn sm ghost" style="margin-left:auto" onclick="copySitrep()">📄 คัดลอก</button></h2>
-    <textarea id="sitrepText" style="width:100%;height:280px;font-family:monospace;font-size:12px;line-height:1.6"></textarea>
+    <textarea id="sitrepText" style="width:100%;height:280px;font-family:monospace;line-height:1.6"></textarea>
   </div>
   </div>
 </div>
@@ -234,5 +243,6 @@ try{
 }catch(e){}
 </script>
 <script src="js/pwa.js" defer></script>
+<script src="js/ui.js" defer></script>
 </body>
 </html>

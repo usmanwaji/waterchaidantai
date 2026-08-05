@@ -1,0 +1,100 @@
+/* =========================================================================
+   shared.css — naraflood.com
+   Shared design tokens + mobile/touch layer for all public pages.
+
+   HOW THIS FILE IS USED
+   Linked with <link rel="stylesheet" href="shared.css?v=1"> placed AFTER each
+   page's inline <style> block (just before </head>). Source order matters:
+   media queries add no specificity, so loading last is what lets the mobile
+   rules below win over each page's inline base rules without !important.
+
+   DISCIPLINE (keeps desktop from changing)
+   - Unconditioned rules here must be either identical to what pages already
+     declare (a no-op override) or a brand-new selector no page uses.
+   - Every behaviour change lives inside @media(max-width:768px) or
+     @media(pointer:coarse).
+
+   CACHE: when this file changes, bump ?v= in all page <link> tags AND in
+   sw.js SHELL_ASSETS AND sw.js VERSION together — the service worker keys
+   its cache on the full URL including the query string.
+   ========================================================================= */
+
+/* ---------- 1. Design tokens (canonical copy — identical to page :root) ---------- */
+:root{
+  --bg:#fcfaf7; --ink:#423d38; --muted:#797067;
+  --surface:#f3f4f6; --surface-soft:#edebe9; --elevated:#ffffff;
+  --outline:#e3e0dd; --outline-strong:#d1d5dc;
+  --orange:#fe6e00; --orange-d:#ff6b00; --orange-focus:#f97015; --orange-warm:#ffb74d;
+  --navy:#57504a; --navy-d:#423d38; --peach:#e3e0dd;
+  --shell:rgba(0,0,0,.72);
+  --success:#00c758; --warning:#edb200; --danger:#fb2c36; --info:#3080ff;
+}
+
+/* ---------- 2. Mobile & touch enhancements (single source of truth) ----------
+   Previously copy-pasted into 10 pages; now lives here only.                */
+a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
+.navtab{scrollbar-width:none}
+.navtab::-webkit-scrollbar{display:none}
+.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+@supports(padding:max(0px)){
+  header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}
+}
+
+/* ---------- 3. Touch targets ----------
+   Guideline is ~44px; the old rule left nav tabs at ~34px and chips at ~32px.
+   Applies on touch devices OR narrow screens (a <=768px viewport is a phone in
+   practice). A desktop mouse at full width matches neither, so it is unaffected. */
+@media(pointer:coarse),(max-width:768px){
+  .navtab a{padding:10px 14px;font-size:13.5px;min-height:42px;display:inline-flex;align-items:center}
+  .chip,.provlbl{min-height:40px;padding:8px 14px;display:inline-flex;align-items:center}
+  select,input:not([type=checkbox]):not([type=radio]){min-height:40px}
+  .btn.sm,.langbtn,.pop-btn,.hbtn,.pbtn,.vbtn{min-height:38px;min-width:38px}
+  /* Leaflet draws its own controls at a fixed size — leave them alone. */
+  button:not(.leaflet-container button):not(.leaflet-control button){min-height:36px}
+  label input[type=checkbox],label input[type=radio]{min-width:20px;min-height:20px}
+}
+
+/* ---------- 4. Mobile typography + iOS zoom guard ----------
+   iOS Safari zooms the page when focusing a control under 16px. Wins over
+   check.html (15px), alert.html / eoc.html / people (13px) by source order. */
+@media(max-width:768px){
+  input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}
+  /* .note is the explanatory grey text under most cards — 10.5px is too small
+     to read one-handed outdoors, which is this site's core use case. */
+  .note{font-size:12px;line-height:1.6}
+}
+
+/* ---------- 5. Nav scroll affordance (classes applied by js/ui.js) ----------
+   The nav holds up to 12 links in a scroller with a hidden scrollbar, so on a
+   phone there was nothing indicating more tabs existed off-screen. */
+.navtab.is-scrollable{
+  -webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 28px),transparent 100%);
+          mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 28px),transparent 100%);
+}
+.navtab.is-scrollable.at-end{-webkit-mask-image:none;mask-image:none}
+
+/* ---------- 6. Opt-in utilities (new class names — used where pages need them) ---------- */
+
+/* Wide tables: scroll horizontally inside their own box instead of stretching
+   the page. min-width keeps columns legible rather than crushed. */
+.tblwrap-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+.tblwrap-scroll table{min-width:560px}
+
+/* Bottom padding clear of the iPhone home indicator. */
+.safe-bottom{padding-bottom:max(12px,env(safe-area-inset-bottom))}
+
+/* Backdrop behind the off-canvas sidebar drawer on map/route pages. */
+.drawer-scrim{position:absolute;inset:0;background:rgba(0,0,0,.38);z-index:998;display:none}
+.drawer-scrim.show{display:block}
+@media(min-width:769px){.drawer-scrim{display:none!important}}
+
+/* Show only on phones. */
+.mobile-only{display:none}
+@media(max-width:768px){.mobile-only{display:block}}
+
+/* Notice bar used where a page embeds a desktop-only third-party tool. */
+.mobile-notice{
+  background:#fff4e6;border:1px solid var(--orange-warm);border-left:4px solid var(--orange);
+  color:var(--navy-d);font-size:13px;line-height:1.55;padding:10px 12px;margin:8px;border-radius:8px
+}
+.mobile-notice a{color:var(--orange-d);font-weight:700}

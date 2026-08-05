@@ -42,8 +42,15 @@ input,select{padding:7px 10px;border:1px solid var(--outline-strong);border-radi
 .notice{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 12px;font-size:12.5px;color:#9a3412}
 footer{background:var(--navy-d);color:#cfc8c0;font-size:10.5px;padding:6px 14px;display:flex;gap:10px;flex-wrap:wrap}
 footer a{color:#ffb74d;text-decoration:none}
-@media(max-width:760px){header h1 small{display:none}}
+@media(max-width:768px){
+  header h1 small{display:none}
+  #content{padding:10px 8px 22px}
+  /* ตารางกฎมี 6 คอลัมน์ — ให้เลื่อนแนวนอนในกรอบตัวเองแทนที่จะบีบจนอ่านไม่ออก */
+  .tblwrap{-webkit-overflow-scrolling:touch}
+  #rulesTbl{min-width:620px}
+}
 </style>
+<link rel="stylesheet" href="shared.css?v=1">
 </head>
 <body>
 <header>
@@ -103,7 +110,7 @@ footer a{color:#ffb74d;text-decoration:none}
       </div>
     </div>
     <div class="tblwrap" style="margin-top:10px">
-      <table><thead><tr><th>กฎ</th><th>จังหวัด/สถานี</th><th>เกณฑ์</th><th>ช่องทาง</th><th>สถานะ</th><th></th></tr></thead>
+      <table id="rulesTbl"><thead><tr><th>กฎ</th><th>จังหวัด/สถานี</th><th>เกณฑ์</th><th>ช่องทาง</th><th>สถานะ</th><th></th></tr></thead>
       <tbody id="rulesBody"></tbody></table>
     </div>
   </div>
@@ -194,5 +201,6 @@ function showMember(profile){
 }
 </script>
 <script src="js/pwa.js" defer></script>
+<script src="js/ui.js" defer></script>
 </body>
 </html>
