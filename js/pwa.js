@@ -30,7 +30,8 @@
     if (!b) {
       b = document.createElement('div');
       b.id = 'offlineBanner';
-      b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#78350f;color:#fff;font:600 12.5px/1.4 "Noto Sans Thai",Tahoma,sans-serif;padding:8px 14px;text-align:center;box-shadow:0 -2px 8px rgba(0,0,0,.25)';
+      // padding-bottom เผื่อแถบ home indicator ของ iPhone ไม่ให้ทับข้อความ
+      b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#78350f;color:#fff;font:600 12.5px/1.4 "Noto Sans Thai",Tahoma,sans-serif;padding:8px 14px max(8px,env(safe-area-inset-bottom));text-align:center;box-shadow:0 -2px 8px rgba(0,0,0,.25)';
       document.body.appendChild(b);
     }
     return b;

@@ -1,7 +1,7 @@
 {
-  "name": "One Map ชายแดนใต้ — เฝ้าระวังอุทกภัย",
-  "short_name": "One Map ใต้",
-  "description": "เฝ้าระวัง คาดการณ์ และตอบโต้อุทกภัย 5 จังหวัดชายแดนใต้ (สตูล สงขลา ปัตตานี ยะลา นราธิวาส)",
+  "name": "naraflood — เฝ้าระวังอุทกภัย จ.นราธิวาส",
+  "short_name": "naraflood",
+  "description": "เฝ้าระวัง คาดการณ์ และตอบโต้อุทกภัย จังหวัดนราธิวาส — ระดับน้ำ ฝน ศูนย์พักพิง และเส้นทางปลอดภัย",
   "lang": "th",
   "start_url": "index.html",
   "scope": "./",
@@ -10,12 +10,13 @@
   "background_color": "#fcfaf7",
   "theme_color": "#423d38",
   "icons": [
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "icon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "maskable" }
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ],
   "shortcuts": [
     { "name": "เช็คพื้นที่ฉัน", "url": "check.html" },
-    { "name": "สถานการณ์ (แผนที่)", "url": "map.html" },
+    { "name": "ระดับน้ำ (แผนที่)", "url": "map.html" },
     { "name": "ศูนย์พักพิง", "url": "shelter.html" }
   ]
 }
