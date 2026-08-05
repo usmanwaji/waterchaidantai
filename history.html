@@ -59,15 +59,17 @@ header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-
 .card,.provcard{border-color:var(--outline)}
 footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
 
-/* ===== Mobile & touch enhancements ===== */
-a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
-.navtab{scrollbar-width:none}
-.navtab::-webkit-scrollbar{display:none}
-.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
-@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
-@media(pointer:coarse){.navtab a{padding:9px 13px;font-size:13px}}
-@media(max-width:768px){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}}
+
+/* จอมือถือ: 100% ของ html คือความสูงที่ไม่รวมแถบ URL ที่ยุบ/ขยาย เนื้อหาท้ายหน้าจึงโดนบัง
+   100dvh ปรับตามแถบ URL จริง */
+@supports(height:100dvh){html,body{height:100dvh}}
+/* ต่ำกว่า 768px แผนที่กินพื้นที่มากไปจนแผงข้อมูลด้านล่างเหลือนิดเดียว */
+@media(max-width:768px){
+  #map{min-height:38vh}
+  #side{padding:8px}
+}
 </style>
+<link rel="stylesheet" href="shared.css?v=1">
 </head>
 <body>
 
@@ -262,5 +264,6 @@ setLayer();
 <script src="js/supabase-client.js?v=2"></script>
 <script src="js/auth-ui.js"></script>
 <script src="js/pwa.js" defer></script>
+<script src="js/ui.js" defer></script>
 </body>
 </html>

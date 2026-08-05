@@ -69,6 +69,7 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 .provlabel div{font-size:13px;font-weight:700;color:#1e293b;text-shadow:0 0 4px #fff,0 0 4px #fff,0 0 4px #fff;white-space:nowrap;text-align:center}
 .wrfimg{width:100%;border-radius:8px;border:1px solid #e2e8f0;cursor:pointer}
 .imgrow{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media(max-width:480px){.imgrow{grid-template-columns:1fr}}
 .imgrow figure{margin:0}
 .imgrow figcaption{font-size:10.5px;color:var(--muted);text-align:center;margin-top:2px}
 .provcard{display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;margin-bottom:5px;font-size:12.5px}
@@ -96,15 +97,17 @@ header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-
 .card,.item,.provcard{border-color:var(--outline)}
 footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
 
-/* ===== Mobile & touch enhancements ===== */
-a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
-.navtab{scrollbar-width:none}
-.navtab::-webkit-scrollbar{display:none}
-.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
-@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
-@media(pointer:coarse){.navtab a{padding:9px 13px;font-size:13px}}
-@media(max-width:768px){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}}
+
+/* จอมือถือ: 100% ของ html คือความสูงที่ไม่รวมแถบ URL ที่ยุบ/ขยาย เนื้อหาท้ายหน้าจึงโดนบัง
+   100dvh ปรับตามแถบ URL จริง */
+@supports(height:100dvh){html,body{height:100dvh}}
+/* ต่ำกว่า 768px แผนที่กินพื้นที่มากไปจนแผงข้อมูลด้านล่างเหลือนิดเดียว */
+@media(max-width:768px){
+  #map{min-height:38vh}
+  #side{padding:8px}
+}
 </style>
+<link rel="stylesheet" href="shared.css?v=1">
 </head>
 <body>
 
@@ -544,5 +547,6 @@ loadAll();
 <script src="js/supabase-client.js?v=2"></script>
 <script src="js/auth-ui.js"></script>
 <script src="js/pwa.js" defer></script>
+<script src="js/ui.js" defer></script>
 </body>
 </html>

@@ -42,14 +42,6 @@ header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-
 #openFull{background:var(--navy);color:#fff;border-color:var(--navy)}
 footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
 
-/* ===== Mobile & touch enhancements ===== */
-a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
-.navtab{scrollbar-width:none}
-.navtab::-webkit-scrollbar{display:none}
-.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
-@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
-@media(pointer:coarse){.navtab a{padding:9px 13px;font-size:13px}}
-@media(max-width:768px){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}}
 @supports(height:100dvh){html,body{height:100dvh}}
 #howto details{margin-top:5px}
 #howto summary{cursor:pointer;font-weight:700;color:var(--orange-d);display:inline-block;padding:2px 0}
@@ -59,7 +51,18 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
 #howto .guide li{margin:3px 0}
 #howto .guide .ex{background:#fff;border:1px solid var(--outline);border-left:3px solid var(--orange);border-radius:8px;padding:8px 10px;margin-top:6px;color:var(--ink)}
 #howto .guide .warn{color:#9a3412;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:7px 10px;margin-top:6px}
+
+/* มือถือ: กรอบแบบจำลองเป็นแอปแผนที่ที่ออกแบบมาสำหรับจอใหญ่
+   ลดพื้นที่ส่วนอธิบาย/ปุ่มลง เพื่อให้กรอบแผนที่ได้ความสูงมากที่สุด
+   และดัน "เปิดเต็มจอ" ให้เด่นขึ้น เพราะใช้งานบนจอเล็กสะดวกกว่า */
+@media(max-width:768px){
+  #bar{padding:6px 8px;gap:4px}
+  #howto{padding:6px 8px;font-size:11px;max-height:28vh;overflow-y:auto}
+  #frameWrap{min-height:52vh}
+  #openFull{margin-left:0;flex:1 0 100%;text-align:center;order:-1;font-weight:700}
+}
 </style>
+<link rel="stylesheet" href="shared.css?v=1">
 </head>
 <body>
 
@@ -154,16 +157,22 @@ const PCODES=['91','90','94','95','96'];
 let cur = SPOTS.narathiwat;
 function hav(a,b,c,d){const R=6371,r=x=>x*Math.PI/180;const dLa=r(c-a),dLo=r(d-b);const s=Math.sin(dLa/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dLo/2)**2;return 2*R*Math.asin(Math.sqrt(s));}
 function setNote(t){ const n=document.getElementById('simNote'); if(n) n.textContent=t||''; }
+/* โหลดแบบจำลองลงกรอบ พร้อมอัปเดตลิงก์ "เปิดเต็มจอ" ให้ตรงกับมุมมองที่ตั้งไว้จริง
+   (สำคัญบนมือถือ: กรอบเล็กใช้ยาก ผู้ใช้มักกดเปิดเต็มจอแทน) */
+function setSim(url){
+  document.getElementById('simFrame').src = url;
+  const of = document.getElementById('openFull'); if(of) of.href = url;
+}
 function go(key){
   const p = SPOTS[key]; if(!p) return; cur = p; setNote('');
   const url = `dtm-th/index.html?lat=${p.lat}&lon=${p.lon}&z=${p.z}&base=${p.base}&water=${p.water}&opacity=65&tiles=${encodeURIComponent(p.tiles)}`;
-  document.getElementById('simFrame').src = url;
+  setSim(url);
   document.querySelectorAll('.chip[data-prov]').forEach(x=>x.classList.toggle('on', x.dataset.prov===key));
 }
 function goCustom(lat,lon,base,water,label){
   cur = {lat,lon,z:13,base,water};
   const url = `dtm-th/index.html?lat=${lat}&lon=${lon}&z=13&base=${base}&water=${water}&opacity=65&tiles=${encodeURIComponent(tile(lat,lon))}`;
-  document.getElementById('simFrame').src = url;
+  setSim(url);
   document.querySelectorAll('.chip[data-prov]').forEach(x=>x.classList.remove('on'));
   if(label) setNote('📍 '+label);
 }
@@ -204,5 +213,6 @@ if(_q.get('lat') && _q.get('lon')){
 <script src="js/supabase-client.js?v=2"></script>
 <script src="js/auth-ui.js"></script>
 <script src="js/pwa.js" defer></script>
+<script src="js/ui.js" defer></script>
 </body>
 </html>
