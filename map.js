@@ -34,6 +34,8 @@ th:{
   lv:'ระดับน้ำ (ม.รทก.)', bank:'ระดับตลิ่ง (ม.รทก.)', diffbank:'ห่างจากตลิ่ง (ม.)', flow:'อัตราการไหล (ม³/วิ)', time:'เวลาวัด',
   up:'▲ เพิ่มขึ้น', down:'▼ ลดลง', steady:'▬ ทรงตัว', stale:'⏱ ข้อมูลเก่ากว่า 24 ชม.',
   wl_nodata:'ไม่มีข้อมูลปัจจุบัน',
+  lyRadar:'🌧️ เรดาร์ฝน', radarPlay:'เล่น/หยุดภาพย้อนหลัง', radarNow:'ล่าสุด',
+  radarLoading:'กำลังโหลดเรดาร์…', radarFail:'โหลดเรดาร์ไม่สำเร็จ',
   gcap:'ระดับน้ำ 3 วันย้อนหลัง (เส้นประแดง = ตลิ่ง)', gload:'กำลังโหลดกราฟ…', gfail:'ไม่สามารถโหลดกราฟได้', gnone:'ไม่มีข้อมูลกราฟ',
   full:'ดูข้อมูลเต็มที่ thaiwater.net ↗', damfull:'ดูข้อมูลเขื่อนทั้งหมด ↗', seafull:'ดูระดับน้ำชายฝั่งเต็ม ↗',
   rain24:'ฝนสะสม 24 ชม.', storage:'ปริมาณน้ำ (ล้าน ม³)', inflow:'น้ำไหลเข้า (ล้าน ม³/วัน)', outflow:'ระบายออก (ล้าน ม³/วัน)', damlv:'ระดับน้ำ (ม.รทก.)', damdate:'วันที่ข้อมูล', pctcap:'% รนก.',
@@ -84,6 +86,8 @@ en:{
   lv:'Water level (m MSL)', bank:'Bank level (m MSL)', diffbank:'Distance to bank (m)', flow:'Discharge (m³/s)', time:'Measured',
   up:'▲ rising', down:'▼ falling', steady:'▬ steady', stale:'⏱ Data older than 24 h',
   wl_nodata:'No current data',
+  lyRadar:'🌧️ Rain radar', radarPlay:'Play/pause loop', radarNow:'latest',
+  radarLoading:'Loading radar…', radarFail:'Radar unavailable',
   gcap:'Water level, past 3 days (red dash = bank)', gload:'Loading graph…', gfail:'Could not load graph', gnone:'No graph data',
   full:'Full data at thaiwater.net ↗', damfull:'All dam data ↗', seafull:'Full coastal data ↗',
   rain24:'Rain 24 h', storage:'Storage (MCM)', inflow:'Inflow (MCM/day)', outflow:'Released (MCM/day)', damlv:'Level (m MSL)', damdate:'Data date', pctcap:'% capacity',
@@ -134,6 +138,8 @@ ms:{
   lv:'Paras air (m MSL)', bank:'Paras tebing (m MSL)', diffbank:'Jarak ke tebing (m)', flow:'Kadar aliran (m³/s)', time:'Masa cerapan',
   up:'▲ meningkat', down:'▼ menurun', steady:'▬ stabil', stale:'⏱ Data melebihi 24 jam',
   wl_nodata:'Tiada data semasa',
+  lyRadar:'🌧️ Radar hujan', radarPlay:'Main/henti ulangan', radarNow:'terkini',
+  radarLoading:'Memuatkan radar…', radarFail:'Radar tidak tersedia',
   gcap:'Paras air 3 hari lepas (garis merah = tebing)', gload:'Memuatkan graf…', gfail:'Graf tidak dapat dimuat', gnone:'Tiada data graf',
   full:'Data penuh di thaiwater.net ↗', damfull:'Semua data empangan ↗', seafull:'Data pantai penuh ↗',
   rain24:'Hujan 24 jam', storage:'Simpanan (juta m³)', inflow:'Aliran masuk (juta m³/hari)', outflow:'Dilepaskan (juta m³/hari)', damlv:'Paras (m MSL)', damdate:'Tarikh data', pctcap:'% kapasiti',
@@ -261,6 +267,96 @@ const gWL=L.layerGroup().addTo(map), gRain=L.layerGroup().addTo(map),
   cb.checked = map.hasLayer(g);                       // สถานะติ๊กตรงกับแผนที่เสมอ
   cb.onchange = e => e.target.checked ? map.addLayer(g) : map.removeLayer(g);
 });
+
+/* ================= เรดาร์ฝน (Longdo Weather) =================
+ * ชั้นภาพเรดาร์ฝนแบบ XYZ tile จาก Longdo — ใช้ API key ของโครงการเอง
+ * รายการเฟรมย้อนหลังมาจาก /rain/api/v1/layer/list (ปกติ ~13 เฟรม ห่างกัน 15 นาที)
+ * วางไว้ใต้เส้นขอบจังหวัดและหมุดสถานี เพื่อไม่ให้บังข้อมูลระดับน้ำ
+ */
+const LONGDO_KEY = '76bd11ab739d4cc6bff6cba182ba11fc';
+map.createPane('radar'); map.getPane('radar').style.zIndex = 250;
+
+let radarFrames = [], radarIdx = -1, radarLayer = null, radarTimer = null;
+
+const radarTileUrl = path => `https://weather.longdo.com${path}/{z}/{x}/{y}.png?key=${LONGDO_KEY}`;
+const radarFrameLabel = ts => new Date(ts*1000)
+  .toLocaleTimeString(locale(), {hour:'2-digit', minute:'2-digit'});
+
+async function loadRadarFrames(){
+  try{
+    const j = await fetchJSON(`https://weather.longdo.com/rain/api/v1/layer/list?key=${LONGDO_KEY}`, 15000);
+    radarFrames = (j?.radar?.past || []).filter(f=>f.path);
+    if(radarFrames.length) radarIdx = radarFrames.length-1;   // เริ่มที่เฟรมล่าสุด
+    return true;
+  }catch(e){ radarFrames=[]; radarIdx=-1; return false; }
+}
+
+function showRadarFrame(i){
+  if(!radarFrames.length) return;
+  radarIdx = (i + radarFrames.length) % radarFrames.length;
+  const url = radarTileUrl(radarFrames[radarIdx].path);
+  if(radarLayer) radarLayer.setUrl(url);
+  else{
+    radarLayer = L.tileLayer(url, {
+      pane:'radar', opacity:.7, maxZoom:18,
+      attribution:'เรดาร์ฝน © <a href="https://weather.longdo.com" target="_blank">Longdo</a>'
+    }).addTo(map);
+  }
+  renderRadarBar();
+}
+
+function radarStop(){ if(radarTimer){ clearInterval(radarTimer); radarTimer=null; } renderRadarBar(); }
+function radarPlay(){
+  if(radarTimer || radarFrames.length<2) return;
+  radarTimer = setInterval(()=>{
+    // ค้างเฟรมสุดท้ายไว้ครู่หนึ่งก่อนวนกลับ จะได้เห็นภาพล่าสุดชัด ๆ
+    showRadarFrame(radarIdx>=radarFrames.length-1 ? 0 : radarIdx+1);
+  }, 700);
+  renderRadarBar();
+}
+function radarToggledPlay(){ radarTimer ? radarStop() : radarPlay(); }
+
+function renderRadarBar(){
+  const bar = document.getElementById('radarBar');
+  if(!bar) return;
+  const on = !!radarLayer && map.hasLayer(radarLayer);
+  if(!on){ bar.innerHTML=''; return; }
+  if(!radarFrames.length){ bar.innerHTML = `<div class="rdrow"><span class="rdinfo">${t('radarFail')}</span></div>`; return; }
+  const f = radarFrames[radarIdx];
+  const isLast = radarIdx === radarFrames.length-1;
+  bar.innerHTML = `<div class="rdrow">
+    <button class="rdbtn" onclick="radarToggledPlay()" title="${t('radarPlay')}">${radarTimer?'⏸':'▶'}</button>
+    <input class="rdslider" type="range" min="0" max="${radarFrames.length-1}" value="${radarIdx}"
+           oninput="radarStop();showRadarFrame(+this.value)">
+    <span class="rdtime ${isLast?'now':''}">${radarFrameLabel(f.time)}${isLast?' • '+t('radarNow'):''}</span>
+  </div>`;
+}
+/* ดึงรายการเฟรมใหม่เป็นระยะ เพื่อให้ภาพ "ล่าสุด" ตามจริงเสมอ (เรดาร์ออกภาพทุก ~15 นาที)
+   ทำเฉพาะตอนเปิดชั้นเรดาร์อยู่ และไม่แตะเฟรมถ้าผู้ใช้กำลังเล่นภาพย้อนหลังค้างไว้ */
+setInterval(async ()=>{
+  if(!radarLayer || !map.hasLayer(radarLayer) || radarTimer) return;
+  const wasLatest = radarIdx === radarFrames.length-1;
+  if(await loadRadarFrames() && wasLatest) showRadarFrame(radarFrames.length-1);
+  else renderRadarBar();
+}, 5*60*1000);
+
+(async function setupRadar(){
+  const cb = document.getElementById('lyRadar');
+  if(!cb) return;
+  cb.onchange = async e => {
+    if(e.target.checked){
+      const bar = document.getElementById('radarBar');
+      if(bar) bar.innerHTML = `<div class="rdrow"><span class="rdinfo">${t('radarLoading')}</span></div>`;
+      if(!radarFrames.length) await loadRadarFrames();
+      if(!radarFrames.length){ renderRadarBar(); return; }
+      showRadarFrame(radarIdx<0 ? radarFrames.length-1 : radarIdx);
+    }else{
+      radarStop();
+      if(radarLayer){ map.removeLayer(radarLayer); radarLayer=null; }
+      renderRadarBar();
+    }
+  };
+})();
 
 /* ---------- ปุ่มลัดบนแผนที่: ใกล้ฉัน · เฉพาะผิดปกติ · แชร์สรุป ---------- */
 (function(){
@@ -1146,8 +1242,9 @@ function applyLang(){
   document.getElementById('search').placeholder = t('search');
   document.querySelector('.provbtn[data-prov="all"]').textContent = t('all');
   document.querySelectorAll('.provbtn').forEach(b=>{ if(b.dataset.prov!=='all') b.textContent = tProv(b.dataset.prov); });
-  [['tWL','lyWL'],['tRain','lyRain'],['tDam','lyDam'],['tSea','lySea'],['tCctv','lyCctv'],['tDdpm','lyDdpm'],['tTele','lyTele'],['tRisk','lyRisk']]
-    .forEach(([sp,key])=>document.getElementById(sp).textContent = t(key));
+  [['tWL','lyWL'],['tRain','lyRain'],['tDam','lyDam'],['tSea','lySea'],['tCctv','lyCctv'],['tDdpm','lyDdpm'],['tTele','lyTele'],['tRisk','lyRisk'],['tRadar','lyRadar']]
+    .forEach(([sp,key])=>{ const el=document.getElementById(sp); if(el) el.textContent = t(key); });
+  renderRadarBar();   // ป้ายเวลา/ปุ่มเล่นในแถบเรดาร์เปลี่ยนภาษาด้วย
   document.getElementById('btnReport').textContent = t('report');
   document.getElementById('btnDdpm').textContent = t('extDdpm');
   document.getElementById('btnTelerid').textContent = t('extTelerid');

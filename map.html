@@ -82,6 +82,18 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
 .provbtn.active{background:var(--orange);color:#fff;border-color:var(--orange)}
 .layerrow{display:flex;gap:6px 10px;flex-wrap:wrap;margin-top:7px;font-size:12px}
 .layerrow label{display:flex;align-items:center;gap:4px;cursor:pointer;color:#334155}
+/* แถบควบคุมภาพเรดาร์ย้อนหลัง (แสดงเมื่อเปิดชั้นเรดาร์เท่านั้น) */
+#radarBar:empty{display:none}
+#radarBar{margin-top:7px}
+#radarBar .rdrow{display:flex;align-items:center;gap:7px;background:#f3f4f6;border:1px solid var(--outline);
+  border-radius:8px;padding:5px 8px}
+#radarBar .rdbtn{flex:none;width:28px;height:28px;border:none;border-radius:7px;background:var(--navy);
+  color:#fff;font-size:12px;cursor:pointer;line-height:1}
+#radarBar .rdbtn:hover{background:var(--orange-d)}
+#radarBar .rdslider{flex:1;min-width:0;accent-color:var(--orange)}
+#radarBar .rdtime{flex:none;font-size:11.5px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+#radarBar .rdtime.now{color:var(--orange-d)}
+#radarBar .rdinfo{font-size:11.5px;color:var(--muted)}
 #btnReport{width:100%;margin-top:7px;padding:6px;border:none;background:var(--navy);color:#fff;font-family:inherit;font-weight:600;font-size:12.5px;border-radius:8px;cursor:pointer}
 #btnReport:hover{background:#1c3aa0}
 .extrow{display:flex;gap:5px;margin-top:6px}
@@ -259,7 +271,9 @@ footer a:hover{text-decoration:underline}
         <label><input type="checkbox" id="lyDdpm"> <span id="tDdpm">📹 CCTV ปภ.</span></label>
         <label><input type="checkbox" id="lyTele"> <span id="tTele">▲ โทรมาตร ชป.</span></label>
         <label><input type="checkbox" id="lyRisk"> <span id="tRisk">⚠ จุดเสี่ยงฉับพลัน</span></label>
+        <label><input type="checkbox" id="lyRadar"> <span id="tRadar">🌧️ เรดาร์ฝน</span></label>
       </div>
+      <div id="radarBar"></div>
       <button id="btnReport" onclick="copyReport()">📋 คัดลอกรายงานสถานการณ์</button>
       <div class="extrow">
         <a id="btnDdpm" class="extbtn" href="https://cctv.disaster.go.th" onclick="openDdpm();return false;">📹 CCTV ปภ. ↗</a>
