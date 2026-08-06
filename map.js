@@ -1,15 +1,13 @@
 
 'use strict';
 const API = 'https://api-v3.thaiwater.net/api/v1/thaiwater30';
+/* เว็บนี้โฟกัสจังหวัดนราธิวาสอย่างเดียว — จำกัดที่นี่ที่เดียว แล้วชั้นข้อมูลอื่น
+   (ระดับน้ำ/ฝน/โทรมาตร/จุดเสี่ยง/เส้นขอบ) จะกรองตามผ่าน PROVINCES และ PROV_SET เอง */
 const PROVINCES = [
-  {code:'91', name:'สตูล'},
-  {code:'90', name:'สงขลา'},
-  {code:'94', name:'ปัตตานี'},
-  {code:'95', name:'ยะลา'},
   {code:'96', name:'นราธิวาส'}
 ];
 const PROV_SET = new Set(PROVINCES.map(p=>p.name));
-const BBOX = {latMin:5.5, latMax:8.0, lonMin:99.1, lonMax:102.3};   // 5 จังหวัดใต้ล่าง (รวมเกาะฝั่งอันดามัน)
+const BBOX = {latMin:5.60, latMax:6.85, lonMin:101.25, lonMax:102.20};   // กรอบจังหวัดนราธิวาส
 const inBbox = (lat,lon)=> lat!=null && lon!=null && lat>=BBOX.latMin && lat<=BBOX.latMax && lon>=BBOX.lonMin && lon<=BBOX.lonMax;
 
 /* ================= ภาษา (TH / EN / MS) ================= */
@@ -46,7 +44,7 @@ th:{
   legWL:'⚫ ระดับน้ำ (% ความจุลำน้ำ)', legRain:'◼ ฝนสะสม 24 ชม.', legOther:'🔻 เขื่อน · 🌊 น้ำทะเล · 📷 CCTV · ▲ โทรมาตร · ⚠ จุดเสี่ยง',
   legR1:'เล็กน้อย ≤10 มม.', legR2:'ปานกลาง 10–35 มม.', legR3:'หนัก 35–90 มม.', legR4:'หนักมาก >90 มม.',
   src:'แหล่งข้อมูล:', note:'อยู่ระหว่างการทดลองปรับปรุง หากมีข้อเสนอ/แก้ไข ติดต่อผู้พัฒนา <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a>',
-  rpTitle:'📋 รายงานสถานการณ์น้ำ 5 จังหวัดภาคใต้ตอนล่าง', rpStations:'สถานี', rpCrit:'⚠ สถานีเฝ้าระวังเร่งด่วน:', rpNoCrit:'✅ ไม่มีสถานีล้นตลิ่ง/น้ำมาก', rpRainMax:'🌧 ฝนสะสม 24 ชม. สูงสุด:', rpDam:'🔻 เขื่อน/อ่างเก็บน้ำ:', rpRisk:'⚠ พื้นที่เสี่ยงน้ำท่วมฉับพลัน:', rpSrc:'ที่มา: thaiwater.net (สสน.) / HII',
+  rpTitle:'📋 รายงานสถานการณ์น้ำ จังหวัดนราธิวาส', rpStations:'สถานี', rpCrit:'⚠ สถานีเฝ้าระวังเร่งด่วน:', rpNoCrit:'✅ ไม่มีสถานีล้นตลิ่ง/น้ำมาก', rpRainMax:'🌧 ฝนสะสม 24 ชม. สูงสุด:', rpDam:'🔻 เขื่อน/อ่างเก็บน้ำ:', rpRisk:'⚠ พื้นที่เสี่ยงน้ำท่วมฉับพลัน:', rpSrc:'ที่มา: thaiwater.net (สสน.) / HII',
   prov:{'สตูล':'สตูล','สงขลา':'สงขลา','ปัตตานี':'ปัตตานี','ยะลา':'ยะลา','นราธิวาส':'นราธิวาส'},
   help:'❓ วิธีใช้', helpTitle:'❓ วิธีใช้งานแผนที่',
   helpBody:`
@@ -98,7 +96,7 @@ en:{
   legWL:'⚫ Water level (% channel capacity)', legRain:'◼ Rain, 24 h', legOther:'🔻 Dam · 🌊 Sea · 📷 CCTV · ▲ Telemetry · ⚠ Risk',
   legR1:'Light ≤10 mm', legR2:'Moderate 10–35 mm', legR3:'Heavy 35–90 mm', legR4:'Very heavy >90 mm',
   src:'Sources:', note:'Trial version under improvement — suggestions/corrections: <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a>',
-  rpTitle:'📋 Water situation report — 5 southern provinces', rpStations:'stations', rpCrit:'⚠ Priority stations:', rpNoCrit:'✅ No overflow/high stations', rpRainMax:'🌧 Max rain 24 h:', rpDam:'🔻 Dams/reservoirs:', rpRisk:'⚠ Flash-flood risk areas:', rpSrc:'Source: thaiwater.net (HII)',
+  rpTitle:'📋 Water situation report — Narathiwat', rpStations:'stations', rpCrit:'⚠ Priority stations:', rpNoCrit:'✅ No overflow/high stations', rpRainMax:'🌧 Max rain 24 h:', rpDam:'🔻 Dams/reservoirs:', rpRisk:'⚠ Flash-flood risk areas:', rpSrc:'Source: thaiwater.net (HII)',
   prov:{'สตูล':'Satun','สงขลา':'Songkhla','ปัตตานี':'Pattani','ยะลา':'Yala','นราธิวาส':'Narathiwat'},
   help:'❓ How to use', helpTitle:'❓ How to use this map',
   helpBody:`
@@ -150,7 +148,7 @@ ms:{
   legWL:'⚫ Paras air (% kapasiti sungai)', legRain:'◼ Hujan 24 jam', legOther:'🔻 Empangan · 🌊 Laut · 📷 CCTV · ▲ Telemetri · ⚠ Risiko',
   legR1:'Ringan ≤10 mm', legR2:'Sederhana 10–35 mm', legR3:'Lebat 35–90 mm', legR4:'Sangat lebat >90 mm',
   src:'Sumber:', note:'Versi percubaan dalam penambahbaikan — cadangan/pembetulan: <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a>',
-  rpTitle:'📋 Laporan situasi air — 5 wilayah selatan', rpStations:'stesen', rpCrit:'⚠ Stesen keutamaan:', rpNoCrit:'✅ Tiada stesen melimpah/tinggi', rpRainMax:'🌧 Hujan 24 j tertinggi:', rpDam:'🔻 Empangan:', rpRisk:'⚠ Kawasan risiko banjir kilat:', rpSrc:'Sumber: thaiwater.net (HII)',
+  rpTitle:'📋 Laporan situasi air — Narathiwat', rpStations:'stesen', rpCrit:'⚠ Stesen keutamaan:', rpNoCrit:'✅ Tiada stesen melimpah/tinggi', rpRainMax:'🌧 Hujan 24 j tertinggi:', rpDam:'🔻 Empangan:', rpRisk:'⚠ Kawasan risiko banjir kilat:', rpSrc:'Sumber: thaiwater.net (HII)',
   prov:{'สตูล':'Satun','สงขลา':'Songkhla','ปัตตานี':'Patani','ยะลา':'Yala','นราธิวาส':'Narathiwat'},
   help:'❓ Panduan', helpTitle:'❓ Cara guna peta ini',
   helpBody:`
@@ -649,7 +647,7 @@ async function loadDam(){
     if(!name) return;
     const provCode = String(geo.province_code ?? '');
     let lat = num(meta.dam_lat ?? d.dam_lat), lon = num(meta.dam_long ?? meta.dam_lon ?? d.dam_long);
-    const inArea = ['90','91','94','95','96'].includes(provCode)
+    const inArea = ['96'].includes(provCode)
       || PROV_SET.has(thName(geo.province_name))
       || Object.keys(DAM_FALLBACK_COORDS).some(k=>name.includes(k))
       || inBbox(lat,lon);
@@ -689,7 +687,7 @@ async function loadSea(){
   if(!rows.length) throw new Error('no sea data');
   rows.forEach(d => {
     const lat = num(d.lat), lon = num(d.lon);
-    if(lat==null || lon==null || lat > 7.95) return;   // ชายฝั่งสงขลา–นราธิวาส
+    if(!inBbox(lat,lon)) return;   // เฉพาะชายฝั่งนราธิวาส
     const warn = d.warning?.level === 1;
     const color = warn ? '#dc2626' : '#0d9488';
     L.marker([lat,lon], {icon: mkIcon('mk-sea', color, 20, '~', warn), zIndexOffset:150})
@@ -740,7 +738,7 @@ async function loadCctv(){
    เว้นว่าง '' = ปิดฟีเจอร์ภาพ (popup แสดงข้อมูล+ลิงก์เหมือนเดิม ไม่มี error) */
 const DDPM_PROXY = 'https://ddpm-proxy.newusmanwaji.workers.dev';
 const DDPM_URL = 'https://gis-portal.disaster.go.th/arcgis/rest/services/Map_DDPM_CCTV/DDPM_CCTV_STATION_PROD/FeatureServer/0/query?where=1%3D1&outFields=code,name,latitude,longitude,basin,agency,telephone,current_water_level,water_level_status,camera_status,updated_at&returnGeometry=false&f=json';
-const DDPM_PROV = {'ปภ.จ.ปัตตานี':'ปัตตานี','ปภ.จ.ยะลา':'ยะลา','ปภ.จ.สตูล':'สตูล','ปภ.จ.นราธิวาส':'นราธิวาส','ปภ.จ.สงขลา':'สงขลา'};
+const DDPM_PROV = {'ปภ.จ.นราธิวาส':'นราธิวาส'};
 /* พิกัดสำรอง (snapshot 3 ก.ค. 2569 จากระบบจริง): [code, name, lat, lon, province] */
 const DDPM_STATIONS = [
 ["NWT01","สะพานข้ามคลอง บ้านปาหนัน ม.4",6.123371,101.510153,"นราธิวาส"],
@@ -876,7 +874,8 @@ async function loadDdpm(){
     }));
   }catch(e){
     // ดึงสดไม่ได้ → ใช้พิกัดสำรอง (ไม่มีค่าระดับน้ำ)
-    DDPM_STATIONS.forEach(r => ddpmMarker({code:r[0], name:r[1], lat:r[2], lon:r[3], prov:r[4]}));
+    DDPM_STATIONS.filter(r => PROV_SET.has(r[4]))
+      .forEach(r => ddpmMarker({code:r[0], name:r[1], lat:r[2], lon:r[3], prov:r[4]}));
   }
 }
 function openDdpm(){
@@ -1083,7 +1082,7 @@ const BND_SOURCES = [
   'https://raw.githubusercontent.com/apisit/thailand.json/master/thailand.json',
   'https://raw.githubusercontent.com/chingchai/OpenGISData-Thailand/master/provinces.geojson'
 ];
-const BND_NAMES = ['สตูล','สงขลา','ปัตตานี','ยะลา','นราธิวาส','Satun','Songkhla','Pattani','Yala','Narathiwat'];
+const BND_NAMES = ['นราธิวาส','Narathiwat'];
 async function loadBoundaries(){
   for(const src of BND_SOURCES){
     try{
@@ -1240,8 +1239,11 @@ function applyLang(){
   document.getElementById('hTitle').innerHTML = `${t('title')}<small id="hSub">${t('sub')}</small>`;
   document.getElementById('btnRefreshTxt').textContent = t('refresh');
   document.getElementById('search').placeholder = t('search');
-  document.querySelector('.provbtn[data-prov="all"]').textContent = t('all');
-  document.querySelectorAll('.provbtn').forEach(b=>{ if(b.dataset.prov!=='all') b.textContent = tProv(b.dataset.prov); });
+  const allBtn = document.querySelector('.provbtn[data-prov="all"]');
+  if(allBtn) allBtn.textContent = t('all');
+  document.querySelectorAll('.provbtn').forEach(b=>{
+    if(b.dataset.prov!=='all') b.textContent = '🏙️ ' + tProv(b.dataset.prov);
+  });
   [['tWL','lyWL'],['tRain','lyRain'],['tDam','lyDam'],['tSea','lySea'],['tCctv','lyCctv'],['tDdpm','lyDdpm'],['tTele','lyTele'],['tRisk','lyRisk'],['tRadar','lyRadar']]
     .forEach(([sp,key])=>{ const el=document.getElementById(sp); if(el) el.textContent = t(key); });
   renderRadarBar();   // ป้ายเวลา/ปุ่มเล่นในแถบเรดาร์เปลี่ยนภาษาด้วย
