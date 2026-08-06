@@ -33,6 +33,7 @@ th:{
   dam_over:'เกินความจุ', dam_watch:'น้ำมาก เฝ้าระวัง', dam_much:'น้ำมาก', dam_normal:'ปกติ', dam_low:'น้ำน้อย', nodata:'ไม่มีข้อมูล',
   lv:'ระดับน้ำ (ม.รทก.)', bank:'ระดับตลิ่ง (ม.รทก.)', diffbank:'ห่างจากตลิ่ง (ม.)', flow:'อัตราการไหล (ม³/วิ)', time:'เวลาวัด',
   up:'▲ เพิ่มขึ้น', down:'▼ ลดลง', steady:'▬ ทรงตัว', stale:'⏱ ข้อมูลเก่ากว่า 24 ชม.',
+  wl_nodata:'ไม่มีข้อมูลปัจจุบัน',
   gcap:'ระดับน้ำ 3 วันย้อนหลัง (เส้นประแดง = ตลิ่ง)', gload:'กำลังโหลดกราฟ…', gfail:'ไม่สามารถโหลดกราฟได้', gnone:'ไม่มีข้อมูลกราฟ',
   full:'ดูข้อมูลเต็มที่ thaiwater.net ↗', damfull:'ดูข้อมูลเขื่อนทั้งหมด ↗', seafull:'ดูระดับน้ำชายฝั่งเต็ม ↗',
   rain24:'ฝนสะสม 24 ชม.', storage:'ปริมาณน้ำ (ล้าน ม³)', inflow:'น้ำไหลเข้า (ล้าน ม³/วัน)', outflow:'ระบายออก (ล้าน ม³/วัน)', damlv:'ระดับน้ำ (ม.รทก.)', damdate:'วันที่ข้อมูล', pctcap:'% รนก.',
@@ -82,6 +83,7 @@ en:{
   dam_over:'Over capacity', dam_watch:'High — watch', dam_much:'High', dam_normal:'Normal', dam_low:'Low', nodata:'No data',
   lv:'Water level (m MSL)', bank:'Bank level (m MSL)', diffbank:'Distance to bank (m)', flow:'Discharge (m³/s)', time:'Measured',
   up:'▲ rising', down:'▼ falling', steady:'▬ steady', stale:'⏱ Data older than 24 h',
+  wl_nodata:'No current data',
   gcap:'Water level, past 3 days (red dash = bank)', gload:'Loading graph…', gfail:'Could not load graph', gnone:'No graph data',
   full:'Full data at thaiwater.net ↗', damfull:'All dam data ↗', seafull:'Full coastal data ↗',
   rain24:'Rain 24 h', storage:'Storage (MCM)', inflow:'Inflow (MCM/day)', outflow:'Released (MCM/day)', damlv:'Level (m MSL)', damdate:'Data date', pctcap:'% capacity',
@@ -131,6 +133,7 @@ ms:{
   dam_over:'Melebihi kapasiti', dam_watch:'Tinggi — berjaga-jaga', dam_much:'Tinggi', dam_normal:'Normal', dam_low:'Rendah', nodata:'Tiada data',
   lv:'Paras air (m MSL)', bank:'Paras tebing (m MSL)', diffbank:'Jarak ke tebing (m)', flow:'Kadar aliran (m³/s)', time:'Masa cerapan',
   up:'▲ meningkat', down:'▼ menurun', steady:'▬ stabil', stale:'⏱ Data melebihi 24 jam',
+  wl_nodata:'Tiada data semasa',
   gcap:'Paras air 3 hari lepas (garis merah = tebing)', gload:'Memuatkan graf…', gfail:'Graf tidak dapat dimuat', gnone:'Tiada data graf',
   full:'Data penuh di thaiwater.net ↗', damfull:'Semua data empangan ↗', seafull:'Data pantai penuh ↗',
   rain24:'Hujan 24 jam', storage:'Simpanan (juta m³)', inflow:'Aliran masuk (juta m³/hari)', outflow:'Dilepaskan (juta m³/hari)', damlv:'Paras (m MSL)', damdate:'Tarikh data', pctcap:'% kapasiti',
@@ -178,6 +181,14 @@ const WL_CLASSES = {
   unknown: {color:'#9ca3af', order:5}
 };
 const wlLabel = cls => t('wl_'+cls);
+/* ป้ายสถานะสำหรับสถานีที่ข้อมูลเก่ากว่า 24 ชม.
+   เดิมยังโชว์ "ล้นตลิ่ง 144%" สีแดงจากค่าที่วัดไว้เมื่อหลายวันก่อน ซึ่งอ่านแล้วเข้าใจผิดว่า
+   กำลังท่วมอยู่ตอนนี้ ทั้งที่สถานีหยุดส่งข้อมูลไปแล้ว — เปลี่ยนเป็นสีเทา "ไม่มีข้อมูลปัจจุบัน"
+   และไม่แสดงเปอร์เซ็นต์ เพราะค่านั้นไม่สะท้อนสถานการณ์จริง ณ ตอนนี้ */
+const wlBadge = (s, dec=1, sep=' · ') => isStale(s.dt)
+  ? { color: WL_CLASSES.unknown.color, text: t('wl_nodata') }
+  : { color: WL_CLASSES[s.cls].color,
+      text: wlLabel(s.cls) + (s.pct!=null ? `${sep}${fmt(s.pct,dec)}%` : '') };
 function wlClass(pct){
   if(pct==null || isNaN(pct)) return 'unknown';
   if(pct>100) return 'overflow';
@@ -413,11 +424,10 @@ function trendArrow(s){
 }
 
 function wlPopup(s){
-  const C = WL_CLASSES[s.cls];
   return `
   <div class="pp-title">⚫ ${esc(s.name)} ${s.code?`(${esc(s.code)})`:''}</div>
   <div class="pp-sub">${esc(s.river||'')} · ${esc(s.amphoe)} · ${tProv(s.prov)} · ${esc(s.agency)}</div>
-  <div class="pp-status"><span class="badge" style="background:${C.color};font-size:12px;padding:3px 14px">${wlLabel(s.cls)}${s.pct!=null?` · ${fmt(s.pct,1)}%`:''}</span></div>
+  <div class="pp-status"><span class="badge" style="background:${wlBadge(s).color};font-size:12px;padding:3px 14px">${wlBadge(s).text}</span></div>
   ${isStale(s.dt)?`<div class="pp-stale">${t('stale')}</div>`:''}
   <dl class="pp-grid">
     <dt>${t('lv')}</dt><dd>${fmt(s.msl)}${trendArrow(s)}</dd>
@@ -1025,7 +1035,7 @@ function renderSidebar(){
       <div class="nm">${esc(s.name)} ${s.code?`<span style="color:#94a3b8;font-weight:400">(${esc(s.code)})</span>`:''}</div>
       <div class="sub">${esc(s.river||'')} · ${esc(s.amphoe)} · ${tProv(s.prov)} ${isStale(s.dt)?`<span class="stale">${t('stale')}</span>`:''}</div>
       <div class="row2">
-        <span class="badge" style="background:${C.color}">${wlLabel(s.cls)}${s.pct!=null?` ${fmt(s.pct,0)}%`:''}</span>
+        <span class="badge" style="background:${wlBadge(s,0,' ').color}">${wlBadge(s,0,' ').text}</span>
         <span style="color:#64748b">${s.msl!=null?fmt(s.msl)+' m':''}${trendArrow(s)}</span>
       </div></div>`;
   }).join('') || `<div style="text-align:center;color:#64748b;font-size:13px;padding:20px 0">${t('listEmpty')}</div>`;
