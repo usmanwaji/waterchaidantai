@@ -19,8 +19,23 @@
 
   // ลงทะเบียน service worker (เฉพาะ https หรือ localhost)
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    // เมื่อ service worker ตัวใหม่เข้ามาคุมแทน แปลว่ามีไฟล์เวอร์ชันใหม่แล้ว
+    // แต่หน้าที่เปิดค้างอยู่ยังใช้สคริปต์ชุดเก่า จึงรีโหลดหนึ่งครั้งให้อัตโนมัติ
+    // (กันปัญหาหน้าเว็บใหม่แต่ map.js เก่า ที่ต้องกด Ctrl+F5 เองทุกครั้ง)
+    // เฉพาะกรณีที่ "เคยมี" service worker คุมอยู่แล้ว = เป็นการอัปเดตจริง
+    // ถ้าเป็นการเข้าครั้งแรก controller จะเป็น null และไม่ต้องรีโหลด
+    if (navigator.serviceWorker.controller) {
+      let reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloading) return;            // กันรีโหลดวน
+        reloading = true;
+        location.reload();
+      });
+    }
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+      navigator.serviceWorker.register('sw.js').then(reg => {
+        reg.update().catch(() => {});     // เช็กเวอร์ชันใหม่ทุกครั้งที่เปิดหน้า
+      }).catch(() => {});
     });
   }
 
