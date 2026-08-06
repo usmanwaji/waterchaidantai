@@ -64,6 +64,52 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
   .note{font-size:12px;line-height:1.6}
 }
 
+/* ---------- 4b. Desktop typography ----------
+   ตัวหนังสือเดิมบนจอคอมเล็กเกินไป (ส่วนใหญ่ 10.5–13px) อ่านยากโดยเฉพาะภาษาไทย
+   ที่มีสระบน-ล่าง ขยับขึ้นทั้งชุดโดยคงลำดับความสำคัญเดิมไว้
+   ค่าที่เลือกไม่ต่ำกว่าค่าเดิมของหน้าไหนเลย จึงไม่มีที่ไหนตัวเล็กลง
+   จำกัดเฉพาะ >=769px เพื่อไม่กระทบเลย์เอาต์มือถือที่ตรวจแล้ว */
+@media(min-width:769px){
+  .note{font-size:12.5px;line-height:1.65}
+  .muted{font-size:13.5px}
+  footer{font-size:12px}
+  header h1 small{font-size:12px}
+  #updated{font-size:12.5px}
+
+  table{font-size:13.5px}
+  th{font-size:13px}
+
+  .navtab a{font-size:13.5px}
+  .chip,.provlbl{font-size:14px}
+  .btn{font-size:14.5px}
+  .btn.sm{font-size:13px}
+  #btnRefresh{font-size:14px}
+
+  .card h2{font-size:16px}
+  .badge,.pill{font-size:11.5px}
+  .legend{font-size:12.5px;line-height:1.75}
+  .leaflet-popup-content{font-size:13.5px}
+
+  input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:15px}
+
+  /* ข้อความรองในการ์ด/รายการ — เดิม 9.5–11.5px ซึ่งเล็กมากสำหรับภาษาไทย */
+  .sub,.where,.tel2,.stale{font-size:12.5px}
+  .occnum,.mm,.pp,.amm{font-size:12px}
+  .item .nm{font-size:14px}
+  .card h3{font-size:14.5px}
+  .disc,.provcard,.extbtn,.freq-dot,.yr{font-size:12.5px}
+  .sw{font-size:11px}
+  .langbtn{font-size:12.5px}
+  .src-btn,#btnReport,.ddpm-filters select{font-size:13px}
+  .layerrow{font-size:13px}
+  .rainScale .rsGrp b{font-size:12px}
+  .rainScale .rsGrp small,.rainScale .rsTitle small{font-size:10.5px}
+  /* แผงข้างแผนที่กว้างคงที่ 340px — ขยับน้อยกว่าที่อื่นเพื่อไม่ให้ปุ่มล้นแถว */
+  .provbtn{font-size:11.5px}
+  .sumcard span{font-size:10.5px}
+  .sumcard b{font-size:18px}
+}
+
 /* ---------- 5. Nav scroll affordance (classes applied by js/ui.js) ----------
    The nav holds up to 12 links in a scroller with a hidden scrollbar, so on a
    phone there was nothing indicating more tabs existed off-screen. */
