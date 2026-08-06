@@ -62,6 +62,16 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
 .sumcard.active{border-color:#0f172a}
 .sumcard b{display:block;font-size:17px;line-height:1.1}
 .sumcard span{font-size:9.5px;display:block;line-height:1.15}
+/* แถวนับสถานีที่ไม่มีข้อมูลปัจจุบัน — แยกจากการ์ดสถานะ เพราะไม่ใช่ระดับความรุนแรง
+   แต่คือสถานีที่หยุดส่งข้อมูล จึงไม่ควรถูกนับรวมในการ์ดสีแดง/น้ำเงิน */
+#nodataTally{padding:0 10px 6px}
+#nodataTally .nd{display:flex;align-items:center;gap:6px;width:100%;padding:5px 9px;border-radius:8px;
+  border:1px dashed var(--outline-strong);background:#fff;color:var(--muted);
+  font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;text-align:left}
+#nodataTally .nd:hover{background:#f8fafc}
+#nodataTally .nd.active{border-style:solid;border-color:#9ca3af;background:#f3f4f6;color:var(--ink)}
+#nodataTally .nd i{width:10px;height:10px;border-radius:50%;background:#9ca3af;flex:none}
+#nodataTally .nd b{margin-left:auto;font-size:13px;color:var(--ink)}
 
 /* ===== Controls ===== */
 #controls{padding:4px 10px 8px;border-bottom:2px solid var(--peach)}
@@ -229,6 +239,7 @@ footer a:hover{text-decoration:underline}
 <div id="wrap">
   <aside id="sidebar">
     <div id="summary"></div>
+    <div id="nodataTally"></div>
     <div id="controls">
       <input id="search" type="text" placeholder="🔍 ค้นหาสถานี / แม่น้ำ / อำเภอ…">
       <div class="provrow" id="provrow">

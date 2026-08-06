@@ -185,6 +185,11 @@ const wlLabel = cls => t('wl_'+cls);
    เดิมยังโชว์ "ล้นตลิ่ง 144%" สีแดงจากค่าที่วัดไว้เมื่อหลายวันก่อน ซึ่งอ่านแล้วเข้าใจผิดว่า
    กำลังท่วมอยู่ตอนนี้ ทั้งที่สถานีหยุดส่งข้อมูลไปแล้ว — เปลี่ยนเป็นสีเทา "ไม่มีข้อมูลปัจจุบัน"
    และไม่แสดงเปอร์เซ็นต์ เพราะค่านั้นไม่สะท้อนสถานการณ์จริง ณ ตอนนี้ */
+/* หมวดที่ใช้นับ/กรองในแถบสรุป: เฉพาะสถานีที่หยุดส่งข้อมูลเกิน 24 ชม. เท่านั้นที่นับเป็น
+   "ไม่มีข้อมูลปัจจุบัน" เพื่อไม่ให้ค่าที่ค้างอยู่ไปโป่งการ์ดล้นตลิ่ง/น้ำมาก
+   หมายเหตุ: สถานีคลาส unknown ไม่ใช่พวกเดียวกัน — ส่วนใหญ่ส่งข้อมูลปกติ เพียงแต่ไม่มี
+   ระดับตลิ่งอ้างอิงจึงคำนวณเปอร์เซ็นต์ไม่ได้ จึงคงพฤติกรรมเดิมไว้ (ไม่นับในการ์ด) */
+const wlBucket = s => isStale(s.dt) ? 'nodata' : s.cls;
 const wlBadge = (s, dec=1, sep=' · ') => isStale(s.dt)
   ? { color: WL_CLASSES.unknown.color, text: t('wl_nodata') }
   : { color: WL_CLASSES[s.cls].color,
@@ -291,11 +296,11 @@ function toggleAbnormal(){
 }
 function applyWlFilter(){
   wlStations.forEach(s=>{ const m=markersById[s.id]; if(!m) return;
-    const show=!wlFilterAbnormal || s.cls==='overflow' || s.cls==='high';
+    const show=!wlFilterAbnormal || wlBucket(s)==='overflow' || wlBucket(s)==='high';
     if(show){ if(!gWL.hasLayer(m)) m.addTo(gWL); } else if(gWL.hasLayer(m)) gWL.removeLayer(m); });
 }
 function shareSnapshot(){
-  const over=wlStations.filter(s=>s.cls==='overflow'), high=wlStations.filter(s=>s.cls==='high');
+  const over=wlStations.filter(s=>wlBucket(s)==='overflow'), high=wlStations.filter(s=>wlBucket(s)==='high');
   const top=[...over,...high].sort((a,b)=>(b.pct??-1)-(a.pct??-1)).slice(0,6);
   const W=720,H=210+top.length*28+40, c=document.createElement('canvas'); c.width=W; c.height=H;
   const x=c.getContext('2d');
@@ -1020,7 +1025,8 @@ function renderSidebar(){
   const inProv = wlStations.filter(s => filterProv==='all' || s.prov===filterProv);
   const counts = {};
   Object.keys(WL_CLASSES).forEach(k=>counts[k]=0);
-  inProv.forEach(s=>counts[s.cls]++);
+  counts.nodata = 0;
+  inProv.forEach(s=>counts[wlBucket(s)]++);
 
   document.getElementById('summary').innerHTML = ['overflow','high','normal','low','critlow'].map(k=>{
     const C = WL_CLASSES[k];
@@ -1028,10 +1034,19 @@ function renderSidebar(){
       <b>${counts[k]}</b><span>${wlLabel(k)}</span></div>`;
   }).join('');
 
+  const nd = document.getElementById('nodataTally');
+  if(nd) nd.innerHTML = counts.nodata
+    ? `<button class="nd ${filterClass==='nodata'?'active':''}" onclick="toggleClass('nodata')">
+         <i></i>${t('wl_nodata')}<b>${counts.nodata}</b></button>`
+    : '';
+
   const list = inProv
-    .filter(s => !filterClass || s.cls===filterClass)
+    .filter(s => !filterClass || wlBucket(s)===filterClass)
     .filter(s => !q || [s.name,s.river,s.amphoe,s.code,s.prov].join(' ').toLowerCase().includes(q))
-    .sort((a,b)=> WL_CLASSES[a.cls].order - WL_CLASSES[b.cls].order || (b.pct??-1)-(a.pct??-1));
+    // สถานีที่ไม่มีข้อมูลปัจจุบันให้ไปอยู่ท้ายรายการ ไม่ปนอยู่บนสุดเหมือนสถานีเร่งด่วนจริง
+    .sort((a,b)=> (wlBucket(a)==='nodata') - (wlBucket(b)==='nodata')
+               || WL_CLASSES[a.cls].order - WL_CLASSES[b.cls].order
+               || (b.pct??-1)-(a.pct??-1));
 
   document.getElementById('list').innerHTML = list.map(s=>{
     return `<div class="item" style="border-left-color:${wlBadge(s).color}" onclick="focusStation('${s.id}')">
@@ -1089,10 +1104,10 @@ function copyReport(){
   PROVINCES.forEach(p=>{
     const st = wlStations.filter(s=>s.prov===p.name);
     if(!st.length) return;
-    const o = st.filter(s=>s.cls==='overflow').length, h = st.filter(s=>s.cls==='high').length;
+    const o = st.filter(s=>wlBucket(s)==='overflow').length, h = st.filter(s=>wlBucket(s)==='high').length;
     lines.push(`• ${tProv(p.name)}: ${wlLabel('overflow')} ${o} · ${wlLabel('high')} ${h} / ${st.length} ${t('rpStations')}`);
   });
-  const crit = wlStations.filter(s=>s.cls==='overflow'||s.cls==='high')
+  const crit = wlStations.filter(s=>wlBucket(s)==='overflow'||wlBucket(s)==='high')
     .sort((a,b)=>(b.pct??0)-(a.pct??0)).slice(0,10);
   lines.push('');
   if(crit.length){
