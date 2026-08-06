@@ -403,8 +403,12 @@ async function loadWaterLevel(){
       discharge: num(d.discharge),
       pct, cls, lat, lon
     };
-    const size = (cls==='overflow'||cls==='high') ? 22 : 16;
-    const m = L.marker([lat,lon], {icon: mkIcon('mk-wl', C.color, size, '', cls==='overflow'), zIndexOffset:(5-C.order)*100})
+    /* สถานีที่หยุดส่งข้อมูลเกิน 24 ชม. ต้องไม่แสดงเป็นหมุดแดงกะพริบเหมือนกำลังล้นตลิ่งจริง
+       ใช้สีเทา ขนาดปกติ ไม่กะพริบ และดันลงไปอยู่ชั้นล่างสุดของหมุด */
+    const stale = isStale(s.dt);
+    const mColor = stale ? WL_CLASSES.unknown.color : C.color;
+    const size = (!stale && (cls==='overflow'||cls==='high')) ? 22 : 16;
+    const m = L.marker([lat,lon], {icon: mkIcon('mk-wl', mColor, size, '', !stale && cls==='overflow'), zIndexOffset:(stale?0:(5-C.order))*100})
       .bindPopup(()=>wlPopup(s), {maxWidth:300});
     m._sid = s.id;
     m.addTo(gWL);
@@ -1030,8 +1034,7 @@ function renderSidebar(){
     .sort((a,b)=> WL_CLASSES[a.cls].order - WL_CLASSES[b.cls].order || (b.pct??-1)-(a.pct??-1));
 
   document.getElementById('list').innerHTML = list.map(s=>{
-    const C = WL_CLASSES[s.cls];
-    return `<div class="item" style="border-left-color:${C.color}" onclick="focusStation('${s.id}')">
+    return `<div class="item" style="border-left-color:${wlBadge(s).color}" onclick="focusStation('${s.id}')">
       <div class="nm">${esc(s.name)} ${s.code?`<span style="color:#94a3b8;font-weight:400">(${esc(s.code)})</span>`:''}</div>
       <div class="sub">${esc(s.river||'')} · ${esc(s.amphoe)} · ${tProv(s.prov)} ${isStale(s.dt)?`<span class="stale">${t('stale')}</span>`:''}</div>
       <div class="row2">
