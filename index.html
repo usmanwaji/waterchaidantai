@@ -111,6 +111,8 @@ footer a{color:var(--orange-warm);text-decoration:none}
 
 /* แถบวัดความแรงฝน (rain-intensity scale) ข้างภาพเรดาร์ */
 .radarWrap{display:flex;gap:12px;align-items:stretch;justify-content:center;flex-wrap:wrap}
+.radarImgBox{position:relative;display:inline-block;max-width:100%;line-height:0}
+#radarFreeze{position:absolute;inset:0;width:100%;height:100%;display:none;border-radius:8px;border:1px solid #e2e8f0;cursor:pointer}
 .rainScale{display:flex;flex-direction:column;flex:0 0 auto;align-self:stretch;min-height:300px;font-size:11px}
 .rainScale .rsTitle{text-align:center;font-weight:800;color:var(--navy);font-size:11.5px;line-height:1.15;margin-bottom:4px}
 .rainScale .rsTitle small{font-weight:600;color:#64748b;font-size:9.5px}
@@ -257,7 +259,10 @@ footer a{color:var(--orange-warm);text-decoration:none}
   <div class="card full">
     <h2>📡 เรดาร์ฝนสทิงพระ (กรมอุตุฯ) <span class="where" id="radarUpdated"></span></h2>
     <div class="radarWrap">
-      <img id="radarImg" src="" alt="เรดาร์ฝนสทิงพระ ล่าสุด" style="max-width:100%;max-height:936px;border-radius:8px;border:1px solid #e2e8f0;cursor:pointer;background:#eef2f7" onclick="window.open('https://sites.google.com/view/naramet-radar/narathiwat?authuser=0','_blank','noopener')">
+      <div class="radarImgBox" id="radarImgBox">
+        <img id="radarImg" src="" alt="เรดาร์ฝนสทิงพระ ล่าสุด" style="max-width:100%;max-height:936px;border-radius:8px;border:1px solid #e2e8f0;cursor:pointer;background:#eef2f7;display:block" onclick="window.open('https://sites.google.com/view/naramet-radar/narathiwat?authuser=0','_blank','noopener')">
+        <canvas id="radarFreeze" onclick="window.open('https://sites.google.com/view/naramet-radar/narathiwat?authuser=0','_blank','noopener')"></canvas>
+      </div>
       <div class="rainScale" aria-label="แถบวัดความแรงฝนจากสีบนเรดาร์">
         <div class="rsTitle">ความแรงฝน<br><small>(อ่านจากสีบนภาพ)</small></div>
         <div class="rsBody">
@@ -655,6 +660,42 @@ function loadRadarImg(){
   const upd = document.getElementById('radarUpdated');
   if(upd) upd.textContent = 'โหลดล่าสุด ' + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
 }
+
+/* หยุดภาพเรดาร์ (GIF) ชั่วคราวตอน hover/แตะ โดยวาดเฟรมปัจจุบันลง canvas ทับไว้ */
+(function initRadarFreeze(){
+  const box = document.getElementById('radarImgBox');
+  const img = document.getElementById('radarImg');
+  const freeze = document.getElementById('radarFreeze');
+  if(!box || !img || !freeze) return;
+  const ctx = freeze.getContext('2d');
+  function showFreeze(){
+    if(!img.naturalWidth) return;
+    freeze.width = img.naturalWidth;
+    freeze.height = img.naturalHeight;
+    try{ ctx.drawImage(img, 0, 0); }catch(e){ return; }
+    freeze.style.display = 'block';
+  }
+  function hideFreeze(){ freeze.style.display = 'none'; }
+  box.addEventListener('mouseenter', showFreeze);
+  box.addEventListener('mouseleave', hideFreeze);
+
+  /* บนมือถือ: แตะค้างเพื่อหยุดภาพ — แตะสั้น ๆ ยังเปิดลิงก์เรดาร์เต็มจอเหมือนเดิม */
+  /* ใช้ e.timeStamp (เวลาที่นิ้วแตะจริง) ไม่ใช่ Date.now() — กันไม่ให้เวลาที่ใช้วาด canvas ถูกนับเป็นการแตะค้าง */
+  let touchStart = 0, swallowClick = false;
+  box.addEventListener('touchstart', e => { touchStart = e.timeStamp; showFreeze(); }, {passive:true});
+  function endTouch(e){
+    if(e.timeStamp - touchStart > 250) swallowClick = true;
+    hideFreeze();
+  }
+  box.addEventListener('touchend', endTouch);
+  box.addEventListener('touchcancel', endTouch);
+  box.addEventListener('click', e => {
+    if(!swallowClick) return;
+    swallowClick = false;
+    e.stopPropagation();
+    e.preventDefault();
+  }, true);
+})();
 
 /* ---------- แผนที่คาดการณ์ฝนล่วงหน้า 7 วัน (WRF-ROMS, โดเมน Southeast Asia 9x9กม. — มีครบ 7 วัน) ---------- */
 /* กรอบครอบตัด (พิกเซลจากภาพต้นฉบับ 1016x708) คำนวณจากกริดเส้นละติจูด/ลองจิจูดในภาพจริง
