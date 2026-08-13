@@ -33,8 +33,16 @@ PWA/Service Worker ทำงานเฉพาะบน https (GitHub Pages เ�
 | `supabase/schema-v6.sql` | `shelters`, `incidents`, `resource_requests`, `alert_rules`, `alert_log` + คอลัมน์ `profiles.province_scope` + ฟังก์ชัน `can_edit_province()` |
 | `supabase/schema-v7.sql` | `audit_log` (บันทึกการกระทำแอดมิน) |
 | `supabase/schema-v8.sql` | `vulnerable_people` (กลุ่มเปราะบาง, RLS เข้มงวด PDPA) + ฟังก์ชัน `is_admin_for_province()` |
+| `supabase/schema-v9.sql` | `page_views` + ฟังก์ชัน `bump_page_view()` / `get_page_views()` — ตัวนับผู้เข้าชมมุมขวาล่างของทุกหน้า |
 
 หน้าเว็บที่พึ่งตารางเหล่านี้ (shelter, eoc, alert, resources, admin, people) จะ **degrade gracefully** ถ้ายังไม่ได้รัน — ไม่ error แค่ไม่มีข้อมูลสด
+ป้ายนับผู้เข้าชมก็เช่นกัน — ถ้ายังไม่ได้รัน `schema-v9.sql` ป้ายจะไม่ขึ้น (ไม่มี error)
+
+**ดูสถิติผู้เข้าชมย้อนหลัง** ที่ SQL Editor:
+```sql
+select day, sum(views) as views from public.page_views group by day order by day desc limit 30;
+select path, sum(views) as views from public.page_views group by path order by views desc;
+```
 
 **สิทธิ์ (RLS) โดยย่อ**
 - `shelters` — อ่านสาธารณะ · แก้/เพิ่มเฉพาะสมาชิกอนุมัติในจังหวัดที่รับผิดชอบ
