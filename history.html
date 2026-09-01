@@ -3,30 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#423d38">
+<meta name="theme-color" content="#102029">
 <title>น้ำท่วมย้อนหลัง (ดาวเทียม GISTDA) | One Map ชายแดนใต้</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/rivers.js"></script>
 <style>
-:root{--bg:#fdeacb;--ink:#0f172a;--muted:#64748b;--orange:#f97316;--orange-d:#ea580c;--navy:#1e40af;--navy-d:#1e3a8a;--peach:#f2d3a0}
+:root{--bg:var(--paper-2);--ink:var(--ink);--muted:var(--ink-3);--orange:var(--st-warn);--orange-d:var(--st-warn);--navy:var(--signal);--navy-d:var(--signal-deep);--peach:var(--paper-2)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden}
-header{background:linear-gradient(180deg,#fb923c,#f97316 45%,#ea580c);color:#fff;padding:8px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+header{background:linear-gradient(180deg,var(--st-warn),var(--st-warn) 45%,var(--st-warn));color:#fff;padding:8px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 header h1{font-size:16px;font-weight:700;line-height:1.2}
 header h1 small{display:block;font-size:10.5px;font-weight:400;opacity:.9}
 .navtab{display:flex;gap:4px;background:rgba(255,255,255,.15);border-radius:9px;padding:3px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
 .navtab a{color:#fff;text-decoration:none;font-size:12px;font-weight:600;padding:4px 10px;border-radius:7px;opacity:.85;white-space:nowrap}
-.navtab a.on{background:#fff;color:#ea580c;opacity:1}
+.navtab a.on{background:#fff;color:var(--st-warn);opacity:1}
 #bar{display:flex;gap:5px;padding:7px 12px;background:#fff;border-bottom:2px solid var(--peach);flex-wrap:wrap;align-items:center}
 .chip{padding:6px 13px;border:1.5px solid var(--navy);background:var(--navy);color:#fff;font-family:inherit;font-size:12.5px;font-weight:600;border-radius:9px;cursor:pointer;white-space:nowrap}
 .chip.on{background:var(--orange);border-color:var(--orange)}
 .chip.prov{background:#fff;color:var(--navy)}
 .chip.prov.on{background:var(--orange);border-color:var(--orange);color:#fff}
-#bar .sep{width:1px;height:22px;background:#e2e8f0;margin:0 3px}
+#bar .sep{width:1px;height:22px;background:var(--line);margin:0 3px}
 #wrap{flex:1;display:flex;min-height:0}
 #map{flex:1;min-width:0}
 #side{width:330px;background:#fff;border-left:2px solid var(--peach);overflow-y:auto;padding:10px}
@@ -36,20 +36,20 @@ header h1 small{display:block;font-size:10.5px;font-weight:400;opacity:.9}
   #side{width:100%;flex:1;border-left:none;border-top:2px solid var(--peach)}
   header h1{font-size:14px}
 }
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
 .card h3{font-size:13.5px;color:var(--navy-d);margin-bottom:6px}
-.provcard{display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;margin-bottom:5px;font-size:12.5px;cursor:pointer}
-.provcard:hover{background:#fff7ed}
+.provcard{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin-bottom:5px;font-size:12.5px;cursor:pointer}
+.provcard:hover{background:var(--st-warn-wash)}
 .badge{padding:1px 9px;border-radius:99px;color:#fff;font-size:10.5px;font-weight:600}
-.disc{background:#eff6ff;border:1px solid #3b82f6;border-radius:9px;padding:8px 10px;font-size:11.5px;line-height:1.55;color:#1e3a8a;margin-bottom:10px}
+.disc{background:var(--signal-wash);border:1px solid var(--signal);border-radius:9px;padding:8px 10px;font-size:11.5px;line-height:1.55;color:var(--signal-deep);margin-bottom:10px}
 footer{background:var(--navy-d);color:#c7d2fe;font-size:10.5px;padding:4px 12px;display:flex;gap:10px;flex-wrap:wrap}
-footer a{color:#fdba74;text-decoration:none}
-.spin{display:inline-block;width:11px;height:11px;border:2px solid #cbd5e1;border-top-color:var(--orange);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-1px}
+footer a{color:var(--st-warn);text-decoration:none}
+.spin{display:inline-block;width:11px;height:11px;border:2px solid var(--line-mid);border-top-color:var(--orange);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-1px}
 @keyframes sp{to{transform:rotate(360deg)}}
 .leaflet-popup-content{font-family:'Noto Sans Thai',Tahoma,sans-serif;font-size:12.5px}
 
 /* ===== Command Center theme (override) ===== */
-:root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--panel:#ffffff;--orange:#fe6e00;--orange-d:#ff6b00;--orange-warm:#ffb74d;--navy:#57504a;--navy-d:#423d38;--peach:#e3e0dd;--outline:#e3e0dd;--outline-strong:#d1d5dc;--elevated:#ffffff;--surface:#f3f4f6;--shell:rgba(0,0,0,.72);--c-over:#fb2c36;--c-risk:#fe6e00;--c-watch:#edb200;--c-ok:#00c758;--c-down:#3080ff}
+:root{--bg:var(--paper);--ink:var(--ink);--muted:var(--ink-3);--panel:#ffffff;--orange:var(--signal);--orange-d:var(--signal-hover);--orange-warm:var(--st-watch);--navy:var(--ink-2);--navy-d:var(--ink);--peach:var(--line);--outline:var(--line);--outline-strong:var(--line-mid);--elevated:#ffffff;--surface:var(--card-2);--shell:rgba(0,0,0,.72);--c-over:var(--st-danger);--c-risk:var(--signal);--c-watch:var(--st-watch);--c-ok:var(--st-normal);--c-down:var(--signal)}
 header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);border-bottom:1px solid rgba(255,255,255,.12)}
 .navtab{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09)}
 .navtab a{color:rgba(255,255,255,.72)}
@@ -57,7 +57,7 @@ header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-
 #bar{border-bottom:1px solid var(--outline)}
 #side{border-left:1px solid var(--outline)}
 .card,.provcard{border-color:var(--outline)}
-footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
+footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-warm)}
 
 
 /* จอมือถือ: 100% ของ html คือความสูงที่ไม่รวมแถบ URL ที่ยุบ/ขยาย เนื้อหาท้ายหน้าจึงโดนบัง
@@ -69,22 +69,22 @@ footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
   #side{padding:8px}
 }
 </style>
-<link rel="stylesheet" href="shared.css?v=2">
+<link rel="stylesheet" href="shared.css?v=3">
 </head>
 <body>
 
 <header>
-  <h1>🛰️ น้ำท่วมย้อนหลังจากดาวเทียม<small>ข้อมูล SAR — GISTDA Disaster Platform</small></h1>
+  <h1>น้ำท่วมย้อนหลังจากดาวเทียม<small>ข้อมูล SAR · GISTDA Disaster Platform</small></h1>
   <nav class="navtab" aria-label="เมนูหลัก">
-    <a href="index.html">🌤️ หน้าแรก</a>
-    <a href="map.html">🗺️ ระดับน้ำ</a>
-    <a href="forecast.html">🔮 คาดการณ์</a>
-    <a href="history.html" class="on">🛰️ ย้อนหลัง</a>
-    <a href="repeat.html">⚠️ พื้นที่เสี่ยง</a>
-    <a href="sim.html">🌊 แบบจำลอง</a>
-    <a href="shelter.html">🏠 ศูนย์พักพิง</a>
-    <a href="route.html">🚗 เส้นทาง</a>
-    <a href="resources.html">🚜 ทรัพยากร</a>
+    <a href="index.html">หน้าแรก</a>
+    <a href="map.html">ระดับน้ำ</a>
+    <a href="forecast.html">คาดการณ์</a>
+    <a href="history.html" class="on">ย้อนหลัง</a>
+    <a href="repeat.html">พื้นที่เสี่ยง</a>
+    <a href="sim.html">แบบจำลอง</a>
+    <a href="shelter.html">ศูนย์พักพิง</a>
+    <a href="route.html">เส้นทาง</a>
+    <a href="resources.html">ทรัพยากร</a>
   </nav>
 </header>
 
@@ -101,7 +101,7 @@ footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
   <button class="chip prov" data-prov="95">ยะลา</button>
   <button class="chip prov on" data-prov="96">นราธิวาส</button>
   <span class="sep"></span>
-  <button class="chip" id="cmpToggle" title="เปรียบเทียบสองช่วงเวลา">🔀 เทียบช่วง</button>
+  <button class="chip" id="cmpToggle" title="เปรียบเทียบสองช่วงเวลา">เทียบช่วง</button>
   <span id="cmpBar" style="display:none">
     <button class="chip cmpb" data-pb="1day">B: 1 วัน</button>
     <button class="chip cmpb on" data-pb="7days">B: 7 วัน</button>
@@ -112,9 +112,9 @@ footer{background:var(--navy-d);color:#cfc8c0}footer a{color:var(--orange-warm)}
 <div id="wrap">
   <div id="map"></div>
   <aside id="side">
-    <div class="disc">🛰️ พื้นที่สีบนแผนที่ = จุดที่ดาวเทียมเรดาร์ (SAR) ตรวจพบน้ำท่วมขังจริงในช่วงเวลาที่เลือก — ข้อมูลอัปเดตหลังดาวเทียมผ่าน 1–3 วัน <b>คลิกบนแผนที่</b>เพื่อดูรายละเอียดตำบลที่ท่วม</div>
-    <div class="card"><h3>📊 จำนวนแปลงพื้นที่ท่วมที่ตรวจพบ <button id="btnCsv" style="margin-left:auto;border:1px solid #d1d5dc;background:#fff;border-radius:7px;padding:3px 9px;font-family:inherit;font-size:11.5px;cursor:pointer">⬇️ CSV รายอำเภอ</button></h3><div id="stats"><span class="spin"></span> กำลังนับ…</div></div>
-    <div class="card"><h3>ℹ️ วิธีอ่านข้อมูล</h3><div style="font-size:12px;color:#475569;line-height:1.65">
+    <div class="disc">พื้นที่สีบนแผนที่ = จุดที่ดาวเทียมเรดาร์ (SAR) ตรวจพบน้ำท่วมขังจริงในช่วงเวลาที่เลือก · ข้อมูลอัปเดตหลังดาวเทียมผ่าน 1-3 วัน <b>คลิกบนแผนที่</b>เพื่อดูรายละเอียดตำบลที่ท่วม</div>
+    <div class="card"><h3>จำนวนแปลงพื้นที่ท่วมที่ตรวจพบ <button id="btnCsv" style="margin-left:auto;border:1px solid var(--line-mid);background:#fff;border-radius:7px;padding:3px 9px;font-family:inherit;font-size:11.5px;cursor:pointer">CSV รายอำเภอ</button></h3><div id="stats"><span class="spin"></span> กำลังนับ…</div></div>
+    <div class="card"><h3>ℹ️ วิธีอ่านข้อมูล</h3><div style="font-size:12px;color:var(--ink-2);line-height:1.65">
       • เลือกช่วงเวลา 1/3/7/30 วันจากแถบด้านบน<br>
       • กดชื่อจังหวัดเพื่อซูมไปยังพื้นที่<br>
       • ไม่มีสีบนแผนที่ = ดาวเทียมไม่พบน้ำท่วมขังในรอบนั้น<br>
@@ -164,22 +164,22 @@ async function loadStats(){
   const parts = await Promise.all(PROVINCES.map(async p=>({ p, n: await countProv(period, p.code) })));
   const anyFlood = parts.some(x=>x.n>0);
   let html = parts.map(({p,n})=>{
-    const c = n==null?'#9ca3af': n>0?'#dc2626':'#22c55e';
+    const c = n==null?'var(--ink-3)': n>0?'var(--st-danger)':'var(--st-normal)';
     const t = n==null?'โหลดไม่ได้': n>0? n.toLocaleString('th-TH')+' แปลง':'ไม่พบ';
     return `<div class="provcard" onclick="goProv('${p.code}')"><span>${p.name}</span><span class="badge" style="background:${c}">${t}</span></div>`;
-  }).join('') + (anyFlood?'' :`<div style="font-size:12px;color:#16a34a;margin-top:4px">✅ ช่วง ${labelOf(period)}ที่ผ่านมา ดาวเทียมไม่พบน้ำท่วมขังใน 5 จังหวัด</div>`);
+  }).join('') + (anyFlood?'' :`<div style="font-size:12px;color:var(--st-normal);margin-top:4px">ช่วง ${labelOf(period)}ที่ผ่านมา ดาวเทียมไม่พบน้ำท่วมขังใน 5 จังหวัด</div>`);
   if(compareMode){
     const partsB = await Promise.all(PROVINCES.map(async p=>({ p, n: await countProv(periodB, p.code) })));
     const row = (p, a, b)=>{
       const d = (a!=null&&b!=null)? (a-b) : null;
-      const dTxt = d==null?'—': (d>0?`▲ +${d}`: d<0?`▼ ${d}`:'0');
-      const dc = d>0?'#dc2626': d<0?'#16a34a':'#64748b';
-      return `<tr><td>${p.name}</td><td style="text-align:right">${a==null?'—':a.toLocaleString('th-TH')}</td><td style="text-align:right">${b==null?'—':b.toLocaleString('th-TH')}</td><td style="text-align:right;color:${dc}">${dTxt}</td></tr>`;
+      const dTxt = d==null?'…': (d>0?`▲ +${d}`: d<0?`▼ ${d}`:'0');
+      const dc = d>0?'var(--st-danger)': d<0?'var(--st-normal)':'var(--ink-3)';
+      return `<tr><td>${p.name}</td><td style="text-align:right">${a==null?'…':a.toLocaleString('th-TH')}</td><td style="text-align:right">${b==null?'…':b.toLocaleString('th-TH')}</td><td style="text-align:right;color:${dc}">${dTxt}</td></tr>`;
     };
-    html += `<div style="margin-top:10px;border-top:1px dashed #e3e0dd;padding-top:8px">
-      <div style="font-size:12px;font-weight:700;color:#423d38;margin-bottom:4px">🔀 เทียบ: A=${labelOf(period)} vs B=${labelOf(periodB)}</div>
+    html += `<div style="margin-top:10px;border-top:1px dashed var(--line);padding-top:8px">
+      <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:4px">เทียบ: A=${labelOf(period)} vs B=${labelOf(periodB)}</div>
       <table style="width:100%;border-collapse:collapse;font-size:11.5px">
-        <thead><tr style="color:#64748b"><th style="text-align:left">จังหวัด</th><th style="text-align:right">A</th><th style="text-align:right">B</th><th style="text-align:right">A−B</th></tr></thead>
+        <thead><tr style="color:var(--ink-3)"><th style="text-align:left">จังหวัด</th><th style="text-align:right">A</th><th style="text-align:right">B</th><th style="text-align:right">A−B</th></tr></thead>
         <tbody>${PROVINCES.map((p,i)=>row(p, parts[i].n, partsB[i].n)).join('')}</tbody>
       </table></div>`;
   }
@@ -225,7 +225,7 @@ map.on('click', async e=>{
     const pr = fs[0].properties || {};
     const dateKeys = Object.keys(pr).filter(k=>/date|_at|sense|time/i.test(k) && pr[k]);
     pop.setContent(`
-      <b>🛰️ พบพื้นที่น้ำท่วม (${j.numberMatched ?? fs.length} แปลงบริเวณนี้)</b><br>
+      <b>พบพื้นที่น้ำท่วม (${j.numberMatched ?? fs.length} แปลงบริเวณนี้)</b><br>
       ${pr.tb_tn?`${pr.tb_tn} ${pr.ap_tn||''} ${pr.pv_tn||''}<br>`:''}
       ${pr.area_rai?`เนื้อที่แปลงแรก ~${(+pr.area_rai).toFixed(1)} ไร่<br>`:''}
       ${dateKeys.slice(0,2).map(k=>`${k}: ${String(pr[k]).slice(0,16)}`).join('<br>')}`);
@@ -261,10 +261,11 @@ document.getElementById('btnCsv').onclick = exportCsv;
 setLayer();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="js/supabase-client.js?v=2"></script>
+<script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
-<script src="js/views.js?v=1" defer></script>
+<script src="js/views.js?v=2" defer></script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
+<script src="js/tabbar.js?v=1" defer></script>
 </body>
 </html>

@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#423d38">
+<meta name="theme-color" content="#102029">
 <title>เช็คพื้นที่ฉัน | One Map ชายแดนใต้</title>
-<meta name="description" content="เช็คความเสี่ยงน้ำท่วมพื้นที่คุณในหน้าเดียว — ระดับความเสี่ยง ฝนข้างหน้า สถานีน้ำใกล้สุด และศูนย์พักพิงที่เปิด พร้อมปุ่มนำทาง">
+<meta name="description" content="เช็คความเสี่ยงน้ำท่วมพื้นที่คุณในหน้าเดียว · ระดับความเสี่ยง ฝนข้างหน้า สถานีน้ำใกล้สุด และศูนย์พักพิงที่เปิด พร้อมปุ่มนำทาง">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📍</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--orange:#fe6e00;--navy:#57504a;--navy-d:#423d38;--outline:#e3e0dd;--outline-strong:#d1d5dc;--shell:rgba(0,0,0,.72)}
+:root{--bg:var(--paper);--ink:var(--ink);--muted:var(--ink-3);--orange:var(--signal);--navy:var(--ink-2);--navy-d:var(--ink);--outline:var(--line);--outline-strong:var(--line-mid);--shell:rgba(0,0,0,.72)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%}
 body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
@@ -36,33 +36,33 @@ select{padding:10px 12px;border:1px solid var(--outline-strong);border-radius:9p
 .btn{display:inline-flex;align-items:center;gap:6px;background:var(--navy);color:#fff;border:none;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;border-radius:9px;cursor:pointer;text-decoration:none}
 .btn.o{background:var(--orange)}
 .muted{color:var(--muted);font-size:12.5px;line-height:1.6}
-.bar{height:9px;background:#eef2f7;border-radius:99px;overflow:hidden;margin:6px 0}
+.bar{height:9px;background:var(--card-2);border-radius:99px;overflow:hidden;margin:6px 0}
 .bar i{display:block;height:100%;border-radius:99px}
 .hide{display:none!important}
-footer{background:var(--navy-d);color:#cfc8c0;font-size:10.5px;padding:6px 14px;display:flex;gap:10px;flex-wrap:wrap}
-footer a{color:#ffb74d;text-decoration:none}
+footer{background:var(--navy-d);color:var(--ink-3);font-size:10.5px;padding:6px 14px;display:flex;gap:10px;flex-wrap:wrap}
+footer a{color:var(--st-watch);text-decoration:none}
 </style>
-<link rel="stylesheet" href="shared.css?v=2">
+<link rel="stylesheet" href="shared.css?v=3">
 </head>
 <body>
 <header>
-  <h1>📍 เช็คพื้นที่ฉัน<small>บ้านฉันเสี่ยงน้ำท่วมไหม — คำตอบในหน้าเดียว</small></h1>
+  <h1>เช็คพื้นที่ฉัน<small>บ้านฉันเสี่ยงน้ำท่วมไหม · คำตอบในหน้าเดียว</small></h1>
   <nav class="navtab" aria-label="เมนูหลัก">
-    <a href="index.html">🌤️ หน้าแรก</a>
-    <a href="check.html" class="on">📍 เช็คพื้นที่ฉัน</a>
-    <a href="map.html">🗺️ ระดับน้ำ</a>
-    <a href="shelter.html">🏠 ศูนย์พักพิง</a>
-    <a href="alert.html">🔔 แจ้งเตือน</a>
+    <a href="index.html">หน้าแรก</a>
+    <a href="check.html" class="on">เช็คพื้นที่ฉัน</a>
+    <a href="map.html">ระดับน้ำ</a>
+    <a href="shelter.html">ศูนย์พักพิง</a>
+    <a href="alert.html">แจ้งเตือน</a>
   </nav>
 </header>
 
 <div id="content">
   <div class="inputbar">
     <h2>เลือกพื้นที่ของคุณ</h2>
-    <button class="big" id="btnGeo">📍 ใช้ตำแหน่งของฉัน</button>
+    <button class="big" id="btnGeo">ใช้ตำแหน่งของฉัน</button>
     <div class="row">
       <select id="provSel">
-        <option value="">— หรือเลือกจังหวัด —</option>
+        <option value=""> · หรือเลือกจังหวัด · </option>
         <option value="สตูล">สตูล</option><option value="สงขลา">สงขลา</option>
         <option value="ปัตตานี">ปัตตานี</option><option value="ยะลา">ยะลา</option>
         <option value="นราธิวาส">นราธิวาส</option>
@@ -72,60 +72,60 @@ footer a{color:#ffb74d;text-decoration:none}
   </div>
 
   <div id="result" class="hide">
-    <div class="risk" id="riskCard"><div class="lv" id="riskLv">—</div><div class="ds" id="riskDs"></div></div>
+    <div class="risk" id="riskCard"><div class="lv" id="riskLv">…</div><div class="ds" id="riskDs"></div></div>
 
     <div class="card">
-      <div class="hd">🌧️ ฝนที่กำลังจะมา</div>
-      <div class="num" id="rainNow">—</div>
-      <div class="muted" id="rain24">—</div>
+      <div class="hd">ฝนที่กำลังจะมา</div>
+      <div class="num" id="rainNow">…</div>
+      <div class="muted" id="rain24">…</div>
     </div>
 
     <div class="card">
-      <div class="hd">🌊 สถานีน้ำใกล้พื้นที่</div>
-      <div class="num" id="stName">—</div>
-      <div class="bar"><i id="stBar" style="width:0%;background:#16a34a"></i></div>
+      <div class="hd">สถานีน้ำใกล้พื้นที่</div>
+      <div class="num" id="stName">…</div>
+      <div class="bar"><i id="stBar" style="width:0%;background:var(--st-normal)"></i></div>
       <div class="muted" id="stDs"></div>
     </div>
 
     <div class="card">
-      <div class="hd">🔁 พื้นที่นี้เป็นจุดท่วมซ้ำซากไหม</div>
+      <div class="hd">พื้นที่นี้เป็นจุดท่วมซ้ำซากไหม</div>
       <div class="muted" id="repeatDs">ดูแผนที่พื้นที่น้ำท่วมซ้ำซาก (ข้อมูลดาวเทียม GISTDA) เพื่อตรวจสอบตำแหน่งของคุณ</div>
       <a class="btn" style="margin-top:8px" href="repeat.html" target="_blank">เปิดแผนที่เสี่ยงซ้ำซาก →</a>
     </div>
 
     <div class="card">
-      <div class="hd">🏠 ศูนย์พักพิงใกล้สุดที่เปิด</div>
-      <div class="num" id="shName">—</div>
+      <div class="hd">ศูนย์พักพิงใกล้สุดที่เปิด</div>
+      <div class="num" id="shName">…</div>
       <div class="muted" id="shDs"></div>
       <div class="row" id="shBtns"></div>
     </div>
 
     <div class="card">
-      <div class="hd">🔔 อยากได้รับแจ้งเตือนล่วงหน้า?</div>
+      <div class="hd">อยากได้รับแจ้งเตือนล่วงหน้า?</div>
       <div class="muted">รับข้อความเตือนเมื่อระดับน้ำใกล้บ้านคุณสูงถึงเกณฑ์ ผ่าน LINE</div>
       <a class="btn o" style="margin-top:8px" href="alert.html">ตั้งรับแจ้งเตือน →</a>
     </div>
   </div>
 
-  <div id="loading" class="hide muted" style="text-align:center;padding:20px">⏳ กำลังประเมินสถานการณ์…</div>
+  <div id="loading" class="hide muted" style="text-align:center;padding:20px">กำลังประเมินสถานการณ์…</div>
 </div>
 
 <footer>
-  <span>🌊 waterchaidantai — One Map ชายแดนใต้</span>
+  <span>waterchaidantai · One Map ชายแดนใต้</span>
   <span class="muted">พยากรณ์: Open-Meteo · ระดับน้ำ: thaiwater.net (สสน.)</span>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="js/supabase-client.js"></script>
+<script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
-<script src="js/views.js?v=1" defer></script>
+<script src="js/views.js?v=2" defer></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = v => { const n=parseFloat(v); return isNaN(n)?null:n; };
 const thName = o => (o&&typeof o==='object')?(o.th||o.en||''):(o||'');
-const fmt1 = n => (n==null?'—':(Math.round(n*10)/10));
+const fmt1 = n => (n==null?'…':(Math.round(n*10)/10));
 const TW_API='https://api-v3.thaiwater.net/api/v1/thaiwater30';
 const PROV_CODE={'สตูล':'91','สงขลา':'90','ปัตตานี':'94','ยะลา':'95','นราธิวาส':'96'};
 const PROV_CENTER={'สตูล':[6.62,100.07],'สงขลา':[7.19,100.60],'ปัตตานี':[6.87,101.25],'ยะลา':[6.54,101.28],'นราธิวาส':[6.42,101.82]};
@@ -199,10 +199,10 @@ function renderRain(r){
 function renderStation(s){
   if(!s){ $('stName').textContent='ไม่พบข้อมูลสถานีในจังหวัดนี้'; $('stDs').textContent=''; return; }
   $('stName').innerHTML=`${esc(s.code)} ${esc(s.name)} <span class="muted">(อ.${esc(s.amphoe)})</span>`;
-  const pct=Math.min(120,Math.round(s.pct)); const c=s.pct>=100?'#dc2626':s.pct>=80?'#ea580c':s.pct>=60?'#ca8a04':'#16a34a';
+  const pct=Math.min(120,Math.round(s.pct)); const c=s.pct>=100?'var(--st-danger)':s.pct>=80?'var(--st-warn)':s.pct>=60?'var(--st-watch)':'var(--st-normal)';
   $('stBar').style.width=Math.min(100,pct)+'%'; $('stBar').style.background=c;
   const lbl=s.pct>=100?'ล้นตลิ่งแล้ว':s.pct>=80?'ใกล้ล้นตลิ่ง เฝ้าระวัง':s.pct>=60?'ระดับค่อนข้างสูง':'ระดับปกติ';
-  $('stDs').innerHTML=`ระดับน้ำ <b>${Math.round(s.pct)}%</b> ของความจุลำน้ำ — ${lbl}`;
+  $('stDs').innerHTML=`ระดับน้ำ <b>${Math.round(s.pct)}%</b> ของความจุลำน้ำ · ${lbl}`;
 }
 function renderShelter(s, pos){
   const btns=$('shBtns'); btns.innerHTML='';
@@ -215,17 +215,17 @@ function renderShelter(s, pos){
     const dist=s._d!=null?` · ห่าง ~${s._d<1?Math.round(s._d*1000)+' ม.':s._d.toFixed(1)+' กม.'}`:'';
     const occ=(s.capacity!=null)?` · ${s.occupancy||0}/${s.capacity} คน`:'';
     $('shDs').textContent=`อ.${s.amphoe||'-'}${occ}${dist}`;
-    btns.innerHTML=`<a class="btn o" target="_blank" href="https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lon}">📍 นำทาง</a>`+
-      (s.contact_phone?`<a class="btn" href="tel:${String(s.contact_phone).replace(/[^0-9]/g,'')}">📞 โทร</a>`:'');
+    btns.innerHTML=`<a class="btn o" target="_blank" href="https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lon}">นำทาง</a>`+
+      (s.contact_phone?`<a class="btn" href="tel:${String(s.contact_phone).replace(/[^0-9]/g,'')}">โทร</a>`:'');
   }
 }
 function renderRisk(rain, st){
   const pct=st?st.pct:0, r24=rain.next24||0;
   let lv,c,ds;
-  if(pct>=100||r24>=200){ lv='🔴 เสี่ยงสูงมาก'; c='#dc2626'; ds='ควรเตรียมอพยพ ติดตามประกาศทางการ และเก็บของสำคัญขึ้นที่สูง'; }
-  else if(pct>=80||r24>=150){ lv='🟠 เตรียมพร้อม'; c='#ea580c'; ds='ยกของขึ้นที่สูง เตรียมกระเป๋าฉุกเฉิน และดูเส้นทาง/ศูนย์พักพิงไว้'; }
-  else if(pct>=60||r24>=80){ lv='🟡 เฝ้าระวัง'; c='#ca8a04'; ds='ติดตามสถานการณ์ฝนและระดับน้ำอย่างใกล้ชิด'; }
-  else{ lv='🟢 ปกติ'; c='#16a34a'; ds='สถานการณ์ปกติ แต่ควรติดตามพยากรณ์เป็นระยะ'; }
+  if(pct>=100||r24>=200){ lv='🔴 เสี่ยงสูงมาก'; c='var(--st-danger)'; ds='ควรเตรียมอพยพ ติดตามประกาศทางการ และเก็บของสำคัญขึ้นที่สูง'; }
+  else if(pct>=80||r24>=150){ lv='🟠 เตรียมพร้อม'; c='var(--st-warn)'; ds='ยกของขึ้นที่สูง เตรียมกระเป๋าฉุกเฉิน และดูเส้นทาง/ศูนย์พักพิงไว้'; }
+  else if(pct>=60||r24>=80){ lv='🟡 เฝ้าระวัง'; c='var(--st-watch)'; ds='ติดตามสถานการณ์ฝนและระดับน้ำอย่างใกล้ชิด'; }
+  else{ lv='🟢 ปกติ'; c='var(--st-normal)'; ds='สถานการณ์ปกติ แต่ควรติดตามพยากรณ์เป็นระยะ'; }
   $('riskCard').style.background=c; $('riskLv').textContent=lv; $('riskDs').textContent=ds;
 }
 
@@ -239,11 +239,12 @@ $('btnGeo').onclick=()=>{
     let best='นราธิวาส',bd=1e9;
     for(const k in PROV_CENTER){ const d=haversine(pos[0],pos[1],PROV_CENTER[k][0],PROV_CENTER[k][1]); if(d<bd){bd=d;best=k;} }
     $('provSel').value=best; run(best,pos);
-  }, e=>{ $('btnGeo').textContent='📍 ใช้ตำแหน่งของฉัน'; alert('หาตำแหน่งไม่ได้: '+e.message+' — โปรดเลือกจังหวัด'); }, {enableHighAccuracy:true,timeout:10000});
+  }, e=>{ $('btnGeo').textContent='📍 ใช้ตำแหน่งของฉัน'; alert('หาตำแหน่งไม่ได้: '+e.message+' · โปรดเลือกจังหวัด'); }, {enableHighAccuracy:true,timeout:10000});
 };
 $('provSel').onchange=e=>{ if(e.target.value) run(e.target.value,null); };
 </script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
+<script src="js/tabbar.js?v=1" defer></script>
 </body>
 </html>

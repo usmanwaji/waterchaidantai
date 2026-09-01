@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#423d38">
+<meta name="theme-color" content="#102029">
 <title>ผู้ดูแลระบบ | One Map ชายแดนใต้</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-:root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--elevated:#ffffff;--outline:#e3e0dd;--outline-strong:#d1d5dc;--orange:#fe6e00;--orange-d:#ff6b00;--navy:#57504a;--navy-d:#423d38;--peach:#e3e0dd;--shell:rgba(0,0,0,.72);--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626}
+:root{--bg:var(--paper);--ink:var(--ink);--muted:var(--ink-3);--elevated:#ffffff;--outline:var(--line);--outline-strong:var(--line-mid);--orange:var(--signal);--orange-d:var(--signal-hover);--navy:var(--ink-2);--navy-d:var(--ink);--peach:var(--line);--shell:rgba(0,0,0,.72);--ok:var(--st-normal);--warn:var(--st-watch);--bad:var(--st-danger)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%}
 body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
@@ -39,9 +39,9 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
 .urow .when{color:var(--muted);font-size:10.5px;margin-top:2px}
 .urow .btns{display:flex;gap:6px;flex-shrink:0}
 .urow button{border:none;border-radius:8px;padding:6px 12px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer;color:#fff}
-.btn-approve{background:var(--ok)}.btn-approve:hover{background:#128a3e}
-.btn-reject{background:var(--bad)}.btn-reject:hover{background:#b91c1c}
-.btn-revoke{background:var(--muted)}.btn-revoke:hover{background:#5c564f}
+.btn-approve{background:var(--ok)}.btn-approve:hover{background:var(--st-normal)}
+.btn-reject{background:var(--bad)}.btn-reject:hover{background:var(--st-danger)}
+.btn-revoke{background:var(--muted)}.btn-revoke:hover{background:var(--ink-2)}
 .empty{color:var(--muted);font-size:12.5px;padding:6px 0}
 .pill{padding:1px 9px;border-radius:99px;font-size:10.5px;font-weight:600;color:#fff}
 
@@ -65,17 +65,18 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
   .gatebox{margin:32px auto;padding:22px 16px}
 }
 </style>
+<link rel="stylesheet" href="shared.css?v=3">
 </head>
 <body>
 
 <header>
-  <h1>🛠️ ผู้ดูแลระบบ<small>อนุมัติผู้ใช้งาน — One Map ชายแดนใต้</small></h1>
+  <h1>ผู้ดูแลระบบ<small>อนุมัติผู้ใช้งาน · One Map ชายแดนใต้</small></h1>
   <nav class="navtab" aria-label="เมนูหลัก">
-    <a href="index.html">🌤️ หน้าแรก</a>
-    <a href="route.html">🚗 เส้นทาง</a>
-    <a href="resources.html">🚜 ทรัพยากร</a>
-    <a href="eoc.html">🎛️ EOC</a>
-    <a href="people.html">🧓 กลุ่มเปราะบาง</a>
+    <a href="index.html">หน้าแรก</a>
+    <a href="route.html">เส้นทาง</a>
+    <a href="resources.html">ทรัพยากร</a>
+    <a href="eoc.html">EOC</a>
+    <a href="people.html">กลุ่มเปราะบาง</a>
   </nav>
   <div id="authBox"></div>
 </header>
@@ -85,41 +86,41 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
   <div id="panels" style="display:none">
 
     <div class="card">
-      <h2>⏳ รออนุมัติ <span class="cnt" id="cntPending">0</span></h2>
+      <h2>รออนุมัติ <span class="cnt" id="cntPending">0</span></h2>
       <div id="listPending"></div>
     </div>
 
     <div class="card">
-      <h2>✅ อนุมัติแล้ว <span class="cnt" id="cntApproved">0</span></h2>
+      <h2>อนุมัติแล้ว <span class="cnt" id="cntApproved">0</span></h2>
       <div id="listApproved"></div>
     </div>
 
     <div class="card">
-      <h2>🚫 ถูกปฏิเสธ <span class="cnt" id="cntRejected">0</span></h2>
+      <h2>ถูกปฏิเสธ <span class="cnt" id="cntRejected">0</span></h2>
       <div id="listRejected"></div>
     </div>
 
     <div class="card">
-      <h2>💓 สุขภาพแหล่งข้อมูล (Data Health) <button onclick="checkHealth()" style="margin-left:auto;border:1px solid var(--outline-strong);background:#fff;border-radius:7px;padding:4px 10px;font-family:inherit;font-size:12px;cursor:pointer">↻ ตรวจใหม่</button></h2>
+      <h2>สุขภาพแหล่งข้อมูล (Data Health) <button onclick="checkHealth()" style="margin-left:auto;border:1px solid var(--outline-strong);background:#fff;border-radius:7px;padding:4px 10px;font-family:inherit;font-size:12px;cursor:pointer">ตรวจใหม่</button></h2>
       <div id="healthList"><div class="empty">กำลังตรวจสอบ…</div></div>
       <div class="when" id="healthUpd" style="margin-top:4px"></div>
     </div>
 
     <div class="card">
-      <h2>🧾 บันทึกการดำเนินการ (Audit Log) <span class="cnt" id="cntAudit">0</span></h2>
+      <h2>บันทึกการดำเนินการ (Audit Log) <span class="cnt" id="cntAudit">0</span></h2>
       <div id="auditList"></div>
     </div>
 
   </div>
 </div>
 
-<script src="js/supabase-client.js?v=2"></script>
+<script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
-<script src="js/views.js?v=1" defer></script>
+<script src="js/views.js?v=2" defer></script>
 <script>
 'use strict';
 const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const fmtWhen = t => t ? new Date(t).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}) : '—';
+const fmtWhen = t => t ? new Date(t).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}) : '…';
 
 const PROVS = ['นราธิวาส','ปัตตานี','ยะลา','สงขลา','สตูล'];
 function scopeSelect(p){
@@ -203,28 +204,28 @@ async function loadAllProfiles(){
   document.getElementById('listPending').innerHTML = pending.length ? pending.map(p=>`
     <div class="urow">
       <div>
-        <div class="nm">${esc(p.full_name||'(ไม่ระบุชื่อ)')} ${p.role==='admin'?'<span class=\"pill\" style=\"background:#57504a\">แอดมิน</span>':''}</div>
+        <div class="nm">${esc(p.full_name||'(ไม่ระบุชื่อ)')} ${p.role==='admin'?'<span class=\"pill\" style=\"background:var(--ink-2)\">แอดมิน</span>':''}</div>
         <div class="em">${esc(p.email)}</div>
         <div class="when">สมัครเมื่อ ${fmtWhen(p.created_at)}</div>
       </div>
       <div class="btns">
-        <button class="btn-approve" onclick="setStatus('${p.id}','approved')">✓ อนุมัติ</button>
-        <button class="btn-reject" onclick="setStatus('${p.id}','rejected')">✕ ปฏิเสธ</button>
-        ${p.role==='admin' ? '' : `<button class="btn-reject" onclick="deleteUser('${p.id}','${esc(p.email)}')">🗑️ ลบ</button>`}
+        <button class="btn-approve" onclick="setStatus('${p.id}','approved')">อนุมัติ</button>
+        <button class="btn-reject" onclick="setStatus('${p.id}','rejected')">ปฏิเสธ</button>
+        ${p.role==='admin' ? '' : `<button class="btn-reject" onclick="deleteUser('${p.id}','${esc(p.email)}')">ลบ</button>`}
       </div>
     </div>`).join('') : '<div class="empty">ไม่มีคำขอรออนุมัติ</div>';
 
   document.getElementById('listApproved').innerHTML = approved.length ? approved.map(p=>`
     <div class="urow">
       <div>
-        <div class="nm">${esc(p.full_name||'(ไม่ระบุชื่อ)')} ${p.role==='admin'?'<span class=\"pill\" style=\"background:#57504a\">แอดมิน</span>':''}</div>
+        <div class="nm">${esc(p.full_name||'(ไม่ระบุชื่อ)')} ${p.role==='admin'?'<span class=\"pill\" style=\"background:var(--ink-2)\">แอดมิน</span>':''}</div>
         <div class="em">${esc(p.email)}</div>
         <div class="when">อนุมัติเมื่อ ${fmtWhen(p.approved_at)}</div>
         ${scopeSelect(p)}
       </div>
       <div class="btns">
         ${p.role==='admin' ? '' : `<button class="btn-revoke" onclick="setStatus('${p.id}','rejected')">เพิกถอนสิทธิ์</button>
-        <button class="btn-reject" onclick="deleteUser('${p.id}','${esc(p.email)}')">🗑️ ลบ</button>`}
+        <button class="btn-reject" onclick="deleteUser('${p.id}','${esc(p.email)}')">ลบ</button>`}
       </div>
     </div>`).join('') : '<div class="empty">ยังไม่มีผู้ใช้ที่อนุมัติแล้ว</div>';
 
@@ -235,8 +236,8 @@ async function loadAllProfiles(){
         <div class="em">${esc(p.email)}</div>
       </div>
       <div class="btns">
-        <button class="btn-approve" onclick="setStatus('${p.id}','approved')">✓ อนุมัติแทน</button>
-        <button class="btn-reject" onclick="deleteUser('${p.id}','${esc(p.email)}')">🗑️ ลบ</button>
+        <button class="btn-approve" onclick="setStatus('${p.id}','approved')">อนุมัติแทน</button>
+        <button class="btn-reject" onclick="deleteUser('${p.id}','${esc(p.email)}')">ลบ</button>
       </div>
     </div>`).join('') : '<div class="empty">ไม่มี</div>';
 }
@@ -266,21 +267,21 @@ watchAuthState({
   onSignedOut: () => {
     renderAuthHeader('signedout');
     showGateMessage(`
-      <h2 style="margin-bottom:8px">🔒 หน้านี้สำหรับผู้ดูแลระบบ</h2>
+      <h2 style="margin-bottom:8px">หน้านี้สำหรับผู้ดูแลระบบ</h2>
       <p style="color:var(--muted);font-size:13px">กรุณาเข้าสู่ระบบด้วยบัญชี Google ที่ได้รับสิทธิ์แอดมิน</p>
       <button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button>`);
   },
   onPending: (p) => {
     renderAuthHeader('pending', p);
-    showGateMessage(`<h2>⏳ บัญชีของคุณกำลังรออนุมัติ</h2><p style="color:var(--muted);font-size:13px;margin-top:6px">หน้านี้ใช้ได้เฉพาะผู้ดูแลระบบเท่านั้น</p>`);
+    showGateMessage(`<h2>บัญชีของคุณกำลังรออนุมัติ</h2><p style="color:var(--muted);font-size:13px;margin-top:6px">หน้านี้ใช้ได้เฉพาะผู้ดูแลระบบเท่านั้น</p>`);
   },
   onRejected: (p) => {
     renderAuthHeader('rejected', p);
-    showGateMessage(`<h2>🚫 ไม่มีสิทธิ์เข้าถึง</h2>`);
+    showGateMessage(`<h2>ไม่มีสิทธิ์เข้าถึง</h2>`);
   },
   onApproved: (p) => {
     renderAuthHeader('approved', p);
-    showGateMessage(`<h2>🚫 หน้านี้สำหรับผู้ดูแลระบบเท่านั้น</h2><p style="color:var(--muted);font-size:13px;margin-top:6px">บัญชีของคุณได้รับอนุมัติแล้ว แต่ไม่มีสิทธิ์แอดมิน</p>`);
+    showGateMessage(`<h2>หน้านี้สำหรับผู้ดูแลระบบเท่านั้น</h2><p style="color:var(--muted);font-size:13px;margin-top:6px">บัญชีของคุณได้รับอนุมัติแล้ว แต่ไม่มีสิทธิ์แอดมิน</p>`);
   },
   onAdmin: (p) => {
     renderAuthHeader('admin', p);
@@ -291,5 +292,6 @@ watchAuthState({
 });
 </script>
 <script src="js/pwa.js" defer></script>
+<script src="js/tabbar.js?v=1" defer></script>
 </body>
 </html>

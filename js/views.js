@@ -1,9 +1,9 @@
-/* js/views.js — ป้ายจำนวนผู้เข้าชม มุมขวาล่างของทุกหน้า
+/* js/views.js · ป้ายจำนวนผู้เข้าชม มุมขวาล่างของทุกหน้า
  * ใส่ในทุกหน้า (หลัง js/supabase-client.js):
  *   <script src="js/views.js" defer></script>
  *
  * - นับผ่าน RPC bump_page_view() ใน Supabase (supabase/schema-v9.sql)
- * - นับหน้าละ 1 ครั้งต่อ session (กด F5 ซ้ำไม่เพิ่มยอด) — ครั้งต่อไปอ่านอย่างเดียว
+ * - นับหน้าละ 1 ครั้งต่อ session (กด F5 ซ้ำไม่เพิ่มยอด) · ครั้งต่อไปอ่านอย่างเดียว
  * - ถ้ายังไม่ได้รัน schema-v9.sql หรือออฟไลน์ → ซ่อนป้ายไปเงียบ ๆ ไม่ขึ้น error
  * - ไม่เก็บ cookie / IP / ตัวตนผู้ใช้ ฝั่ง client เก็บแค่ flag ใน sessionStorage
  */
@@ -32,13 +32,13 @@
   css.textContent =
     '#viewCounter{position:fixed;right:10px;bottom:10px;z-index:900;' +
     'display:flex;align-items:baseline;gap:6px;' +
-    'background:rgba(66,61,56,.82);color:#f3f4f6;' +
+    'background:rgba(66,61,56,.82);color:var(--card-2);' +
     'font-family:inherit;font-size:11.5px;line-height:1;font-variant-numeric:tabular-nums;' +
     'padding:6px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.12);' +
     'box-shadow:0 2px 8px rgba(0,0,0,.22);backdrop-filter:blur(4px);' +
     'pointer-events:none;user-select:none}' +
     '#viewCounter b{font-weight:700;font-size:12.5px;color:#fff}' +
-    '#viewCounter small{font-size:10px;color:#cfc8c0}' +
+    '#viewCounter small{font-size:10px;color:var(--ink-3)}' +
     /* หน้าที่มีแผนที่เต็มจอ: ยกขึ้นเหนือแถบเครดิต Leaflet มุมขวาล่าง */
     '#viewCounter.above-attrib{bottom:26px}' +
     '@media(max-width:768px){#viewCounter{right:8px;bottom:8px;font-size:11px;padding:5px 9px}' +
@@ -55,7 +55,7 @@
     window.addEventListener('load', liftAboveLeaflet);
   }
 
-  /* แถบเครดิต Leaflet อยู่มุมขวาล่างเหมือนกัน — ต้องไม่บัง (เงื่อนไขการใช้แผนที่ OSM) */
+  /* แถบเครดิต Leaflet อยู่มุมขวาล่างเหมือนกัน · ต้องไม่บัง (เงื่อนไขการใช้แผนที่ OSM) */
   function liftAboveLeaflet() {
     if (document.querySelector('.leaflet-control-attribution')) el.classList.add('above-attrib');
   }
@@ -71,7 +71,7 @@
       t.textContent = '· วันนี้ ' + fmt(today);
       el.append(t);
     }
-    el.title = 'ผู้เข้าชมทั้งเว็บ ' + fmt(total) + ' ครั้ง — วันนี้ ' + fmt(today) + ' ครั้ง';
+    el.title = 'ผู้เข้าชมทั้งเว็บ ' + fmt(total) + ' ครั้ง · วันนี้ ' + fmt(today) + ' ครั้ง';
     el.hidden = false;
   }
 

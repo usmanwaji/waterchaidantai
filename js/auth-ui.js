@@ -1,4 +1,4 @@
-/* js/auth-ui.js — ปุ่ม "เข้าสู่ระบบด้วย Google" บน header ทุกหน้า
+/* js/auth-ui.js · ปุ่ม "เข้าสู่ระบบด้วย Google" บน header ทุกหน้า
  * ต้องโหลดหลัง supabase SDK + js/supabase-client.js:
  *   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
  *   <script src="js/supabase-client.js?v=2"></script>
@@ -7,7 +7,7 @@
  */
 'use strict';
 (function () {
-  // SDK/ไคลเอนต์โหลดไม่สำเร็จ (เช่น ออฟไลน์) — ไม่ต้องแสดงปุ่ม อย่าทำหน้าพัง
+  // SDK/ไคลเอนต์โหลดไม่สำเร็จ (เช่น ออฟไลน์) · ไม่ต้องแสดงปุ่ม อย่าทำหน้าพัง
   if (!window.supabase || typeof sb === 'undefined' || typeof watchAuthState !== 'function') return;
 
   var header = document.querySelector('header');
@@ -31,7 +31,7 @@
   var G = '<svg width="15" height="15" viewBox="0 0 48 48" aria-hidden="true">' +
     '<path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.7-.4-3.9z"/>' +
     '<path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>' +
-    '<path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.4-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>' +
+    '<path fill="var(--st-normal)" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.4-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>' +
     '<path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.7-.4-3.9z"/></svg>';
 
   function esc(s) {
@@ -65,5 +65,5 @@
       onApproved:  function (p) { showChip(p, '✅', 'สมาชิก (อนุมัติแล้ว)'); },
       onAdmin:     function (p) { showChip(p, '🛡️', 'ผู้ดูแลระบบ'); }
     });
-  } catch (e) { /* เงียบ — ปุ่มไม่ขึ้นดีกว่าหน้าพัง */ }
+  } catch (e) { /* เงียบ · ปุ่มไม่ขึ้นดีกว่าหน้าพัง */ }
 })();

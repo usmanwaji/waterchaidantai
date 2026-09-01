@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#423d38">
+<meta name="theme-color" content="#102029">
 <title>เส้นทางน้ำท่วม | One Map ชายแดนใต้</title>
-<meta name="description" content="ตรวจสอบเส้นทางน้ำท่วม ความลึกน้ำบนถนน และคำแนะนำการเดินทางตามประเภทรถ — สตูล สงขลา ปัตตานี ยะลา นราธิวาส">
+<meta name="description" content="ตรวจสอบเส้นทางน้ำท่วม ความลึกน้ำบนถนน และคำแนะนำการเดินทางตามประเภทรถ · สตูล สงขลา ปัตตานี ยะลา นราธิวาส">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚗</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-:root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--panel:#ffffff;--orange:#fe6e00;--orange-d:#ff6b00;--orange-warm:#ffb74d;--navy:#57504a;--navy-d:#423d38;--peach:#e3e0dd;--outline:#e3e0dd;--outline-strong:#d1d5dc;--elevated:#ffffff;--surface:#f3f4f6;--shell:rgba(0,0,0,.72);--danger:#dc2626;--warn:#f59e0b;--ok:#16a34a}
+:root{--bg:var(--paper);--ink:var(--ink);--muted:var(--ink-3);--panel:#ffffff;--orange:var(--signal);--orange-d:var(--signal-hover);--orange-warm:var(--st-watch);--navy:var(--ink-2);--navy-d:var(--ink);--peach:var(--line);--outline:var(--line);--outline-strong:var(--line-mid);--elevated:#ffffff;--surface:var(--card-2);--shell:rgba(0,0,0,.72);--danger:var(--st-danger);--warn:var(--st-watch);--ok:var(--st-normal)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden}
@@ -43,27 +43,27 @@ input[type=text], input[type=number], input[type=tel], input[type=file], select,
 .vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:4px}
 .vbtn{border:1.5px solid var(--outline-strong);background:#fff;border-radius:9px;padding:8px 4px;text-align:center;cursor:pointer;font-size:11px;color:var(--ink)}
 .vbtn .ic{font-size:18px;display:block}
-.vbtn.on{border-color:var(--orange);background:#fff3ea;color:var(--orange-d);font-weight:700}
+.vbtn.on{border-color:var(--orange);background:var(--st-warn-wash);color:var(--orange-d);font-weight:700}
 #btnRoute{width:100%;margin-top:12px;padding:9px;border:none;background:var(--orange);color:#fff;font-family:inherit;font-weight:700;font-size:13.5px;border-radius:9px;cursor:pointer}
 #btnRoute:hover{background:var(--orange-d)}
-#btnRoute:disabled{background:#cbd5e1;cursor:not-allowed}
+#btnRoute:disabled{background:var(--line-mid);cursor:not-allowed}
 #btnSwap{border:1px solid var(--outline-strong);background:#fff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:14px;color:var(--muted)}
 
 #resultBox{padding:12px 14px;border-bottom:1px solid var(--outline);display:none}
 #resultBox.show{display:block}
 .verdict{border-radius:10px;padding:10px 12px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.verdict.ok{background:#dcfce7;color:#15803d}
-.verdict.warn{background:#fef3c7;color:#92400e}
-.verdict.bad{background:#fee2e2;color:#b91c1c}
+.verdict.ok{background:var(--st-normal-wash);color:var(--st-normal)}
+.verdict.warn{background:var(--st-watch-wash);color:var(--st-warn)}
+.verdict.bad{background:var(--st-danger-wash);color:var(--st-danger)}
 .rmeta{font-size:12px;color:var(--muted);display:flex;gap:14px;margin-bottom:6px}
 .altbtn{display:inline-block;font-size:11px;padding:3px 9px;border:1px solid var(--outline-strong);border-radius:99px;margin:2px 4px 2px 0;cursor:pointer;background:#fff}
 .altbtn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
-.floodhit{border-left:4px solid var(--danger);background:#fff5f5;border-radius:6px;padding:6px 8px;font-size:11.5px;margin-top:5px;cursor:pointer}
+.floodhit{border-left:4px solid var(--danger);background:var(--st-danger-wash);border-radius:6px;padding:6px 8px;font-size:11.5px;margin-top:5px;cursor:pointer}
 .floodhit b{color:var(--danger)}
 
 #floodList{padding:6px 14px}
 .frow{border:1px solid var(--outline);border-left-width:5px;border-radius:8px;padding:7px 10px;margin-bottom:6px;cursor:pointer;background:#fff;font-size:12px}
-.frow:hover{background:#f8fafc}
+.frow:hover{background:var(--card)}
 .frow .nm{font-weight:700;font-size:12.5px}
 .frow .sub{color:var(--muted);font-size:11px;margin-top:1px}
 .badge{padding:1px 8px;border-radius:99px;color:#fff;font-size:10.5px;font-weight:600;display:inline-block}
@@ -71,25 +71,25 @@ input[type=text], input[type=number], input[type=tel], input[type=file], select,
 #reportSec{padding:12px 14px;border-top:2px solid var(--peach)}
 #reportSec h3{font-size:12.5px;color:var(--navy-d);margin-bottom:6px}
 .gate{font-size:12.5px;line-height:1.7;padding:10px;border-radius:9px}
-.gate.pending{background:#fef3c7;color:#92400e}
-.gate.rejected{background:#fee2e2;color:#b91c1c}
-.gate.signedout{background:#f3f4f6;color:var(--muted)}
+.gate.pending{background:var(--st-watch-wash);color:var(--st-warn)}
+.gate.rejected{background:var(--st-danger-wash);color:var(--st-danger)}
+.gate.signedout{background:var(--card-2);color:var(--muted)}
 .gate button{margin-top:6px}
 
 .rtype{display:flex;gap:6px;margin-bottom:8px}
 .rtype button{flex:1;padding:7px 4px;border:1.5px solid var(--outline-strong);background:#fff;border-radius:9px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted)}
-.rtype button.on{border-color:var(--orange);background:#fff3ea;color:var(--orange-d)}
+.rtype button.on{border-color:var(--orange);background:var(--st-warn-wash);color:var(--orange-d)}
 .pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:4px}
 .pbtn{border:1.5px solid var(--outline-strong);background:#fff;border-radius:9px;padding:7px 3px;text-align:center;cursor:pointer;font-size:10.5px;color:var(--ink)}
 .pbtn .ic{font-size:16px;display:block}
-.pbtn.on{border-color:var(--ok);background:#dcfce7;color:#15803d;font-weight:700}
-.pin-btn { flex: 1; padding:8px; border:1.5px dashed var(--orange);background:#fff8f2;color:var(--orange-d);font-family:inherit;font-weight:600;font-size:11px;border-radius:9px;cursor:pointer; }
+.pbtn.on{border-color:var(--ok);background:var(--st-normal-wash);color:var(--st-normal);font-weight:700}
+.pin-btn { flex: 1; padding:8px; border:1.5px dashed var(--orange);background:var(--st-warn-wash);color:var(--orange-d);font-family:inherit;font-weight:600;font-size:11px;border-radius:9px;cursor:pointer; }
 .pin-btn.active { background:var(--orange);color:#fff;border-style:solid; }
-.pin-btn.done { background:#dcfce7;color:#15803d;border:1.5px solid #15803d; }
+.pin-btn.done { background:var(--st-normal-wash);color:var(--st-normal);border:1.5px solid var(--st-normal); }
 
 #btnSubmitReport{width:100%;margin-top:10px;padding:9px;border:none;background:var(--navy);color:#fff;font-family:inherit;font-weight:700;font-size:13px;border-radius:9px;cursor:pointer}
-#btnSubmitReport:hover{background:#3a352f}
-.note{font-size:10.5px;color:#94a3b8;margin-top:6px;line-height:1.5;padding:0 14px 10px}
+#btnSubmitReport:hover{background:var(--ink)}
+.note{font-size:10.5px;color:var(--ink-3);margin-top:6px;line-height:1.5;padding:0 14px 10px}
 
 /* Google Maps flood marker */
 .gm-flood-marker{border-radius:50% 50% 50% 4px;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:10px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);width:28px;height:28px;cursor:pointer}
@@ -97,9 +97,9 @@ input[type=text], input[type=number], input[type=tel], input[type=file], select,
 
 /* Google Places Autocomplete dropdown styling */
 .pac-container{font-family:'Noto Sans Thai',Tahoma,sans-serif;border-radius:0 0 8px 8px;border:1px solid var(--outline-strong);box-shadow:0 6px 18px rgba(0,0,0,.15);margin-top:-1px;z-index:10000!important}
-.pac-item{padding:7px 10px;font-size:12.5px;cursor:pointer;border-bottom:1px solid #f1f1f1;line-height:1.5}
-.pac-item:hover{background:#fff3ea}
-.pac-item-selected{background:#fff3ea}
+.pac-item{padding:7px 10px;font-size:12.5px;cursor:pointer;border-bottom:1px solid var(--card-2);line-height:1.5}
+.pac-item:hover{background:var(--st-warn-wash)}
+.pac-item-selected{background:var(--st-warn-wash)}
 .pac-icon{display:none}
 .pac-item-query{font-size:13px;color:var(--ink);font-weight:500}
 .pac-matched{font-weight:700;color:var(--orange-d)}
@@ -108,7 +108,7 @@ input[type=text], input[type=number], input[type=tel], input[type=file], select,
 .gm-style .gm-style-iw-c{font-family:'Noto Sans Thai',Tahoma,sans-serif;border-radius:10px;padding:0}
 .gm-style .gm-style-iw-d{font-size:12.5px;line-height:1.6;overflow:auto!important}
 
-footer{background:var(--navy-d);color:#cfc8c0;font-size:10.5px;padding:5px 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+footer{background:var(--navy-d);color:var(--ink-3);font-size:10.5px;padding:5px 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 footer a{color:var(--orange-warm);text-decoration:none}
 
 #btnSidebar{display:none}
@@ -130,22 +130,22 @@ footer a{color:var(--orange-warm);text-decoration:none}
 
 @supports(height:100dvh){html,body{height:100dvh}}
 </style>
-<link rel="stylesheet" href="shared.css?v=2">
+<link rel="stylesheet" href="shared.css?v=3">
 </head>
 <body>
 
 <header>
-  <h1>🚗 เส้นทางน้ำท่วม</h1>
+  <h1>เส้นทางน้ำท่วม</h1>
   <nav class="navtab" aria-label="เมนูหลัก">
-    <a href="index.html">🌤️ หน้าแรก</a>
-    <a href="map.html">🗺️ ระดับน้ำ</a>
-    <a href="forecast.html">🔮 คาดการณ์</a>
-    <a href="history.html">🛰️ ย้อนหลัง</a>
-    <a href="repeat.html">⚠️ พื้นที่เสี่ยง</a>
-    <a href="sim.html">🌊 แบบจำลอง</a>
-    <a href="shelter.html">🏠 ศูนย์พักพิง</a>
-    <a href="route.html" class="on">🚗 เส้นทาง</a>
-    <a href="resources.html">🚜 ทรัพยากร</a>
+    <a href="index.html">หน้าแรก</a>
+    <a href="map.html">ระดับน้ำ</a>
+    <a href="forecast.html">คาดการณ์</a>
+    <a href="history.html">ย้อนหลัง</a>
+    <a href="repeat.html">พื้นที่เสี่ยง</a>
+    <a href="sim.html">แบบจำลอง</a>
+    <a href="shelter.html">ศูนย์พักพิง</a>
+    <a href="route.html" class="on">เส้นทาง</a>
+    <a href="resources.html">ทรัพยากร</a>
   </nav>
   <div id="authBox"><span class="pill" style="background:rgba(255,255,255,.15)">กำลังตรวจสอบ…</span></div>
 </header>
@@ -155,7 +155,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
   <aside id="sidebar">
 
     <div class="sec">
-      <h3>🧭 หาเส้นทาง</h3>
+      <h3>หาเส้นทาง</h3>
       <label class="f">จุดเริ่มต้น</label>
       <input type="text" id="startInput" placeholder="พิมพ์ชื่อสถานที่ หรือ lat,lon" autocomplete="off">
       <div style="text-align:center;margin:4px 0"><button id="btnSwap" title="สลับต้นทาง/ปลายทาง">⇅</button></div>
@@ -165,13 +165,13 @@ footer a{color:var(--orange-warm);text-decoration:none}
       <label class="f">ประเภทรถ</label>
       <div class="vgrid" id="vgrid"></div>
 
-      <button id="btnRoute" onclick="findRoute()">🔍 ค้นหาเส้นทาง</button>
+      <button id="btnRoute" onclick="findRoute()">ค้นหาเส้นทาง</button>
     </div>
 
     <div id="resultBox"></div>
 
     <div class="sec" style="border-bottom:none;padding-bottom:6px">
-      <h3>⚠️ จุดน้ำท่วม / ถนนชำรุดล่าสุด <span id="floodCount" style="font-weight:400;color:var(--muted)"></span></h3>
+      <h3>จุดน้ำท่วม / ถนนชำรุดล่าสุด <span id="floodCount" style="font-weight:400;color:var(--muted)"></span></h3>
     </div>
     <div id="floodList"><span style="font-size:12px;color:var(--muted)">กำลังโหลด…</span></div>
 
@@ -185,17 +185,17 @@ footer a{color:var(--orange-warm);text-decoration:none}
 
 <footer>
   <span>เส้นทาง: Google Maps · จุดน้ำท่วม: รายงานโดยเจ้าหน้าที่ที่ได้รับอนุมัติ</span>
-  <span style="margin-left:auto">อยู่ระหว่างการทดลองปรับปรุง — <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a></span>
+  <span style="margin-left:auto">อยู่ระหว่างการทดลองปรับปรุง · <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a></span>
 </footer>
 
-<script src="js/supabase-client.js?v=2"></script>
+<script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
-<script src="js/views.js?v=1" defer></script>
+<script src="js/views.js?v=2" defer></script>
 <script>
 'use strict';
 
 /* ================================================================
-   Google Maps API Key — แก้ค่านี้เป็น API Key ของคุณ
+   Google Maps API Key · แก้ค่านี้เป็น API Key ของคุณ
    ================================================================ */
 const GOOGLE_MAPS_API_KEY = 'AIzaSyBQn9I9wIGZek05pVc-ST9i4tO8QnLiBtI';
 
@@ -355,7 +355,7 @@ async function findRoute(){
   } catch(e) {
     const box = document.getElementById('resultBox');
     box.className = 'show';
-    box.innerHTML = `<div class="verdict bad">⚠️ หาเส้นทางไม่สำเร็จ — ${esc(e.message)}</div>`;
+    box.innerHTML = `<div class="verdict bad">หาเส้นทางไม่สำเร็จ · ${esc(e.message)}</div>`;
   } finally {
     btn.disabled = false; btn.textContent = '🔍 ค้นหาเส้นทาง';
   }
@@ -433,7 +433,7 @@ function drawRoutes(evaluated){
   evaluated.forEach((e, i) => {
     const path = e.route.coordinates.map(c => ({ lat: c.lat, lng: c.lng }));
     const isActive = i === activeRouteIdx;
-    const color = isActive ? (e.passable ? '#16a34a' : '#dc2626') : '#94a3b8';
+    const color = isActive ? (e.passable ? 'var(--st-normal)' : 'var(--st-danger)') : 'var(--ink-3)';
     const polyline = new google.maps.Polyline({
       path: path, strokeColor: color, strokeWeight: isActive ? 6 : 4,
       strokeOpacity: isActive ? 0.9 : 0.5, zIndex: isActive ? 10 : 5, map: gMap
@@ -456,7 +456,7 @@ function renderFloodListOnMap(){
     if (f.status !== 'active') return;
     const blocked = isBlockedFor(f, vehicle);
     const isDamage = f.report_type === 'damage';
-    const color = isDamage ? (blocked ? '#7c3aed' : '#a78bfa') : (blocked ? '#dc2626' : '#f59e0b');
+    const color = isDamage ? (blocked ? '#7c3aed' : '#a78bfa') : (blocked ? 'var(--st-danger)' : 'var(--st-watch)');
 
     if (f.polyline) {
       const path = google.maps.geometry.encoding.decodePath(f.polyline);
@@ -518,23 +518,23 @@ function popupForReport(f, blocked){
       ? `<textarea id="upd_desc_${f.id}" rows="2" placeholder="สภาพล่าสุด เช่น ซ่อมแล้ว / ชำรุดมากขึ้น" style="width:100%;margin-top:4px;font-family:inherit;font-size:11.5px"></textarea>`
       : `<input type="number" id="upd_depth_${f.id}" placeholder="ความลึกใหม่ (ซม.)" style="width:100px;margin-top:4px"><br>`;
     updateBtn = `<hr style="margin:8px 0;border:none;border-top:1px solid #ddd">
-      <div style="background:#f9f9f9;padding:6px;border-radius:6px">
+      <div style="background:var(--card-2);padding:6px;border-radius:6px">
         <b>อัปเดตสถานการณ์</b><br>
         ${updField}
         <input type="file" id="upd_photo_${f.id}" accept="image/*" style="width:100%;margin-top:4px"><br>
         <button onclick="submitUpdate('${f.id}')" style="margin-top:6px;padding:4px 8px;background:var(--navy);color:#fff;border:none;border-radius:4px;cursor:pointer">บันทึกอัปเดต</button>
-        <button onclick="viewHistory('${f.id}')" style="margin-top:6px;margin-left:4px;padding:4px 8px;background:#e2e8f0;color:#333;border:none;border-radius:4px;cursor:pointer">ดูประวัติ</button>
-        <button onclick="deleteReport('${f.id}')" style="margin-top:6px;margin-left:4px;padding:4px 8px;background:var(--danger);color:#fff;border:none;border-radius:4px;cursor:pointer">🗑️ ลบหมุด</button>
+        <button onclick="viewHistory('${f.id}')" style="margin-top:6px;margin-left:4px;padding:4px 8px;background:var(--line);color:#333;border:none;border-radius:4px;cursor:pointer">ดูประวัติ</button>
+        <button onclick="deleteReport('${f.id}')" style="margin-top:6px;margin-left:4px;padding:4px 8px;background:var(--danger);color:#fff;border:none;border-radius:4px;cursor:pointer">ลบหมุด</button>
       </div>`;
   } else {
     updateBtn = `<hr style="margin:8px 0;border:none;border-top:1px solid #ddd">
-      <button onclick="viewHistory('${f.id}')" style="padding:4px 8px;background:#e2e8f0;color:#333;border:none;border-radius:4px;cursor:pointer">ดูประวัติการอัปเดต</button>`;
+      <button onclick="viewHistory('${f.id}')" style="padding:4px 8px;background:var(--line);color:#333;border:none;border-radius:4px;cursor:pointer">ดูประวัติการอัปเดต</button>`;
   }
 
   let headline, detailLine;
   if (isDamage) {
     const passable = (f.passable_vehicles||[]).map(id => { const v = VEHICLE_TYPES.find(x=>x.id===id); return v ? v.icon+' '+v.label : id; });
-    headline = blocked ? '🚧 ถนนชำรุด — รถประเภทนี้ผ่านไม่ได้' : '🚧 ถนนชำรุด — ผ่านได้แต่ต้องระวัง';
+    headline = blocked ? '🚧 ถนนชำรุด · รถประเภทนี้ผ่านไม่ได้' : '🚧 ถนนชำรุด · ผ่านได้แต่ต้องระวัง';
     detailLine = `${f.road_name?esc(f.road_name)+'<br>':''}สภาพ: ${esc(f.description||'-')}<br>รถที่ผ่านได้: <b>${passable.length ? passable.join(', ') : 'ไม่มี (ปิดถนน)'}</b>`;
   } else {
     headline = blocked ? '🔴 รถประเภทนี้ผ่านไม่ได้' : '🟠 ผ่านได้แต่ต้องระวัง';
@@ -542,8 +542,8 @@ function popupForReport(f, blocked){
   }
 
   const stale = isStale(f);
-  const staleStr = stale ? `<div style="margin-top:6px;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:4px 7px;color:#9a3412;font-size:11px">⏳ ยังไม่ยืนยันซ้ำ (อายุ >${STALE_H} ชม.) — สถานการณ์อาจเปลี่ยนแล้ว${canEdit?` <button onclick="confirmStill('${f.id}')" style="margin-left:4px;font-family:inherit;font-size:11px;font-weight:600;background:#16a34a;color:#fff;border:none;border-radius:5px;padding:2px 8px;cursor:pointer">✓ ยังท่วมอยู่</button>`:''}</div>` : '';
-  const hotline = `<br><a href="tel:1784" style="display:inline-block;margin-top:5px;background:var(--danger,#dc2626);color:#fff;text-decoration:none;padding:3px 9px;border-radius:6px;font-weight:600;font-size:11.5px">📞 สายด่วน ปภ. 1784</a>`;
+  const staleStr = stale ? `<div style="margin-top:6px;background:var(--st-warn-wash);border:1px solid var(--st-warn-wash);border-radius:6px;padding:4px 7px;color:var(--st-warn);font-size:11px">ยังไม่ยืนยันซ้ำ (อายุ >${STALE_H} ชม.) · สถานการณ์อาจเปลี่ยนแล้ว${canEdit?` <button onclick="confirmStill('${f.id}')" style="margin-left:4px;font-family:inherit;font-size:11px;font-weight:600;background:var(--st-normal);color:#fff;border:none;border-radius:5px;padding:2px 8px;cursor:pointer">ยังท่วมอยู่</button>`:''}</div>` : '';
+  const hotline = `<br><a href="tel:1784" style="display:inline-block;margin-top:5px;background:var(--danger,var(--st-danger));color:#fff;text-decoration:none;padding:3px 9px;border-radius:6px;font-weight:600;font-size:11.5px">สายด่วน ปภ. 1784</a>`;
   return `<div style="font-family:'Noto Sans Thai',Tahoma,sans-serif;font-size:12.5px;line-height:1.6;padding:4px;width:220px${stale?';opacity:.92':''}">
     <b>${headline}</b><br>
     ${detailLine}<br>
@@ -613,7 +613,7 @@ window.viewHistory = async function(id) {
     let p = h.photo_url ? ` <a href="${esc(h.photo_url)}" target="_blank">[รูปภาพ]</a>` : '';
     let name = h.profiles ? h.profiles.full_name : 'แอดมิน';
     const what = h.depth_cm != null ? `ปรับเป็น <b>${h.depth_cm} ซม.</b>` : `สภาพ: <b>${esc(h.description||'-')}</b>`;
-    return `<div style="margin-top:4px;padding:4px;background:#f1f5f9;border-radius:4px;font-size:11px">
+    return `<div style="margin-top:4px;padding:4px;background:var(--card-2);border-radius:4px;font-size:11px">
       ${new Date(h.updated_at).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'})}<br>
       ${what} โดย ${esc(name)}${p}
     </div>`;
@@ -631,10 +631,10 @@ function renderResultBox(evaluated){
   } else if (active.blocking.length === 0) {
     verdictClass='warn'; verdictText=`🟠 ${vehicle.label} ผ่านได้ แต่มี ${active.hits.length} จุดต้องระวัง (น้ำท่วม/ชำรุด)`;
   } else {
-    verdictClass='bad'; verdictText=`🔴 ${vehicle.label} ผ่าน "ไม่ได้" — เจอ ${active.blocking.length} จุดกีดขวาง`;
+    verdictClass='bad'; verdictText=`🔴 ${vehicle.label} ผ่าน "ไม่ได้" · เจอ ${active.blocking.length} จุดกีดขวาง`;
   }
   const altBtns = evaluated.map((e,i)=>`<span class="altbtn ${i===activeRouteIdx?'on':''}" onclick="pickAltRoute(${i})">${e.passable ? `เส้นทาง ${i+1} ✓` : `เส้นทาง ${i+1} (${e.blocking.length} กีดขวาง)`}</span>`).join('');
-  box.innerHTML = `<div class="verdict ${verdictClass}">${verdictText}</div><div class="rmeta"><span>📏 ${km} กม.</span><span>⏱️ ${esc(active.route.durationText)}</span></div><div>${altBtns}</div>`;
+  box.innerHTML = `<div class="verdict ${verdictClass}">${verdictText}</div><div class="rmeta"><span>${km} กม.</span><span>${esc(active.route.durationText)}</span></div><div>${altBtns}</div>`;
 }
 
 function pickAltRoute(i){ activeRouteIdx = i; evaluateAndRender(); }
@@ -653,16 +653,16 @@ async function loadFloodReports(){
 function renderFloodList(){
   const el = document.getElementById('floodList');
   document.getElementById('floodCount').textContent = allFloodReports.length ? `(${allFloodReports.length})` : '';
-  if (!allFloodReports.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:6px 0">✅ ยังไม่มีรายงานที่ใช้งานอยู่</div>'; return; }
+  if (!allFloodReports.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:6px 0">ยังไม่มีรายงานที่ใช้งานอยู่</div>'; return; }
   el.innerHTML = allFloodReports.map(f=>{
     const isDamage = f.report_type === 'damage';
-    const c = isDamage ? '#7c3aed' : (f.depth_cm>=50?'#dc2626':f.depth_cm>=20?'#f59e0b':'#16a34a');
+    const c = isDamage ? '#7c3aed' : (f.depth_cm>=50?'var(--st-danger)':f.depth_cm>=20?'var(--st-watch)':'var(--st-normal)');
     const badge = isDamage ? '🚧 ชำรุด' : esc(f.depth_cm)+' ซม.';
     const name = f.road_name || (isDamage ? 'ถนนชำรุด' : 'จุดน้ำท่วมบนถนน');
     const sub = isDamage && f.description ? esc(f.description.length>60 ? f.description.slice(0,60)+'…' : f.description)+'<br>' : '';
     const focusLat = f.start_lat || f.lat; const focusLon = f.start_lon || f.lon;
     const stale = isStale(f);
-    const staleTag = stale ? ' <span style="color:#ea580c;font-weight:600">⏳ ยังไม่ยืนยันซ้ำ</span>' : '';
+    const staleTag = stale ? ' <span style="color:var(--st-warn);font-weight:600">ยังไม่ยืนยันซ้ำ</span>' : '';
     return `<div class="frow" style="border-left-color:${c}${stale?';opacity:.6':''}" onclick="gMap.setCenter({lat:${focusLat},lng:${focusLon}});gMap.setZoom(15)">
       <div class="nm">${esc(name)} <span class="badge" style="background:${c}">${badge}</span></div>
       <div class="sub">${sub}${new Date(f.reported_at).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'})} · ${esc(f.reporter_name)}${staleTag}</div>
@@ -717,7 +717,7 @@ async function setReportLatLon(lat, lng){
         if (reportPolylineObj) reportPolylineObj.setMap(null);
         reportPolylineObj = new google.maps.Polyline({
           path: google.maps.geometry.encoding.decodePath(reportPolylineString),
-          strokeColor: '#3b82f6', strokeWeight: 6, map: gMap, zIndex: 35
+          strokeColor: 'var(--signal)', strokeWeight: 6, map: gMap, zIndex: 35
         });
       }
     } catch(e) {
@@ -731,7 +731,7 @@ async function setReportLatLon(lat, lng){
 
 function createPinIcon(label) {
   const el = document.createElement('div');
-  el.style.background = '#3b82f6'; el.style.color = '#fff'; el.style.borderRadius = '50%';
+  el.style.background = 'var(--signal)'; el.style.color = '#fff'; el.style.borderRadius = '50%';
   el.style.width = '24px'; el.style.height = '24px'; el.style.display = 'flex';
   el.style.alignItems = 'center'; el.style.justifyContent = 'center';
   el.style.fontWeight = 'bold'; el.style.fontSize = '12px'; el.style.border = '2px solid white';
@@ -742,29 +742,29 @@ function createPinIcon(label) {
 function renderAuthHeader(state, profile){
   const el = document.getElementById('authBox');
   if (state==='signedout') el.innerHTML = `<button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button>`;
-  else if (state==='pending') el.innerHTML = `<span class="pill" style="background:#fef3c7;color:#92400e">รออนุมัติ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
-  else if (state==='rejected') el.innerHTML = `<span class="pill" style="background:#fee2e2;color:#b91c1c">ถูกปฏิเสธ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
-  else el.innerHTML = `<span class="pill" style="background:#dcfce7;color:#15803d">${esc(profile.full_name||profile.email)}${profile.role==='admin'?' · แอดมิน':''}</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
+  else if (state==='pending') el.innerHTML = `<span class="pill" style="background:var(--st-watch-wash);color:var(--st-warn)">รออนุมัติ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
+  else if (state==='rejected') el.innerHTML = `<span class="pill" style="background:var(--st-danger-wash);color:var(--st-danger)">ถูกปฏิเสธ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
+  else el.innerHTML = `<span class="pill" style="background:var(--st-normal-wash);color:var(--st-normal)">${esc(profile.full_name||profile.email)}${profile.role==='admin'?' · แอดมิน':''}</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
 }
 
 function renderReportSection(state, profile){
   window.currentUserProfile = (state === 'approved' || state === 'admin') ? profile : null;
   const el = document.getElementById('reportSec');
-  if (state==='signedout') { el.innerHTML = `<div class="gate signedout">🔒 ต้องเข้าสู่ระบบก่อน จึงจะรายงานจุดน้ำท่วมได้<br><button onclick="signInWithGoogle()" style="margin-top:8px;background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 14px;cursor:pointer">เข้าสู่ระบบด้วย Google</button></div>`; return; }
-  if (state==='pending') { el.innerHTML = `<div class="gate pending">⏳ บัญชีรออนุมัติจากผู้ดูแลระบบ</div>`; return; }
-  if (state==='rejected') { el.innerHTML = `<div class="gate rejected">🚫 บัญชีของคุณไม่ได้รับอนุมัติให้บันทึกข้อมูล</div>`; return; }
+  if (state==='signedout') { el.innerHTML = `<div class="gate signedout">ต้องเข้าสู่ระบบก่อน จึงจะรายงานจุดน้ำท่วมได้<br><button onclick="signInWithGoogle()" style="margin-top:8px;background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 14px;cursor:pointer">เข้าสู่ระบบด้วย Google</button></div>`; return; }
+  if (state==='pending') { el.innerHTML = `<div class="gate pending">บัญชีรออนุมัติจากผู้ดูแลระบบ</div>`; return; }
+  if (state==='rejected') { el.innerHTML = `<div class="gate rejected">บัญชีของคุณไม่ได้รับอนุมัติให้บันทึกข้อมูล</div>`; return; }
   
   el.innerHTML = `
-    <h3>📝 รายงานสภาพถนน</h3>
+    <h3>รายงานสภาพถนน</h3>
     <div class="rtype">
-      <button id="rtFlood" class="on" onclick="setReportType('flood')">🌊 น้ำท่วม</button>
-      <button id="rtDamage" onclick="setReportType('damage')">🚧 ถนนชำรุด</button>
+      <button id="rtFlood" class="on" onclick="setReportType('flood')">น้ำท่วม</button>
+      <button id="rtDamage" onclick="setReportType('damage')">ถนนชำรุด</button>
     </div>
     <div style="display:flex;gap:6px">
-      <button id="pinStartBtn" onclick="togglePinMode('start')" class="pin-btn">📍 1. จุดเริ่มต้น</button>
-      <button id="pinEndBtn" onclick="togglePinMode('end')" class="pin-btn">📍 2. จุดสิ้นสุด</button>
+      <button id="pinStartBtn" onclick="togglePinMode('start')" class="pin-btn">1. จุดเริ่มต้น</button>
+      <button id="pinEndBtn" onclick="togglePinMode('end')" class="pin-btn">2. จุดสิ้นสุด</button>
     </div>
-    <div id="distanceWarn" style="color:var(--danger);font-size:11.5px;display:none;margin-top:4px">⚠️ ระยะทางเกิน 10 กม. กรุณาปักหมุดให้สั้นลง</div>
+    <div id="distanceWarn" style="color:var(--danger);font-size:11.5px;display:none;margin-top:4px">ระยะทางเกิน 10 กม. กรุณาปักหมุดให้สั้นลง</div>
     <div id="reportLatLon" style="font-size:11.5px;color:var(--muted);margin-top:4px">เลือกจุดเริ่มต้นและสิ้นสุดของช่วงที่มีปัญหา</div>
 
     <label class="f">ชื่อถนน / บริเวณ</label>
@@ -776,7 +776,7 @@ function renderReportSection(state, profile){
     <div id="rDamageFields" style="display:none">
       <label class="f">รายละเอียดความชำรุด *</label>
       <textarea id="rDesc" rows="3" placeholder="เช่น ถนนทรุดเป็นหลุมลึกครึ่งเลน / คอสะพานขาด / ดินสไลด์ทับผิวทาง"></textarea>
-      <label class="f">รถที่ยัง "ผ่านได้" (กดเลือก — ไม่เลือกเลย = ปิดถนนทุกประเภท)</label>
+      <label class="f">รถที่ยัง "ผ่านได้" (กดเลือก · ไม่เลือกเลย = ปิดถนนทุกประเภท)</label>
       <div class="pgrid" id="pgrid"></div>
     </div>
     <label class="f">รูปภาพประกอบ (ถ้ามี)</label>
@@ -785,7 +785,7 @@ function renderReportSection(state, profile){
     <input type="text" id="rName" value="${esc(profile.full_name||'')}">
     <label class="f">เบอร์โทรติดต่อ (หน่วยงาน)</label>
     <input type="tel" id="rPhone" placeholder="เช่น 073-xxxxxx">
-    <button id="btnSubmitReport" onclick="submitReport()">✅ บันทึกรายงาน</button>
+    <button id="btnSubmitReport" onclick="submitReport()">บันทึกรายงาน</button>
   `;
   renderPassablePicker();
   setReportType(reportType);
@@ -896,5 +896,6 @@ watchAuthState({
 <script src="js/rivers.js"></script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
+<script src="js/tabbar.js?v=1" defer></script>
 </body>
 </html>

@@ -1,74 +1,491 @@
 /* =========================================================================
-   shared.css — naraflood.com
-   Shared design tokens + mobile/touch layer for all public pages.
+   shared.css · naraflood.com
+   สัญญาออกแบบ (design contract) + เลเยอร์คอมโพเนนต์ร่วมของทุกหน้า
 
-   HOW THIS FILE IS USED
-   Linked with <link rel="stylesheet" href="shared.css?v=1"> placed AFTER each
-   page's inline <style> block (just before </head>). Source order matters:
-   media queries add no specificity, so loading last is what lets the mobile
-   rules below win over each page's inline base rules without !important.
+   ทิศทาง: "น้ำเชี่ยว" · register แบบ instrument
+   คนที่เข้าเว็บนี้ไม่ได้มาให้ขายของ เขามาหาคำตอบว่า "ต้องกังวลไหม ต้องไปไหน"
+   หน้าเว็บจึงต้องแน่น ตอบก่อน แล้วค่อยแจกแจง
 
-   DISCIPLINE (keeps desktop from changing)
-   - Unconditioned rules here must be either identical to what pages already
-     declare (a no-op override) or a brand-new selector no page uses.
-   - Every behaviour change lives inside @media(max-width:768px) or
-     @media(pointer:coarse).
+   วิธีที่ไฟล์นี้ถูกใช้
+   ลิงก์ด้วย <link rel="stylesheet" href="shared.css?v=3"> วางไว้ "หลัง" บล็อก
+   <style> ของแต่ละหน้า (ก่อน </head>) ลำดับการโหลดคือกลไกทั้งหมด: ทุกหน้า
+   ประกาศ :root ของตัวเองไว้ในไฟล์ ไฟล์นี้โหลดทีหลังจึงชนะด้วย source order
+   โดยไม่ต้องใช้ !important เลย
 
-   CACHE: when this file changes, bump ?v= in all page <link> tags AND in
-   sw.js SHELL_ASSETS AND sw.js VERSION together — the service worker keys
-   its cache on the full URL including the query string.
+   กฎเหล็กสองข้อของระบบสี
+   1. --signal (เขียวน้ำทะเล) คือสีของ "ตัวเว็บ" ปุ่ม แท็บ ชิป ลิงก์ ใช้ได้หมด
+   2. --st-* (เขียว เหลือง ส้ม แดง) คือสีของ "สถานการณ์" เท่านั้น
+      ห้ามเอาไปใช้กับ chrome เด็ดขาด ไม่งั้นพอมีอำเภอเสี่ยงระดับส้มขึ้นมาจริง
+      สีมันจะหมดแรงเตือน เพราะตาคนชินกับส้มบนของที่ไม่มีความหมายไปแล้ว
+      (ของเดิมใช้ส้ม #fe6e00 เป็นสีแบรนด์บนแถบเมนูและปุ่มรีเฟรช คือปัญหาข้อนี้)
+
+   CACHE: เมื่อแก้ไฟล์นี้ ต้องบัมพ์ ?v= ในแท็ก <link> ของทุกหน้า และใน
+   sw.js SHELL_ASSETS กับ sw.js VERSION พร้อมกัน เพราะ service worker
+   คีย์แคชด้วย URL เต็มรวม query string
    ========================================================================= */
 
-/* ---------- 1. Design tokens (canonical copy — identical to page :root) ---------- */
+/* =========================================================================
+   1. สัญญาออกแบบ: token
+   ห้ามมี hex ดิบหรือ px ดิบในคอมโพเนนต์ ทุกค่าต้องอ้างจากตรงนี้
+   ========================================================================= */
 :root{
-  --bg:#fcfaf7; --ink:#423d38; --muted:#797067;
-  --surface:#f3f4f6; --surface-soft:#edebe9; --elevated:#ffffff;
-  --outline:#e3e0dd; --outline-strong:#d1d5dc;
-  --orange:#fe6e00; --orange-d:#ff6b00; --orange-focus:#f97015; --orange-warm:#ffb74d;
-  --navy:#57504a; --navy-d:#423d38; --peach:#e3e0dd;
-  --shell:rgba(0,0,0,.72);
-  --success:#00c758; --warning:#edb200; --danger:#fb2c36; --info:#3080ff;
+  /* ---------- พื้นผิว: แสงบนน้ำยามเช้า ไม่มีขาวล้วน ---------- */
+  --paper:#eef2f4;        /* พื้นหน้า */
+  --paper-2:#e4ebee;      /* พื้นยุบ ใช้กับแถบเครื่องมือ */
+  --card:#f9fbfc;         /* การ์ดยกขึ้น */
+  --card-2:#f2f6f8;       /* การ์ดซ้อนในการ์ด */
+
+  /* ---------- เส้น 3 ระดับ เพื่อให้ขอบสื่อลำดับชั้นได้ ไม่ใช่แค่มีขอบ ----------
+     ค่าถูกเลือกให้ห่างจากค่าพื้นผิวทุกตัวพอที่จะมองเห็นจริง
+     เส้นผมที่สว่างใกล้พื้นภายใน 2 ขั้นความสว่างจะมองไม่เห็นบนจอกลางแดด */
+  --line:#d2dbe0;
+  --line-mid:#b0bec6;
+  --line-strong:#788b94;
+
+  /* ---------- หมึก: ดำอมน้ำเงินของน้ำลึก ไม่ใช่ดำล้วน ---------- */
+  --ink:#1b2733;
+  --ink-2:#42525e;
+  --ink-3:#5f6f78;
+
+  /* ---------- signal: สีทำงานของเว็บ เขียวน้ำทะเลตอนน้ำขึ้น ---------- */
+  --signal:#0e6e7a;
+  --signal-hover:#0a555f;
+  --signal-deep:#083f47;
+  --signal-wash:#dcebed;
+  --signal-ink:#f4fafb;
+
+  /* ---------- ไวยากรณ์สถานการณ์ สงวนไว้ใช้กับระดับภัยเท่านั้น ----------
+     base = ตัวหนังสือและไอคอน  wash = พื้นชิป  ทุกคู่ผ่าน 4.5:1 บน wash ของตัวเอง */
+  --st-normal:#1a6b46;   --st-normal-wash:#dcefe5;
+  --st-watch:#8a5f00;    --st-watch-wash:#f5ecd6;
+  --st-warn:#a94a08;     --st-warn-wash:#f9e5d7;
+  --st-danger:#9d1c16;   --st-danger-wash:#f7e0de;
+
+  /* ---------- ยกระดับ: วงแหวน 1px บวกเงา อ่านคมทั้งบนพื้นสว่างและพื้นเข้ม ---------- */
+  --lift-1:0 0 0 1px rgba(27,39,51,.07),0 1px 2px rgba(27,39,51,.05);
+  --lift-2:0 0 0 1px rgba(27,39,51,.05),0 6px 16px rgba(27,39,51,.10);
+  --lift-3:0 12px 32px rgba(27,39,51,.16);
+
+  /* ---------- รัศมีตามบทบาท ไม่ใช่ตามขนาด ----------
+     ถามว่า "นี่คือ control หรือ sheet" ตอบได้ทันที
+     ถามว่า "นี่คือ md หรือ lg" ต้องเดา */
+  --r-control:10px;
+  --r-media:14px;
+  --r-sheet:20px;
+  --r-commit:999px;
+
+  /* ---------- บันได z มีชื่อ ห้าม z-index ดิบในคอมโพเนนต์ ----------
+     ค่าสูงกว่า 1000 เพราะ Leaflet บนหน้า map และ route วาดตัวเองถึง ~1000
+     แถบล่างต้องลอยเหนือแผนที่เสมอ ไม่งั้นแท็บหายไปทั้งหน้า */
+  --z-bar:1200;
+  --z-scrim:1250;
+  --z-sheet:1300;
+
+  /* ---------- ความสูง chrome เป็น token ----------
+     ทุกกล่องที่เลื่อนได้ ทุกของที่ปักหมุด และการคำนวณ safe area
+     ต้องอ้างตัวเลขชุดเดียวกัน ไม่งั้นจะมีอยู่หน้าเดียวที่เนื้อหาโดนแถบล่างบัง
+     แล้วไม่มีใครหาสาเหตุเจอ */
+  --tabbar-h:58px;
+
+  /* ---------- ระยะ ฐาน 4px ---------- */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
+
+  /* ---------- ตัวอักษร ----------
+     IBM Plex Sans Thai พาทั้งไทยและละตินมาด้วยกัน จึงไม่เจอกับดัก
+     ที่ Noto Sans Thai ไม่มี glyph ละติน แล้ว "AI" ตกไป fallback จนอ่านเป็น "Al"
+     และเป็นหน้าที่ออกแบบมาสำหรับ UI ข้อมูลโดยตรง ไม่ใช่หน้าตกแต่ง */
+  --ui:'IBM Plex Sans Thai','IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --lh-thai:1.65;
+  --lh-tight:1.25;
+
+  /* ---------- เส้นโค้งเดียวทั้งเว็บ ---------- */
+  --ease:cubic-bezier(.23,1,.32,1);
+
+  /* =======================================================================
+     แม็ปชื่อ token เดิมมาที่ระบบใหม่
+     ทั้ง 14 หน้าอ้าง --orange รวมกัน 124 ครั้ง และ --navy อีก 99 ครั้ง
+     ในบล็อก <style> ของตัวเอง การแม็ปตรงนี้จุดเดียวจึงเปลี่ยนสีทั้งเว็บ
+     โดยไม่ต้องแตะ CSS ในหน้าไหนเลย
+     --orange เดิมเคยเป็นสีแบรนด์ ตอนนี้ชี้ไปที่ --signal สีเตือนภัยจึงว่างคืนมา
+     ======================================================================= */
+  --bg:var(--paper);
+  --elevated:var(--card);
+  --surface:var(--card-2);
+  --surface-soft:var(--paper-2);
+  --outline:var(--line);
+  --outline-strong:var(--line-mid);
+  --muted:var(--ink-3);
+
+  --orange:var(--signal);
+  --orange-d:var(--signal-hover);
+  --orange-focus:var(--signal-hover);
+  --orange-warm:var(--st-watch);
+
+  --navy:var(--ink-2);
+  --navy-d:var(--ink);
+  --peach:var(--paper-2);
+
+  /* หัวเว็บเดิมเป็น rgba(0,0,0,.72) ดำล้วน เปลี่ยนเป็นหมึกน้ำลึกโปร่ง */
+  --shell:rgba(16,32,41,.86);
+
+  --success:var(--st-normal);
+  --warning:var(--st-watch);
+  --danger:var(--st-danger);
+  --info:var(--signal);
+
+  /* token เดิมอีกชุดที่โผล่เฉพาะบางหน้า หลายหน้าประกาศ :root ซ้ำสองรอบในไฟล์
+     เดียวกัน ทำให้ของพวกนี้หลุดสายตาได้ง่าย ถ้าไม่แม็ปด้วยจะเหลือหน้าที่ยัง
+     ใช้พาเลตต์เก่าอยู่ปนกับหน้าที่เปลี่ยนแล้ว ซึ่งอ่านว่า "ของหลุดชุด"
+     --panel เดิมเป็น #ffffff ขาวล้วน ผิดกฎพื้นต้องมีอุณหภูมิ */
+  --panel:var(--card);
+
+  /* สีระดับน้ำและสถานะ ทุกตัวชี้กลับเข้าไวยากรณ์เดียวกัน */
+  --c-over:var(--st-danger);     --c-overflow:var(--st-danger);
+  --c-risk:var(--st-warn);
+  --c-watch:var(--st-watch);     --c-low:var(--st-watch);
+  --c-critlow:var(--st-warn);
+  --c-ok:var(--st-normal);       --c-normal:var(--st-normal);
+  --c-high:var(--signal);        --c-down:var(--signal);
+  --c-na:var(--ink-3);           --c-unknown:var(--ink-3);
+  --ok:var(--st-normal);
+  --warn:var(--st-watch);
+  --bad:var(--st-danger);
 }
 
-/* ---------- 2. Mobile & touch enhancements (single source of truth) ----------
-   Previously copy-pasted into 10 pages; now lives here only.                */
-a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(254,110,0,.15)}
+/* =========================================================================
+   2. ฐาน
+   ========================================================================= */
+body{
+  font-family:var(--ui);
+  background:var(--paper);
+  color:var(--ink);
+  /* ตัวเลขต้องตรงคอลัมน์ ระดับน้ำ ปริมาณฝน เวลา เปอร์เซ็นต์ ทั้งเว็บคือตัวเลข
+     ตัวเลขที่ไม่ตรงหลักคือข้อบกพร่องที่คนรู้สึกได้แต่เรียกชื่อไม่ถูก */
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+}
+:lang(th),body{line-height:var(--lh-thai)}
+
+/* ภาษาไทยมีสระบนและล่าง การบีบ letter-spacing ที่สวยกับตัวพิมพ์ใหญ่ละติน
+   ทำให้ไทยพัง ปิดทิ้งทั้งเว็บ */
+h1,h2,h3,.card h2,.chip,.navtab a{letter-spacing:0}
+h1,h2,h3{line-height:var(--lh-tight)}
+
+a{color:var(--signal)}
+a:hover{color:var(--signal-hover)}
+
+/* =========================================================================
+   3. Chrome: หัวเว็บ แถบเมนู แถบเลือกพื้นที่
+   ========================================================================= */
+header{
+  background:var(--shell);
+  backdrop-filter:blur(14px) saturate(1.15);
+  -webkit-backdrop-filter:blur(14px) saturate(1.15);
+  border-bottom:1px solid rgba(244,250,251,.10);
+}
+header h1{font-weight:600;letter-spacing:0}
+
+.navtab{
+  background:rgba(244,250,251,.06);
+  border:1px solid rgba(244,250,251,.10);
+  border-radius:var(--r-control);
+}
+.navtab a{color:rgba(244,250,251,.74);border-radius:var(--r-control);font-weight:500}
+.navtab a:hover{color:var(--signal-ink);background:rgba(244,250,251,.10)}
+.navtab a.on{background:var(--signal);color:var(--signal-ink);font-weight:600}
+.navtab a.on:hover{background:var(--signal-hover);color:var(--signal-ink)}
+
+#btnRefresh{
+  background:var(--signal);color:var(--signal-ink);
+  border-radius:var(--r-control);font-weight:600;
+  transition:background .15s var(--ease);
+}
+#btnRefresh:hover{background:var(--signal-hover)}
+
+#selbar{background:var(--card);border-bottom:1px solid var(--line)}
+.chip{
+  background:var(--card);color:var(--ink);
+  border:1px solid var(--line-mid);border-radius:var(--r-control);
+  font-weight:500;transition:background .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease);
+}
+.chip:hover{border-color:var(--signal);color:var(--signal)}
+.chip.on{background:var(--signal);border-color:var(--signal);color:var(--signal-ink);font-weight:600}
+/* ป้ายชื่อจังหวัดเป็นข้อความนิ่ง กดไม่ได้ ไม่ใช่ปุ่ม
+   เดิมมันถูกทาสีแบรนด์เต็มใบ ซึ่งในไวยากรณ์สีของระบบนี้แปลว่า
+   "นี่คือปุ่มหลักของหน้า" การย้อมของที่กดไม่ได้ด้วยสีของปุ่ม
+   ทำให้สีนั้นเชื่อถือไม่ได้ทั้งระบบ ป้ายจึงต้องเงียบ */
+.provlbl{
+  background:var(--paper-2);color:var(--ink-2);
+  border:1px solid var(--line);border-radius:var(--r-control);
+  font-weight:600;
+}
+#ampSel{border:1px solid var(--line-mid);border-radius:var(--r-control);background:var(--card);color:var(--ink)}
+
+/* =========================================================================
+   4. การ์ดและเนื้อหา
+   ========================================================================= */
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--r-media);
+  box-shadow:var(--lift-1);
+}
+.card h2{color:var(--ink);font-weight:600}
+.card h2 .where{color:var(--ink-3);font-weight:400}
+.note{color:var(--ink-3)}
+footer{background:var(--paper-2);border-top:1px solid var(--line);color:var(--ink-3)}
+
+/* =========================================================================
+   5. ไวยากรณ์สถานการณ์ ใช้กับระดับภัยเท่านั้น
+   ทุกหน้าที่แสดงระดับความเสี่ยงต้องใช้ชุดนี้ ไม่ประดิษฐ์สีเอง
+   ========================================================================= */
+/* ชื่อคลาสคือ .sig ไม่ใช่ .st เพราะ .st ถูกใช้ไปแล้วเป็นแถวสถานีน้ำใน index.html
+   และ .lvl ถูกใช้แล้วใน eoc.html การทับชื่อจะพังของเดิมแบบเงียบ ๆ */
+.sig{
+  display:inline-flex;align-items:center;gap:var(--s2);
+  padding:var(--s1) var(--s3);border-radius:var(--r-commit);
+  font-size:13px;font-weight:600;line-height:1.4;white-space:nowrap;
+}
+.sig::before{content:"";width:8px;height:8px;border-radius:var(--r-commit);background:currentColor;flex:none}
+.sig-normal{background:var(--st-normal-wash);color:var(--st-normal)}
+.sig-watch {background:var(--st-watch-wash); color:var(--st-watch)}
+.sig-warn  {background:var(--st-warn-wash);  color:var(--st-warn)}
+.sig-danger{background:var(--st-danger-wash);color:var(--st-danger)}
+
+/* =========================================================================
+   5b. แถบคำตอบ
+   ของที่คนเปิดเว็บนี้มาหา ต้องเห็นโดยไม่ต้องเลื่อนเลย
+   ของเดิมกว่าจะถึงตัวเลขนี้ต้องผ่าน chrome 316px แล้วอ่านร้อยแก้วของกรมอุตุฯ
+   อีกครึ่งการ์ด ทุกตัวเลขในนี้อ่านมาจากค่าที่หน้านี้คำนวณอยู่แล้ว
+   ไม่มีการคิดเลขชุดใหม่ ตัวเลขบนหน้าจึงตรงกันเสมอ
+   ========================================================================= */
+.strip{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-left:4px solid var(--line-strong);
+  border-radius:var(--r-media);
+  box-shadow:var(--lift-1);
+  padding:var(--s4);
+  display:grid;gap:var(--s3);
+}
+.strip[data-lv="normal"]{border-left-color:var(--st-normal)}
+.strip[data-lv="watch"] {border-left-color:var(--st-watch)}
+.strip[data-lv="warn"]  {border-left-color:var(--st-warn)}
+.strip[data-lv="danger"]{border-left-color:var(--st-danger)}
+
+.strip-lv{font-size:20px;font-weight:600;line-height:var(--lh-tight);color:var(--ink)}
+.strip-sub{font-size:13px;color:var(--ink-2);line-height:1.55}
+.strip-nums{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s2);
+  border-top:1px solid var(--line);padding-top:var(--s3);
+}
+.strip-nums>div{display:grid;gap:2px;min-width:0}
+.strip-nums b{
+  font-size:23px;font-weight:600;line-height:1.15;color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+.strip-nums span{font-size:11.5px;color:var(--ink-3);line-height:1.35}
+.strip-when{font-size:11.5px;color:var(--ink-3)}
+@media(min-width:769px){
+  .strip{grid-template-columns:1fr auto;align-items:center;gap:var(--s5)}
+  .strip-nums{border-top:none;border-left:1px solid var(--line);
+    padding-top:0;padding-left:var(--s5);min-width:330px}
+  .strip-lv{font-size:23px}
+}
+
+/* =========================================================================
+   5c. ส่วนที่พับเก็บ
+   ภาพเรดาร์และแผนที่แบบจำลองเป็นของอ้างอิง ไม่ใช่คำตอบแรกที่คนต้องการ
+   สองใบนี้กินความสูงรวมกัน 931px บนมือถือ คิดเป็นเกินหนึ่งจอเต็ม
+   พับไว้แล้วบอกด้วยคำว่าข้างในมีอะไร ดีกว่าบังคับให้ทุกคนเลื่อนผ่าน
+   ใช้ details ของ HTML เอง จึงกดด้วยคีย์บอร์ดได้และโปรแกรมอ่านหน้าจอเข้าใจ
+   โดยไม่ต้องเขียน JS เพิ่มสักบรรทัด
+   ========================================================================= */
+.fold{margin-top:var(--s2)}
+.fold>summary{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+  min-height:44px;padding:var(--s2) 0;
+  font-size:13.5px;font-weight:600;color:var(--signal);
+  cursor:pointer;list-style:none;
+}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary::after{
+  content:"";flex:none;width:9px;height:9px;
+  border-right:2px solid currentColor;border-bottom:2px solid currentColor;
+  transform:rotate(45deg) translate(-2px,-2px);
+  transition:transform .2s var(--ease);
+}
+.fold[open]>summary::after{transform:rotate(-135deg) translate(-2px,-2px)}
+.fold>summary:hover{color:var(--signal-hover)}
+.fold-body{padding-top:var(--s2)}
+
+/* =========================================================================
+   5d. รางเลื่อนแนวนอนของสถานีน้ำหลัก
+   สามสถานีเรียงลงมาแนวตั้งกินความสูง 618px บนมือถือ คิดเป็นเกือบหนึ่งจอเต็ม
+   ทั้งที่เป็นของชนิดเดียวกันสามชิ้นที่เอามาเทียบกัน ซึ่งเป็นงานของรางแนวนอน
+   ห้ามพับเก็บ เพราะเป็นระดับน้ำจริงที่คนใช้ตัดสินใจ ต้องบีบ ไม่ใช่ซ่อน
+   ========================================================================= */
+@media(max-width:768px){
+  .wtaRow{
+    flex-wrap:nowrap;justify-content:flex-start;
+    gap:var(--s3);padding-bottom:var(--s1);
+    overflow-x:auto;scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;touch-action:pan-x;
+    scrollbar-width:none;
+    /* ขอบขวาจางลงเพื่อบอกว่ายังมีใบถัดไป ราง 3 ใบที่ความกว้าง 76%
+       ล้นเสมอ เงาจึงไม่โกหก ต่อให้เลื่อนไปสุดแล้วก็ยังมีของอยู่ทางซ้าย */
+    -webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 26px),transparent 100%);
+            mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 26px),transparent 100%);
+  }
+  .wtaRow::-webkit-scrollbar{display:none}
+  .wtaCol{flex:0 0 76%;max-width:none;scroll-snap-align:center}
+}
+/* คำบอกท่าทาง ของที่ปัดได้ต้องบอกด้วยคำ ไม่ใช่รอให้ผู้ใช้เดาเอง
+   บนจอคอมไม่ต้องบอกเพราะทั้งสามใบเรียงให้เห็นพร้อมกันอยู่แล้ว */
+.swipe-hint{display:none}
+@media(max-width:768px){
+  .swipe-hint{
+    display:block;font-size:11.5px;color:var(--ink-3);
+    margin-top:var(--s1);
+  }
+}
+
+/* =========================================================================
+   6. แถบแท็บล่าง
+   การเปลี่ยนอย่างเดียวที่ทำให้หน้าเว็บรู้สึกเป็นแอปจริง และเป็นคำสัญญาว่า
+   ทุกส่วนของระบบกดถึงได้จากทุกที่ในแตะเดียว
+   ของเดิมเป็นแถบเมนู 12 อันเลื่อนแนวนอนด้านบนที่โดนตัด และไม่เหมือนกันสักหน้า
+   (index 12 อัน, map 9, eoc 8, people 4) ตรงนี้คือ 5 อันเท่ากันทุกหน้า
+   ========================================================================= */
+.tabbar{
+  position:fixed;inset:auto 0 0 0;z-index:var(--z-bar);
+  height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  display:grid;grid-auto-flow:column;grid-auto-columns:1fr;
+  background:var(--card);
+  border-top:1px solid var(--line);
+  box-shadow:0 -1px 12px rgba(27,39,51,.08);
+}
+.tabbar a,.tabbar button{
+  display:grid;place-items:center;gap:2px;
+  min-height:48px;padding:var(--s1) 2px;
+  font-family:inherit;font-size:11px;font-weight:500;line-height:1.3;
+  color:var(--ink-3);text-decoration:none;
+  background:none;border:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  transition:color .15s var(--ease);
+}
+.tabbar svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;display:block}
+.tabbar a[aria-current="page"]{color:var(--signal);font-weight:600}
+.tabbar a:active,.tabbar button:active{transform:scale(.94)}
+.tabbar a,.tabbar button{transition:color .15s var(--ease),transform .06s var(--ease)}
+
+/* ทุกหน้าต้องเว้นที่ให้แถบล่าง ไม่งั้นแถวสุดท้ายกดไม่ถึง */
+body{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom))}
+
+/* บนมือถือ แถบล่างทำหน้าที่นำทางแทนแล้ว แถบเมนู 12 อันด้านบนจึงเป็นของซ้ำ
+   ที่กินพื้นที่เหนือ fold ไปเปล่า ๆ และของเดิมก็โดนตัดขอบขวาอยู่ดี
+   ภาพแบนเนอร์เป็นของประดับ ซึ่งเป็นสิทธิ์ของหน้าขายของ ไม่ใช่ของเครื่องมือ
+   ที่คนเปิดมาเพื่อหาคำตอบว่าต้องอพยพไหม จอคอมยังเห็นทั้งสองอย่างตามเดิม */
+@media(max-width:768px){
+  .navtab{display:none}
+  .pageBanner{display:none}
+
+  /* หัวเว็บเดิมสูง 99px เพราะชื่อหน้ากับปุ่มรวมกันกว้างเกินจอไป 3px
+     แล้วปุ่มเข้าสู่ระบบตกลงไปอยู่บรรทัดของตัวเองทั้งบรรทัด
+     ให้ชื่อหน้าหดได้และตัดท้ายแทนที่จะดันของอื่นตก */
+  header{gap:var(--s2)}
+  header h1{flex:1 1 auto;min-width:0;font-size:15.5px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+/* จอคอมไม่ต้องมีแถบล่าง เมนูบนอ่านได้สบายอยู่แล้ว */
+@media(min-width:769px){
+  .tabbar{display:none}
+  body{padding-bottom:0}
+}
+
+/* หน้าแผนที่กับหน้าเส้นทางเต็มจอ Leaflet วางคำอธิบายสัญลักษณ์
+   กับแถบมาตราส่วนไว้ชิดขอบล่าง ซึ่งตอนนี้เป็นที่ของแถบแท็บ
+   ยกขึ้นมาให้พ้น ไม่งั้นคำอธิบายสีของระดับน้ำจะถูกบังไปครึ่งหนึ่ง */
+@media(max-width:768px){
+  .leaflet-bottom{margin-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom))}
+}
+
+/* ---------- แผ่นเมนูเพิ่มเติม ----------
+   ปลายทางที่เหลืออยู่ในนี้ แทนที่จะยัด 12 อันลงแถบเดียว
+   กฎคือ 3 ถึง 5 อัน ไม่เกินนั้น ถ้าต้องการที่ 6 แปลว่าสองอันควรอยู่ในอันที่สาม */
+.sheet-scrim{
+  position:fixed;inset:0;z-index:var(--z-scrim);
+  background:rgba(16,32,41,.55);
+  opacity:0;pointer-events:none;transition:opacity .22s var(--ease);
+}
+.sheet-scrim.show{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;inset:auto 0 0 0;z-index:var(--z-sheet);
+  background:var(--card);
+  border-radius:var(--r-sheet) var(--r-sheet) 0 0;
+  box-shadow:var(--lift-3);
+  padding:var(--s3) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom));
+  transform:translateY(100%);transition:transform .28s var(--ease);
+  max-height:80vh;overflow-y:auto;
+}
+.sheet.show{transform:translateY(0)}
+.sheet-grab{width:36px;height:4px;border-radius:var(--r-commit);background:var(--line-mid);margin:0 auto var(--s3)}
+.sheet h3{font-size:13px;font-weight:600;color:var(--ink-3);margin-bottom:var(--s2)}
+.sheet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s2)}
+.sheet-grid a{
+  display:grid;place-items:center;gap:var(--s1);
+  padding:var(--s3) var(--s1);min-height:76px;
+  border:1px solid var(--line);border-radius:var(--r-control);
+  background:var(--card-2);color:var(--ink);
+  font-size:12px;font-weight:500;line-height:1.35;text-align:center;text-decoration:none;
+}
+.sheet-grid a[aria-current="page"]{border-color:var(--signal);background:var(--signal-wash);color:var(--signal);font-weight:600}
+.sheet-grid svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
+@media(min-width:769px){.sheet,.sheet-scrim{display:none}}
+
+/* =========================================================================
+   7. เลเยอร์มือถือและการสัมผัส (ของเดิม เก็บไว้ทั้งหมด)
+   ทุกอย่างในหัวข้อนี้ผ่านการตรวจบนเครื่องจริงมาแล้ว จึงไม่แตะ
+   ========================================================================= */
+a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(14,110,122,.15)}
 .navtab{scrollbar-width:none}
 .navtab::-webkit-scrollbar{display:none}
-.navtab a:focus-visible,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+.navtab a:focus-visible,button:focus-visible,.tabbar a:focus-visible{
+  outline:2px solid var(--signal);outline-offset:1px
+}
 @supports(padding:max(0px)){
   header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}
 }
 
-/* ---------- 3. Touch targets ----------
-   Guideline is ~44px; the old rule left nav tabs at ~34px and chips at ~32px.
-   Applies on touch devices OR narrow screens (a <=768px viewport is a phone in
-   practice). A desktop mouse at full width matches neither, so it is unaffected. */
+/* ---------- เป้าสัมผัส ----------
+   มาตรฐานคือ ~44px กฎเดิมทิ้งแท็บเมนูไว้ที่ ~34px และชิปที่ ~32px
+   ใช้กับอุปกรณ์สัมผัสหรือจอแคบ จอคอมกับเมาส์ที่ความกว้างเต็มไม่เข้าเงื่อนไขไหนเลย */
 @media(pointer:coarse),(max-width:768px){
   .navtab a{padding:10px 14px;font-size:13.5px;min-height:42px;display:inline-flex;align-items:center}
   .chip,.provlbl{min-height:40px;padding:8px 14px;display:inline-flex;align-items:center}
   select,input:not([type=checkbox]):not([type=radio]){min-height:40px}
   .btn.sm,.langbtn,.pop-btn,.hbtn,.pbtn,.vbtn{min-height:38px;min-width:38px}
-  /* Leaflet draws its own controls at a fixed size — leave them alone. */
-  button:not(.leaflet-container button):not(.leaflet-control button){min-height:36px}
+  /* Leaflet วาดปุ่มควบคุมของตัวเองที่ขนาดตายตัว ปล่อยไว้ */
+  button:not(.leaflet-container button):not(.leaflet-control button):not(.tabbar button){min-height:36px}
   label input[type=checkbox],label input[type=radio]{min-width:20px;min-height:20px}
 }
 
-/* ---------- 4. Mobile typography + iOS zoom guard ----------
-   iOS Safari zooms the page when focusing a control under 16px. Wins over
-   check.html (15px), alert.html / eoc.html / people (13px) by source order. */
+/* ---------- ตัวอักษรบนมือถือ และกันซูมบน iOS ----------
+   Safari บน iOS ซูมหน้าเมื่อโฟกัสช่องกรอกที่เล็กกว่า 16px */
 @media(max-width:768px){
   input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px}
-  /* .note is the explanatory grey text under most cards — 10.5px is too small
-     to read one-handed outdoors, which is this site's core use case. */
+  /* .note คือคำอธิบายสีเทาใต้การ์ดเกือบทุกใบ 10.5px เล็กเกินกว่าจะอ่าน
+     มือเดียวกลางแดด ซึ่งคือสถานการณ์ใช้งานจริงของเว็บนี้ */
   .note{font-size:12px;line-height:1.6}
 }
 
-/* ---------- 4b. Desktop typography ----------
-   ตัวหนังสือเดิมบนจอคอมเล็กเกินไป (ส่วนใหญ่ 10.5–13px) อ่านยากโดยเฉพาะภาษาไทย
-   ที่มีสระบน-ล่าง ขยับขึ้นทั้งชุดโดยคงลำดับความสำคัญเดิมไว้
-   ค่าที่เลือกไม่ต่ำกว่าค่าเดิมของหน้าไหนเลย จึงไม่มีที่ไหนตัวเล็กลง
-   จำกัดเฉพาะ >=769px เพื่อไม่กระทบเลย์เอาต์มือถือที่ตรวจแล้ว */
+/* ---------- ตัวอักษรบนจอคอม ----------
+   ของเดิมส่วนใหญ่ 10.5 ถึง 13px เล็กเกินไปสำหรับภาษาไทยที่มีสระบนล่าง
+   ค่าที่เลือกไม่ต่ำกว่าค่าเดิมของหน้าไหนเลย จึงไม่มีที่ไหนตัวเล็กลง */
 @media(min-width:769px){
   .note{font-size:12.5px;line-height:1.65}
   .muted{font-size:13.5px}
@@ -92,7 +509,6 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
 
   input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:15px}
 
-  /* ข้อความรองในการ์ด/รายการ — เดิม 9.5–11.5px ซึ่งเล็กมากสำหรับภาษาไทย */
   .sub,.where,.tel2,.stale{font-size:12.5px}
   .occnum,.mm,.pp,.amm{font-size:12px}
   .item .nm{font-size:14px}
@@ -104,43 +520,42 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
   .layerrow{font-size:13px}
   .rainScale .rsGrp b{font-size:12px}
   .rainScale .rsGrp small,.rainScale .rsTitle small{font-size:10.5px}
-  /* แผงข้างแผนที่กว้างคงที่ 340px — ขยับน้อยกว่าที่อื่นเพื่อไม่ให้ปุ่มล้นแถว */
   .provbtn{font-size:11.5px}
   .sumcard span{font-size:10.5px}
   .sumcard b{font-size:18px}
 }
 
-/* ---------- 5. Nav scroll affordance (classes applied by js/ui.js) ----------
-   The nav holds up to 12 links in a scroller with a hidden scrollbar, so on a
-   phone there was nothing indicating more tabs existed off-screen. */
+/* ---------- สัญญาณว่าแถบเมนูบนเลื่อนได้ (คลาสถูกใส่โดย js/ui.js) ---------- */
 .navtab.is-scrollable{
   -webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 28px),transparent 100%);
           mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 28px),transparent 100%);
 }
 .navtab.is-scrollable.at-end{-webkit-mask-image:none;mask-image:none}
 
-/* ---------- 6. Opt-in utilities (new class names — used where pages need them) ---------- */
-
-/* Wide tables: scroll horizontally inside their own box instead of stretching
-   the page. min-width keeps columns legible rather than crushed. */
+/* =========================================================================
+   8. ยูทิลิตี้แบบเลือกใช้
+   ========================================================================= */
 .tblwrap-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
 .tblwrap-scroll table{min-width:560px}
 
-/* Bottom padding clear of the iPhone home indicator. */
 .safe-bottom{padding-bottom:max(12px,env(safe-area-inset-bottom))}
 
-/* Backdrop behind the off-canvas sidebar drawer on map/route pages. */
-.drawer-scrim{position:absolute;inset:0;background:rgba(0,0,0,.38);z-index:998;display:none}
+.drawer-scrim{position:absolute;inset:0;background:rgba(16,32,41,.42);z-index:998;display:none}
 .drawer-scrim.show{display:block}
 @media(min-width:769px){.drawer-scrim{display:none!important}}
 
-/* Show only on phones. */
 .mobile-only{display:none}
 @media(max-width:768px){.mobile-only{display:block}}
 
-/* Notice bar used where a page embeds a desktop-only third-party tool. */
 .mobile-notice{
-  background:#fff4e6;border:1px solid var(--orange-warm);border-left:4px solid var(--orange);
-  color:var(--navy-d);font-size:13px;line-height:1.55;padding:10px 12px;margin:8px;border-radius:8px
+  background:var(--st-watch-wash);border:1px solid var(--st-watch);
+  border-left:4px solid var(--st-watch);
+  color:var(--ink);font-size:13px;line-height:1.55;
+  padding:10px 12px;margin:8px;border-radius:var(--r-control)
 }
-.mobile-notice a{color:var(--orange-d);font-weight:700}
+.mobile-notice a{color:var(--st-watch);font-weight:700}
+
+/* ---------- เคารพการตั้งค่าลดการเคลื่อนไหว ---------- */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}

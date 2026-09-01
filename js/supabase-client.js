@@ -5,8 +5,8 @@
  *   <script src="js/supabase-client.js"></script>
  *
  * Fill in the two constants below after creating your Supabase project
- * (SETUP-GUIDE.md step 1). Both are PUBLIC values — safe to ship in client
- * code — never put the service_role key here.
+ * (SETUP-GUIDE.md step 1). Both are PUBLIC values · safe to ship in client
+ * code · never put the service_role key here.
  */
 'use strict';
 

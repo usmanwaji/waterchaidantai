@@ -1,4 +1,4 @@
-/* js/ui.js — ปรับแถบเมนูให้ใช้งานง่ายบนมือถือ
+/* js/ui.js · ปรับแถบเมนูให้ใช้งานง่ายบนมือถือ
  * ใส่ในทุกหน้า: <script src="js/ui.js" defer></script>
  * - เลื่อนแท็บหน้าปัจจุบันให้เห็นเสมอเมื่อเปิดหน้า (เมนูมีถึง 12 แท็บ เลื่อนแนวนอน)
  * - เพิ่มเงาจาง ๆ ที่ขอบขวาให้รู้ว่ายังมีแท็บถัดไป (แถบเลื่อนถูกซ่อนไว้)
@@ -49,7 +49,7 @@
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && side.classList.contains('open')) { side.classList.remove('open'); sync(); }
     });
-    // ปุ่ม ☰ ใช้ onclick เดิมในแต่ละหน้า และบางหน้าเปิดแผงจากโค้ด — ใช้ observer จับทุกทาง
+    // ปุ่ม ☰ ใช้ onclick เดิมในแต่ละหน้า และบางหน้าเปิดแผงจากโค้ด · ใช้ observer จับทุกทาง
     new MutationObserver(sync).observe(side, { attributes: true, attributeFilter: ['class'] });
 
     if (btn) { btn.setAttribute('aria-controls', 'sidebar'); sync(); }

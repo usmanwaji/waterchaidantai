@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#423d38">
+<meta name="theme-color" content="#102029">
 <title>ทรัพยากร จักรกลสาธารณภัย | One Map ชายแดนใต้</title>
-<meta name="description" content="แผนที่จักรกลสาธารณภัยที่ประจำการในพื้นที่ — เรือกู้ภัย เครื่องสูบส่งน้ำระยะไกล รถผลิตน้ำดื่ม ฯลฯ — สตูล สงขลา ปัตตานี ยะลา นราธิวาส">
+<meta name="description" content="แผนที่จักรกลสาธารณภัยที่ประจำการในพื้นที่ · เรือกู้ภัย เครื่องสูบส่งน้ำระยะไกล รถผลิตน้ำดื่ม ฯลฯ · สตูล สงขลา ปัตตานี ยะลา นราธิวาส">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚜</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/rivers.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-:root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--panel:#ffffff;--orange:#fe6e00;--orange-d:#ff6b00;--orange-warm:#ffb74d;--navy:#57504a;--navy-d:#423d38;--peach:#e3e0dd;--outline:#e3e0dd;--outline-strong:#d1d5dc;--shell:rgba(0,0,0,.72);--danger:#dc2626;--warn:#f59e0b;--ok:#16a34a}
+:root{--bg:var(--paper);--ink:var(--ink);--muted:var(--ink-3);--panel:#ffffff;--orange:var(--signal);--orange-d:var(--signal-hover);--orange-warm:var(--st-watch);--navy:var(--ink-2);--navy-d:var(--ink);--peach:var(--line);--outline:var(--line);--outline-strong:var(--line-mid);--shell:rgba(0,0,0,.72);--danger:var(--st-danger);--warn:var(--st-watch);--ok:var(--st-normal)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden}
@@ -47,7 +47,7 @@ input[type=text], input[type=number], input[type=tel], input[type=date], input[t
 
 #mList{padding:6px 14px}
 .mrow{border:1px solid var(--outline);border-left-width:5px;border-radius:8px;padding:7px 10px;margin-bottom:6px;cursor:pointer;background:#fff;font-size:12px}
-.mrow:hover{background:#f8fafc}
+.mrow:hover{background:var(--card)}
 .mrow .nm{font-weight:700;font-size:12.5px}
 .mrow .sub{color:var(--muted);font-size:11px;margin-top:1px}
 .badge{padding:1px 8px;border-radius:99px;color:#fff;font-size:10.5px;font-weight:600;display:inline-block}
@@ -55,24 +55,24 @@ input[type=text], input[type=number], input[type=tel], input[type=date], input[t
 #reportSec{padding:12px 14px;border-top:2px solid var(--peach)}
 #reportSec h3{font-size:12.5px;color:var(--navy-d);margin-bottom:6px}
 .gate{font-size:12.5px;line-height:1.7;padding:10px;border-radius:9px}
-.gate.pending{background:#fef3c7;color:#92400e}
-.gate.rejected{background:#fee2e2;color:#b91c1c}
-.gate.signedout{background:#f3f4f6;color:var(--muted)}
+.gate.pending{background:var(--st-watch-wash);color:var(--st-warn)}
+.gate.rejected{background:var(--st-danger-wash);color:var(--st-danger)}
+.gate.signedout{background:var(--card-2);color:var(--muted)}
 
-.pin-btn{width:100%;padding:8px;border:1.5px dashed var(--orange);background:#fff8f2;color:var(--orange-d);font-family:inherit;font-weight:600;font-size:11.5px;border-radius:9px;cursor:pointer}
+.pin-btn{width:100%;padding:8px;border:1.5px dashed var(--orange);background:var(--st-warn-wash);color:var(--orange-d);font-family:inherit;font-weight:600;font-size:11.5px;border-radius:9px;cursor:pointer}
 .pin-btn.active{background:var(--orange);color:#fff;border-style:solid}
-.pin-btn.done{background:#dcfce7;color:#15803d;border:1.5px solid #15803d}
+.pin-btn.done{background:var(--st-normal-wash);color:var(--st-normal);border:1.5px solid var(--st-normal)}
 #btnSubmitM{width:100%;margin-top:10px;padding:9px;border:none;background:var(--navy);color:#fff;font-family:inherit;font-weight:700;font-size:13px;border-radius:9px;cursor:pointer}
-#btnSubmitM:hover{background:#3a352f}
+#btnSubmitM:hover{background:var(--ink)}
 #btnCancelEdit{width:100%;margin-top:6px;padding:7px;border:1px solid var(--outline-strong);background:#fff;color:var(--muted);font-family:inherit;font-weight:600;font-size:12px;border-radius:9px;cursor:pointer;display:none}
-.note{font-size:10.5px;color:#94a3b8;margin-top:6px;line-height:1.5;padding:0 14px 10px}
+.note{font-size:10.5px;color:var(--ink-3);margin-top:6px;line-height:1.5;padding:0 14px 10px}
 
-.m-pin{display:flex;align-items:center;justify-content:center;font-size:16px;width:30px;height:30px;border-radius:50%;background:#fff;border:3px solid #16a34a;box-shadow:0 1px 5px rgba(0,0,0,.4)}
+.m-pin{display:flex;align-items:center;justify-content:center;font-size:16px;width:30px;height:30px;border-radius:50%;background:#fff;border:3px solid var(--st-normal);box-shadow:0 1px 5px rgba(0,0,0,.4)}
 .leaflet-popup-content{font-family:'Noto Sans Thai',Tahoma,sans-serif!important;font-size:12.5px;line-height:1.6;margin:10px 12px;width:min(230px,78vw)!important}
 .leaflet-popup-content b.hd{font-size:13px}
 .pop-btn{padding:4px 8px;border:none;border-radius:4px;cursor:pointer;font-family:inherit;font-size:11.5px;margin:4px 4px 0 0;color:#fff}
 
-footer{background:var(--navy-d);color:#cfc8c0;font-size:10.5px;padding:5px 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+footer{background:var(--navy-d);color:var(--ink-3);font-size:10.5px;padding:5px 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 footer a{color:var(--orange-warm);text-decoration:none}
 
 #pageGate{position:absolute;inset:0;z-index:2000;background:rgba(252,250,247,.96);display:flex;align-items:center;justify-content:center;padding:20px}
@@ -97,22 +97,22 @@ footer a{color:var(--orange-warm);text-decoration:none}
 
 @supports(height:100dvh){html,body{height:100dvh}}
 </style>
-<link rel="stylesheet" href="shared.css?v=2">
+<link rel="stylesheet" href="shared.css?v=3">
 </head>
 <body>
 
 <header>
-  <h1>🚜 ทรัพยากร<small>จักรกลสาธารณภัย · สตูล สงขลา ปัตตานี ยะลา นราธิวาส</small></h1>
+  <h1>ทรัพยากร<small>จักรกลสาธารณภัย · สตูล สงขลา ปัตตานี ยะลา นราธิวาส</small></h1>
   <nav class="navtab" aria-label="เมนูหลัก">
-    <a href="index.html">🌤️ หน้าแรก</a>
-    <a href="map.html">🗺️ ระดับน้ำ</a>
-    <a href="forecast.html">🔮 คาดการณ์</a>
-    <a href="history.html">🛰️ ย้อนหลัง</a>
-    <a href="repeat.html">⚠️ พื้นที่เสี่ยง</a>
-    <a href="sim.html">🌊 แบบจำลอง</a>
-    <a href="shelter.html">🏠 ศูนย์พักพิง</a>
-    <a href="route.html">🚗 เส้นทาง</a>
-    <a href="resources.html" class="on">🚜 ทรัพยากร</a>
+    <a href="index.html">หน้าแรก</a>
+    <a href="map.html">ระดับน้ำ</a>
+    <a href="forecast.html">คาดการณ์</a>
+    <a href="history.html">ย้อนหลัง</a>
+    <a href="repeat.html">พื้นที่เสี่ยง</a>
+    <a href="sim.html">แบบจำลอง</a>
+    <a href="shelter.html">ศูนย์พักพิง</a>
+    <a href="route.html">เส้นทาง</a>
+    <a href="resources.html" class="on">ทรัพยากร</a>
   </nav>
   <div id="authBox"><span class="pill" style="background:rgba(255,255,255,.15)">กำลังตรวจสอบ…</span></div>
 </header>
@@ -122,7 +122,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
   <aside id="sidebar">
 
     <div class="sec">
-      <h3>🔎 ค้นหาทรัพยากร</h3>
+      <h3>ค้นหาทรัพยากร</h3>
       <div class="row2">
         <div>
           <label class="f">ประเภท</label>
@@ -139,7 +139,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
     </div>
 
     <div class="sec" style="border-bottom:none;padding-bottom:6px">
-      <h3>🚜 จักรกลในพื้นที่ <span id="mCount" style="font-weight:400;color:var(--muted)"></span></h3>
+      <h3>จักรกลในพื้นที่ <span id="mCount" style="font-weight:400;color:var(--muted)"></span></h3>
     </div>
     <div id="mList"><span style="font-size:12px;color:var(--muted)">กำลังโหลด…</span></div>
 
@@ -153,7 +153,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
 
   <div id="pageGate">
     <div class="gbox">
-      <h2 id="gateTitle">🔒 หน้าทรัพยากรสำหรับสมาชิกที่ได้รับอนุมัติเท่านั้น</h2>
+      <h2 id="gateTitle">หน้าทรัพยากรสำหรับสมาชิกที่ได้รับอนุมัติเท่านั้น</h2>
       <p id="gateMsg">ข้อมูลจักรกลสาธารณภัยและผู้ประสานงานจะแสดงเฉพาะสมาชิกที่ได้รับอนุมัติจากผู้ดูแลระบบแล้ว เพื่อความปลอดภัยของข้อมูลติดต่อเจ้าหน้าที่</p>
       <div id="gateAction"><button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button></div>
     </div>
@@ -162,12 +162,12 @@ footer a{color:var(--orange-warm);text-decoration:none}
 
 <footer>
   <span>แผนที่: OpenStreetMap · จักรกล: บันทึกโดยเจ้าหน้าที่ที่ได้รับอนุมัติ</span>
-  <span style="margin-left:auto">อยู่ระหว่างการทดลองปรับปรุง — <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a></span>
+  <span style="margin-left:auto">อยู่ระหว่างการทดลองปรับปรุง · <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a></span>
 </footer>
 
-<script src="js/supabase-client.js?v=2"></script>
+<script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
-<script src="js/views.js?v=1" defer></script>
+<script src="js/views.js?v=2" defer></script>
 <script>
 'use strict';
 
@@ -195,20 +195,20 @@ const MACHINE_TYPES = [
 const typeOf = id => MACHINE_TYPES.find(t=>t.id===id) || MACHINE_TYPES[MACHINE_TYPES.length-1];
 
 const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const fmtD = d => d ? new Date(d+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}) : '—';
+const fmtD = d => d ? new Date(d+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}) : '…';
 const todayStr = () => { const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); };
 
 /* ---------- สถานะเครื่องจักร (คำนวณจากวันที่) ---------- */
 function machineStatus(m){
-  if (m.status === 'demobilized') return { k:'demob',  label:'ถอนกลับที่ตั้งแล้ว', color:'#94a3b8' };
+  if (m.status === 'demobilized') return { k:'demob',  label:'ถอนกลับที่ตั้งแล้ว', color:'var(--ink-3)' };
   const t = todayStr();
-  if (m.deployed_until && m.deployed_until < t) return { k:'over', label:'เกินกำหนดประจำจุด', color:'#dc2626' };
+  if (m.deployed_until && m.deployed_until < t) return { k:'over', label:'เกินกำหนดประจำจุด', color:'var(--st-danger)' };
   if (m.demob_date) {
     const diff = Math.round((new Date(m.demob_date) - new Date(t)) / 86400000);
-    if (diff < 0)  return { k:'over', label:'เกินกำหนดถอนกลับ', color:'#dc2626' };
-    if (diff <= 3) return { k:'soon', label:`ใกล้ถอนกลับ (อีก ${diff} วัน)`, color:'#f59e0b' };
+    if (diff < 0)  return { k:'over', label:'เกินกำหนดถอนกลับ', color:'var(--st-danger)' };
+    if (diff <= 3) return { k:'soon', label:`ใกล้ถอนกลับ (อีก ${diff} วัน)`, color:'var(--st-watch)' };
   }
-  return { k:'active', label:'ปฏิบัติงานอยู่', color:'#16a34a' };
+  return { k:'active', label:'ปฏิบัติงานอยู่', color:'var(--st-normal)' };
 }
 
 /* ---------- แผนที่ ---------- */
@@ -229,7 +229,7 @@ map.on('click', e => {
   if (!pinMode) return;
   pinLatLng = { lat: e.latlng.lat, lng: e.latlng.lng };
   if (pinTempMarker) map.removeLayer(pinTempMarker);
-  pinTempMarker = L.marker(e.latlng, { icon: L.divIcon({ className:'', html:'<div class="m-pin" style="border-color:#3b82f6">📍</div>', iconSize:[30,30], iconAnchor:[15,15] }) }).addTo(map);
+  pinTempMarker = L.marker(e.latlng, { icon: L.divIcon({ className:'', html:'<div class="m-pin" style="border-color:var(--signal)">📍</div>', iconSize:[30,30], iconAnchor:[15,15] }) }).addTo(map);
   pinMode = false;
   updatePinBtn();
 });
@@ -238,7 +238,7 @@ function updatePinBtn(){
   const b = document.getElementById('btnPinM');
   if (!b) return;
   b.className = 'pin-btn ' + (pinMode ? 'active' : (pinLatLng ? 'done' : ''));
-  b.textContent = pinMode ? '👆 คลิกตำแหน่งบนแผนที่…' : (pinLatLng ? `✅ ปักหมุดแล้ว (${pinLatLng.lat.toFixed(5)}, ${pinLatLng.lng.toFixed(5)}) — กดเพื่อย้าย` : '📍 ปักหมุดตำแหน่งบนแผนที่');
+  b.textContent = pinMode ? '👆 คลิกตำแหน่งบนแผนที่…' : (pinLatLng ? `✅ ปักหมุดแล้ว (${pinLatLng.lat.toFixed(5)}, ${pinLatLng.lng.toFixed(5)}) · กดเพื่อย้าย` : '📍 ปักหมุดตำแหน่งบนแผนที่');
   map.getContainer().style.cursor = pinMode ? 'crosshair' : '';
 }
 window.togglePinM = function(){ pinMode = !pinMode; updatePinBtn(); };
@@ -309,9 +309,9 @@ function popupHTML(m){
   const canEdit = !!me && (me.role === 'admin' || m.created_by === me.id);
   const photo = m.photo_url ? `<a href="${esc(m.photo_url)}" target="_blank"><img src="${esc(m.photo_url)}" style="max-width:100%;max-height:110px;border-radius:6px;margin-top:5px"></a>` : '';
   const btns = canEdit ? `<hr style="margin:7px 0;border:none;border-top:1px solid #ddd">
-      <button class="pop-btn" style="background:var(--navy)" onclick="editMachine('${m.id}')">✏️ แก้ไข</button>
-      ${m.status==='deployed' ? `<button class="pop-btn" style="background:#94a3b8" onclick="demobMachine('${m.id}')">↩️ ถอนกลับที่ตั้ง</button>` : `<button class="pop-btn" style="background:var(--ok)" onclick="redeployMachine('${m.id}')">▶️ กลับมาปฏิบัติงาน</button>`}
-      <button class="pop-btn" style="background:var(--danger)" onclick="deleteMachine('${m.id}')">🗑️ ลบ</button>` : '';
+      <button class="pop-btn" style="background:var(--navy)" onclick="editMachine('${m.id}')">แก้ไข</button>
+      ${m.status==='deployed' ? `<button class="pop-btn" style="background:var(--ink-3)" onclick="demobMachine('${m.id}')">ถอนกลับที่ตั้ง</button>` : `<button class="pop-btn" style="background:var(--ok)" onclick="redeployMachine('${m.id}')">กลับมาปฏิบัติงาน</button>`}
+      <button class="pop-btn" style="background:var(--danger)" onclick="deleteMachine('${m.id}')">ลบ</button>` : '';
   return `<b class="hd">${t.icon} ${esc(m.name)}</b><br>
     <span class="badge" style="background:${st.color}">${st.label}</span><br>
     ประเภท: ${esc(t.label)}<br>
@@ -333,7 +333,7 @@ window.editMachine = function(id){
   editingId = id;
   pinLatLng = { lat: m.lat, lng: m.lon };
   if (pinTempMarker) map.removeLayer(pinTempMarker);
-  pinTempMarker = L.marker([m.lat, m.lon], { icon: L.divIcon({ className:'', html:'<div class="m-pin" style="border-color:#3b82f6">📍</div>', iconSize:[30,30], iconAnchor:[15,15] }) }).addTo(map);
+  pinTempMarker = L.marker([m.lat, m.lon], { icon: L.divIcon({ className:'', html:'<div class="m-pin" style="border-color:var(--signal)">📍</div>', iconSize:[30,30], iconAnchor:[15,15] }) }).addTo(map);
   const g = x => document.getElementById(x);
   g('mName').value = m.name || '';
   g('mType').value = m.type || 'other';
@@ -452,21 +452,21 @@ window.submitMachine = async function(){
 function renderAuthHeader(state, profile){
   const el = document.getElementById('authBox');
   if (state==='signedout') el.innerHTML = `<button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button>`;
-  else if (state==='pending') el.innerHTML = `<span class="pill" style="background:#fef3c7;color:#92400e">รออนุมัติ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
-  else if (state==='rejected') el.innerHTML = `<span class="pill" style="background:#fee2e2;color:#b91c1c">ถูกปฏิเสธ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
-  else el.innerHTML = `<span class="pill" style="background:#dcfce7;color:#15803d">${esc(profile.full_name||profile.email)}${profile.role==='admin'?' · แอดมิน':''}</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
+  else if (state==='pending') el.innerHTML = `<span class="pill" style="background:var(--st-watch-wash);color:var(--st-warn)">รออนุมัติ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
+  else if (state==='rejected') el.innerHTML = `<span class="pill" style="background:var(--st-danger-wash);color:var(--st-danger)">ถูกปฏิเสธ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
+  else el.innerHTML = `<span class="pill" style="background:var(--st-normal-wash);color:var(--st-normal)">${esc(profile.full_name||profile.email)}${profile.role==='admin'?' · แอดมิน':''}</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
 }
 
 function renderReportSection(state, profile){
   window.currentUserProfile = (state === 'approved') ? profile : null;
   const el = document.getElementById('reportSec');
-  if (state==='signedout') { el.innerHTML = `<div class="gate signedout">🔒 ต้องเข้าสู่ระบบก่อน จึงจะบันทึกจักรกลสาธารณภัยได้<br><button onclick="signInWithGoogle()" style="margin-top:8px;background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 14px;cursor:pointer">เข้าสู่ระบบด้วย Google</button></div>`; return; }
-  if (state==='pending') { el.innerHTML = `<div class="gate pending">⏳ บัญชีรออนุมัติจากผู้ดูแลระบบ</div>`; return; }
-  if (state==='rejected') { el.innerHTML = `<div class="gate rejected">🚫 บัญชีของคุณไม่ได้รับอนุมัติให้บันทึกข้อมูล</div>`; return; }
+  if (state==='signedout') { el.innerHTML = `<div class="gate signedout">ต้องเข้าสู่ระบบก่อน จึงจะบันทึกจักรกลสาธารณภัยได้<br><button onclick="signInWithGoogle()" style="margin-top:8px;background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 14px;cursor:pointer">เข้าสู่ระบบด้วย Google</button></div>`; return; }
+  if (state==='pending') { el.innerHTML = `<div class="gate pending">บัญชีรออนุมัติจากผู้ดูแลระบบ</div>`; return; }
+  if (state==='rejected') { el.innerHTML = `<div class="gate rejected">บัญชีของคุณไม่ได้รับอนุมัติให้บันทึกข้อมูล</div>`; return; }
 
   el.innerHTML = `
-    <h3>📝 เพิ่ม / แก้ไขจักรกลสาธารณภัย</h3>
-    <button id="btnPinM" class="pin-btn" onclick="togglePinM()">📍 ปักหมุดตำแหน่งบนแผนที่</button>
+    <h3>เพิ่ม / แก้ไขจักรกลสาธารณภัย</h3>
+    <button id="btnPinM" class="pin-btn" onclick="togglePinM()">ปักหมุดตำแหน่งบนแผนที่</button>
 
     <label class="f">ชื่อเครื่องจักร *</label>
     <input type="text" id="mName" placeholder="เช่น เรือท้องแบน ปภ.นธ-01">
@@ -516,7 +516,7 @@ function renderReportSection(state, profile){
     </div>
     <label class="f">รูปภาพเครื่องจักร (ถ้ามี)</label>
     <input type="file" id="mPhoto" accept="image/*">
-    <button id="btnSubmitM" onclick="submitMachine()">✅ บันทึกจักรกล</button>
+    <button id="btnSubmitM" onclick="submitMachine()">บันทึกจักรกล</button>
     <button id="btnCancelEdit" onclick="cancelEdit()">ยกเลิกการแก้ไข</button>
   `;
   document.getElementById('mFrom').value = todayStr();
@@ -525,13 +525,13 @@ function renderReportSection(state, profile){
 /* ---------- คำขอสนับสนุนทรัพยากร (resource_requests) ---------- */
 let allRequests = [];
 const REQ_STATUS = {
-  requested:{l:'ขอแล้ว',    c:'#ca8a04', next:'approved',  nextL:'อนุมัติ'},
-  approved: {l:'อนุมัติแล้ว', c:'#2563eb', next:'dispatched', nextL:'ส่งแล้ว'},
+  requested:{l:'ขอแล้ว',    c:'var(--st-watch)', next:'approved',  nextL:'อนุมัติ'},
+  approved: {l:'อนุมัติแล้ว', c:'var(--signal)', next:'dispatched', nextL:'ส่งแล้ว'},
   dispatched:{l:'ส่งแล้ว',   c:'#7c3aed', next:'returned',   nextL:'คืนแล้ว'},
-  returned: {l:'คืนแล้ว',    c:'#16a34a', next:null},
-  cancelled:{l:'ยกเลิก',     c:'#94a3b8', next:null}
+  returned: {l:'คืนแล้ว',    c:'var(--st-normal)', next:null},
+  cancelled:{l:'ยกเลิก',     c:'var(--ink-3)', next:null}
 };
-const URG = {normal:{l:'ปกติ',c:'#64748b'}, urgent:{l:'ด่วน',c:'#ea580c'}, critical:{l:'ด่วนที่สุด',c:'#dc2626'}};
+const URG = {normal:{l:'ปกติ',c:'var(--ink-3)'}, urgent:{l:'ด่วน',c:'var(--st-warn)'}, critical:{l:'ด่วนที่สุด',c:'var(--st-danger)'}};
 async function loadRequests(){
   const { data, error } = await sb.from('resource_requests').select('*').order('created_at',{ascending:false});
   allRequests = error ? [] : (data||[]);
@@ -546,12 +546,12 @@ function renderRequests(){
   const el = document.getElementById('reqSec'); if(!el) return;
   const av = reqAvailability();
   const avHtml = MACHINE_TYPES.filter(t=>av[t.id]&&av[t.id].total>0).map(t=>
-    `<span style="display:inline-block;background:#f3f4f6;border:1px solid #e3e0dd;border-radius:7px;padding:2px 7px;margin:2px;font-size:11px">${t.icon} <b>${av[t.id].active}</b>/${av[t.id].total}</span>`
+    `<span style="display:inline-block;background:var(--card-2);border:1px solid var(--line);border-radius:7px;padding:2px 7px;margin:2px;font-size:11px">${t.icon} <b>${av[t.id].active}</b>/${av[t.id].total}</span>`
   ).join('') || '<span style="font-size:11px;color:var(--muted)">ยังไม่มีข้อมูลจักรกล</span>';
   const canReq = !!window.currentUserProfile;
   const opts = MACHINE_TYPES.map(t=>`<option value="${t.id}">${t.icon} ${t.label}</option>`).join('');
   const form = canReq ? `
-    <details style="margin:6px 0"><summary style="cursor:pointer;font-weight:700;color:var(--navy-d,#423d38);font-size:12.5px">➕ สร้างคำขอสนับสนุน</summary>
+    <details style="margin:6px 0"><summary style="cursor:pointer;font-weight:700;color:var(--navy-d,var(--ink));font-size:12.5px">สร้างคำขอสนับสนุน</summary>
       <input id="rqRequester" placeholder="หน่วยที่ขอ เช่น อบต.บางปอ" style="width:100%;margin-top:5px">
       <div class="row2"><div><input id="rqProv" placeholder="จังหวัด" style="width:100%"></div><div><input id="rqAmphoe" placeholder="อำเภอ" style="width:100%"></div></div>
       <div class="row2"><div><select id="rqType" style="width:100%">${opts}</select></div><div><input id="rqQty" type="number" min="1" value="1" placeholder="จำนวน" style="width:100%"></div></div>
@@ -561,8 +561,8 @@ function renderRequests(){
     </details>` : '';
   const list = allRequests.map(r=>{
     const st = REQ_STATUS[r.status]||REQ_STATUS.requested, u = URG[r.urgency]||URG.normal, t = typeOf(r.resource_type);
-    const adv = (canReq && st.next) ? `<button onclick="updateReqStatus('${r.id}','${st.next}')" style="font-size:10.5px;border:1px solid #d1d5dc;background:#fff;border-radius:6px;padding:2px 7px;cursor:pointer">→ ${st.nextL}</button>` : '';
-    const cancel = (canReq && r.status!=='returned' && r.status!=='cancelled') ? `<button onclick="updateReqStatus('${r.id}','cancelled')" style="font-size:10.5px;border:1px solid #d1d5dc;background:#fff;border-radius:6px;padding:2px 7px;cursor:pointer">ยกเลิก</button>` : '';
+    const adv = (canReq && st.next) ? `<button onclick="updateReqStatus('${r.id}','${st.next}')" style="font-size:10.5px;border:1px solid var(--line-mid);background:#fff;border-radius:6px;padding:2px 7px;cursor:pointer">${st.nextL}</button>` : '';
+    const cancel = (canReq && r.status!=='returned' && r.status!=='cancelled') ? `<button onclick="updateReqStatus('${r.id}','cancelled')" style="font-size:10.5px;border:1px solid var(--line-mid);background:#fff;border-radius:6px;padding:2px 7px;cursor:pointer">ยกเลิก</button>` : '';
     return `<div class="mrow" style="border-left-color:${st.c}">
       <div class="nm">${t.icon} ${esc(t.label.split(' ')[0])} × ${esc(r.quantity)} <span class="badge" style="background:${st.c}">${st.l}</span> <span class="badge" style="background:${u.c}">${u.l}</span></div>
       <div class="sub">${esc(r.requester||'-')}${r.province?' · '+esc(r.province):''}${r.amphoe?' อ.'+esc(r.amphoe):''}${r.contact_phone?' · ☎ '+esc(r.contact_phone):''}</div>
@@ -632,7 +632,7 @@ watchAuthState({
     lockPage(
       '⏳ บัญชีของคุณกำลังรออนุมัติ',
       'ผู้ดูแลระบบจะตรวจสอบและอนุมัติบัญชีของคุณ กรุณารอสักครู่ หรือติดต่อผู้ดูแลระบบเพื่อเร่งการอนุมัติ',
-      '<button onclick="signOut()" style="background:#94a3b8">ออกจากระบบ</button>'
+      '<button onclick="signOut()" style="background:var(--ink-3)">ออกจากระบบ</button>'
     );
   },
   onRejected: (p) => {
@@ -641,7 +641,7 @@ watchAuthState({
     lockPage(
       '🚫 บัญชีของคุณไม่ได้รับอนุมัติ',
       'บัญชีของคุณถูกปฏิเสธการเข้าถึงหน้าทรัพยากร หากเชื่อว่าเป็นข้อผิดพลาด กรุณาติดต่อผู้ดูแลระบบ',
-      '<button onclick="signOut()" style="background:#94a3b8">ออกจากระบบ</button>'
+      '<button onclick="signOut()" style="background:var(--ink-3)">ออกจากระบบ</button>'
     );
   },
   onApproved: (p) => { renderAuthHeader('approved', p); renderReportSection('approved', p); unlockPage(); },
@@ -650,5 +650,6 @@ watchAuthState({
 </script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
+<script src="js/tabbar.js?v=1" defer></script>
 </body>
 </html>

@@ -1,0 +1,6 @@
+# ภาพจากการตรวจงาน (review gate) เป็นผลลัพธ์ ไม่ใช่ซอร์ส
+shots/
+
+# ของที่ติดตั้งเฉพาะเครื่อง
+telerid-scraper/node_modules/
+node_modules/

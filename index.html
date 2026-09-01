@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#423d38">
-<title>ภาพรวมอากาศ & สถานการณ์น้ำ จังหวัดนราธิวาส — naraflood</title>
+<meta name="theme-color" content="#102029">
+<title>ภาพรวมอากาศ & สถานการณ์น้ำ จังหวัดนราธิวาส · naraflood</title>
 <meta name="description" content="หน้าแรก: พยากรณ์อากาศ 24 ชม. รายวัน 7 วัน ปริมาณฝน มาตรวัดน้ำและอำเภอที่ต้องเฝ้าระวัง จังหวัดนราธิวาส เลือกดูรายอำเภอได้">
-<meta property="og:title" content="ภาพรวมอากาศ & สถานการณ์น้ำ จังหวัดนราธิวาส — naraflood.com">
+<meta property="og:title" content="ภาพรวมอากาศ & สถานการณ์น้ำ จังหวัดนราธิวาส · naraflood.com">
 <meta property="og:description" content="พยากรณ์ฝน 7 วัน จุดเฝ้าระวังน้ำ และอำเภอเสี่ยง จังหวัดนราธิวาส เลือกดูรายอำเภอได้">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌤️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--surface:#f3f4f6;--surface-soft:#edebe9;--elevated:#ffffff;--outline:#e3e0dd;--outline-strong:#d1d5dc;--orange:#fe6e00;--orange-d:#ff6b00;--orange-focus:#f97015;--orange-warm:#ffb74d;--navy:#57504a;--navy-d:#423d38;--peach:#e3e0dd;--shell:rgba(0,0,0,.72);--success:#00c758;--warning:#edb200;--danger:#fb2c36;--info:#3080ff}
+:root{--bg:var(--paper);--ink:var(--ink);--muted:var(--ink-3);--surface:var(--card-2);--surface-soft:var(--paper-2);--elevated:#ffffff;--outline:var(--line);--outline-strong:var(--line-mid);--orange:var(--signal);--orange-d:var(--signal-hover);--orange-focus:var(--signal-hover);--orange-warm:var(--st-watch);--navy:var(--ink-2);--navy-d:var(--ink);--peach:var(--line);--shell:rgba(0,0,0,.72);--success:var(--st-normal);--warning:var(--st-watch);--danger:var(--st-danger);--info:var(--signal)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%}
 body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
@@ -40,7 +40,7 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 
 #content{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:12px 14px 30px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
 /* กล่องในกริดต้องยอมหดได้ ไม่งั้นเนื้อหากว้าง ๆ (แถวเลื่อนแนวนอน/ภาพ) จะดันคอลัมน์
-   จนทั้งหน้าเลื่อนซ้าย-ขวาได้บนมือถือ — grid item ค่าเริ่มต้นคือ min-width:auto */
+   จนทั้งหน้าเลื่อนซ้าย-ขวาได้บนมือถือ · grid item ค่าเริ่มต้นคือ min-width:auto */
 #content>*{min-width:0}
 .card{background:var(--elevated);border:1px solid var(--outline);border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.10),0 1px 2px rgba(0,0,0,.06)}
 .card.full{grid-column:1 / -1}
@@ -67,39 +67,37 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 #nowBox .d{font-size:12px;color:var(--muted);line-height:1.5}
 /* แถวรายชั่วโมง */
 #hourRow{display:flex;gap:6px;overflow-x:auto;padding:6px 0 4px;-webkit-overflow-scrolling:touch}
-.hr{flex:0 0 62px;text-align:center;background:#f8fafc;border:1px solid #eef2f7;border-radius:10px;padding:6px 2px;font-size:11px}
-.hr.rain{background:#eff6ff;border-color:#bfdbfe}
+.hr{flex:0 0 62px;text-align:center;background:var(--card);border:1px solid var(--card-2);border-radius:10px;padding:6px 2px;font-size:11px}
+.hr.rain{background:var(--signal-wash);border-color:var(--signal-wash)}
 .hr .ic{font-size:19px;line-height:1.3}
 .hr .tt{font-weight:700;font-size:12.5px}
-.hr .mm{color:#1d4ed8;font-weight:600;font-size:10.5px}
-.hr .pp{color:#94a3b8;font-size:10px}
+.hr .mm{color:var(--signal);font-weight:600;font-size:10.5px}
+.hr .pp{color:var(--ink-3);font-size:10px}
 /* 7 วัน */
-.dayrow{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px dashed #eef2f7;font-size:12.5px}
+.dayrow{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px dashed var(--card-2);font-size:12.5px}
 .dayrow:last-child{border-bottom:none}
 .dayrow .dn{width:64px;font-weight:600}
 .dayrow .ic{width:26px;text-align:center;font-size:17px}
-.dayrow .tmp{width:86px;color:#475569}
-.dayrow .rbar{flex:1;height:9px;background:#f1f5f9;border-radius:6px;overflow:hidden}
-.dayrow .rbar i{display:block;height:100%;background:linear-gradient(90deg,#60a5fa,#1d4ed8)}
-.dayrow .rmm{width:66px;text-align:right;font-weight:700;color:#1d4ed8}
+.dayrow .tmp{width:86px;color:var(--ink-2)}
+.dayrow .rbar{flex:1;height:9px;background:var(--card-2);border-radius:6px;overflow:hidden}
+.dayrow .rbar i{display:block;height:100%;background:linear-gradient(90deg,var(--signal),var(--signal))}
+.dayrow .rmm{width:66px;text-align:right;font-weight:700;color:var(--signal)}
 /* จุดเฝ้าระวัง */
-.st{border:1px solid #e2e8f0;border-left-width:5px;border-radius:8px;padding:6px 10px;margin-bottom:6px;font-size:12.5px;display:flex;justify-content:space-between;gap:6px;align-items:center}
+.st{border:1px solid var(--line);border-left-width:5px;border-radius:8px;padding:6px 10px;margin-bottom:6px;font-size:12.5px;display:flex;justify-content:space-between;gap:6px;align-items:center}
 .st .nm{font-weight:600}
 .st .sub{font-size:10.5px;color:var(--muted)}
 .badge{padding:1px 9px;border-radius:99px;color:#fff;font-size:10.5px;font-weight:600;white-space:nowrap}
 /* อำเภอ */
-.amp{display:flex;align-items:center;gap:8px;padding:5px 2px;border-bottom:1px dashed #eef2f7;font-size:12.5px;cursor:pointer}
-.amp:hover{background:#fff7ed}
+.amp{display:flex;align-items:center;gap:8px;padding:5px 2px;border-bottom:1px dashed var(--card-2);font-size:12.5px;cursor:pointer}
+.amp:hover{background:var(--st-warn-wash)}
 .amp .an{width:120px;font-weight:600}
-.amp .abar{flex:1;height:9px;background:#f1f5f9;border-radius:6px;overflow:hidden}
+.amp .abar{flex:1;height:9px;background:var(--card-2);border-radius:6px;overflow:hidden}
 .amp .abar i{display:block;height:100%}
-.amp .amm{width:118px;text-align:right;font-size:11px;color:#475569}
-.bignum{font-size:34px;font-weight:700;line-height:1.1}
-.risklabel{font-size:12px;font-weight:600}
-.note{font-size:10.5px;color:#94a3b8;margin-top:6px;line-height:1.5}
-.spin{display:inline-block;width:12px;height:12px;border:2px solid #cbd5e1;border-top-color:var(--orange);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-2px}
+.amp .amm{width:118px;text-align:right;font-size:11px;color:var(--ink-2)}
+.note{font-size:10.5px;color:var(--ink-3);margin-top:6px;line-height:1.5}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line-mid);border-top-color:var(--orange);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-2px}
 @keyframes sp{to{transform:rotate(360deg)}}
-footer{background:var(--navy-d);color:#cfc8c0;font-size:10.5px;padding:6px 14px;display:flex;gap:10px;flex-wrap:wrap}
+footer{background:var(--navy-d);color:var(--ink-3);font-size:10.5px;padding:6px 14px;display:flex;gap:10px;flex-wrap:wrap}
 footer a{color:var(--orange-warm);text-decoration:none}
 
 /* เรดาร์ตำบล */
@@ -112,17 +110,17 @@ footer a{color:var(--orange-warm);text-decoration:none}
 /* แถบวัดความแรงฝน (rain-intensity scale) ข้างภาพเรดาร์ */
 .radarWrap{display:flex;gap:12px;align-items:stretch;justify-content:center;flex-wrap:wrap}
 .radarImgBox{position:relative;display:inline-block;max-width:100%;line-height:0}
-#radarFreeze{position:absolute;inset:0;width:100%;height:100%;display:none;border-radius:8px;border:1px solid #e2e8f0;cursor:pointer}
+#radarFreeze{position:absolute;inset:0;width:100%;height:100%;display:none;border-radius:8px;border:1px solid var(--line);cursor:pointer}
 .rainScale{display:flex;flex-direction:column;flex:0 0 auto;align-self:stretch;min-height:300px;font-size:11px}
 .rainScale .rsTitle{text-align:center;font-weight:800;color:var(--navy);font-size:11.5px;line-height:1.15;margin-bottom:4px}
-.rainScale .rsTitle small{font-weight:600;color:#64748b;font-size:9.5px}
+.rainScale .rsTitle small{font-weight:600;color:var(--ink-3);font-size:9.5px}
 .rainScale .rsBody{display:flex;flex:1 1 auto;gap:0}
-.rainScale .rsBar{display:flex;flex-direction:column;width:26px;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px #cbd5e1}
+.rainScale .rsBar{display:flex;flex-direction:column;width:26px;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px var(--line-mid)}
 .rainScale .rsBar span{display:block}
 .rainScale .rsLabels{display:flex;flex-direction:column;margin-left:6px}
-.rainScale .rsGrp{display:flex;align-items:center;border-left:2px solid #cbd5e1;padding-left:6px}
-.rainScale .rsGrp b{font-weight:800;color:#334155;font-size:11px;line-height:1.1}
-.rainScale .rsGrp small{display:block;font-weight:600;color:#64748b;font-size:9px}
+.rainScale .rsGrp{display:flex;align-items:center;border-left:2px solid var(--line-mid);padding-left:6px}
+.rainScale .rsGrp b{font-weight:800;color:var(--ink-2);font-size:11px;line-height:1.1}
+.rainScale .rsGrp small{display:block;font-weight:600;color:var(--ink-3);font-size:9px}
 /* บนมือถือ: วางภาพเรดาร์เต็มความกว้าง แล้วพลิกแถบวัดความแรงฝนเป็นแนวนอนไว้ใต้ภาพ
    (แบบเดิมเป็นแท่งตั้งสูง 300px ต่อท้ายภาพ ทำให้การ์ดยาวและอ่านยากบนจอแคบ) */
 @media(max-width:768px){
@@ -131,7 +129,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
   .rainScale .rsBody{flex-direction:column}
   .rainScale .rsBar{flex-direction:row;width:100%;height:20px}
   .rainScale .rsLabels{flex-direction:row;margin-left:0;margin-top:6px}
-  .rainScale .rsGrp{border-left:none;border-top:2px solid #cbd5e1;padding-left:0;padding-top:4px;
+  .rainScale .rsGrp{border-left:none;border-top:2px solid var(--line-mid);padding-left:0;padding-top:4px;
     justify-content:center;text-align:center;margin-right:2px}
   .rainScale .rsGrp b{font-size:10.5px}
   #radarImg{max-height:none!important}
@@ -148,11 +146,11 @@ footer a{color:var(--orange-warm);text-decoration:none}
 /* ฝนพยากรณ์ 7 วัน */
 #wrfRow{display:flex;gap:8px;overflow-x:auto;padding:4px 0;-webkit-overflow-scrolling:touch}
 .wrfCard{flex:0 0 auto;text-align:center}
-.wrfThumb{width:172px;height:139px;border-radius:8px;border:1px solid #e2e8f0;overflow:hidden;position:relative;cursor:zoom-in;background:#eef2f7}
+.wrfThumb{width:172px;height:139px;border-radius:8px;border:1px solid var(--line);overflow:hidden;position:relative;cursor:zoom-in;background:var(--card-2)}
 .wrfThumb img{position:absolute;image-rendering:-webkit-optimize-contrast}
 .wrfCard .dn{font-size:11.5px;font-weight:600;margin-top:4px}
-.wrfLegend{display:flex;flex-wrap:wrap;gap:2px;align-items:center;margin-top:8px;font-size:10px;color:#475569}
-.wrfLegend .sw{padding:2px 6px;border-radius:3px;color:#0f172a;font-weight:600;font-size:9.5px}
+.wrfLegend{display:flex;flex-wrap:wrap;gap:2px;align-items:center;margin-top:8px;font-size:10px;color:var(--ink-2)}
+.wrfLegend .sw{padding:2px 6px;border-radius:3px;color:var(--ink);font-weight:600;font-size:9.5px}
 #wrfModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.85);z-index:2000;align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
 #wrfModal.show{display:flex}
 #wrfModal img{max-width:95%;max-height:92vh;border-radius:8px;background:#fff}
@@ -160,107 +158,132 @@ footer a{color:var(--orange-warm);text-decoration:none}
 /* การ์ดข้อมูลทางการกรมอุตุฯ */
 #tmdGrid{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}
 @media(max-width:768px){#tmdGrid{grid-template-columns:1fr}}
-.tmdObsRow{display:flex;align-items:center;gap:8px;padding:4px 2px;border-bottom:1px dashed #eef2f7;font-size:12px}
+.tmdObsRow{display:flex;align-items:center;gap:8px;padding:4px 2px;border-bottom:1px dashed var(--card-2);font-size:12px}
 .tmdObsRow:last-child{border-bottom:none}
 .tmdObsRow .sn{flex:1;font-weight:600}
 .tmdObsRow .sn small{display:block;font-weight:400;color:var(--muted);font-size:10px}
 .tmdObsRow .rv{width:74px;text-align:right;font-weight:700}
-.tmdObsRow .tv{width:86px;text-align:right;color:#475569}
-.tmdObsRow .hv{width:44px;text-align:right;color:#64748b}
+.tmdObsRow .tv{width:86px;text-align:right;color:var(--ink-2)}
+.tmdObsRow .hv{width:44px;text-align:right;color:var(--ink-3)}
 
 </style>
-<link rel="stylesheet" href="shared.css?v=2">
+<link rel="stylesheet" href="shared.css?v=3">
 </head>
 <body>
 
 <div class="pageBanner"><img src="header.jpg?v=3" alt="Dashboard อุทกภัย จังหวัดนราธิวาส" width="1600" height="397" fetchpriority="high" decoding="async"></div>
 
 <header>
-  <h1>🌤️ ภาพรวมอากาศ & สถานการณ์น้ำ</h1>
+  <h1>ภาพรวมอากาศ & สถานการณ์น้ำ</h1>
   <nav class="navtab" aria-label="เมนูหลัก">
-    <a href="index.html" class="on">🌤️ หน้าแรก</a>
-    <a href="map.html">🗺️ ระดับน้ำ</a>
-    <a href="forecast.html">🔮 คาดการณ์</a>
-    <a href="history.html">🛰️ ย้อนหลัง</a>
-    <a href="repeat.html">⚠️ พื้นที่เสี่ยง</a>
-    <a href="sim.html">🌊 แบบจำลอง</a>
-    <a href="shelter.html">🏠 ศูนย์พักพิง</a>
-    <a href="route.html">🚗 เส้นทาง</a>
-    <a href="resources.html">🚜 ทรัพยากร</a>
-    <a href="check.html">📍 เช็คพื้นที่</a>
-    <a href="alert.html">🔔 แจ้งเตือน</a>
-    <a href="eoc.html">🎛️ EOC</a>
+    <a href="index.html" class="on">หน้าแรก</a>
+    <a href="map.html">ระดับน้ำ</a>
+    <a href="forecast.html">คาดการณ์</a>
+    <a href="history.html">ย้อนหลัง</a>
+    <a href="repeat.html">พื้นที่เสี่ยง</a>
+    <a href="sim.html">แบบจำลอง</a>
+    <a href="shelter.html">ศูนย์พักพิง</a>
+    <a href="route.html">เส้นทาง</a>
+    <a href="resources.html">ทรัพยากร</a>
+    <a href="check.html">เช็คพื้นที่</a>
+    <a href="alert.html">แจ้งเตือน</a>
+    <a href="eoc.html">EOC</a>
   </nav>
   <div id="updated">…</div>
   <button id="btnRefresh" onclick="loadAll()">รีเฟรช</button>
 </header>
 
 <div id="selbar">
-  <span class="provlbl">🏙️ จังหวัดนราธิวาส</span>
+  <span class="provlbl">จังหวัดนราธิวาส</span>
   <select id="ampSel"><option value="">ทั้งจังหวัด</option></select>
 </div>
 
 <div id="content">
+  <!-- แถบคำตอบ: อยู่บนสุดเพราะเป็นสิ่งเดียวที่คนส่วนใหญ่เปิดเว็บนี้มาดู
+       ทุกค่าอ่านมาจากที่หน้านี้คำนวณอยู่แล้ว ไม่ได้คิดเลขชุดใหม่
+       ตัวเลขบนหน้าจึงตรงกันเสมอ ไม่มีทางขัดกันเอง -->
+  <div class="card full strip" id="statusStrip" role="status" aria-live="polite">
+    <div>
+      <div class="strip-lv" id="stripLv">กำลังอ่านข้อมูล</div>
+      <div class="strip-sub" id="stripSub">ประเมินจากฝนพยากรณ์ 7 วัน ดินอิ่มน้ำ และสถานีน้ำที่เข้าเกณฑ์เฝ้าระวัง</div>
+    </div>
+    <div class="strip-nums">
+      <div><b id="stripRain">…</b><span>ฝน 7 วัน (มม.)</span></div>
+      <div><b id="stripSoil">…</b><span>ดินอิ่มน้ำ (มม.)</span></div>
+      <div><b id="stripSt">…</b><span>สถานีเฝ้าระวัง</span></div>
+    </div>
+  </div>
+
   <div class="card full" id="tmdCard">
-    <h2>🏛️ ข้อมูลทางการ กรมอุตุนิยมวิทยา <span class="where" id="tmdUpdated"></span></h2>
+    <h2>ข้อมูลทางการ กรมอุตุนิยมวิทยา <span class="where" id="tmdUpdated"></span></h2>
+    <!-- คำเตือนทางการอยู่นอกส่วนพับเสมอ ของที่ต้องเห็นห้ามซ่อน
+         ส่วนที่พับได้คือร้อยแก้วพยากรณ์รายภาคกับแผนที่ฝนรายอำเภอ
+         ซึ่งเป็นของอ้างอิงที่อ่านทีหลังได้ -->
+    <div id="tmdWarn"></div>
+    <details class="fold">
+    <summary>อ่านพยากรณ์รายภาคฉบับเต็ม และแผนที่ฝนรายอำเภอ</summary>
+    <div class="fold-body">
     <div id="tmdGrid">
       <div>
-        <div style="font-weight:700;font-size:13px;color:var(--navy-d)">📢 พยากรณ์ 7 วัน — ภาคใต้ฝั่งตะวันออก</div>
-        <div id="tmdWarn"></div>
-        <div id="tmdRegion" style="font-size:12.5px;line-height:1.7;color:#334155;margin-top:4px"><span class="spin"></span> กำลังโหลด…</div>
-        <div style="border-top:1px solid #eef2f7;margin-top:12px;padding-top:10px">
-          <div style="font-weight:700;font-size:13px;color:var(--navy-d)">🌧️ ฝนรวม 7 วันข้างหน้า</div>
-          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:6px">
-            <div><div class="bignum" id="rain7"><span class="spin"></span></div><div style="font-size:11px;color:var(--muted)">มม. (จุดที่เลือก)</div></div>
-            <div id="rain7Label" class="risklabel"></div>
-          </div>
-          <div id="soil" style="margin-top:8px;font-size:12px;color:#475569"></div>
-          <div class="note">เกณฑ์อ้างอิง: ฝนรวมสัปดาห์ >150 มม. ในพื้นที่ลุ่ม/ดินอิ่มน้ำ ควรยกระดับการเฝ้าระวัง</div>
-        </div>
+        <div style="font-weight:700;font-size:13px;color:var(--navy-d)">พยากรณ์ 7 วัน · ภาคใต้ฝั่งตะวันออก</div>
+        <div id="tmdRegion" style="font-size:12.5px;line-height:1.7;color:var(--ink-2);margin-top:4px"><span class="spin"></span> กำลังโหลด…</div>
       </div>
       <div>
-        <div style="font-weight:700;font-size:13px;color:var(--navy-d)">🗺️ ปริมาณฝนรายอำเภอ นราธิวาส</div>
-        <img src="https://ax4zxr2a81pg.objectstorage.ap-singapore-1.oci.customer-oci.com/n/ax4zxr2a81pg/b/semet-radar/o/naramet%2Fraininfo.png" alt="แผนที่ปริมาณฝนรายอำเภอ นราธิวาส" title="คลิกเพื่อดูภาพเต็ม" style="width:100%;aspect-ratio:1240/1140;object-fit:cover;object-position:50% 57%;border-radius:8px;border:1px solid #e2e8f0;cursor:zoom-in;background:#fff;margin-top:4px" onclick="window.open('https://ax4zxr2a81pg.objectstorage.ap-singapore-1.oci.customer-oci.com/n/ax4zxr2a81pg/b/semet-radar/o/naramet%2Fraininfo.png','_blank')">
+        <div style="font-weight:700;font-size:13px;color:var(--navy-d)">ปริมาณฝนรายอำเภอ นราธิวาส</div>
+        <img src="https://ax4zxr2a81pg.objectstorage.ap-singapore-1.oci.customer-oci.com/n/ax4zxr2a81pg/b/semet-radar/o/naramet%2Fraininfo.png" alt="แผนที่ปริมาณฝนรายอำเภอ นราธิวาส" title="คลิกเพื่อดูภาพเต็ม" style="width:100%;aspect-ratio:1240/1140;object-fit:cover;object-position:50% 57%;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;background:#fff;margin-top:4px" onclick="window.open('https://ax4zxr2a81pg.objectstorage.ap-singapore-1.oci.customer-oci.com/n/ax4zxr2a81pg/b/semet-radar/o/naramet%2Fraininfo.png','_blank')">
       </div>
     </div>
-    <div class="note">ที่มา: กรมอุตุนิยมวิทยา (TMDAPI ทางการ) — พยากรณ์รายภาคออกใหม่ทุกวัน ~11:00 น. · ค่าตรวจวัด ณ 07:00 น. ฝนคือปริมาณสะสม 24 ชม.ที่ผ่านมา · การ์ดอื่นในหน้านี้เป็นแบบจำลอง Open-Meteo รายอำเภอ ใช้คู่กัน: ตัวเลขละเอียดจากแบบจำลอง + ภาพรวม/คำเตือนทางการจากกรมอุตุฯ · <a href="https://www.tmd.go.th" target="_blank" rel="noopener">เปิดเว็บกรมอุตุฯ ↗</a></div>
+    </div>
+    </details>
+    <div class="note">ที่มา: กรมอุตุนิยมวิทยา (TMDAPI ทางการ) · พยากรณ์รายภาคออกใหม่ทุกวัน ~11:00 น. · ค่าตรวจวัด ณ 07:00 น. ฝนคือปริมาณสะสม 24 ชม.ที่ผ่านมา · การ์ดอื่นในหน้านี้เป็นแบบจำลอง Open-Meteo รายอำเภอ ใช้คู่กัน: ตัวเลขละเอียดจากแบบจำลอง + ภาพรวม/คำเตือนทางการจากกรมอุตุฯ · <a href="https://www.tmd.go.th" target="_blank" rel="noopener">เปิดเว็บกรมอุตุฯ ↗</a></div>
   </div>
 
   <div class="card full">
-    <h2>⏱️ พยากรณ์ 24 ชั่วโมงข้างหน้า (รายชั่วโมง) <span class="where" id="whereHour"></span></h2>
+    <h2>พยากรณ์ 24 ชั่วโมงข้างหน้า (รายชั่วโมง) <span class="where" id="whereHour"></span></h2>
     <div id="nowBox"><span class="spin"></span> กำลังโหลด…</div>
     <div id="hourRow"></div>
     <div class="note">แหล่งข้อมูล: แบบจำลอง Open-Meteo (ผสาน GFS/ECMWF) ณ จุดศูนย์กลางอำเภอ · เวลาไทย</div>
   </div>
 
   <div class="card">
-    <h2>📅 พยากรณ์รายวัน 7 วัน <span class="where" id="whereDay"></span></h2>
+    <h2>พยากรณ์รายวัน 7 วัน <span class="where" id="whereDay"></span></h2>
+    <!-- ฝนรวม 7 วันสรุปอยู่บนแถบคำตอบแล้ว รายวันเป็นรายละเอียดที่ดูทีหลังได้
+         และมีฉบับเต็มอยู่ที่หน้าคาดการณ์ -->
+    <details class="fold">
+    <summary>ดูรายวันทั้ง 7 วัน</summary>
+    <div class="fold-body">
     <div id="dayList"><span class="spin"></span></div>
+    </div>
+    </details>
   </div>
 
   <div class="card">
-    <h2>⚠️ มาตรวัดน้ำต้องระวังเป็นพิเศษ <span class="where" id="whereSt"></span></h2>
+    <h2>มาตรวัดน้ำต้องระวังเป็นพิเศษ <span class="where" id="whereSt"></span></h2>
     <div id="stList"><span class="spin"></span></div>
-    <div class="note">เกณฑ์: ล้นตลิ่ง / ≥70% ความจุลำน้ำ / กำลังขึ้นเร็ว — คลิกเพื่อดูบนแผนที่</div>
+    <div class="note">เกณฑ์: ล้นตลิ่ง / ≥70% ความจุลำน้ำ / กำลังขึ้นเร็ว · คลิกเพื่อดูบนแผนที่</div>
   </div>
 
   <div class="card full">
-    <h2>🌊 สถานการณ์น้ำท่า — สถานีหลัก <span class="where">NWT02 · X.73 · X.119A</span></h2>
+    <h2>สถานการณ์น้ำท่า · สถานีหลัก <span class="where">NWT02 · X.73 · X.119A</span></h2>
+    <div class="swipe-hint">ปัดไปทางซ้ายเพื่อดูสถานีถัดไป (3 สถานี)</div>
     <div id="wtaRow" class="wtaRow"><span class="spin"></span> กำลังโหลด…</div>
-    <div class="note">ระดับน้ำจริง เทียบเส้นเฝ้าระวัง (เหลือง) และตลิ่ง (แดง) · X.73, X.119A (ม.รทก.) อัปเดตสดจาก thaiwater.net (สสน.) — NWT02 สะพานข้ามคลองบากง (อ.รือเสาะ) อัปเดตสดจากระบบ ปภ. (<a href="https://cctv.disaster.go.th/stations/NWT02" target="_blank" rel="noopener">cctv.disaster.go.th</a>) ใช้แทน X.199 ที่ไม่มีในข้อมูลเปิด</div>
+    <div class="note">ระดับน้ำจริง เทียบเส้นเฝ้าระวัง (เหลือง) และตลิ่ง (แดง) · X.73, X.119A (ม.รทก.) อัปเดตสดจาก thaiwater.net (สสน.) · NWT02 สะพานข้ามคลองบากง (อ.รือเสาะ) อัปเดตสดจากระบบ ปภ. (<a href="https://cctv.disaster.go.th/stations/NWT02" target="_blank" rel="noopener">cctv.disaster.go.th</a>) ใช้แทน X.199 ที่ไม่มีในข้อมูลเปิด</div>
   </div>
 
   <div class="card full">
-    <h2>🏘️ อำเภอที่ต้องเฝ้าระวังเป็นพิเศษ (7 วันนี้) <span class="where" id="whereAmp"></span></h2>
+    <h2>อำเภอที่ต้องเฝ้าระวังเป็นพิเศษ (7 วันนี้) <span class="where" id="whereAmp"></span></h2>
     <div id="ampList"><span class="spin"></span> กำลังประเมิน…</div>
     <div class="note">คะแนนรวมจาก: ฝนพยากรณ์ 7 วัน (Open-Meteo รายอำเภอ) + ดินอิ่มน้ำ (ฝน 3 วันที่ผ่านมา สสน.) + สถานีน้ำมาก/ล้นตลิ่งในอำเภอ · คลิกชื่ออำเภอเพื่อดูพยากรณ์เฉพาะจุด</div>
   </div>
 
   <div class="card full">
-    <h2>📡 เรดาร์ฝนสทิงพระ (กรมอุตุฯ) <span class="where" id="radarUpdated"></span></h2>
+    <h2>เรดาร์ฝนสทิงพระ (กรมอุตุฯ) <span class="where" id="radarUpdated"></span></h2>
+    <details class="fold">
+    <summary>ดูภาพเรดาร์ย้อนหลัง 1 ชั่วโมง พร้อมแถบเทียบความแรงฝน</summary>
+    <div class="fold-body">
     <div class="radarWrap">
       <div class="radarImgBox" id="radarImgBox">
-        <img id="radarImg" src="" alt="เรดาร์ฝนสทิงพระ ล่าสุด" style="max-width:100%;max-height:936px;border-radius:8px;border:1px solid #e2e8f0;cursor:pointer;background:#eef2f7;display:block" onclick="window.open('https://sites.google.com/view/naramet-radar/narathiwat?authuser=0','_blank','noopener')">
+        <img id="radarImg" alt="เรดาร์ฝนสทิงพระ ล่าสุด" style="max-width:100%;max-height:936px;border-radius:8px;border:1px solid var(--line);cursor:pointer;background:var(--card-2);display:block" onclick="window.open('https://sites.google.com/view/naramet-radar/narathiwat?authuser=0','_blank','noopener')">
         <canvas id="radarFreeze" onclick="window.open('https://sites.google.com/view/naramet-radar/narathiwat?authuser=0','_blank','noopener')"></canvas>
       </div>
       <div class="rainScale" aria-label="แถบวัดความแรงฝนจากสีบนเรดาร์">
@@ -281,21 +304,28 @@ footer a{color:var(--orange-warm);text-decoration:none}
         </div>
       </div>
     </div>
+    </div>
+    </details>
   </div>
 
   <div class="card full">
-    <h2>🌧️ แผนที่คาดการณ์ฝนล่วงหน้า 7 วัน (WRF-ROMS สสน.) <span class="where">โฟกัสภาคใต้ตอนล่าง</span></h2>
+    <h2>แผนที่คาดการณ์ฝนล่วงหน้า 7 วัน (WRF-ROMS สสน.) <span class="where">โฟกัสภาคใต้ตอนล่าง</span></h2>
+    <details class="fold">
+    <summary>ดูแผนที่คาดการณ์ฝนรายวัน 7 ภาพ</summary>
+    <div class="fold-body">
     <div id="wrfRow"><span class="spin"></span> กำลังโหลด…</div>
     <div class="wrfLegend" id="wrfLegend"></div>
-    <div class="note">แผนที่ครอบตัดแสดงเฉพาะภาคใต้ตอนล่างจากภาพต้นฉบับ (ความละเอียด ~9x9 กม.) — คลิกภาพเพื่อดูฉบับเต็มพร้อมแถบสีและพิกัด ค่าฝนเป็นปริมาณสะสมต่อวัน (มม./วัน) ความแม่นยำลดลงตามระยะเวลาคาดการณ์</div>
+    <div class="note">แผนที่ครอบตัดแสดงเฉพาะภาคใต้ตอนล่างจากภาพต้นฉบับ (ความละเอียด ~9x9 กม.) · คลิกภาพเพื่อดูฉบับเต็มพร้อมแถบสีและพิกัด ค่าฝนเป็นปริมาณสะสมต่อวัน (มม./วัน) ความแม่นยำลดลงตามระยะเวลาคาดการณ์</div>
+    </div>
+    </details>
   </div>
 </div>
 
-<div id="wrfModal" onclick="this.classList.remove('show')"><img id="wrfModalImg" src="" alt=""></div>
+<div id="wrfModal" onclick="this.classList.remove('show')"><img id="wrfModalImg" alt="แผนที่คาดการณ์ฝน WRF-ROMS ขยายเต็มจอ"></div>
 
 <footer>
   <span>ข้อมูล: กรมอุตุนิยมวิทยา (TMDAPI) · Open-Meteo · thaiwater.net (สสน.) · ศูนย์กลางอำเภอจาก OpenGISData-Thailand</span>
-  <span style="margin-left:auto">อยู่ระหว่างการทดลองปรับปรุง — <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a></span>
+  <span style="margin-left:auto">อยู่ระหว่างการทดลองปรับปรุง · <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a></span>
 </footer>
 
 <script>
@@ -322,26 +352,26 @@ function wmo(code, pop){
   if(c<=65) return [c>=63?'🌧️':'🌦️', c>=63?'ฝนปานกลาง-หนัก':'ฝนเล็กน้อย'];
   if(c<=82) return ['🌧️','ฝนซู่'];
   if(c>=95) return ['⛈️','ฝนฟ้าคะนอง'];
-  return [pop>=50?'🌧️':'🌥️','—'];
+  return [pop>=50?'🌧️':'🌥️','…'];
 }
 const num = v => { const n = parseFloat(v); return isNaN(n) ? null : n; };
 const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const thName = o => (o && typeof o==='object') ? (o.th || o.en || '') : (o || '');
-const fmt1 = v => v==null ? '—' : (+v).toLocaleString('th-TH',{maximumFractionDigits:1});
+const fmt1 = v => v==null ? '…' : (+v).toLocaleString('th-TH',{maximumFractionDigits:1});
 
 let prov = 'นราธิวาส';
 let amp = '';                 // '' = ทั้งจังหวัด (ใช้จุดอำเภอเมือง)
 let meteoCache = {};          // จังหวัด -> array ผลพยากรณ์ตามลำดับอำเภอ
 let wlAll = [];               // สถานีน้ำทั้ง 5 จังหวัด
-let nwt02 = null;             // สถานี ปภ. NWT02 (สะพานข้ามคลองบากง) — ใช้แทน X.199
-let soilByAmp = {};           // 'จังหวัด|อำเภอบางส่วน' ไม่ใช้ — เก็บรายจังหวัด: {จังหวัด: {อำเภอ: มม.}}
+let nwt02 = null;             // สถานี ปภ. NWT02 (สะพานข้ามคลองบากง) · ใช้แทน X.199
+let soilByAmp = {};           // 'จังหวัด|อำเภอบางส่วน' ไม่ใช้ · เก็บรายจังหวัด: {จังหวัด: {อำเภอ: มม.}}
 
 const ampsOf = p => AMPHOES.filter(a=>a[0]===p);
 const mainAmp = p => ampsOf(p).find(a=>a[1].startsWith('เมือง')) || ampsOf(p)[0];
 
 /* ---------- ข้อมูลทางการกรมอุตุฯ ผ่าน tmd-proxy Worker (CORS) ----------
    endpoint ตรวจแล้ว 2026-07-19: /region7days (รายภาค อัปเดตทุกวัน ~11:00)
-   + /today (ตรวจวัดจริง 07:00) — ห้ามใช้ WeatherWarningNews (ค้างปี 2022) */
+   + /today (ตรวจวัดจริง 07:00) · ห้ามใช้ WeatherWarningNews (ค้างปี 2022) */
 const TMD_PROXY = 'https://tmd-proxy.newusmanwaji.workers.dev';
 const TMD_SOUTH = ['สงขลา','สตูล','ปัตตานี','ยะลา','นราธิวาส'];
 async function loadTmd(){
@@ -352,20 +382,20 @@ async function loadTmd(){
     const se = ((reg.WeatherForecast7DaysByRegion||{}).Regions||[])
       .find(x=>x.RegionNameThai==='ภาคใต้ฝั่งตะวันออก');
     if(se){
-      rEl.textContent = se.WeatherDescriptionThai || '—';
+      rEl.textContent = se.WeatherDescriptionThai || '…';
       const end = (se.EndForecastDate||'').slice(0,10);
       if(end) document.getElementById('tmdUpdated').textContent =
         'พยากรณ์ถึง ' + new Date(end+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short'});
       const warn = (typeof se.WarningThai==='string' ? se.WarningThai : '').trim();
       wEl.innerHTML = (warn && warn!=='-')
-        ? `<div style="background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:8px;padding:6px 10px;font-size:12.5px;font-weight:600;margin-top:6px">⚠️ ${warn}</div>`
+        ? `<div style="background:var(--st-danger-wash);border:1px solid var(--st-danger-wash);color:var(--st-danger);border-radius:8px;padding:6px 10px;font-size:12.5px;font-weight:600;margin-top:6px">${warn}</div>`
         : '';
     }else rEl.textContent = 'ไม่พบข้อมูลภาคใต้ฝั่งตะวันออกในรอบนี้';
     // (ส่วนตรวจวัดรายสถานีถูกแทนด้วยแผนที่ฝนรายอำเภอด้านขวา)
   }catch(e){
-    const msg = `<div style="font-size:12px;color:#94a3b8">เชื่อมต่อข้อมูลกรมอุตุฯ ไม่ได้ขณะนี้ —
+    const msg = `<div style="font-size:12px;color:var(--ink-3)">เชื่อมต่อข้อมูลกรมอุตุฯ ไม่ได้ขณะนี้ · 
       <a href="https://www.tmd.go.th/forecast/region" target="_blank" rel="noopener">เปิดพยากรณ์รายภาคที่เว็บกรมอุตุฯ ↗</a><br>
-      <small>(สำหรับผู้ดูแล: ต้อง deploy tmd-proxy.worker.js บน Cloudflare ก่อน — ดูวิธีในไฟล์)</small></div>`;
+      <small>(สำหรับผู้ดูแล: ต้อง deploy tmd-proxy.worker.js บน Cloudflare ก่อน · ดูวิธีในไฟล์)</small></div>`;
     rEl.innerHTML = msg;
   }
 }
@@ -423,16 +453,16 @@ async function loadSoil(){
     });
   }catch(e){ soilByAmp = {}; }
 }
-/* NWT02 (สะพานข้ามคลองบากง อ.รือเสาะ) จากระบบ ปภ. — ใช้แทน X.199 ที่ไม่มีในข้อมูลเปิด
+/* NWT02 (สะพานข้ามคลองบากง อ.รือเสาะ) จากระบบ ปภ. · ใช้แทน X.199 ที่ไม่มีในข้อมูลเปิด
    ดึงสดจาก ArcGIS FeatureServer ของ ปภ. (CORS สาธารณะ) */
 const DDPM_NWT02 = 'https://gis-portal.disaster.go.th/arcgis/rest/services/Map_DDPM_CCTV/DDPM_CCTV_STATION_PROD/FeatureServer/0/query?where=code%3D%27NWT02%27&outFields=current_water_level,river_bank_level,water_level_status,updated_at&returnGeometry=false&f=json';
 function ddpmWtaStatus(txt){
   const s = String(txt||'').toUpperCase();
-  if(s==='LOW')    return {l:'ปกติ',      c:'#22c55e'};
-  if(s==='MEDIUM') return {l:'เฝ้าระวัง',  c:'#eab308'};
-  if(s==='HIGH')   return {l:'น้ำมาก',     c:'#f97316'};
-  if(s==='VERYHIGH'||s==='CRITICAL'||s==='CRISIS') return {l:'ล้นตลิ่ง', c:'#dc2626'};
-  return {l:'รอข้อมูล', c:'#9ca3af'};
+  if(s==='LOW')    return {l:'ปกติ',      c:'var(--st-normal)'};
+  if(s==='MEDIUM') return {l:'เฝ้าระวัง',  c:'var(--st-watch)'};
+  if(s==='HIGH')   return {l:'น้ำมาก',     c:'var(--st-warn)'};
+  if(s==='VERYHIGH'||s==='CRITICAL'||s==='CRISIS') return {l:'ล้นตลิ่ง', c:'var(--st-danger)'};
+  return {l:'รอข้อมูล', c:'var(--ink-3)'};
 }
 async function loadDdpmNwt02(){
   if(nwt02) return;
@@ -454,10 +484,10 @@ const WTA = [
   {code:'X.119A', name:'สะพานลันตู',    amphoe:'สุไหงโก-ลก', river:'แม่น้ำโก-ลก',   bank:9.30,  warn:8.30,  ground:1},
 ];
 function wtaStatus(s, cur){
-  if(cur==null) return {c:'#9ca3af', l:'รอข้อมูล'};
-  if(cur>=s.bank) return {c:'#dc2626', l:'ล้นตลิ่ง'};
-  if(cur>=s.warn) return {c:'#eab308', l:'เฝ้าระวัง'};
-  return {c:'#22c55e', l:'ปกติ'};
+  if(cur==null) return {c:'var(--ink-3)', l:'รอข้อมูล'};
+  if(cur>=s.bank) return {c:'var(--st-danger)', l:'ล้นตลิ่ง'};
+  if(cur>=s.warn) return {c:'var(--st-watch)', l:'เฝ้าระวัง'};
+  return {c:'var(--st-normal)', l:'ปกติ'};
 }
 function wtaGauge(s, cur){
   const W=142,H=170,padT=14,padB=16,left=26,right=54;
@@ -467,24 +497,24 @@ function wtaGauge(s, cur){
   const y=v=>padT+(H-padT-padB)*(1-(Math.max(lo,Math.min(top,v))-lo)/(top-lo));
   const bx=left, bw=W-left-right, bBot=H-padB;
   const bankY=y(s.bank), warnY=hasWarn?y(s.warn):null, curY=cur!=null?y(cur):null;
-  const water = cur!=null ? `<rect x="${bx}" y="${curY}" width="${bw}" height="${(bBot-curY).toFixed(1)}" fill="#3b82f6" opacity="0.5"/>` : '';
-  const curLine = cur!=null ? `<line x1="${bx}" y1="${curY}" x2="${bx+bw}" y2="${curY}" stroke="#1e40af" stroke-width="1.5"/><text x="${bx+bw+3}" y="${curY+3}" font-size="8.5" fill="#1e40af">${cur.toFixed(2)}</text>` : '';
+  const water = cur!=null ? `<rect x="${bx}" y="${curY}" width="${bw}" height="${(bBot-curY).toFixed(1)}" fill="var(--signal)" opacity="0.5"/>` : '';
+  const curLine = cur!=null ? `<line x1="${bx}" y1="${curY}" x2="${bx+bw}" y2="${curY}" stroke="var(--signal)" stroke-width="1.5"/><text x="${bx+bw+3}" y="${curY+3}" font-size="8.5" fill="var(--signal)">${cur.toFixed(2)}</text>` : '';
   const sideBar = hasWarn
-    ? `<rect x="${bx-6}" y="${y(top)}" width="5" height="${(bankY-y(top)).toFixed(1)}" fill="#dc2626"/>
-    <rect x="${bx-6}" y="${bankY}" width="5" height="${(warnY-bankY).toFixed(1)}" fill="#eab308"/>
-    <rect x="${bx-6}" y="${warnY}" width="5" height="${(bBot-warnY).toFixed(1)}" fill="#22c55e"/>`
-    : `<rect x="${bx-6}" y="${y(top)}" width="5" height="${(bankY-y(top)).toFixed(1)}" fill="#dc2626"/>
-    <rect x="${bx-6}" y="${bankY}" width="5" height="${(bBot-bankY).toFixed(1)}" fill="#22c55e"/>`;
+    ? `<rect x="${bx-6}" y="${y(top)}" width="5" height="${(bankY-y(top)).toFixed(1)}" fill="var(--st-danger)"/>
+    <rect x="${bx-6}" y="${bankY}" width="5" height="${(warnY-bankY).toFixed(1)}" fill="var(--st-watch)"/>
+    <rect x="${bx-6}" y="${warnY}" width="5" height="${(bBot-warnY).toFixed(1)}" fill="var(--st-normal)"/>`
+    : `<rect x="${bx-6}" y="${y(top)}" width="5" height="${(bankY-y(top)).toFixed(1)}" fill="var(--st-danger)"/>
+    <rect x="${bx-6}" y="${bankY}" width="5" height="${(bBot-bankY).toFixed(1)}" fill="var(--st-normal)"/>`;
   const warnLine = hasWarn
-    ? `<line x1="${bx}" y1="${warnY}" x2="${bx+bw}" y2="${warnY}" stroke="#eab308" stroke-width="1.5" stroke-dasharray="3 2"/>
-    <text x="${bx+bw+3}" y="${warnY+3}" font-size="8.5" fill="#b7791f">เฝ้าระวัง ${s.warn.toFixed(2)}</text>`
+    ? `<line x1="${bx}" y1="${warnY}" x2="${bx+bw}" y2="${warnY}" stroke="var(--st-watch)" stroke-width="1.5" stroke-dasharray="3 2"/>
+    <text x="${bx+bw+3}" y="${warnY+3}" font-size="8.5" fill="var(--st-watch)">เฝ้าระวัง ${s.warn.toFixed(2)}</text>`
     : '';
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:150px;display:block;margin:2px auto">
-    <rect x="${bx}" y="${padT}" width="${bw}" height="${bBot-padT}" rx="5" fill="#eef2f7" stroke="#e3e0dd"/>
+    <rect x="${bx}" y="${padT}" width="${bw}" height="${bBot-padT}" rx="5" fill="var(--card-2)" stroke="var(--line)"/>
     ${sideBar}
     ${water}
-    <line x1="${bx}" y1="${bankY}" x2="${bx+bw}" y2="${bankY}" stroke="#dc2626" stroke-width="1.5"/>
-    <text x="${bx+bw+3}" y="${bankY+3}" font-size="8.5" fill="#dc2626">ตลิ่ง ${s.bank.toFixed(2)}</text>
+    <line x1="${bx}" y1="${bankY}" x2="${bx+bw}" y2="${bankY}" stroke="var(--st-danger)" stroke-width="1.5"/>
+    <text x="${bx+bw+3}" y="${bankY+3}" font-size="8.5" fill="var(--st-danger)">ตลิ่ง ${s.bank.toFixed(2)}</text>
     ${warnLine}
     ${curLine}
   </svg>`;
@@ -507,7 +537,7 @@ function renderWaterta(){
       <div class="nm">${s.code} · ${esc(s.name)}</div>
       <div class="sub">อ.${esc(s.amphoe)} · ${esc(s.river)}</div>
       ${wtaGauge(s, cur)}
-      <div class="val" style="color:${st.c}">${cur!=null?cur.toFixed(2):'—'} <span style="font-size:11px;color:#64748b;font-weight:400">${s0.src==='ddpm'?'ม.':'ม.(รทก.)'}</span></div>
+      <div class="val" style="color:${st.c}">${cur!=null?cur.toFixed(2):'…'} <span style="font-size:11px;color:var(--ink-3);font-weight:400">${s0.src==='ddpm'?'ม.':'ม.(รทก.)'}</span></div>
       <div class="sub">${below!=null?'ต่ำกว่าตลิ่ง '+below.toFixed(2)+' ม.':'ค่าล่าสุดดูที่ กรมชลประทาน'}</div>
       <div class="st" style="background:${st.c}">${st.l}</div>
     </div>`;
@@ -537,7 +567,7 @@ function renderHour(met){
   now.innerHTML = `
     <div class="big">${ic}</div>
     <div class="t">${Math.round(H.temperature_2m[i0])}°</div>
-    <div class="d">${lb}<br>ฝน ชม.นี้ ${fmt1(H.precipitation[i0])} มม. · โอกาส ${H.precipitation_probability[i0]??'—'}%<br>ลม ${fmt1(H.wind_speed_10m[i0])} กม./ชม.</div>`;
+    <div class="d">${lb}<br>ฝน ชม.นี้ ${fmt1(H.precipitation[i0])} มม. · โอกาส ${H.precipitation_probability[i0]??'…'}%<br>ลม ${fmt1(H.wind_speed_10m[i0])} กม./ชม.</div>`;
   let html = '';
   for(let i=i0; i<Math.min(i0+24, H.time.length); i++){
     const [ic2] = wmo(H.weather_code[i], H.precipitation_probability[i]);
@@ -546,7 +576,7 @@ function renderHour(met){
       <div>${H.time[i].slice(11,16)}</div>
       <div class="ic">${ic2}</div>
       <div class="tt">${Math.round(H.temperature_2m[i])}°</div>
-      <div class="mm">${mm>0?fmt1(mm)+' มม.':'—'}</div>
+      <div class="mm">${mm>0?fmt1(mm)+' มม.':'…'}</div>
       <div class="pp">${H.precipitation_probability[i]??0}%</div>
     </div>`;
   }
@@ -565,26 +595,43 @@ function renderDay(met){
     const mm = D.precipitation_sum[i];
     return `<div class="dayrow">
       <span class="dn">${dn}</span><span class="ic">${ic}</span>
-      <span class="tmp">${Math.round(D.temperature_2m_min[i])}°–${Math.round(D.temperature_2m_max[i])}°</span>
+      <span class="tmp">${Math.round(D.temperature_2m_min[i])}°-${Math.round(D.temperature_2m_max[i])}°</span>
       <span class="rbar"><i style="width:${Math.min(100, mm/maxR*100)}%"></i></span>
-      <span class="rmm">${mm>0?fmt1(mm)+' มม.':'—'}</span>
+      <span class="rmm">${mm>0?fmt1(mm)+' มม.':'…'}</span>
     </div>`;
   }).join('');
 }
+/* ตัวเลขฝนรวม ดินอิ่มน้ำ และระดับสถานการณ์ อยู่ที่แถบคำตอบด้านบนที่เดียว
+   เดิมการ์ดกรมอุตุฯ แสดงค่าชุดเดียวกันนี้ซ้ำอีกรอบในหน้าเดียวกัน
+   ซึ่งนอกจากกินความสูง 330px แล้ว ยังทำให้คนอ่านต้องเดาว่าอันไหนคืออันจริง */
 function renderRain7(met, sel){
-  const el = document.getElementById('rain7'), lb = document.getElementById('rain7Label'), so = document.getElementById('soil');
-  if(!met?.daily){ el.textContent = '—'; return; }
+  const strip = document.getElementById('statusStrip');
+  if(!met?.daily){
+    if(strip) document.getElementById('stripLv').textContent = 'อ่านข้อมูลฝนไม่สำเร็จ';
+    return;
+  }
   const sum = met.daily.precipitation_sum.reduce((a,b)=>a+(b||0),0);
-  el.textContent = fmt1(sum);
-  let c, t;
-  if(sum>=200){ c='#dc2626'; t='🔴 ฝนมากผิดปกติ — เตรียมพร้อมรับสถานการณ์'; }
-  else if(sum>=150){ c='#f97316'; t='🟠 ฝนมาก — ยกระดับการเฝ้าระวังพื้นที่ลุ่ม'; }
-  else if(sum>=80){ c='#eab308'; t='🟡 ฝนปานกลาง — ติดตามสถานการณ์'; }
-  else { c='#16a34a'; t='🟢 ฝนน้อย — สถานการณ์ปกติ'; }
-  el.style.color = c; lb.style.color = c; lb.textContent = t;
+  /* เกณฑ์ระดับเป็นของเดิมของหน้านี้ ไม่ได้เปลี่ยนตัวเลขใด
+     สิ่งที่เปลี่ยนคือระดับถูกบอกด้วยคำและสีจาก token ชุดสถานะ ไม่ใช่ emoji
+     เพราะ emoji เรนเดอร์ไม่เหมือนกันข้าม Android, iOS และ Windows
+     และโปรแกรมอ่านหน้าจอจะอ่านออกมาเป็นชื่อสี ซึ่งไม่ใช่ข้อมูลที่ต้องการสื่อ */
+  const LV = sum>=200 ? {k:'danger', n:'ฝนมากผิดปกติ', act:'เตรียมพร้อมรับสถานการณ์'}
+           : sum>=150 ? {k:'warn',   n:'ฝนมาก',        act:'ยกระดับการเฝ้าระวังพื้นที่ลุ่ม'}
+           : sum>=80  ? {k:'watch',  n:'ฝนปานกลาง',    act:'ติดตามสถานการณ์'}
+           :            {k:'normal', n:'ฝนน้อย',       act:'สถานการณ์ปกติ'};
   const soil = soilByAmp[prov]?.[ (amp||sel[1]) ] ?? Math.max(0, ...Object.values(soilByAmp[prov]||{0:0}));
-  so.innerHTML = `🌍 ดินอิ่มน้ำ (ฝน 3 วันที่ผ่านมา${amp?' อ.'+amp:' สูงสุดในจังหวัด'}): <b>${fmt1(soil)} มม.</b>` +
-    (soil>=100 && sum>=80 ? ' — <b style="color:#dc2626">ดินชุ่มอยู่แล้ว + ฝนใหม่ = เสี่ยงสูงขึ้น</b>' : '');
+
+  if(!strip) return;
+  strip.dataset.lv = LV.k;
+  document.getElementById('stripLv').textContent = `${amp?'อ.'+amp:'จ.'+prov}: ${LV.n}`;
+  /* ดินที่ชุ่มอยู่แล้วบวกฝนใหม่คือเงื่อนไขที่ทำให้ท่วมเร็วกว่าที่ฝนอย่างเดียวบอก
+     ถ้าเข้าเงื่อนไขนั้นต้องพูดออกมา ไม่ใช่ปล่อยให้คนอ่านเอาสองตัวเลขมาคูณกันเอง */
+  document.getElementById('stripSub').textContent =
+    (soil>=100 && sum>=80)
+      ? `${LV.act} · ดินชุ่มอยู่แล้ว บวกฝนใหม่ ทำให้ท่วมเร็วกว่าที่ฝนอย่างเดียวบอก`
+      : `${LV.act} · เกณฑ์เฝ้าระวังคือฝนรวมสัปดาห์เกิน 150 มม. ในพื้นที่ลุ่มหรือดินอิ่มน้ำ`;
+  document.getElementById('stripRain').textContent = fmt1(sum);
+  document.getElementById('stripSoil').textContent = fmt1(soil);
 }
 function renderStations(){
   const el = document.getElementById('stList');
@@ -593,11 +640,18 @@ function renderStations(){
   const rising = s => s.msl!=null && s.prev!=null && (s.msl-s.prev) >= 0.03;
   const hot = list.filter(s => (s.pct!=null && s.pct>100) || (s.pct!=null && s.pct>=70) || rising(s))
     .sort((a,b)=>(b.pct??0)-(a.pct??0));
-  if(!wlAll.length){ el.innerHTML = '⚠️ โหลดข้อมูลสถานีไม่สำเร็จ'; return; }
-  if(!hot.length){ el.innerHTML = `<div style="color:#16a34a;font-size:12.5px">✅ ${amp?`อ.${amp}`:`จ.${prov}`} ไม่มีสถานีเข้าเกณฑ์เฝ้าระวังขณะนี้ (ทั้งหมด ${list.length} สถานี)</div>`; return; }
+
+  /* แถบคำตอบด้านบนใช้จำนวนเดียวกันกับที่การ์ดนี้แสดงจริง
+     ถ้าโหลดสถานีไม่สำเร็จต้องบอกว่าไม่รู้ ไม่ใช่แสดงเลข 0
+     ซึ่งจะอ่านได้ว่า "ปลอดภัย" ทั้งที่ความจริงคือไม่มีข้อมูล */
+  const stripSt = document.getElementById('stripSt');
+  if(stripSt) stripSt.textContent = wlAll.length ? String(hot.length) : 'ไม่มีข้อมูล';
+
+  if(!wlAll.length){ el.innerHTML = 'โหลดข้อมูลสถานีไม่สำเร็จ'; return; }
+  if(!hot.length){ el.innerHTML = `<div style="color:var(--st-normal);font-size:12.5px">${amp?`อ.${amp}`:`จ.${prov}`} ไม่มีสถานีเข้าเกณฑ์เฝ้าระวังขณะนี้ (ทั้งหมด ${list.length} สถานี)</div>`; return; }
   el.innerHTML = hot.slice(0,8).map(s=>{
     const over = s.pct!=null && s.pct>100;
-    const c = over?'#dc2626': (s.pct>=70?'#2563eb':'#eab308');
+    const c = over?'var(--st-danger)': (s.pct>=70?'var(--signal)':'var(--st-watch)');
     const t = over?'ล้นตลิ่ง': (s.pct>=70?`น้ำมาก ${Math.round(s.pct)}%`:'กำลังขึ้น');
     return `<a class="st" style="border-left-color:${c};text-decoration:none;color:inherit" href="map.html">
       <span><span class="nm">${esc(s.name)}</span> <span class="sub">${esc(s.river)} · อ.${esc(s.amphoe)}</span></span>
@@ -618,16 +672,26 @@ function renderAmphoes(list){
       Math.min(60, rain7/250*60) + Math.min(25, soil/150*25) + Math.min(15, hotSt*8);
     return {a, rain7, soil, hotSt, score};
   }).sort((x,y)=>(y.score??-1)-(x.score??-1));
-  el.innerHTML = rows.map(({a,rain7,soil,hotSt,score})=>{
-    const c = score==null?'#9ca3af': score>=60?'#dc2626': score>=40?'#f97316': score>=22?'#eab308':'#22c55e';
-    const lb = score==null?'—': score>=60?'สูงมาก': score>=40?'สูง': score>=22?'ปานกลาง':'ต่ำ';
+  const row = ({a,rain7,soil,hotSt,score})=>{
+    const c = score==null?'var(--ink-3)': score>=60?'var(--st-danger)': score>=40?'var(--st-warn)': score>=22?'var(--st-watch)':'var(--st-normal)';
+    const lb = score==null?'…': score>=60?'สูงมาก': score>=40?'สูง': score>=22?'ปานกลาง':'ต่ำ';
     return `<div class="amp" onclick="pickAmp('${esc(a[1])}')">
       <span class="an">${esc(a[1])}</span>
       <span class="abar"><i style="width:${Math.min(100,score??0)}%;background:${c}"></i></span>
       <span class="badge" style="background:${c}">${lb}</span>
-      <span class="amm">ฝน7ว. ${fmt1(rain7)} มม.${soil?` · ดิน ${fmt1(soil)}`:''}${hotSt?` · ⚠${hotSt} สถานี`:''}</span>
+      <span class="amm">ฝน7ว. ${fmt1(rain7)} มม.${soil?` · ดิน ${fmt1(soil)}`:''}${hotSt?` · ${hotSt} สถานีเฝ้าระวัง`:''}</span>
     </div>`;
-  }).join('');
+  };
+  /* รายการเรียงจากเสี่ยงมากไปน้อยอยู่แล้ว หกอันดับแรกจึงเป็นอันที่ต้องเห็น
+     ที่พับไว้คืออำเภอที่เสี่ยงน้อยที่สุด และบอกจำนวนไว้ตรง ๆ ว่าพับกี่อำเภอ
+     คนที่ตามหาอำเภอตัวเองยังเลือกจากช่องเลือกอำเภอด้านบนได้เหมือนเดิม */
+  const TOP = 6;
+  const head = rows.slice(0, TOP).map(row).join('');
+  const rest = rows.slice(TOP);
+  el.innerHTML = head + (rest.length
+    ? `<details class="fold"><summary>ดูอีก ${rest.length} อำเภอที่เสี่ยงน้อยกว่านี้</summary>
+       <div class="fold-body">${rest.map(row).join('')}</div></details>`
+    : '');
 }
 
 /* ---------- เรดาร์ตรวจอากาศระดับตำบล (ศูนย์อุตุฯ ภาคใต้ฝั่งตะวันออก / Google Sites) ---------- */
@@ -679,8 +743,8 @@ function loadRadarImg(){
   box.addEventListener('mouseenter', showFreeze);
   box.addEventListener('mouseleave', hideFreeze);
 
-  /* บนมือถือ: แตะค้างเพื่อหยุดภาพ — แตะสั้น ๆ ยังเปิดลิงก์เรดาร์เต็มจอเหมือนเดิม */
-  /* ใช้ e.timeStamp (เวลาที่นิ้วแตะจริง) ไม่ใช่ Date.now() — กันไม่ให้เวลาที่ใช้วาด canvas ถูกนับเป็นการแตะค้าง */
+  /* บนมือถือ: แตะค้างเพื่อหยุดภาพ · แตะสั้น ๆ ยังเปิดลิงก์เรดาร์เต็มจอเหมือนเดิม */
+  /* ใช้ e.timeStamp (เวลาที่นิ้วแตะจริง) ไม่ใช่ Date.now() · กันไม่ให้เวลาที่ใช้วาด canvas ถูกนับเป็นการแตะค้าง */
   let touchStart = 0, swallowClick = false;
   box.addEventListener('touchstart', e => { touchStart = e.timeStamp; showFreeze(); }, {passive:true});
   function endTouch(e){
@@ -697,21 +761,21 @@ function loadRadarImg(){
   }, true);
 })();
 
-/* ---------- แผนที่คาดการณ์ฝนล่วงหน้า 7 วัน (WRF-ROMS, โดเมน Southeast Asia 9x9กม. — มีครบ 7 วัน) ---------- */
+/* ---------- แผนที่คาดการณ์ฝนล่วงหน้า 7 วัน (WRF-ROMS, โดเมน Southeast Asia 9x9กม. · มีครบ 7 วัน) ---------- */
 /* กรอบครอบตัด (พิกเซลจากภาพต้นฉบับ 1016x708) คำนวณจากกริดเส้นละติจูด/ลองจิจูดในภาพจริง
-   ให้ครอบคลุมประมาณ 4.5–10.5°N, 97–104.5°E (ภาคใต้ตอนล่างทั้งแถบ) */
+   ให้ครอบคลุมประมาณ 4.5-10.5°N, 97-104.5°E (ภาคใต้ตอนล่างทั้งแถบ) */
 const WRF_CROP = { x1:217, y1:349, x2:324, y2:435, W:1016, H:708 };
 const WRF_BANDS = [
-  {c:'#dbe9f9', t:'1–5'}, {c:'#7fa8d9', t:'5–10'},
-  {c:'#a8dfb5', t:'10–20'}, {c:'#4caf50', t:'20–35'},
-  {c:'#f2e01a', t:'35–50'}, {c:'#f5a623', t:'50–70'}, {c:'#c6791f', t:'70–90'},
-  {c:'#f2401a', t:'90–150'}, {c:'#d4372f', t:'150–200'},
-  {c:'#701010', t:'200–300', dark:true}, {c:'#a832c8', t:'>300', dark:true}
+  {c:'var(--signal-wash)', t:'1-5'}, {c:'#7fa8d9', t:'5-10'},
+  {c:'var(--st-normal-wash)', t:'10-20'}, {c:'var(--st-normal)', t:'20-35'},
+  {c:'#f2e01a', t:'35-50'}, {c:'#f5a623', t:'50-70'}, {c:'#c6791f', t:'70-90'},
+  {c:'#f2401a', t:'90-150'}, {c:'var(--st-danger)', t:'150-200'},
+  {c:'#701010', t:'200-300', dark:true}, {c:'#a832c8', t:'>300', dark:true}
 ];
 function renderWrfLegend(){
   const el = document.getElementById('wrfLegend');
   if(!el) return;
-  el.innerHTML = '<b style="font-size:10.5px;color:#334155">ฝนสะสม (มม./วัน):</b>' +
+  el.innerHTML = '<b style="font-size:10.5px;color:var(--ink-2)">ฝนสะสม (มม./วัน):</b>' +
     WRF_BANDS.map(b=>`<span class="sw" style="background:${b.c};${b.dark?'color:#fff':''}">${b.t}</span>`).join('');
 }
 async function loadRainForecast(){
@@ -739,7 +803,7 @@ async function loadRainForecast(){
       </div>`;
     }).join('');
   }catch(e){
-    row.innerHTML = '⚠️ โหลดแผนที่ฝนพยากรณ์ไม่สำเร็จ — ดูที่ <a href="https://nationalthaiwater.onwr.go.th/forecast/rainfall" target="_blank" rel="noopener">nationalthaiwater.onwr.go.th</a>';
+    row.innerHTML = '⚠️ โหลดแผนที่ฝนพยากรณ์ไม่สำเร็จ · ดูที่ <a href="https://nationalthaiwater.onwr.go.th/forecast/rainfall" target="_blank" rel="noopener">nationalthaiwater.onwr.go.th</a>';
   }
 }
 function bigWrf(src){ document.getElementById('wrfModalImg').src = src; document.getElementById('wrfModal').classList.add('show'); }
@@ -784,10 +848,11 @@ setInterval(loadRainForecast, 60*60*1000);
 setInterval(loadRadarImg, 10*60*1000);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="js/supabase-client.js?v=2"></script>
+<script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
-<script src="js/views.js?v=1" defer></script>
+<script src="js/views.js?v=2" defer></script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
+<script src="js/tabbar.js?v=1" defer></script>
 </body>
 </html>

@@ -3,47 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#423d38">
+<meta name="theme-color" content="#102029">
 <title>แผนที่สถานการณ์น้ำ | One Map ชายแดนใต้</title>
-<meta name="description" content="แผนที่รวมข้อมูลน้ำจังหวัดนราธิวาส: ระดับน้ำ ฝน 24 ชม. เรดาร์ฝน เขื่อน น้ำทะเล CCTV ปภ. โทรมาตรกรมชลฯ และจุดเสี่ยงน้ำท่วมฉับพลัน — อัปเดตอัตโนมัติจากหน่วยงานรัฐ">
-<meta property="og:title" content="One Map ระดับน้ำชายแดนใต้ — waterchaidantai.com">
+<meta name="description" content="แผนที่รวมข้อมูลน้ำจังหวัดนราธิวาส: ระดับน้ำ ฝน 24 ชม. เรดาร์ฝน เขื่อน น้ำทะเล CCTV ปภ. โทรมาตรกรมชลฯ และจุดเสี่ยงน้ำท่วมฉับพลัน · อัปเดตอัตโนมัติจากหน่วยงานรัฐ">
+<meta property="og:title" content="One Map ระดับน้ำชายแดนใต้ · waterchaidantai.com">
 <meta property="og:description" content="ดูสถานการณ์น้ำจังหวัดนราธิวาสในแผนที่เดียว เพื่อการป้องกัน แจ้งเตือน และวางแผนรับมืออุทกภัย">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://waterchaidantai.com">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌊</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{
-  --c-overflow:#dc2626; --c-high:#2563eb; --c-normal:#22c55e; --c-low:#eab308;
-  --c-critlow:#b45309; --c-unknown:#9ca3af;
-  --bg:#fdeacb; --panel:#ffffff; --ink:#0f172a; --muted:#64748b;
-  --orange:#f97316; --orange-d:#ea580c; --navy:#1e40af; --navy-d:#1e3a8a; --peach:#f2d3a0;
+  --c-overflow:var(--st-danger); --c-high:var(--signal); --c-normal:var(--st-normal); --c-low:var(--st-watch);
+  --c-critlow:var(--st-warn); --c-unknown:var(--ink-3);
+  --bg:var(--paper-2); --panel:#ffffff; --ink:var(--ink); --muted:var(--ink-3);
+  --orange:var(--st-warn); --orange-d:var(--st-warn); --navy:var(--signal); --navy-d:var(--signal-deep); --peach:var(--paper-2);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden}
 
 /* ===== Header ===== */
-header{background:linear-gradient(180deg,#fb923c,#f97316 45%,#ea580c);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;z-index:1200}
+header{background:linear-gradient(180deg,var(--st-warn),var(--st-warn) 45%,var(--st-warn));color:#fff;padding:8px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;z-index:1200}
 header h1{font-size:17px;font-weight:700;line-height:1.2}
 header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
 .navtab{display:flex;gap:4px;background:rgba(255,255,255,.15);border-radius:9px;padding:3px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
 .navtab a{color:#fff;text-decoration:none;font-size:12px;font-weight:600;padding:4px 10px;border-radius:7px;opacity:.85;white-space:nowrap}
-.navtab a.on{background:#fff;color:#ea580c;opacity:1}
+.navtab a.on{background:#fff;color:var(--st-warn);opacity:1}
 #langSw{display:flex;gap:3px;background:rgba(255,255,255,.15);border-radius:8px;padding:3px}
 .langbtn{border:none;background:transparent;color:#fff;font-family:inherit;font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:6px;cursor:pointer;opacity:.75}
-.langbtn.active{background:#fff;color:#ea580c;opacity:1}
+.langbtn.active{background:#fff;color:var(--st-warn);opacity:1}
 #updated{font-size:11px;opacity:.9;margin-left:auto;text-align:right}
-#btnRefresh{background:#fff;color:#ea580c;border:none;border-radius:8px;padding:6px 14px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px}
-#btnRefresh:hover{background:#ffedd5}
+#btnRefresh{background:#fff;color:var(--st-warn);border:none;border-radius:8px;padding:6px 14px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px}
+#btnRefresh:hover{background:var(--st-warn-wash)}
 #btnRefresh.loading svg{animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ===== Warning banner ===== */
-#banner{display:none;background:#7f1d1d;color:#fff;padding:6px 14px;font-size:13px;font-weight:500}
+#banner{display:none;background:var(--st-danger);color:#fff;padding:6px 14px;font-size:13px;font-weight:500}
 #banner.show{display:block}
 
 /* ===== Layout ===== */
@@ -52,40 +52,40 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
 #sidebar.hidden{display:none}
 #btnCollapse{position:absolute;left:340px;top:50%;transform:translateY(-50%);z-index:1120;width:22px;height:56px;border:none;border-radius:0 10px 10px 0;background:var(--navy);color:#fff;cursor:pointer;font-size:13px;box-shadow:2px 0 6px rgba(0,0,0,.25);transition:left .2s}
 #btnCollapse.closed{left:0}
-#btnCollapse:hover{background:#1c3aa0}
+#btnCollapse:hover{background:var(--signal-deep)}
 #map{flex:1;min-width:0}
 
 /* ===== Summary cards ===== */
 #summary{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:10px 10px 6px}
 .sumcard{border-radius:8px;padding:5px 2px;text-align:center;color:#fff;cursor:pointer;border:2px solid transparent;transition:transform .1s}
 .sumcard:hover{transform:translateY(-1px)}
-.sumcard.active{border-color:#0f172a}
+.sumcard.active{border-color:var(--ink)}
 .sumcard b{display:block;font-size:17px;line-height:1.1}
 .sumcard span{font-size:9.5px;display:block;line-height:1.15}
-/* แถวนับสถานีที่ไม่มีข้อมูลปัจจุบัน — แยกจากการ์ดสถานะ เพราะไม่ใช่ระดับความรุนแรง
+/* แถวนับสถานีที่ไม่มีข้อมูลปัจจุบัน · แยกจากการ์ดสถานะ เพราะไม่ใช่ระดับความรุนแรง
    แต่คือสถานีที่หยุดส่งข้อมูล จึงไม่ควรถูกนับรวมในการ์ดสีแดง/น้ำเงิน */
 #nodataTally{padding:0 10px 6px}
 #nodataTally .nd{display:flex;align-items:center;gap:6px;width:100%;padding:5px 9px;border-radius:8px;
   border:1px dashed var(--outline-strong);background:#fff;color:var(--muted);
   font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;text-align:left}
-#nodataTally .nd:hover{background:#f8fafc}
-#nodataTally .nd.active{border-style:solid;border-color:#9ca3af;background:#f3f4f6;color:var(--ink)}
-#nodataTally .nd i{width:10px;height:10px;border-radius:50%;background:#9ca3af;flex:none}
+#nodataTally .nd:hover{background:var(--card)}
+#nodataTally .nd.active{border-style:solid;border-color:var(--ink-3);background:var(--card-2);color:var(--ink)}
+#nodataTally .nd i{width:10px;height:10px;border-radius:50%;background:var(--ink-3);flex:none}
 #nodataTally .nd b{margin-left:auto;font-size:13px;color:var(--ink)}
 
 /* ===== Controls ===== */
 #controls{padding:4px 10px 8px;border-bottom:2px solid var(--peach)}
-#search{width:100%;padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:13px;margin-bottom:6px}
+#search{width:100%;padding:7px 10px;border:1px solid var(--line-mid);border-radius:8px;font-family:inherit;font-size:13px;margin-bottom:6px}
 .provrow{display:flex;gap:4px}
 .provbtn{flex:1;padding:5px 2px;font-family:inherit;font-size:10.5px;font-weight:600;border:1px solid var(--navy);background:var(--navy);border-radius:8px;cursor:pointer;color:#fff}
-.provbtn:hover{background:#1c3aa0}
+.provbtn:hover{background:var(--signal-deep)}
 .provbtn.active{background:var(--orange);color:#fff;border-color:var(--orange)}
 .layerrow{display:flex;gap:6px 10px;flex-wrap:wrap;margin-top:7px;font-size:12px}
-.layerrow label{display:flex;align-items:center;gap:4px;cursor:pointer;color:#334155}
+.layerrow label{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--ink-2)}
 /* แถบควบคุมภาพเรดาร์ย้อนหลัง (แสดงเมื่อเปิดชั้นเรดาร์เท่านั้น) */
 #radarBar:empty{display:none}
 #radarBar{margin-top:7px}
-#radarBar .rdrow{display:flex;align-items:center;gap:7px;background:#f3f4f6;border:1px solid var(--outline);
+#radarBar .rdrow{display:flex;align-items:center;gap:7px;background:var(--card-2);border:1px solid var(--outline);
   border-radius:8px;padding:5px 8px}
 #radarBar .rdbtn{flex:none;width:28px;height:28px;border:none;border-radius:7px;background:var(--navy);
   color:#fff;font-size:12px;cursor:pointer;line-height:1}
@@ -95,20 +95,20 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
 #radarBar .rdtime.now{color:var(--orange-d)}
 #radarBar .rdinfo{font-size:11.5px;color:var(--muted)}
 #btnReport{width:100%;margin-top:7px;padding:6px;border:none;background:var(--navy);color:#fff;font-family:inherit;font-weight:600;font-size:12.5px;border-radius:8px;cursor:pointer}
-#btnReport:hover{background:#1c3aa0}
+#btnReport:hover{background:var(--signal-deep)}
 .extrow{display:flex;gap:5px;margin-top:6px}
 .extbtn{flex:1;text-align:center;padding:5px 4px;border:1.5px solid var(--orange-d);background:#fff;color:var(--orange-d);font-weight:600;font-size:11.5px;border-radius:8px;text-decoration:none}
-.extbtn:hover{background:#ffedd5}
+.extbtn:hover{background:var(--st-warn-wash)}
 
 /* ===== Station list ===== */
 #list{flex:1;overflow-y:auto;padding:6px 10px}
-.item{border:1px solid #e2e8f0;border-left-width:5px;border-radius:8px;padding:7px 10px;margin-bottom:6px;cursor:pointer;background:#fff}
-.item:hover{background:#f8fafc}
+.item{border:1px solid var(--line);border-left-width:5px;border-radius:8px;padding:7px 10px;margin-bottom:6px;cursor:pointer;background:#fff}
+.item:hover{background:var(--card)}
 .item .nm{font-weight:600;font-size:13px;line-height:1.25}
 .item .sub{font-size:11px;color:var(--muted);margin-top:1px}
 .item .row2{display:flex;justify-content:space-between;align-items:center;margin-top:3px;font-size:11.5px}
 .badge{padding:1px 8px;border-radius:99px;color:#fff;font-size:10.5px;font-weight:600}
-.stale{color:#b45309;font-size:10px;font-weight:600}
+.stale{color:var(--st-warn);font-size:10px;font-weight:600}
 
 /* ===== Markers ===== */
 .mk{display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)}
@@ -118,7 +118,7 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
 .mk-sea{border-radius:50% 50% 4px 4px}
 
 /* ===== Command Center theme (override) ===== */
-:root{--bg:#fcfaf7;--ink:#423d38;--muted:#797067;--panel:#ffffff;--orange:#fe6e00;--orange-d:#ff6b00;--orange-warm:#ffb74d;--navy:#57504a;--navy-d:#423d38;--peach:#e3e0dd;--outline:#e3e0dd;--outline-strong:#d1d5dc;--elevated:#ffffff;--surface:#f3f4f6;--shell:rgba(0,0,0,.72);--c-overflow:#fb2c36;--c-high:#3080ff;--c-normal:#00c758;--c-low:#edb200}
+:root{--bg:var(--paper);--ink:var(--ink);--muted:var(--ink-3);--panel:#ffffff;--orange:var(--signal);--orange-d:var(--signal-hover);--orange-warm:var(--st-watch);--navy:var(--ink-2);--navy-d:var(--ink);--peach:var(--line);--outline:var(--line);--outline-strong:var(--line-mid);--elevated:#ffffff;--surface:var(--card-2);--shell:rgba(0,0,0,.72);--c-overflow:var(--st-danger);--c-high:var(--signal);--c-normal:var(--st-normal);--c-low:var(--st-watch)}
 header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);border-bottom:1px solid rgba(255,255,255,.12)}
 .navtab{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09)}
 .navtab a{color:rgba(255,255,255,.72)}
@@ -130,14 +130,14 @@ header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-
 #sidebar{border-right:1px solid var(--outline)}
 #controls{border-bottom:1px solid var(--outline)}
 #search{border-color:var(--outline-strong)}
-.provbtn{border-color:var(--outline-strong);background:#f3f4f6;color:var(--ink)}
-.provbtn:hover{background:#eceae7}
+.provbtn{border-color:var(--outline-strong);background:var(--card-2);color:var(--ink)}
+.provbtn:hover{background:var(--card-2)}
 .provbtn.active{background:var(--orange);color:#fff;border-color:var(--orange)}
 #btnCollapse{background:var(--orange)}
 #btnCollapse:hover{background:var(--orange-d)}
 .item{border-color:var(--outline)}
 .extbtn{border-color:var(--outline-strong);color:var(--orange-d)}
-.extbtn:hover{background:#fff3ea}
+.extbtn:hover{background:var(--st-warn-wash)}
 .ddpm-tabs{display:flex;gap:4px;margin-bottom:5px}
 .ddpm-tab{padding:3px 12px;border:1px solid var(--outline-strong);background:#fff;color:var(--ink);font-family:inherit;font-size:11.5px;font-weight:600;border-radius:7px;cursor:pointer}
 .ddpm-tab.on{background:var(--orange);border-color:var(--orange);color:#fff}
@@ -149,11 +149,11 @@ header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-
 .blink{animation:blink 1s ease-in-out infinite}
 @keyframes blink{50%{opacity:.35}}
 .provlabel{background:none;border:none;box-shadow:none}
-.provlabel div{font-size:13px;font-weight:700;color:#1e293b;text-shadow:0 0 4px #fff,0 0 4px #fff,0 0 4px #fff,0 0 4px #fff;white-space:nowrap;text-align:center}
+.provlabel div{font-size:13px;font-weight:700;color:var(--ink);text-shadow:0 0 4px #fff,0 0 4px #fff,0 0 4px #fff,0 0 4px #fff;white-space:nowrap;text-align:center}
 
 /* ===== Legend ===== */
 .legend{background:rgba(255,255,255,.95);padding:9px 12px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.25);font-size:11px;line-height:1.7;max-height:46vh;overflow-y:auto}
-.legend h4{font-size:11.5px;margin:3px 0 1px;color:#334155}
+.legend h4{font-size:11.5px;margin:3px 0 1px;color:var(--ink-2)}
 .lg{display:flex;align-items:center;gap:6px}
 .sw{width:12px;height:12px;border-radius:50%;flex:0 0 12px;border:1px solid rgba(0,0,0,.15)}
 .sw.sq{border-radius:3px}
@@ -166,14 +166,14 @@ header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-
 .pp-grid dt{color:var(--muted)}
 .pp-grid dd{text-align:right;font-weight:600}
 .pp-status{margin:5px 0;text-align:center}
-.pp-link{display:block;text-align:center;margin-top:6px;font-size:11.5px;color:#ea580c}
-.pp-stale{text-align:center;color:#b45309;font-size:11px;font-weight:600;margin-top:3px}
-.sparkwrap{margin-top:6px;border-top:1px dashed #e2e8f0;padding-top:5px}
+.pp-link{display:block;text-align:center;margin-top:6px;font-size:11.5px;color:var(--st-warn)}
+.pp-stale{text-align:center;color:var(--st-warn);font-size:11px;font-weight:600;margin-top:3px}
+.sparkwrap{margin-top:6px;border-top:1px dashed var(--line);padding-top:5px}
 .sparkwrap .cap{font-size:10.5px;color:var(--muted);text-align:center}
 
 /* ===== Footer ===== */
 footer{background:var(--navy-d);color:#c7d2fe;font-size:10.5px;padding:4px 14px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-footer a{color:#fdba74;text-decoration:none}
+footer a{color:var(--st-warn);text-decoration:none}
 footer a:hover{text-decoration:underline}
 
 /* ===== Help modal ===== */
@@ -184,10 +184,10 @@ footer a:hover{text-decoration:underline}
 #ddpmModal.show{display:flex !important}
 .mk-ddpm{border-radius:6px;font-size:10px}
 .helpbox{background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:82vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.35)}
-.helpbox .hb-head{background:linear-gradient(90deg,#f97316,#ea580c);color:#fff;padding:10px 16px;font-weight:700;font-size:15px;display:flex;justify-content:space-between;align-items:center;border-radius:14px 14px 0 0;position:sticky;top:0}
+.helpbox .hb-head{background:linear-gradient(90deg,var(--st-warn),var(--st-warn));color:#fff;padding:10px 16px;font-weight:700;font-size:15px;display:flex;justify-content:space-between;align-items:center;border-radius:14px 14px 0 0;position:sticky;top:0}
 .helpbox .hb-head button{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1}
 .helpbox .hb-body{padding:12px 18px 16px;font-size:13px;line-height:1.7}
-.helpbox .hb-body h4{color:#ea580c;margin:8px 0 2px;font-size:13.5px}
+.helpbox .hb-body h4{color:var(--st-warn);margin:8px 0 2px;font-size:13.5px}
 .helpbox .hb-body .sw{display:inline-block;vertical-align:-1px}
 
 /* ===== Mobile ===== */
@@ -202,43 +202,43 @@ footer a:hover{text-decoration:underline}
   #btnRefresh{padding:5px 10px;font-size:12px}
   #sidebar{position:absolute;left:0;top:0;bottom:0;transform:translateX(-100%);transition:transform .25s;width:85%;max-width:330px;box-shadow:2px 0 12px rgba(0,0,0,.3);z-index:999}
   #sidebar.open{transform:translateX(0)}
-  /* การ์ดสรุป 5 ช่องในแผงกว้าง 330px เหลือช่องละ ~60px — ให้ไหลลงแถวใหม่เองแทน */
+  /* การ์ดสรุป 5 ช่องในแผงกว้าง 330px เหลือช่องละ ~60px · ให้ไหลลงแถวใหม่เองแทน */
   #summary{grid-template-columns:repeat(auto-fit,minmax(92px,1fr));padding:10px 8px 6px}
   /* คำอธิบายสัญลักษณ์เดิมสูงได้ถึง 46vh บังแผนที่เกือบครึ่งจอ */
   .legend{max-height:30vh;font-size:11.5px;line-height:1.6}
   /* กฎ #search ด้านบนแรงกว่า element selector ใน shared.css จึงต้องระบุซ้ำ
      ต่ำกว่า 16px iOS จะซูมหน้าจอทุกครั้งที่แตะช่องค้นหา */
   #search{font-size:16px}
-  #btnSidebar{display:block;position:absolute;left:10px;top:10px;z-index:1150;background:#ea580c;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-family:inherit;font-weight:600;font-size:13px;box-shadow:0 1px 6px rgba(0,0,0,.3);cursor:pointer}
+  #btnSidebar{display:block;position:absolute;left:10px;top:10px;z-index:1150;background:var(--signal);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-family:inherit;font-weight:600;font-size:13px;box-shadow:0 1px 6px rgba(0,0,0,.3);cursor:pointer}
   #btnCollapse{display:none}
   footer{display:none}
 }
 
 @supports(height:100dvh){html,body{height:100dvh}}
 </style>
-<link rel="stylesheet" href="shared.css?v=2">
+<link rel="stylesheet" href="shared.css?v=3">
 </head>
 <body>
 
 <header>
-  <h1 id="hTitle">🌊 One Map ระดับน้ำชายแดนใต้<small id="hSub">รวมทุกหน่วยงานในแผนที่เดียว</small></h1>
+  <h1 id="hTitle">One Map ระดับน้ำชายแดนใต้<small id="hSub">รวมทุกหน่วยงานในแผนที่เดียว</small></h1>
   <nav class="navtab" aria-label="เมนูหลัก">
-    <a href="index.html">🌤️ หน้าแรก</a>
-    <a href="map.html" class="on">🗺️ ระดับน้ำ</a>
-    <a href="forecast.html">🔮 คาดการณ์</a>
-    <a href="history.html">🛰️ ย้อนหลัง</a>
-    <a href="repeat.html">⚠️ พื้นที่เสี่ยง</a>
-    <a href="sim.html">🌊 แบบจำลอง</a>
-    <a href="shelter.html">🏠 ศูนย์พักพิง</a>
-    <a href="route.html">🚗 เส้นทาง</a>
-    <a href="resources.html">🚜 ทรัพยากร</a>
+    <a href="index.html">หน้าแรก</a>
+    <a href="map.html" class="on">ระดับน้ำ</a>
+    <a href="forecast.html">คาดการณ์</a>
+    <a href="history.html">ย้อนหลัง</a>
+    <a href="repeat.html">พื้นที่เสี่ยง</a>
+    <a href="sim.html">แบบจำลอง</a>
+    <a href="shelter.html">ศูนย์พักพิง</a>
+    <a href="route.html">เส้นทาง</a>
+    <a href="resources.html">ทรัพยากร</a>
   </nav>
   <div id="langSw">
     <button class="langbtn active" data-lang="th">ไทย</button>
     <button class="langbtn" data-lang="en">EN</button>
     <button class="langbtn" data-lang="ms">MS</button>
   </div>
-  <button id="btnHelp" onclick="document.getElementById('helpModal').classList.add('show')">❓ วิธีใช้</button>
+  <button id="btnHelp" onclick="document.getElementById('helpModal').classList.add('show')">วิธีใช้</button>
   <div id="updated">…</div>
   <button id="btnRefresh" onclick="loadAll()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
@@ -255,24 +255,24 @@ footer a:hover{text-decoration:underline}
     <div id="controls">
       <input id="search" type="text" placeholder="🔍 ค้นหาสถานี / แม่น้ำ / อำเภอ…">
       <div class="provrow" id="provrow">
-        <button class="provbtn active" data-prov="นราธิวาส">🏙️ จังหวัดนราธิวาส</button>
+        <button class="provbtn active" data-prov="นราธิวาส">จังหวัดนราธิวาส</button>
       </div>
       <div class="layerrow">
-        <label><input type="checkbox" id="lyWL" checked> <span id="tWL">⚫ ระดับน้ำ</span></label>
-        <label><input type="checkbox" id="lyRain"> <span id="tRain">◼ ฝน 24 ชม.</span></label>
-        <label><input type="checkbox" id="lyDam"> <span id="tDam">🔻 เขื่อน</span></label>
-        <label><input type="checkbox" id="lySea"> <span id="tSea">🌊 น้ำทะเล</span></label>
-        <label><input type="checkbox" id="lyCctv"> <span id="tCctv">📷 CCTV</span></label>
-        <label><input type="checkbox" id="lyDdpm"> <span id="tDdpm">📹 CCTV ปภ.</span></label>
-        <label><input type="checkbox" id="lyTele"> <span id="tTele">▲ โทรมาตร ชป.</span></label>
-        <label><input type="checkbox" id="lyRisk"> <span id="tRisk">⚠ จุดเสี่ยงฉับพลัน</span></label>
-        <label><input type="checkbox" id="lyRadar"> <span id="tRadar">🌧️ เรดาร์ฝน</span></label>
+        <label><input type="checkbox" id="lyWL" checked> <span id="tWL">ระดับน้ำ</span></label>
+        <label><input type="checkbox" id="lyRain"> <span id="tRain">ฝน 24 ชม.</span></label>
+        <label><input type="checkbox" id="lyDam"> <span id="tDam">เขื่อน</span></label>
+        <label><input type="checkbox" id="lySea"> <span id="tSea">น้ำทะเล</span></label>
+        <label><input type="checkbox" id="lyCctv"> <span id="tCctv">CCTV</span></label>
+        <label><input type="checkbox" id="lyDdpm"> <span id="tDdpm">CCTV ปภ.</span></label>
+        <label><input type="checkbox" id="lyTele"> <span id="tTele">โทรมาตร ชป.</span></label>
+        <label><input type="checkbox" id="lyRisk"> <span id="tRisk">จุดเสี่ยงฉับพลัน</span></label>
+        <label><input type="checkbox" id="lyRadar"> <span id="tRadar">เรดาร์ฝน</span></label>
       </div>
       <div id="radarBar"></div>
-      <button id="btnReport" onclick="copyReport()">📋 คัดลอกรายงานสถานการณ์</button>
+      <button id="btnReport" onclick="copyReport()">คัดลอกรายงานสถานการณ์</button>
       <div class="extrow">
-        <a id="btnDdpm" class="extbtn" href="https://cctv.disaster.go.th" onclick="openDdpm();return false;">📹 CCTV ปภ. ↗</a>
-        <a id="btnTelerid" class="extbtn" href="https://telerid.rid.go.th/#/" target="_blank">▲ โทรมาตร ชป. ↗</a>
+        <a id="btnDdpm" class="extbtn" href="https://cctv.disaster.go.th" onclick="openDdpm();return false;">CCTV ปภ. ↗</a>
+        <a id="btnTelerid" class="extbtn" href="https://telerid.rid.go.th/#/" target="_blank">โทรมาตร ชป. ↗</a>
       </div>
     </div>
     <div id="list"></div>
@@ -285,22 +285,22 @@ footer a:hover{text-decoration:underline}
 
 <div id="ddpmModal" onclick="if(event.target===this)this.classList.remove('show')" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:2000;align-items:center;justify-content:center;padding:14px">
   <div class="helpbox" style="max-width:960px">
-    <div class="hb-head"><span id="ddpmTitle">📹 ระบบเฝ้าระวังภัยพิบัติ ปภ. (cctv.disaster.go.th)</span>
+    <div class="hb-head"><span id="ddpmTitle">ระบบเฝ้าระวังภัยพิบัติ ปภ. (cctv.disaster.go.th)</span>
       <span>
         <a id="ddpmNewTab" href="https://cctv.disaster.go.th" target="_blank" style="color:#fff;font-size:12px;margin-right:12px;text-decoration:underline">เปิดแท็บใหม่ ↗</a>
         <button onclick="document.getElementById('ddpmModal').classList.remove('show')">✕</button>
       </span>
     </div>
     <div style="padding:0">
-      <iframe id="ddpmFrame" src="" style="width:100%;height:72vh;border:0;display:block"></iframe>
-      <div id="ddpmNote" style="font-size:11px;color:#64748b;padding:6px 12px">หากหน้าต่างด้านบนว่างเปล่า แสดงว่าเว็บ ปภ. ไม่อนุญาตให้ฝังหน้า — กด "เปิดแท็บใหม่" แทน</div>
+      <iframe id="ddpmFrame" style="width:100%;height:72vh;border:0;display:block"></iframe>
+      <div id="ddpmNote" style="font-size:11px;color:var(--ink-3);padding:6px 12px">หากหน้าต่างด้านบนว่างเปล่า แสดงว่าเว็บ ปภ. ไม่อนุญาตให้ฝังหน้า · กด "เปิดแท็บใหม่" แทน</div>
     </div>
   </div>
 </div>
 
 <div id="helpModal" onclick="if(event.target===this)this.classList.remove('show')">
   <div class="helpbox">
-    <div class="hb-head"><span id="hbTitle">❓ วิธีใช้งาน</span><button onclick="document.getElementById('helpModal').classList.remove('show')">✕</button></div>
+    <div class="hb-head"><span id="hbTitle">วิธีใช้งาน</span><button onclick="document.getElementById('helpModal').classList.remove('show')">✕</button></div>
     <div class="hb-body" id="hbBody"></div>
   </div>
 </div>
@@ -317,12 +317,13 @@ footer a:hover{text-decoration:underline}
 </footer>
 
 <script src="js/rivers.js"></script>
-<script src="map.js?v=13"></script>
+<script src="map.js?v=14"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="js/supabase-client.js?v=2"></script>
+<script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
-<script src="js/views.js?v=1" defer></script>
+<script src="js/views.js?v=2" defer></script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
+<script src="js/tabbar.js?v=1" defer></script>
 </body>
 </html>
