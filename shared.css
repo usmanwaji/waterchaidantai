@@ -451,6 +451,11 @@ body{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom))}
   header{gap:var(--s2)}
   header h1{flex:1 1 auto;min-width:0;font-size:15.5px;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* หน้าที่แสดงเวลาอัปเดตด้วย (คาดการณ์ ย้อนหลัง แผนที่) มีของบนหัวเว็บ
+     มากกว่าหน้าแรกหนึ่งชิ้น ปุ่มท้ายแถวจึงตกไปครองบรรทัดของตัวเองทั้งบรรทัด
+     ให้เวลาอัปเดตลงไปอยู่บรรทัดล่างเต็มความกว้างแทน ปุ่มทุกตัวจะได้อยู่แถวเดียวกัน
+     เวลาอัปเดตต้องไม่ถูกซ่อน เพราะบนเว็บเตือนภัย ความสดของข้อมูลคือข้อมูล */
+  header #updated{order:9;flex:1 0 100%;margin-left:0;text-align:right}
 }
 /* จอคอมไม่ต้องมีแถบล่าง เมนูบนอ่านได้สบายอยู่แล้ว */
 @media(min-width:769px){
