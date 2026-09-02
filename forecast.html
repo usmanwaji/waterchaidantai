@@ -193,13 +193,60 @@ const HORIZON_INFO = {
        method:'ประเมินความเสี่ยงรายจังหวัดจากฝนพยากรณ์ 3 วัน + ดินอิ่มน้ำ + สถานะเขื่อน'}
 };
 const CLS = {
-  over: {label:'ล้นตลิ่ง/คาดล้น', color:'var(--st-danger)', order:0},
-  risk: {label:'เสี่ยงสูง',        color:'var(--st-warn)', order:1},
-  watch:{label:'กำลังขึ้น เฝ้าระวัง', color:'var(--st-watch)', order:2},
-  ok:   {label:'ทรงตัว/ปกติ',      color:'var(--st-normal)', order:3},
-  down: {label:'กำลังลด',          color:'var(--signal)', order:4},
-  na:   {label:'ข้อมูลไม่พอ',      color:'var(--ink-3)', order:5}
+  over: {label:'ล้นตลิ่งแล้ว',       color:'var(--st-danger)', order:0},
+  risk: {label:'คาดถึงตลิ่งในช่วงนี้', color:'var(--st-warn)', order:1},
+  watch:{label:'น้ำมาก เฝ้าระวัง',    color:'var(--st-watch)', order:2},
+  ok:   {label:'ทรงตัว/ปกติ',        color:'var(--st-normal)', order:3},
+  down: {label:'กำลังลด',            color:'var(--signal)', order:4},
+  na:   {label:'ข้อมูลไม่พอ/ล้าสมัย', color:'var(--ink-3)', order:5}
 };
+
+/* ---------- เกณฑ์การเตือน (ปรับให้สมจริง ลดการเตือนเกินจริง) ----------
+ * ที่มาของปัญหาเดิม: สถานีจำนวนมากส่งค่า min_bank = 0 ทำให้ "ระดับน้ำ >= ตลิ่ง" เป็นจริงเสมอ
+ * และเกณฑ์ "กำลังขึ้น" ไม่ดูว่าน้ำยังห่างตลิ่งแค่ไหน จึงขึ้นสีเตือนทั้งที่ฝนน้อย
+ * เกณฑ์ใหม่:
+ *  - over  : ระดับน้ำ >= ระดับตลิ่ง (ต้องมีตลิ่งที่ถูกต้อง > 0 เท่านั้น)
+ *  - risk  : น้ำกำลังขึ้นชัดเจน และระดับที่คาด (อัตราขึ้น x ชั่วโมง x ตัวถ่วง) ถึงตลิ่งภายในช่วงที่เลือก
+ *            (ไม่ใช้ "เวลาถึงตลิ่ง" แบบเส้นตรงตัดสินอีก เพราะน้ำขึ้นลงตามน้ำทะเลทำให้เตือนเกินจริง)
+ *  - watch : น้ำใกล้ตลิ่งแล้ว (>= 85%) และไม่ลด
+ *            หรือ น้ำมาก (>= 70% เกณฑ์ สสน.) และกำลังขึ้น (>= 2 ซม./ชม.)
+ *            หรือ น้ำขึ้นเร็ว (>= 5 ซม./ชม.) และอยู่เกินครึ่งของตลิ่งแล้ว
+ *  - ok    : ที่เหลือ รวมถึงน้ำขึ้นช้า ๆ ขณะที่ระดับยังต่ำ (แสดงอัตราในป๊อปอัปแทนการเตือน)
+ *  - na    : ไม่มีระดับน้ำ / ข้อมูลเก่ากว่า 6 ชม. (สถานีที่ไม่มีกราฟแนวโน้ม จะจัดสถานะจากระดับปัจจุบันเท่านั้น)
+ */
+const CRIT = {
+  RISE_MIN:   0.02,   // ม./ชม. · ถือว่า "กำลังขึ้น" (12 ซม. ใน 6 ชม.)
+  RISE_FAST:  0.05,   // ม./ชม. · ถือว่า "ขึ้นเร็ว" (30 ซม. ใน 6 ชม.)
+  FALL_MIN:  -0.02,   // ม./ชม. · ถือว่า "กำลังลด"
+  PCT_HIGH:   85,     // % ของตลิ่ง · น้ำมากใกล้ตลิ่ง แม้ทรงตัวก็เฝ้าระวัง
+  PCT_RISE:   70,     // % ของตลิ่ง · "น้ำมาก" (เกณฑ์ สสน.) ใช้ร่วมกับน้ำกำลังขึ้น
+  PCT_MID:    50,     // % ของตลิ่ง · ใช้ร่วมกับน้ำขึ้นเร็ว
+  STALE_H:    6,      // ชม. · ข้อมูลเก่ากว่านี้ไม่ใช้คาดการณ์
+  RAIN3D: [           // ฝนสะสม 3 วัน (มม.) → ดัชนีดินอิ่มน้ำ (เกณฑ์ภาคใต้: ฝนหนัก > 90 มม./วัน)
+    {min:250, color:'var(--st-danger)', short:'อิ่มน้ำมาก',  long:'อิ่มน้ำมาก เสี่ยงสูง'},
+    {min:150, color:'var(--st-warn)',   short:'อิ่มน้ำ',     long:'อิ่มน้ำ เฝ้าระวัง'},
+    {min:80,  color:'var(--st-watch)',  short:'ชื้นปานกลาง', long:'ชื้นปานกลาง'},
+    {min:0,   color:'var(--st-normal)', short:'ปกติ',        long:'ปกติ'}
+  ]
+};
+function rainClass(mm){
+  if(mm==null) return {color:'var(--ink-3)', short:'ไม่มีข้อมูล', long:'ไม่มีข้อมูล'};
+  return CRIT.RAIN3D.find(r => mm >= r.min);
+}
+// ระดับตลิ่งที่ใช้ได้: min_bank ถ้า > 0 · ถ้าไม่มี (สถานี ชป. ส่ง 0) ค่อยใช้ค่าต่ำสุดของตลิ่งซ้าย/ขวาที่ > 0 · ไม่มีก็ null
+// (ไม่เอา min ของทั้งสามค่า เพราะบางสถานีมีตลิ่งซ้าย/ขวาผิด เช่น บ้านนาสีทอง min_bank 39.9 แต่ซ้าย/ขวา 6.3)
+function validBank(minBank, left, right){
+  const mb = num(minBank);
+  if(mb!=null && mb > 0) return mb;
+  const v = [left, right].map(num).filter(x => x!=null && x > 0);
+  return v.length ? Math.min(...v) : null;
+}
+// อายุข้อมูล (ชม.) จากสตริง 'YYYY-MM-DD HH:mm' (เวลาไทย)
+function ageHours(dt){
+  if(!dt) return null;
+  const t = new Date(String(dt).replace(' ','T')+':00+07:00').getTime();
+  return isNaN(t) ? null : (Date.now()-t)/3600000;
+}
 
 /* ---------- แผนที่ ---------- */
 const map = L.map('map', {zoomControl:false}).setView([6.20, 101.75], 10);
@@ -275,10 +322,25 @@ async function loadStations(){
       id: 'f'+st.id, stationId: st.id, stationType: d.station_type || 'tele_waterlevel',
       name: thName(st.tele_station_name).trim(), code: st.tele_station_oldcode || '',
       river: d.river_name || '', amphoe: thName(d.geocode?.amphoe_name), prov: thName(d.geocode?.province_name),
-      msl: num(d.waterlevel_msl), bank: num(st.min_bank), pct: num(d.storage_percent),
-      dt: d.waterlevel_datetime || '', lat, lon, rate: undefined   // undefined = ยังไม่คำนวณ
+      msl: num(d.waterlevel_msl), bank: validBank(st.min_bank, st.left_bank, st.right_bank),
+      ground: num(st.ground_level), pct: num(d.storage_percent), sit: num(d.situation_level),
+      dt: d.waterlevel_datetime || '', lat, lon, rate: undefined   // undefined = ยังคำนวณไม่เสร็จ
     };
   }).filter(Boolean);
+  // ถ้าไม่มี storage_percent ให้คำนวณจากระดับพื้นท้องน้ำ-ตลิ่ง (ถ้ามี)
+  stations.forEach(s => {
+    if(s.pct==null && s.msl!=null && s.bank!=null && s.ground!=null && s.bank > s.ground)
+      s.pct = (s.msl - s.ground) / (s.bank - s.ground) * 100;
+  });
+  // ตัดสถานีซ้ำ (ชื่อเดียวกัน จังหวัดเดียวกัน จากคนละหน่วยงาน) เก็บตัวที่มีตลิ่ง/สถานะครบกว่า
+  const seen = new Map();
+  stations.forEach(s => {
+    const key = s.prov + '|' + s.name.replace(/\s+/g,'');
+    const score = (s.bank!=null?2:0) + (s.sit!=null?1:0) + (s.pct!=null?1:0);
+    const prev = seen.get(key);
+    if(!prev || score > prev.score) seen.set(key, {s, score});
+  });
+  stations = [...seen.values()].map(v => v.s);
 }
 
 /* ---------- คำนวณแนวโน้ม (m/ชม.) จากกราฟ 24 ชม.ย้อนหลัง ---------- */
@@ -298,7 +360,7 @@ async function loadTrends(){
           .map(p=>({t:new Date(String(p.datetime).replace(' ','T')+'+07:00').getTime(), v:num(p.value)}))
           .filter(p=>p.v!=null && !isNaN(p.t));
         s.rate = calcRate(pts);
-        if(s.bank==null){ const b = num(g?.data?.min_bank); if(b!=null) s.bank = b; }
+        if(s.bank==null){ s.bank = validBank(g?.data?.min_bank); }
       }catch(e){ s.rate = null; }
       trendsLoaded++;
       if(trendsLoaded % 10 === 0 || trendsLoaded===trendsTotal) render();
@@ -311,7 +373,7 @@ function calcRate(pts){
   if(pts.length < 3) return null;
   const tEnd = pts[pts.length-1].t;
   const win = pts.filter(p => tEnd - p.t <= 6.5*3600*1000);
-  if(win.length < 3) return null;
+  if(win.length < 6) return null;                // ต้องมีจุดข้อมูลพอสมควรใน 6 ชม. (ทุก 10-60 นาที)
   const xs = win.map(p=>(p.t - win[0].t)/3600000), ys = win.map(p=>p.v);
   const n = xs.length, mx = xs.reduce((a,b)=>a+b,0)/n, my = ys.reduce((a,b)=>a+b,0)/n;
   let sxy=0, sxx=0;
@@ -353,31 +415,51 @@ async function loadFfpi(){
 async function loadDam(){
   try{
     const g = await fetchJSON(`${API}/analyst/dam`, 30000);
-    const rows = [ ...(g?.data?.dam_hourly||[]), ...(g?.data?.dam_medium||[]) ];
-    const bl = rows.find(d => thName((d.dam||d).dam_name).includes('บางลาง'));
-    if(bl) damBanglang = {pct:num(bl.dam_storage_percent), storage:num(bl.dam_storage), inflow:num(bl.dam_inflow), released:num(bl.dam_released)};
+    // dam_hourly ของ กฟผ. ส่ง % = 0 เสมอ → ใช้แถวรายวันล่าสุดที่มี % > 0 ก่อน · ไม่มีก็คำนวณจากความจุ รนก. 1,454 ล้าน ม³
+    const rows = [ ...(g?.data?.dam_daily||[]), ...(g?.data?.dam_medium||[]), ...(g?.data?.dam_hourly||[]) ]
+      .filter(d => thName((d.dam||d).dam_name).includes('บางลาง'));
+    const bl = rows.find(d => num(d.dam_storage_percent) > 0) || rows[0];
+    if(bl){
+      let pct = num(bl.dam_storage_percent), storage = num(bl.dam_storage);
+      if(!(pct > 0) && storage!=null) pct = storage / 1454 * 100;
+      damBanglang = {pct, storage, inflow:num(bl.dam_inflow), released:num(bl.dam_released), date: bl.dam_date||''};
+    }
   }catch(e){ damBanglang = null; }
 }
 /* ---------- คาดการณ์รายสถานี ---------- */
 function predict(s, h){
   // คืนค่า {cls, pred, tta} · tta = ชั่วโมงโดยประมาณจนถึงระดับตลิ่ง (เฉพาะกำลังขึ้น)
-  if(s.msl!=null && s.bank!=null && s.msl >= s.bank) return {cls:'over', pred:s.msl, tta:0};
+  const age = ageHours(s.dt);
+  const stale = age!=null && age > CRIT.STALE_H;
+  if(s.msl==null || stale) return {cls:'na', pred:null, tta:null, stale};
+  // ล้นตลิ่งจริง: ต้องมีระดับตลิ่งที่ถูกต้อง (validBank ตัดค่า 0 ออกแล้ว)
+  // และถ้าหน่วยงานส่ง % ความจุมาเอง ต้องสอดคล้องกัน (>= 100%) กันกรณีข้อมูลตลิ่งผิด
+  if(s.bank!=null && s.msl >= s.bank && (s.pct==null || s.pct >= 100)) return {cls:'over', pred:s.msl, tta:0};
   if(s.rate === undefined) return {cls:'na', pred:null, tta:null, pending:true};
-  if(s.rate === null || s.msl==null) return {cls:'na', pred:null, tta:null};
+  if(s.rate === null){
+    // ไม่มีข้อมูลแนวโน้ม (เช่น สถานี ชป. ที่กราฟย้อนหลังว่าง) → จัดสถานะจากระดับปัจจุบันอย่างเดียว
+    const cls = (s.pct!=null && s.pct >= CRIT.PCT_HIGH) ? 'watch' : 'ok';
+    return {cls, pred:null, tta:null, noTrend:true};
+  }
   const damp = HORIZON_INFO[h].damp ?? 0.55;
   const pred = s.msl + s.rate * h * damp;
+  const rising = s.rate >= CRIT.RISE_MIN, fast = s.rate >= CRIT.RISE_FAST, falling = s.rate <= CRIT.FALL_MIN;
+  const pct = s.pct;
   let tta = null;
-  if(s.rate > 0.001 && s.bank!=null) tta = (s.bank - s.msl) / s.rate;
+  if(rising && s.bank!=null) tta = (s.bank - s.msl) / s.rate;
   let cls;
-  if(s.bank!=null && pred >= s.bank) cls = 'over';
-  else if(tta!=null && tta <= h*1.5) cls = 'risk';
-  else if(s.rate >= 0.02) cls = 'watch';
-  else if(s.rate <= -0.02) cls = 'down';
-  else cls = 'ok';
+  if(s.bank!=null && rising && pred >= s.bank) cls = 'risk';                                 // คาดถึงตลิ่งภายในช่วงที่เลือก
+  else if(pct!=null && pct >= CRIT.PCT_HIGH && !falling) cls = 'watch';                      // ใกล้ตลิ่งแล้ว และไม่ลด
+  else if(rising && pct!=null && pct >= CRIT.PCT_RISE) cls = 'watch';                        // น้ำมาก และกำลังขึ้น
+  else if(fast && pct!=null && pct >= CRIT.PCT_MID) cls = 'watch';                           // ขึ้นเร็ว และเกินครึ่งตลิ่ง
+  else if(fast && pct==null && s.bank==null) cls = 'watch';                                  // ไม่รู้ตลิ่ง แต่ขึ้นเร็ว
+  else if(falling) cls = 'down';
+  else cls = 'ok';                                                                           // รวมถึงน้ำขึ้นช้าขณะระดับยังต่ำ
   return {cls, pred, tta};
 }
 function rateTxt(r){
-  if(r==null) return '…';
+  if(r === undefined) return '…';
+  if(r === null) return 'ไม่มีข้อมูลแนวโน้ม';
   const cm = r*100;
   if(Math.abs(cm) < 0.5) return 'ทรงตัว';
   return (cm>0?'▲ +':'▼ ') + fmt(cm,1) + ' ซม./ชม.';
@@ -392,7 +474,7 @@ function ttaClock(h){
 }
 /* สร้างข้อความแจ้งเตือนรูปแบบราชการ พร้อมคัดลอกส่งกลุ่มไลน์ */
 function alertMsg(s,p){
-  const lvl = p.cls==='over'?'🔴 [ล้นตลิ่ง]':p.cls==='risk'?'🟠 [เฝ้าระวังสูง]':'🟡 [เฝ้าระวัง]';
+  const lvl = p.cls==='over'?'🔴 [ล้นตลิ่งแล้ว]':p.cls==='risk'?'🟠 [คาดถึงตลิ่งใน '+horizon+' ชม.]':'🟡 [น้ำมาก เฝ้าระวัง]';
   let m = lvl+' สถานี '+(s.code?s.code+' ':'')+s.name+' อ.'+s.amphoe+' จ.'+s.prov;
   m += ' | ระดับน้ำ '+fmt(s.msl)+' ม.รทก. (ตลิ่ง '+fmt(s.bank)+')';
   m += ' | แนวโน้ม '+rateTxt(s.rate).replace(/[▲▼]/g,'').trim();
@@ -430,10 +512,10 @@ function render(){
         <div style="margin:4px 0;text-align:center"><span class="badge" style="background:${CLS[pp.cls].color};font-size:12px;padding:3px 12px">${CLS[pp.cls].label}</span></div>
         <table style="font-size:12px;width:100%">
           <tr><td style="color:var(--ink-3)">ระดับปัจจุบัน</td><td style="text-align:right"><b>${fmt(s.msl)}</b> ม.รทก. (${esc(s.dt)})</td></tr>
-          <tr><td style="color:var(--ink-3)">ระดับตลิ่ง</td><td style="text-align:right">${fmt(s.bank)} ม.รทก.</td></tr>
+          <tr><td style="color:var(--ink-3)">ระดับตลิ่ง</td><td style="text-align:right">${s.bank!=null?fmt(s.bank)+' ม.รทก.':'ไม่มีข้อมูลตลิ่ง'}${s.pct!=null?' <span style="color:var(--ink-3)">('+fmt(s.pct,0)+'% ของตลิ่ง)</span>':''}</td></tr>
           <tr><td style="color:var(--ink-3)">แนวโน้ม</td><td style="text-align:right">${rateTxt(s.rate)}</td></tr>
           ${pp.pred!=null?`<tr><td style="color:var(--ink-3)">คาดระดับ +${horizon} ชม.</td><td style="text-align:right"><b>${fmt(pp.pred)}</b> ม.รทก.</td></tr>`:''}
-          ${pp.tta!=null&&pp.tta>0&&pp.tta<48?`<tr><td style="color:var(--st-danger)">คาดถึงตลิ่งใน</td><td style="text-align:right;color:var(--st-danger)"><b>~${fmt(pp.tta,1)} ชม.</b><br><span style="font-size:10.5px">${ttaClock(pp.tta)}</span></td></tr>`:''}
+          ${pp.cls==='risk'&&pp.tta!=null&&pp.tta>0&&pp.tta<48?`<tr><td style="color:var(--st-danger)">คาดถึงตลิ่งใน</td><td style="text-align:right;color:var(--st-danger)"><b>~${fmt(pp.tta,1)} ชม.</b><br><span style="font-size:10.5px">${ttaClock(pp.tta)}</span></td></tr>`:''}
         </table>`;
       }, {maxWidth:290})
       .addTo(gMk);
@@ -444,12 +526,13 @@ function render(){
     .sort((a,b)=> CLS[a.p.cls].order - CLS[b.p.cls].order || (a.p.tta??99) - (b.p.tta??99));
   let html = `<div class="card"><h3>วิธีคาดการณ์ช่วง +${horizon} ชม.</h3><div style="font-size:12px;color:var(--ink-2)">${HORIZON_INFO[horizon].method}</div></div>`;
   html += `<div class="card"><h3>สถานีเฝ้าระวัง (${hot.length})</h3>`;
-  if(!hot.length) html += `<div style="font-size:12.5px;color:var(--st-normal)">ไม่มีสถานีที่คาดว่าจะถึงระดับเสี่ยงในช่วง +${horizon} ชม.</div>`;
+  if(!hot.length) html += `<div style="font-size:12.5px;color:var(--st-normal)">ไม่มีสถานีที่น้ำมากหรือคาดว่าจะถึงตลิ่งในช่วง +${horizon} ชม.</div>`;
+  html += `<div style="font-size:10.5px;color:var(--ink-3);margin-bottom:6px">เกณฑ์: 🔴 ล้นตลิ่งแล้ว · 🟠 น้ำกำลังขึ้นและระดับที่คาดถึงตลิ่งภายใน ${horizon} ชม. · 🟡 ระดับ ≥85% ของตลิ่งและไม่ลด หรือ ≥70% และกำลังขึ้น หรือขึ้นเร็ว ≥5 ซม./ชม. เกินครึ่งตลิ่ง</div>`;
   window._amsg = [];
   hot.slice(0,25).forEach(({s,p})=>{
     const C = CLS[p.cls];
     const i = window._amsg.length; window._amsg.push(alertMsg(s,p));
-    const ttaTxt = (p.tta!=null&&p.tta>0&&p.tta<48) ? ` · <b style="color:var(--st-danger)">ถึงตลิ่ง ~${fmt(p.tta,1)} ชม. (${ttaClock(p.tta)})</b>` : '';
+    const ttaTxt = (p.cls==='risk'&&p.tta!=null&&p.tta>0&&p.tta<48) ? ` · <b style="color:var(--st-danger)">ถึงตลิ่ง ~${fmt(p.tta,1)} ชม. (${ttaClock(p.tta)})</b>` : '';
     html += `<div class="item" style="border-left-color:${C.color}">
       <div style="display:flex;justify-content:space-between;gap:6px;cursor:pointer" onclick="fly(${s.lat},${s.lon})"><span class="nm">${esc(s.name)}</span><span class="badge" style="background:${C.color}">${C.label}</span></div>
       <div class="sub" style="cursor:pointer" onclick="fly(${s.lat},${s.lon})">${esc(s.amphoe)} · ${esc(s.prov)} · ${rateTxt(s.rate)}${ttaTxt}</div>
@@ -461,12 +544,10 @@ function render(){
   if(horizon >= 12){
     html += `<div class="card"><h3>ดัชนีดินอิ่มน้ำ (ฝนสะสม 3 วันย้อนหลัง สูงสุดรายจังหวัด)</h3>`;
     PROVINCES.filter(p=>provFilter==='all'||p.name===provFilter).forEach(p=>{
-      const mm = provRain3d[p.name];
-      const c = mm==null?'var(--ink-3)': mm>=200?'var(--st-danger)': mm>=100?'var(--st-warn)': mm>=50?'var(--st-watch)':'var(--st-normal)';
-      const lb = mm==null?'ไม่มีข้อมูล': mm>=200?'อิ่มน้ำมาก เสี่ยงสูง': mm>=100?'อิ่มน้ำ เฝ้าระวัง': mm>=50?'ชื้นปานกลาง':'ปกติ';
-      html += `<div class="provcard"><span>${p.name}</span><span><b>${mm!=null?fmt(mm,0)+' มม.':'…'}</b> <span class="badge" style="background:${c}">${lb}</span></span></div>`;
+      const mm = provRain3d[p.name], rc = rainClass(mm);
+      html += `<div class="provcard"><span>${p.name}</span><span><b>${mm!=null?fmt(mm,0)+' มม.':'…'}</b> <span class="badge" style="background:${rc.color}">${rc.long}</span></span></div>`;
     });
-    html += `<div style="font-size:10.5px;color:var(--ink-3)">ดินที่อิ่มน้ำทำให้ฝนใหม่กลายเป็นน้ำท่าเร็วขึ้น · ใช้ประกอบการอ่านแนวโน้ม</div></div>`;
+    html += `<div style="font-size:10.5px;color:var(--ink-3)">ดินที่อิ่มน้ำทำให้ฝนใหม่กลายเป็นน้ำท่าเร็วขึ้น · เกณฑ์: ≥80 ชื้น · ≥150 อิ่มน้ำ · ≥250 มม./3 วัน อิ่มน้ำมาก</div></div>`;
   }
   if(horizon === 24){
     html += wrfCard(2);
@@ -488,16 +569,14 @@ function render72(panel){
   // ความเสี่ยงรายจังหวัด = ดินอิ่มน้ำ (ย้อนหลัง) เป็นฐาน · ให้ผู้ใช้อ่านร่วมกับแผนที่ฝนพยากรณ์
   html += `<div class="card"><h3>ความเสี่ยงพื้นฐานรายจังหวัด (จากดินอิ่มน้ำ)</h3>`;
   PROVINCES.filter(p=>provFilter==='all'||p.name===provFilter).forEach(p=>{
-    const mm = provRain3d[p.name];
-    const c = mm==null?'var(--ink-3)': mm>=200?'var(--st-danger)': mm>=100?'var(--st-warn)': mm>=50?'var(--st-watch)':'var(--st-normal)';
-    const lb = mm==null?'ไม่มีข้อมูล': mm>=200?'เสี่ยงสูง หากฝนตกเพิ่ม':'' || (mm>=100?'เฝ้าระวัง':'') || (mm>=50?'ปานกลาง':'ต่ำ');
-    html += `<div class="provcard"><span>${p.name}</span><span><b>${mm!=null?fmt(mm,0)+' มม./3วัน':'…'}</b> <span class="badge" style="background:${c}">${lb||'เฝ้าระวัง'}</span></span></div>`;
+    const mm = provRain3d[p.name], rc = rainClass(mm);
+    html += `<div class="provcard"><span>${p.name}</span><span><b>${mm!=null?fmt(mm,0)+' มม./3วัน':'…'}</b> <span class="badge" style="background:${rc.color}">${rc.short}</span></span></div>`;
   });
   html += `<div style="font-size:10.5px;color:var(--ink-3)">อ่านร่วมกับแผนที่ฝนพยากรณ์ด้านบน: จังหวัดที่ดินอิ่มน้ำสูง + ฝนพยากรณ์หนัก = เสี่ยงน้ำท่วมมากที่สุด</div></div>`;
   if(damBanglang){
-    const c = damBanglang.pct>=80?'var(--st-warn)': damBanglang.pct>=100?'var(--st-danger)':'var(--st-normal)';
+    const c = damBanglang.pct>=95?'var(--st-danger)': damBanglang.pct>=80?'var(--st-warn)':'var(--st-normal)';
     html += `<div class="card"><h3>เขื่อนบางลาง (ต้นน้ำแม่น้ำปัตตานี)</h3>
-      <div class="provcard"><span>น้ำในอ่าง</span><span><b>${fmt(damBanglang.pct,1)}% รนก.</b> <span class="badge" style="background:${c}">${damBanglang.pct>=80?'เฝ้าระวังการระบาย':'ปกติ'}</span></span></div>
+      <div class="provcard"><span>น้ำในอ่าง</span><span><b>${fmt(damBanglang.pct,1)}% รนก.</b> <span class="badge" style="background:${c}">${damBanglang.pct>=95?'ใกล้เต็ม เสี่ยงระบายมาก':damBanglang.pct>=80?'เฝ้าระวังการระบาย':'ปกติ'}</span></span></div>
       <div style="font-size:11.5px;color:var(--ink-2)">ไหลเข้า ${fmt(damBanglang.inflow,1)} · ระบาย ${fmt(damBanglang.released,1)} ล้าน ม³/วัน · หากระบายเพิ่ม จะกระทบ ยะลา-ปัตตานี ตามลำน้ำภายใน 12-48 ชม.</div></div>`;
   }
   html += ffpiCard();
