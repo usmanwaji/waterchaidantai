@@ -5,7 +5,7 @@
  *   • ข้อมูล API (GET) → network-first แล้วเก็บชุดล่าสุดไว้ ใช้ตอนออฟไลน์ ("last good data")
  * เพิ่มเลขเวอร์ชันเมื่อแก้ไฟล์เพื่อบังคับอัปเดตแคช
  */
-const VERSION = 'oms-v17';
+const VERSION = 'oms-v18';
 const SHELL = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 
@@ -16,7 +16,7 @@ const SHELL_ASSETS = [
   'js/supabase-client.js?v=3','js/auth-ui.js','js/shelters_nwt.js','js/ddpm_risk_data.js','js/rivers.js','js/pwa.js','js/ui.js','js/views.js?v=2',
   // ต้องใส่ ?v= ให้ตรงกับที่หน้าเว็บเรียกจริง เพราะแคชอ้างอิง URL เต็มรวม query string
   'js/tabbar.js?v=1',
-  'shared.css?v=3',
+  'shared.css?v=4',
   'manifest.json','icon.svg','icon-512.png'
 ];
 

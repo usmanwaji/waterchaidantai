@@ -29,49 +29,76 @@
    ห้ามมี hex ดิบหรือ px ดิบในคอมโพเนนต์ ทุกค่าต้องอ้างจากตรงนี้
    ========================================================================= */
 :root{
-  /* ---------- พื้นผิว: แสงบนน้ำยามเช้า ไม่มีขาวล้วน ---------- */
-  --paper:#eef2f4;        /* พื้นหน้า */
-  --paper-2:#e4ebee;      /* พื้นยุบ ใช้กับแถบเครื่องมือ */
-  --card:#f9fbfc;         /* การ์ดยกขึ้น */
-  --card-2:#f2f6f8;       /* การ์ดซ้อนในการ์ด */
+  /* ---------- พื้นผิว: สว่างอมน้ำเงินจาง ไม่มีขาวล้วน ----------
+     ไล่ตามแดชบอร์ดอ้างอิง พื้นแอปสว่างเกือบขาวแต่มีสีแบรนด์เจือ
+     การ์ดยกขึ้นมาเป็นขาวกว่าพื้น แล้วให้เงานุ่มทำหน้าที่แยกชั้นแทนเส้นขอบหนา */
+  --paper:#f2f4fa;        /* พื้นหน้า */
+  --paper-2:#e8ecf6;      /* พื้นยุบ ใช้กับแถบเครื่องมือ */
+  --card:#fdfdff;         /* การ์ดยกขึ้น ขาวแต่ยังมีอุณหภูมิ */
+  --card-2:#f3f5fc;       /* การ์ดซ้อนในการ์ด */
 
   /* ---------- เส้น 3 ระดับ เพื่อให้ขอบสื่อลำดับชั้นได้ ไม่ใช่แค่มีขอบ ----------
      ค่าถูกเลือกให้ห่างจากค่าพื้นผิวทุกตัวพอที่จะมองเห็นจริง
      เส้นผมที่สว่างใกล้พื้นภายใน 2 ขั้นความสว่างจะมองไม่เห็นบนจอกลางแดด */
-  --line:#d2dbe0;
-  --line-mid:#b0bec6;
-  --line-strong:#788b94;
+  --line:#dfe4f0;
+  --line-mid:#bcc4da;
+  --line-strong:#8189a6;
 
-  /* ---------- หมึก: ดำอมน้ำเงินของน้ำลึก ไม่ใช่ดำล้วน ---------- */
-  --ink:#1b2733;
-  --ink-2:#42525e;
-  --ink-3:#5f6f78;
+  /* ---------- หมึก: กรมท่าเกือบดำ ไม่ใช่ดำล้วน ---------- */
+  --ink:#1a1f33;
+  --ink-2:#454d68;
+  /* วัดจากพิกเซลที่เรนเดอร์จริงแล้วต้องได้อย่างน้อย 4.5:1 บนการ์ด
+     ค่าที่อ่อนกว่านี้ (#727a96) วัดได้ 4.18:1 ซึ่งตกเกณฑ์
+     ตัวนี้คือสีของ .note และป้ายใต้ตัวเลข ซึ่งเป็นข้อความที่คนอ่านกลางแดดจริง */
+  --ink-3:#666e8c;
 
-  /* ---------- signal: สีทำงานของเว็บ เขียวน้ำทะเลตอนน้ำขึ้น ---------- */
-  --signal:#0e6e7a;
-  --signal-hover:#0a555f;
-  --signal-deep:#083f47;
-  --signal-wash:#dcebed;
-  --signal-ink:#f4fafb;
+  /* ---------- signal: สีทำงานของเว็บ น้ำเงินกรมท่าจากตราสัญลักษณ์ ปภ. ----------
+     สีมาจากของที่หน่วยงานเป็นเจ้าของอยู่แล้ว ไม่ใช่สีที่เลือกให้ตามใจ
+     ทั้งมือและตัวอักษร DDPM บนตราเป็นน้ำเงินกรมท่าบนพื้นเหลือง
+
+     ในแดชบอร์ดอ้างอิง ส้มถูกใช้เป็นสีเมนูที่เลือกอยู่และปุ่มหลัก
+     แต่เว็บนี้เป็นเว็บเตือนภัย ส้มมีความหมายว่า "เตือนภัย" อยู่แล้ว
+     ถ้าเอาไปแปะบนเมนู ตาคนจะชินกับส้มบนของที่ไม่มีความหมาย
+     แล้ววันที่มีอำเภอเสี่ยงระดับส้มจริง สีจะหมดแรงเตือน
+     น้ำเงินจึงเป็นสีหลักเดี่ยว และส้มถูกคืนให้ระบบเตือนภัยใช้อย่างเดียว */
+  --signal:#1c3282;
+  --signal-hover:#142663;
+  --signal-deep:#0e1a45;
+  --signal-wash:#e7ebf7;
+  --signal-ink:#f8faff;
+
+  /* ---------- เหลืองของตรา ปภ. ----------
+     กฎเหล็ก: เหลืองสดนี้ใช้ได้เฉพาะเป็นของประดับ chrome และเฉพาะเมื่อวาง
+     บนพื้นน้ำเงินเท่านั้น (เส้นคาดใต้หัวเว็บ ขีดบอกแท็บที่เลือก แถบจับของแผ่น)
+     ห้ามใช้กับข้อมูล ตัวเลข หรือสถานะเด็ดขาด เพราะเหลืองในระบบนี้
+     มีความหมายว่า "เฝ้าระวัง" อยู่แล้ว (--st-watch) ถ้าปนกันเมื่อไร
+     ผู้ใช้จะแยกไม่ออกว่าเหลืองตรงหน้าคือยี่ห้อหรือคือคำเตือน
+     บนพื้นน้ำเงิน #1c3282 เหลืองนี้วัดได้ราว 8.5:1 จึงอ่านออกชัด */
+  --brand-yellow:#ffd400;
+  --brand-yellow-dim:#e0ba00;
 
   /* ---------- ไวยากรณ์สถานการณ์ สงวนไว้ใช้กับระดับภัยเท่านั้น ----------
-     base = ตัวหนังสือและไอคอน  wash = พื้นชิป  ทุกคู่ผ่าน 4.5:1 บน wash ของตัวเอง */
-  --st-normal:#1a6b46;   --st-normal-wash:#dcefe5;
-  --st-watch:#8a5f00;    --st-watch-wash:#f5ecd6;
-  --st-warn:#a94a08;     --st-warn-wash:#f9e5d7;
-  --st-danger:#9d1c16;   --st-danger-wash:#f7e0de;
+     base = ตัวหนังสือและไอคอน  wash = พื้นชิป
+     ปรับให้สดขึ้นตามภาพอ้างอิง แต่เข้มพอจะเป็นตัวหนังสือบน wash ของตัวเองได้ */
+  --st-normal:#15803d;   --st-normal-wash:#dcfce7;
+  --st-watch:#a16207;    --st-watch-wash:#fef3c7;
+  --st-warn:#c2410c;     --st-warn-wash:#ffedd5;
+  --st-danger:#be123c;   --st-danger-wash:#ffe4e6;
 
-  /* ---------- ยกระดับ: วงแหวน 1px บวกเงา อ่านคมทั้งบนพื้นสว่างและพื้นเข้ม ---------- */
-  --lift-1:0 0 0 1px rgba(27,39,51,.07),0 1px 2px rgba(27,39,51,.05);
-  --lift-2:0 0 0 1px rgba(27,39,51,.05),0 6px 16px rgba(27,39,51,.10);
-  --lift-3:0 12px 32px rgba(27,39,51,.16);
+  /* ---------- ยกระดับ: เงานุ่มกระจายกว้างแบบภาพอ้างอิง ----------
+     การ์ดในภาพแทบไม่มีเส้นขอบ ใช้เงาบาง ๆ ที่ฟุ้งกว้างแยกชั้นแทน
+     วงแหวน 1px ยังอยู่เพื่อให้ขอบไม่หายไปเลยบนจอกลางแดด */
+  --lift-1:0 0 0 1px rgba(26,31,51,.045),0 2px 6px rgba(28,50,130,.07);
+  --lift-2:0 0 0 1px rgba(26,31,51,.035),0 8px 22px rgba(28,50,130,.11);
+  --lift-3:0 16px 40px rgba(28,50,130,.20);
 
   /* ---------- รัศมีตามบทบาท ไม่ใช่ตามขนาด ----------
      ถามว่า "นี่คือ control หรือ sheet" ตอบได้ทันที
-     ถามว่า "นี่คือ md หรือ lg" ต้องเดา */
-  --r-control:10px;
-  --r-media:14px;
-  --r-sheet:20px;
+     ถามว่า "นี่คือ md หรือ lg" ต้องเดา
+     มนขึ้นกว่าเดิมตามภาพอ้างอิงที่การ์ดมนราว 16px และปุ่มมนราว 12px */
+  --r-control:12px;
+  --r-media:16px;
+  --r-sheet:24px;
   --r-commit:999px;
 
   /* ---------- บันได z มีชื่อ ห้าม z-index ดิบในคอมโพเนนต์ ----------
@@ -125,8 +152,10 @@
   --navy-d:var(--ink);
   --peach:var(--paper-2);
 
-  /* หัวเว็บเดิมเป็น rgba(0,0,0,.72) ดำล้วน เปลี่ยนเป็นหมึกน้ำลึกโปร่ง */
-  --shell:rgba(16,32,41,.86);
+  /* หัวเว็บเป็นน้ำเงินกรมท่าของตรา ปภ. คาดด้วยเส้นเหลืองของตราด้านล่าง
+     คู่สีน้ำเงินบนเหลืองคือตัวตราเอง และการวางเหลืองไว้บนน้ำเงินทำให้
+     เหลืองอยู่ในที่ที่อ่านออกชัดโดยไม่ไปปนกับความหมาย "เฝ้าระวัง" */
+  --shell:rgba(20,34,86,.93);
 
   --success:var(--st-normal);
   --warning:var(--st-watch);
@@ -177,30 +206,46 @@ a:hover{color:var(--signal-hover)}
 /* =========================================================================
    3. Chrome: หัวเว็บ แถบเมนู แถบเลือกพื้นที่
    ========================================================================= */
+/* หัวเว็บน้ำเงินกรมท่า คาดเส้นเหลืองของตรา ปภ. ด้านล่าง
+   เส้นเหลืองคือจุดเดียวที่สีแบรนด์ปรากฏเต็มความสด และมันอยู่บนน้ำเงิน
+   จึงอ่านออกชัดและไม่มีทางถูกเข้าใจผิดว่าเป็นระดับเฝ้าระวัง */
 header{
   background:var(--shell);
-  backdrop-filter:blur(14px) saturate(1.15);
-  -webkit-backdrop-filter:blur(14px) saturate(1.15);
-  border-bottom:1px solid rgba(244,250,251,.10);
+  backdrop-filter:blur(16px) saturate(1.3);
+  -webkit-backdrop-filter:blur(16px) saturate(1.3);
+  border-bottom:3px solid var(--brand-yellow);
+  color:var(--signal-ink);
 }
-header h1{font-weight:600;letter-spacing:0}
+header h1{font-weight:600;letter-spacing:0;color:var(--signal-ink)}
+header h1 small{color:rgba(248,250,255,.78)}
+#updated{color:rgba(248,250,255,.80)}
 
 .navtab{
-  background:rgba(244,250,251,.06);
-  border:1px solid rgba(244,250,251,.10);
+  background:rgba(248,250,255,.10);
+  border:1px solid rgba(248,250,255,.16);
   border-radius:var(--r-control);
 }
-.navtab a{color:rgba(244,250,251,.74);border-radius:var(--r-control);font-weight:500}
-.navtab a:hover{color:var(--signal-ink);background:rgba(244,250,251,.10)}
-.navtab a.on{background:var(--signal);color:var(--signal-ink);font-weight:600}
-.navtab a.on:hover{background:var(--signal-hover);color:var(--signal-ink)}
+.navtab a{color:rgba(248,250,255,.82);border-radius:var(--r-control);font-weight:500}
+.navtab a:hover{color:var(--signal-ink);background:rgba(248,250,255,.16)}
+/* แท็บที่เลือกอยู่บนหัวเว็บใช้พื้นเหลืองหมึกน้ำเงิน ซึ่งคือตรา ปภ. กลับด้าน
+   และเป็นคู่สีที่คอนทราสต์สูงที่สุดที่แบรนด์นี้มี */
+.navtab a.on{background:var(--brand-yellow);color:var(--signal-deep);font-weight:700}
+.navtab a.on:hover{background:var(--brand-yellow-dim);color:var(--signal-deep)}
 
+/* ปุ่มที่อยู่บนหัวเว็บต้องไม่ใช้สีน้ำเงินเป็นพื้น เพราะหัวเว็บเองก็น้ำเงิน
+   ปุ่มจะจมหายไปทั้งใบ กลับด้านเป็นพื้นสว่างหมึกน้ำเงินแทน
+   ไม่ใช้เหลืองเพราะปุ่มสีเหลืองบนเว็บเตือนภัยอ่านได้ว่าเป็นปุ่มคำเตือน */
 #btnRefresh{
-  background:var(--signal);color:var(--signal-ink);
+  background:var(--signal-ink);color:var(--signal-deep);
   border-radius:var(--r-control);font-weight:600;
-  transition:background .15s var(--ease);
+  transition:background .15s var(--ease),color .15s var(--ease);
 }
-#btnRefresh:hover{background:var(--signal-hover)}
+#btnRefresh:hover{background:var(--brand-yellow);color:var(--signal-deep)}
+header .langbtn{
+  background:rgba(248,250,255,.12);color:rgba(248,250,255,.85);
+  border:1px solid rgba(248,250,255,.20);border-radius:var(--r-control);
+}
+header .langbtn.active{background:var(--brand-yellow);color:var(--signal-deep);border-color:var(--brand-yellow);font-weight:700}
 
 #selbar{background:var(--card);border-bottom:1px solid var(--line)}
 .chip{
@@ -378,7 +423,14 @@ footer{background:var(--paper-2);border-top:1px solid var(--line);color:var(--in
 }
 .tabbar svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;
   stroke-linecap:round;stroke-linejoin:round;display:block}
-.tabbar a[aria-current="page"]{color:var(--signal);font-weight:600}
+/* แท็บที่เลือกอยู่บอกด้วยสามอย่างพร้อมกัน: สีน้ำเงิน น้ำหนักตัวอักษร
+   และขีดคาดด้านบน สีจึงไม่ใช่สัญญาณเดียว คนตาบอดสียังอ่านออก
+   ขีดเป็นสีแบรนด์เหลืองบนน้ำเงิน ตรงกับเส้นคาดใต้หัวเว็บ */
+.tabbar a[aria-current="page"]{color:var(--signal);font-weight:600;position:relative}
+.tabbar a[aria-current="page"]::before{
+  content:"";position:absolute;inset:0 22% auto 22%;height:3px;
+  background:var(--signal);border-radius:0 0 var(--r-commit) var(--r-commit);
+}
 .tabbar a:active,.tabbar button:active{transform:scale(.94)}
 .tabbar a,.tabbar button{transition:color .15s var(--ease),transform .06s var(--ease)}
 
@@ -412,6 +464,10 @@ body{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom))}
 @media(max-width:768px){
   .leaflet-bottom{margin-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom))}
 }
+/* คำอธิบายสัญลักษณ์กับแถบเครดิตของ Leaflet อยู่ในมุมล่างเหมือนกัน
+   วัดแล้วบรรทัดสุดท้ายของคำอธิบายถูกแถบเครดิตทับอยู่ 10px
+   ยกคำอธิบายให้พ้น เพราะบรรทัดที่โดนทับคือคีย์สีของเขื่อนและกล้อง */
+.leaflet-bottom .legend{margin-bottom:22px}
 
 /* ---------- แผ่นเมนูเพิ่มเติม ----------
    ปลายทางที่เหลืออยู่ในนี้ แทนที่จะยัด 12 อันลงแถบเดียว
@@ -432,7 +488,7 @@ body{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom))}
   max-height:80vh;overflow-y:auto;
 }
 .sheet.show{transform:translateY(0)}
-.sheet-grab{width:36px;height:4px;border-radius:var(--r-commit);background:var(--line-mid);margin:0 auto var(--s3)}
+.sheet-grab{width:44px;height:4px;border-radius:var(--r-commit);background:var(--line-mid);margin:0 auto var(--s3)}
 .sheet h3{font-size:13px;font-weight:600;color:var(--ink-3);margin-bottom:var(--s2)}
 .sheet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s2)}
 .sheet-grid a{
