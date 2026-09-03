@@ -21,6 +21,21 @@ git push origin main      # ต้องล็อกอิน GitHub (Credential
 รอ ~1 นาที เว็บอัปเดตที่ลิงก์ด้านบน  
 PWA/Service Worker ทำงานเฉพาะบน https (GitHub Pages เป็น https อยู่แล้ว)
 
+### 1.1) Cloudflare Worker proxies (แก้ CORS ให้ API ราชการ)
+
+หน้า map.html/index.html เรียก API บางตัวผ่าน Worker ฟรีของ Cloudflare เพราะต้นทางไม่เปิด CORS
+ทุกตัว deploy แบบเดียวกัน: **dash.cloudflare.com → Workers & Pages → Create Worker → ตั้งชื่อตามตาราง → Edit code → วางไฟล์ → Save and deploy**
+ถ้าตั้งชื่อ worker ตรงตามตาราง URL จะตรงกับที่ตั้งค่าไว้ในโค้ดแล้ว ไม่ต้องแก้อะไร
+
+| ไฟล์ | ชื่อ worker | ใช้กับ | ทดสอบ |
+|------|-------------|--------|--------|
+| `ddpm-proxy.worker.js` | `ddpm-proxy` | map.html — ภาพกล้อง ปภ. | `https://ddpm-proxy.<บัญชี>.workers.dev/stations/PTN07` |
+| `tmd-proxy.worker.js` | `tmd-proxy` | index.html — พยากรณ์ 7 วัน TMD | `https://tmd-proxy.<บัญชี>.workers.dev/region7days` |
+| `onwr-proxy.worker.js` | `onwr-proxy` | map.html — 4 ชั้นเรดาร์ สทนช. (เรดาร์ TMD + คาดการณ์ 3 ชม. · ฝนสะสม 3 ชม. ล่วงหน้ารายอำเภอ/ตำบล · ฝนสถานีรายชั่วโมง · สถานีเรดาร์) | `https://onwr-proxy.<บัญชี>.workers.dev/frames` |
+
+`onwr-proxy` กรองข้อมูลให้เหลือเฉพาะนราธิวาสก่อนส่ง (ต้นทาง `zones?level=subdistrict` ใหญ่ 8 MB) และแคชผล 5 นาที
+ถ้ายังไม่ deploy หน้า map จะขึ้น "โหลดข้อมูล สทนช. ไม่สำเร็จ" เฉพาะชั้นเหล่านี้ ชั้นอื่นทำงานปกติ
+
 ---
 
 ## 2) ฐานข้อมูล (Supabase)

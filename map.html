@@ -83,17 +83,34 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
 .layerrow{display:flex;gap:6px 10px;flex-wrap:wrap;margin-top:7px;font-size:12px}
 .layerrow label{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--ink-2)}
 /* แถบควบคุมภาพเรดาร์ย้อนหลัง (แสดงเมื่อเปิดชั้นเรดาร์เท่านั้น) */
-#radarBar:empty{display:none}
-#radarBar{margin-top:7px}
-#radarBar .rdrow{display:flex;align-items:center;gap:7px;background:var(--card-2);border:1px solid var(--outline);
+.rdbar:empty{display:none}
+.rdbar{margin-top:7px}
+.rdbar .rdrow{display:flex;align-items:center;gap:7px;background:var(--card-2);border:1px solid var(--outline);
   border-radius:8px;padding:5px 8px}
-#radarBar .rdbtn{flex:none;width:28px;height:28px;border:none;border-radius:7px;background:var(--navy);
+.rdbar .rdbtn{flex:none;width:28px;height:28px;border:none;border-radius:7px;background:var(--navy);
   color:#fff;font-size:12px;cursor:pointer;line-height:1}
-#radarBar .rdbtn:hover{background:var(--orange-d)}
-#radarBar .rdslider{flex:1;min-width:0;accent-color:var(--orange)}
-#radarBar .rdtime{flex:none;font-size:11.5px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
-#radarBar .rdtime.now{color:var(--orange-d)}
-#radarBar .rdinfo{font-size:11.5px;color:var(--muted)}
+.rdbar .rdbtn:hover{background:var(--orange-d)}
+.rdbar .rdslider{flex:1;min-width:0;accent-color:var(--orange)}
+.rdbar .rdtime{flex:none;font-size:11.5px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.rdbar .rdtime.now{color:var(--orange-d)}
+.rdbar .rdinfo{font-size:11.5px;color:var(--muted)}
+.rdbar .rdtime.fc{color:var(--signal)}
+.rdbar .rdnote{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+.rdbar .rdnote a{color:var(--signal)}
+/* ชั้นข้อมูล สทนช. (wam.onwr.go.th/radar): หัวข้อกลุ่ม + ปุ่มสลับย่อยข้างชื่อชั้น */
+.laycap{flex-basis:100%;font-size:10.5px;font-weight:600;color:var(--muted);margin-top:4px;padding-top:6px;border-top:1px dashed var(--outline)}
+.layitem{display:inline-flex;align-items:center;gap:5px}
+.seg{display:inline-flex;border:1px solid var(--outline-strong);border-radius:6px;overflow:hidden;background:#fff}
+.seg button{border:none;background:transparent;color:var(--ink-2);font-family:inherit;font-size:10.5px;font-weight:600;padding:2px 7px;cursor:pointer;line-height:1.3}
+.seg button.active{background:var(--navy);color:#fff}
+#onwrMsg:empty{display:none}
+#onwrMsg{margin-top:5px}
+.leaflet-tooltip.onwrlbl{background:rgba(255,255,255,.92);border:1px solid var(--outline-strong);border-radius:6px;padding:2px 6px;font-size:11px;font-weight:700;color:var(--ink);box-shadow:none}
+.leaflet-tooltip.onwrlbl::before{display:none}
+.legend .ramp{display:flex;height:10px;border-radius:3px;overflow:hidden;border:1px solid rgba(0,0,0,.15);margin-top:2px}
+.legend .ramp i{flex:1;display:block}
+.legend .ticks{display:flex;font-size:9px;line-height:1.3;color:var(--ink-3);margin-bottom:2px}
+.legend .ticks span{flex:1;text-align:center;white-space:nowrap}
 #btnReport{width:100%;margin-top:7px;padding:6px;border:none;background:var(--navy);color:#fff;font-family:inherit;font-weight:600;font-size:12.5px;border-radius:8px;cursor:pointer}
 #btnReport:hover{background:var(--signal-deep)}
 .extrow{display:flex;gap:5px;margin-top:6px}
@@ -268,7 +285,27 @@ footer a:hover{text-decoration:underline}
         <label><input type="checkbox" id="lyRisk"> <span id="tRisk">จุดเสี่ยงฉับพลัน</span></label>
         <label><input type="checkbox" id="lyRadar"> <span id="tRadar">เรดาร์ฝน</span></label>
       </div>
-      <div id="radarBar"></div>
+      <div id="radarBar" class="rdbar"></div>
+      <!-- ชั้นข้อมูลจากหน้าเรดาร์ สทนช. (wam.onwr.go.th/radar) เฉพาะนราธิวาส · JSON ผ่าน onwr-proxy.worker.js -->
+      <div class="layerrow" id="onwrRow">
+        <div class="laycap" id="tOnwrCap">ข้อมูลเรดาร์ สทนช. · wam.onwr.go.th</div>
+        <label><input type="checkbox" id="lyOnwrRadar"> <span id="tOnwrRadar">เรดาร์ TMD + คาดการณ์ 3 ชม.</span></label>
+        <span class="layitem">
+          <label><input type="checkbox" id="lyOnwrAccum"> <span id="tOnwrAccum">ฝนสะสม 3 ชม. ล่วงหน้า</span></label>
+          <span class="seg" id="onwrLevelSeg"><button type="button" class="active" data-level="district" id="sgDist">อำเภอ</button><button type="button" data-level="subdistrict" id="sgSub">ตำบล</button></span>
+        </span>
+        <span class="layitem">
+          <label><input type="checkbox" id="lyOnwrRain"> <span id="tOnwrRain">ฝนสถานีรายชั่วโมง</span></label>
+          <span class="seg" id="onwrRainSeg"><button type="button" class="active" data-mode="dots" id="sgDots">จุด</button><button type="button" data-mode="heat" id="sgHeat">Heat</button></span>
+          <span class="seg" id="onwrWinSeg"><button type="button" class="active" data-win="1h" id="sgW1">1 ชม.</button><button type="button" data-win="24h" id="sgW24">24 ชม.</button></span>
+        </span>
+        <span class="layitem">
+          <label><input type="checkbox" id="lyOnwrSites"> <span id="tOnwrSites">สถานีเรดาร์</span></label>
+          <label><input type="checkbox" id="lyOnwrLabels" checked> <span id="tOnwrLabels">ป้าย</span></label>
+        </span>
+      </div>
+      <div id="onwrBar" class="rdbar"></div>
+      <div id="onwrMsg" class="rdnote"></div>
       <button id="btnReport" onclick="copyReport()">คัดลอกรายงานสถานการณ์</button>
       <div class="extrow">
         <a id="btnDdpm" class="extbtn" href="https://cctv.disaster.go.th" onclick="openDdpm();return false;">CCTV ปภ. ↗</a>
@@ -309,6 +346,7 @@ footer a:hover{text-decoration:underline}
   <span id="fSrc">แหล่งข้อมูล:</span>
   <a href="https://www.thaiwater.net" target="_blank">thaiwater.net (สสน.)</a>
   <a href="https://nationalthaiwater.onwr.go.th/waterlevel" target="_blank">สทนช.</a>
+  <a href="https://wam.onwr.go.th/radar" target="_blank">เรดาร์ สทนช./TMD</a>
   <a href="https://telerid.rid.go.th/#/" target="_blank">โทรมาตร กรมชลฯ</a>
   <a href="https://cctv.disaster.go.th" target="_blank">CCTV ปภ.</a>
   <a href="https://tiwrm.hii.or.th/thaiwater_l5/public/sealevel" target="_blank">ระดับน้ำชายฝั่ง</a>
@@ -317,7 +355,7 @@ footer a:hover{text-decoration:underline}
 </footer>
 
 <script src="js/rivers.js"></script>
-<script src="map.js?v=14"></script>
+<script src="map.js?v=15"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>

@@ -34,6 +34,18 @@ th:{
   wl_nodata:'ไม่มีข้อมูลปัจจุบัน',
   lyRadar:'เรดาร์ฝน', radarPlay:'เล่น/หยุดภาพย้อนหลัง', radarNow:'ล่าสุด',
   radarLoading:'กำลังโหลดเรดาร์…', radarFail:'โหลดเรดาร์ไม่สำเร็จ',
+  onwrCap:'ข้อมูลเรดาร์ สทนช. · wam.onwr.go.th', lyOnwrRadar:'เรดาร์ TMD + คาดการณ์ 3 ชม.', lyOnwrAccum:'ฝนสะสม 3 ชม. ล่วงหน้า',
+  lyOnwrRain:'ฝนสถานีรายชั่วโมง', lyOnwrSites:'สถานีเรดาร์', lyOnwrLabels:'ป้าย',
+  sgDist:'อำเภอ', sgSub:'ตำบล', sgDots:'จุด', sgHeat:'Heat', sgW1:'1 ชม.', sgW24:'24 ชม.',
+  onwrObs:'ตรวจวัด', onwrFc:'คาดการณ์', onwrBase:'เวลาฐาน', onwrStale:'ข้อมูลเก่า', onwrMin:'นาที', onwrMm:'มม.', onwrKm:'กม.',
+  onwrLoading:'กำลังโหลดข้อมูล สทนช.…', onwrFail:'โหลดข้อมูล สทนช. ไม่สำเร็จ (ตรวจสอบ onwr-proxy)', onwrNoNowcast:'รอบนี้ยังไม่มีข้อมูลคาดการณ์',
+  onwrAccMax:'ฝนสะสม 3 ชม. ล่วงหน้า สูงสุด', onwrAccMean:'เฉลี่ยทั้งพื้นที่', onwrPeak:'ความแรงสูงสุด (มม./ชม.)', onwrRaining:'ฝนกำลังตกอยู่แล้ว',
+  onwrOnset:'คาดว่าเริ่มตกในอีก', onwrNoRadar:'ไม่มีข้อมูลเรดาร์ในพื้นที่นี้', onwrCov:'เรดาร์ครอบคลุมเพียง',
+  onwrRainNow:'ฝน 1 ชม. ล่าสุด', onwrRain12:'12 ชม.', onwrRain24:'24 ชม.', onwrLastObs:'ตรวจวัดล่าสุด', onwrHist:'รายชั่วโมง 6 ชม. ล่าสุด (มม.)',
+  onwrDerived:'ค่าประมาณ', onwrAgency:'หน่วยงาน',
+  onwrSiteType:'ชนิดเรดาร์', onwrSiteRadius:'รัศมีตรวจวัด', onwrSiteSrc:'กรมอุตุนิยมวิทยา ผ่าน สทนช.',
+  legOnwrRadar:'เรดาร์ TMD (มม./ชม.)', legOnwrAccum:'ฝนสะสม 3 ชม. ล่วงหน้า (มม.)', legOnwrRain1:'ฝนสถานี 1 ชม. (มม.)', legOnwrRain24:'ฝนสถานี 24 ชม. (มม.)',
+  legOnwrSites:'◎ สถานีเรดาร์ · เส้นประ = รัศมี 240 กม.',
   gcap:'ระดับน้ำ 3 วันย้อนหลัง (เส้นประแดง = ตลิ่ง)', gload:'กำลังโหลดกราฟ…', gfail:'ไม่สามารถโหลดกราฟได้', gnone:'ไม่มีข้อมูลกราฟ',
   full:'ดูข้อมูลเต็มที่ thaiwater.net ↗', damfull:'ดูข้อมูลเขื่อนทั้งหมด ↗', seafull:'ดูระดับน้ำชายฝั่งเต็ม ↗',
   rain24:'ฝนสะสม 24 ชม.', storage:'ปริมาณน้ำ (ล้าน ม³)', inflow:'น้ำไหลเข้า (ล้าน ม³/วัน)', outflow:'ระบายออก (ล้าน ม³/วัน)', damlv:'ระดับน้ำ (ม.รทก.)', damdate:'วันที่ข้อมูล', pctcap:'% รนก.',
@@ -86,6 +98,18 @@ en:{
   wl_nodata:'No current data',
   lyRadar:'Rain radar', radarPlay:'Play/pause loop', radarNow:'latest',
   radarLoading:'Loading radar…', radarFail:'Radar unavailable',
+  onwrCap:'ONWR radar data · wam.onwr.go.th', lyOnwrRadar:'TMD radar + 3 h nowcast', lyOnwrAccum:'3 h rain ahead',
+  lyOnwrRain:'Hourly gauge rain', lyOnwrSites:'Radar sites', lyOnwrLabels:'Labels',
+  sgDist:'District', sgSub:'Subdistrict', sgDots:'Dots', sgHeat:'Heat', sgW1:'1 h', sgW24:'24 h',
+  onwrObs:'observed', onwrFc:'forecast', onwrBase:'Base time', onwrStale:'stale', onwrMin:'min', onwrMm:'mm', onwrKm:'km',
+  onwrLoading:'Loading ONWR data…', onwrFail:'ONWR data unavailable (check onwr-proxy)', onwrNoNowcast:'No nowcast in this cycle yet',
+  onwrAccMax:'Max 3 h rain ahead', onwrAccMean:'Area mean', onwrPeak:'Peak intensity (mm/h)', onwrRaining:'Already raining',
+  onwrOnset:'Rain expected to start in', onwrNoRadar:'No radar data for this area', onwrCov:'Radar covers only',
+  onwrRainNow:'Last 1 h rain', onwrRain12:'12 h', onwrRain24:'24 h', onwrLastObs:'Last observed', onwrHist:'Last 6 hours, hourly (mm)',
+  onwrDerived:'estimated', onwrAgency:'Agency',
+  onwrSiteType:'Radar type', onwrSiteRadius:'Range', onwrSiteSrc:'TMD via ONWR',
+  legOnwrRadar:'TMD radar (mm/h)', legOnwrAccum:'3 h rain ahead (mm)', legOnwrRain1:'Gauge rain 1 h (mm)', legOnwrRain24:'Gauge rain 24 h (mm)',
+  legOnwrSites:'◎ Radar site · dashed ring = 240 km range',
   gcap:'Water level, past 3 days (red dash = bank)', gload:'Loading graph…', gfail:'Could not load graph', gnone:'No graph data',
   full:'Full data at thaiwater.net ↗', damfull:'All dam data ↗', seafull:'Full coastal data ↗',
   rain24:'Rain 24 h', storage:'Storage (MCM)', inflow:'Inflow (MCM/day)', outflow:'Released (MCM/day)', damlv:'Level (m MSL)', damdate:'Data date', pctcap:'% capacity',
@@ -138,6 +162,18 @@ ms:{
   wl_nodata:'Tiada data semasa',
   lyRadar:'Radar hujan', radarPlay:'Main/henti ulangan', radarNow:'terkini',
   radarLoading:'Memuatkan radar…', radarFail:'Radar tidak tersedia',
+  onwrCap:'Data radar ONWR · wam.onwr.go.th', lyOnwrRadar:'Radar TMD + ramalan 3 jam', lyOnwrAccum:'Hujan 3 jam akan datang',
+  lyOnwrRain:'Hujan stesen sejam', lyOnwrSites:'Stesen radar', lyOnwrLabels:'Label',
+  sgDist:'Daerah', sgSub:'Mukim', sgDots:'Titik', sgHeat:'Heat', sgW1:'1 jam', sgW24:'24 jam',
+  onwrObs:'cerapan', onwrFc:'ramalan', onwrBase:'Masa asas', onwrStale:'data lama', onwrMin:'minit', onwrMm:'mm', onwrKm:'km',
+  onwrLoading:'Memuatkan data ONWR…', onwrFail:'Data ONWR tidak tersedia (semak onwr-proxy)', onwrNoNowcast:'Belum ada ramalan untuk kitaran ini',
+  onwrAccMax:'Hujan 3 jam akan datang (maks)', onwrAccMean:'Purata kawasan', onwrPeak:'Keamatan puncak (mm/j)', onwrRaining:'Sudah hujan',
+  onwrOnset:'Hujan dijangka mula dalam', onwrNoRadar:'Tiada data radar di kawasan ini', onwrCov:'Radar meliputi hanya',
+  onwrRainNow:'Hujan 1 jam terkini', onwrRain12:'12 jam', onwrRain24:'24 jam', onwrLastObs:'Cerapan terakhir', onwrHist:'6 jam terakhir, setiap jam (mm)',
+  onwrDerived:'anggaran', onwrAgency:'Agensi',
+  onwrSiteType:'Jenis radar', onwrSiteRadius:'Jarak liputan', onwrSiteSrc:'TMD melalui ONWR',
+  legOnwrRadar:'Radar TMD (mm/j)', legOnwrAccum:'Hujan 3 jam akan datang (mm)', legOnwrRain1:'Hujan stesen 1 jam (mm)', legOnwrRain24:'Hujan stesen 24 jam (mm)',
+  legOnwrSites:'◎ Stesen radar · garis putus = liputan 240 km',
   gcap:'Paras air 3 hari lepas (garis merah = tebing)', gload:'Memuatkan graf…', gfail:'Graf tidak dapat dimuat', gnone:'Tiada data graf',
   full:'Data penuh di thaiwater.net ↗', damfull:'Semua data empangan ↗', seafull:'Data pantai penuh ↗',
   rain24:'Hujan 24 jam', storage:'Simpanan (juta m³)', inflow:'Aliran masuk (juta m³/hari)', outflow:'Dilepaskan (juta m³/hari)', damlv:'Paras (m MSL)', damdate:'Tarikh data', pctcap:'% kapasiti',
@@ -362,6 +398,366 @@ setInterval(async ()=>{
   st.textContent='.maptools{display:flex;flex-direction:column;gap:4px}.maptools button{width:34px;height:34px;border:none;border-radius:8px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.28);font-size:16px;cursor:pointer;line-height:1}.maptools button.on{background:var(--signal);color:#fff}';
   document.head.appendChild(st);
 })();
+/* ================= ชั้นข้อมูล สทนช. (wam.onwr.go.th/radar) =================
+ * 4 ชั้นจากหน้าเรดาร์ สทนช. ตัดเฉพาะจังหวัดนราธิวาส:
+ *   1) เรดาร์คอมโพสิต TMD ย้อนหลัง 1 ชม. + คาดการณ์ (nowcast) 3 ชม. · PNG ทั้งประเทศ วางด้วย imageOverlay ตาม bounds ที่ API บอก
+ *   2) ประมาณการฝนสะสม 3 ชม. ล่วงหน้า รายอำเภอ/ตำบล · choropleth จากสถิติของ สทนช. + ขอบเขตใน js/onwr-nara-*.geojson
+ *   3) ฝนสถานีรายชั่วโมง (จุด / Heat · หน้าต่าง 1 ชม. / 24 ชม.)
+ *   4) สถานีเรดาร์ที่รัศมี 240 กม. ครอบคลุมนราธิวาส (ตากใบ · หาดใหญ่ · สทิงพระ)
+ * JSON ต้องผ่าน ONWR_PROXY (Cloudflare Worker · ดู onwr-proxy.worker.js) เพราะต้นทางไม่เปิด CORS
+ * และ proxy กรองให้เหลือแค่นราธิวาสก่อนส่ง (ไฟล์ต้นทางใหญ่ถึง 8 MB) · ส่วนภาพ PNG โหลดตรงจาก wam.onwr.go.th ได้
+ * dev: ตั้ง localStorage.onwr_proxy = 'http://localhost:8787' เพื่อชี้ไป worker ที่รันในเครื่อง */
+const ONWR_PROXY = (()=>{ let o=null; try{ o = localStorage.getItem('onwr_proxy'); }catch(e){} return o || 'https://onwr-proxy.newusmanwaji.workers.dev'; })();
+const ONWR_IMG = 'https://wam.onwr.go.th';
+const ONWR_SRC = 'https://wam.onwr.go.th/radar';
+map.createPane('onwrRadar'); map.getPane('onwrRadar').style.zIndex = 252;   // เหนือเรดาร์ Longdo (250) ใต้ขอบจังหวัด (350)
+map.createPane('onwrHeat');  map.getPane('onwrHeat').style.zIndex  = 254;
+map.createPane('onwrAccum'); map.getPane('onwrAccum').style.zIndex = 260;
+map.createPane('onwrSites'); map.getPane('onwrSites').style.zIndex = 345;
+map.createPane('onwrDots');  map.getPane('onwrDots').style.zIndex  = 420;   // เหนือ overlay (400) ใต้ marker (600)
+
+const ONWR = {
+  frames:null, idx:-1, layer:null, timer:null,            // 1) เรดาร์
+  level:'district', geo:{}, zones:{}, accumLayer:null,     // 2) ฝนสะสม
+  rain:null, rainMode:'dots', rainWin:'1h', rainLayer:null, // 3) ฝนสถานี
+  sitesLayer:null, labels:true                             // 4) สถานีเรดาร์
+};
+const onwrEl = id => document.getElementById(id);
+const onwrOn = id => { const cb = onwrEl(id); return !!(cb && cb.checked); };
+const onwrFetch = path => fetchJSON(`${ONWR_PROXY}/${path}`, 30000);
+const onwrHHMM = ts => new Date(ts*1000).toLocaleTimeString(locale(), {hour:'2-digit', minute:'2-digit', timeZone:'Asia/Bangkok'});
+const onwrISO  = s => s ? new Date(s).toLocaleString(locale(), {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', timeZone:'Asia/Bangkok'}) : '…';
+const onwrLink = `<a href="${ONWR_SRC}" target="_blank" style="color:var(--signal)">wam.onwr.go.th ↗</a>`;
+const onwrRGB  = a => `rgb(${a.join(',')})`;
+/* หาชั้นสีแบบเดียวกับ backend ของ สทนช. (searchsorted ด้านขวา): ชั้น 0 = ต่ำกว่าเกณฑ์แรก ไม่ระบายสี */
+const onwrClass = (v, breaks) => { let k=0; while(k<breaks.length && v>=breaks[k]) k++; return k; };
+function onwrMsg(html){ const el = onwrEl('onwrMsg'); if(el) el.innerHTML = html || ''; }
+/* แถบสีสำหรับ legend: ช่องสีชั้น 1..n + ป้ายช่วงค่าใต้ช่อง */
+function onwrRamp(breaks, rgb){
+  const cells=[], ticks=[];
+  for(let k=1; k<=breaks.length; k++){
+    const lo=breaks[k-1], hi=breaks[k];
+    cells.push(`<i style="background:${onwrRGB(rgb[k])}"></i>`);
+    ticks.push(`<span>${hi==null ? '≥'+lo : lo+'–'+hi}</span>`);
+  }
+  return `<div class="ramp">${cells.join('')}</div><div class="ticks">${ticks.join('')}</div>`;
+}
+
+/* ---- 1) เรดาร์คอมโพสิต TMD: ย้อนหลัง 1 ชม. + คาดการณ์ 3 ชม. (เฟรมละ 15 นาที) ---- */
+async function onwrLoadFrames(){
+  try{
+    const j = await onwrFetch('frames');
+    if(!j?.frames?.length || !j.bounds) throw new Error('empty');
+    ONWR.frames = j;
+    j.frames.forEach(f => { (new Image()).src = ONWR_IMG + f.url; });   // preload ให้เลื่อนดู/เล่นลื่น
+    return true;
+  }catch(e){ return false; }
+}
+/* เฟรม "ปัจจุบัน" = จุดตั้งต้นเมื่อเปิดชั้น (ไม่ใช่เฟรมสุดท้ายซึ่งเป็นคาดการณ์ +3 ชม.) */
+function onwrPresentIdx(){
+  const fr = ONWR.frames?.frames || [];
+  const i = fr.findIndex(f => f.kind==='present');
+  if(i>=0) return i;
+  const n = fr.findIndex(f => f.kind==='nowcast');
+  return n>0 ? n-1 : Math.max(0, fr.length-1);
+}
+function onwrShowFrame(i){
+  const F = ONWR.frames; if(!F) return;
+  const n = F.frames.length; ONWR.idx = (i+n)%n;
+  const url = ONWR_IMG + F.frames[ONWR.idx].url;
+  if(ONWR.layer) ONWR.layer.setUrl(url);
+  else ONWR.layer = L.imageOverlay(url, F.bounds, {pane:'onwrRadar', opacity:.75, interactive:false,
+    attribution:`เรดาร์ TMD © <a href="${ONWR_SRC}" target="_blank">สทนช.</a>`}).addTo(map);
+  onwrRenderBar();
+}
+function onwrStop(){ if(ONWR.timer){ clearInterval(ONWR.timer); ONWR.timer=null; } onwrRenderBar(); }
+function onwrPlay(){
+  if(ONWR.timer || !ONWR.frames || ONWR.frames.frames.length<2) return;
+  ONWR.timer = setInterval(()=>{ onwrShowFrame(ONWR.idx >= ONWR.frames.frames.length-1 ? 0 : ONWR.idx+1); }, 700);
+  onwrRenderBar();
+}
+function onwrTogglePlay(){ ONWR.timer ? onwrStop() : onwrPlay(); }
+function onwrRenderBar(){
+  const bar = onwrEl('onwrBar'); if(!bar) return;
+  if(!ONWR.layer || !map.hasLayer(ONWR.layer)){ bar.innerHTML=''; return; }
+  const F = ONWR.frames;
+  if(!F){ bar.innerHTML = `<div class="rdrow"><span class="rdinfo">${t('onwrFail')}</span></div>`; return; }
+  const f = F.frames[ONWR.idx];
+  const fc = f.kind==='nowcast', now = f.kind==='present';
+  const tag = fc ? `${t('onwrFc')} +${f.offset_min} ${t('onwrMin')}` : (now ? t('radarNow') : `${t('onwrObs')} ${f.offset_min} ${t('onwrMin')}`);
+  const stale = F.stale ? ` · <b style="color:var(--st-warn)">${t('onwrStale')} ${Math.round(F.age_min)} ${t('onwrMin')}</b>` : '';
+  bar.innerHTML = `<div class="rdrow">
+      <button class="rdbtn" onclick="onwrTogglePlay()" title="${t('radarPlay')}">${ONWR.timer?'⏸':'▶'}</button>
+      <input class="rdslider" type="range" min="0" max="${F.frames.length-1}" value="${ONWR.idx}" oninput="onwrStop();onwrShowFrame(+this.value)">
+      <span class="rdtime ${fc?'fc':(now?'now':'')}">${onwrHHMM(f.time)} · ${tag}</span>
+    </div>
+    <div class="rdnote">${t('onwrBase')} ${onwrHHMM(F.frames[onwrPresentIdx()].time)}${stale} · TMD/${onwrLink}</div>`;
+}
+async function onwrSetRadar(on){
+  const bar = onwrEl('onwrBar');
+  if(on){
+    // ไม่ซ้อนภาพกับเรดาร์ Longdo: เปิดอันนี้ = ปิดอันนั้น (และกลับกัน ดู setupOnwr)
+    const lg = onwrEl('lyRadar');
+    if(lg && lg.checked){ lg.checked=false; lg.dispatchEvent(new Event('change')); }
+    if(bar) bar.innerHTML = `<div class="rdrow"><span class="rdinfo">${t('onwrLoading')}</span></div>`;
+    if(!ONWR.frames) await onwrLoadFrames();
+    if(!onwrOn('lyOnwrRadar')) return;                       // ผู้ใช้ปิดไปแล้วระหว่างโหลด
+    if(!ONWR.frames){ if(bar) bar.innerHTML = `<div class="rdrow"><span class="rdinfo">${t('onwrFail')}</span></div>`; return; }
+    onwrShowFrame(ONWR.idx<0 ? onwrPresentIdx() : ONWR.idx);
+  }else{
+    onwrStop();
+    if(ONWR.layer){ map.removeLayer(ONWR.layer); ONWR.layer=null; }
+    onwrRenderBar();
+  }
+  buildLegend();
+}
+/* ดึงรายการเฟรมใหม่ทุก 5 นาทีเฉพาะตอนเปิดชั้นอยู่และไม่ได้กำลังเล่นภาพ · ถ้าดูเฟรมปัจจุบันอยู่ให้ตามไปเฟรมปัจจุบันรอบใหม่ */
+setInterval(async ()=>{
+  if(!ONWR.layer || !map.hasLayer(ONWR.layer) || ONWR.timer) return;
+  const wasPresent = ONWR.idx === onwrPresentIdx();
+  if(await onwrLoadFrames()){ onwrShowFrame(wasPresent ? onwrPresentIdx() : Math.min(ONWR.idx, ONWR.frames.frames.length-1)); buildLegend(); }
+}, 5*60*1000);
+
+/* ---- 2) ประมาณการฝนสะสม 3 ชม. ล่วงหน้า รายอำเภอ/ตำบล ----
+   สถิติ (max_mm / mean_mm / covered_px ต่อโซน + max_mm_hr ต่อเฟรม) คำนวณโดย backend สทนช. จากเฟรม nowcast 13 เฟรม
+   ขอบเขตโซนดึงจาก static geojson ของ สทนช. มาตัดเฉพาะ TH96 เก็บไว้ในเว็บ (pcode ตรงกัน) */
+const ONWR_GEO = {district:'js/onwr-nara-districts.geojson', subdistrict:'js/onwr-nara-subdistricts.geojson'};
+async function onwrLoadZones(level){
+  const [geo, st] = await Promise.all([
+    ONWR.geo[level] || fetchJSON(ONWR_GEO[level], 30000),
+    onwrFetch(`zones?level=${level}`)
+  ]);
+  st._acc = new Map((st.accum?.zones || []).map(z => [z.pcode, z]));
+  st._fr = new Map();                                        // pcode → [{time, offset_min, kind, max_mm_hr}]
+  for(const f of st.frames || []) for(const z of f.zones || []){
+    if(!st._fr.has(z.pcode)) st._fr.set(z.pcode, []);
+    st._fr.get(z.pcode).push({time:f.time, offset_min:f.offset_min, kind:f.kind, max_mm_hr:z.max_mm_hr});
+  }
+  ONWR.geo[level] = geo; ONWR.zones[level] = st;
+}
+const onwrZoneName = p => (lang==='th' ? p.name_th : p.name_en) || p.name_th || '';
+const ONWR_UNFILLED = {color:'#8b949e', weight:.7, opacity:.35, fillOpacity:0};
+function onwrAccumStyle(feat){
+  const st = ONWR.zones[ONWR.level], rec = st?._acc.get(feat.properties.pcode);
+  if(!st?.accum || !rec || !rec.covered_px || rec.max_mm==null) return ONWR_UNFILLED;
+  const k = onwrClass(rec.max_mm, st.accum.breaks_mm);
+  if(k===0) return ONWR_UNFILLED;
+  const col = onwrRGB(st.accum.breaks_rgb[k]);
+  return {color:col, weight:.9, opacity:.8, fillColor:col, fillOpacity:.45};   // พาเลตต์ สทนช. ออกแบบบนแผนที่มืด · ลดความทึบบนแผนที่สว่าง
+}
+/* full=false → tooltip สั้น (hover) · full=true → popup (คลิก) มีความแรงสูงสุด/เวลาเริ่มตก/คำเตือนความครอบคลุม */
+function onwrAccumInfo(feat, full){
+  const p = feat.properties, st = ONWR.zones[ONWR.level], A = st?.accum;
+  const sub = p.district_th ? ` <span style="color:var(--muted)">${esc(lang==='th' ? 'อ.'+p.district_th : p.district_en)}</span>` : '';
+  const head = `<b>${esc(onwrZoneName(p))}</b>${sub}`;
+  const rec = st?._acc.get(p.pcode);
+  if(!A || !rec || !rec.covered_px || rec.max_mm==null) return `${head}<br><span style="color:var(--muted)">${A ? t('onwrNoRadar') : t('onwrNoNowcast')}</span>`;
+  let s = `${head}<br>${t('onwrAccMax')}: <b>${fmt(rec.max_mm,1)}</b> ${t('onwrMm')}`;
+  if(rec.mean_mm!=null) s += `<br>${t('onwrAccMean')}: ${fmt(rec.mean_mm,1)} ${t('onwrMm')}`;
+  if(!full) return s;
+  // "ฝนตกอยู่แล้ว / เริ่มตกในอีก X นาที" อ่านจากค่าสูงสุดต่อเฟรม · เกณฑ์ฝนตก = ระดับแรกของสเกลเรดาร์ (0.21 มม./ชม.)
+  const WET = ONWR.frames?.levels_mm_hr?.[0] ?? 0.21;
+  const fr = st._fr.get(p.pcode) || [];
+  const pres = fr.find(x => x.kind==='present');
+  const raining = !!(pres && pres.max_mm_hr!=null && pres.max_mm_hr>=WET);
+  let peak=null, onset=null;
+  for(const x of fr){
+    if(x.kind!=='nowcast' || x.max_mm_hr==null) continue;
+    if(peak==null || x.max_mm_hr>peak) peak = x.max_mm_hr;
+    if(onset==null && x.max_mm_hr>=WET) onset = x.offset_min;
+  }
+  if(peak!=null) s += `<br>${t('onwrPeak')}: ${fmt(peak,1)}`;
+  s += raining ? `<br>${t('onwrRaining')}` : (onset!=null ? `<br>${t('onwrOnset')} ${onset} ${t('onwrMin')}` : '');
+  const cov = rec.total_px ? Math.round(100*rec.covered_px/rec.total_px) : 0;
+  if(cov < Math.round((A.low_coverage_frac||0)*100)) s += `<br><span style="color:var(--st-warn)">⚠ ${t('onwrCov')} ${cov}%</span>`;
+  const base = (st.frames||[]).find(f => f.kind==='present')?.time;
+  s += `<div style="font-size:10.5px;color:var(--muted);margin-top:4px">${base ? `${t('onwrBase')} ${onwrHHMM(base)} · ` : ''}TMD/${onwrLink}</div>`;
+  return s;
+}
+function onwrSyncSeg(){
+  document.querySelectorAll('#onwrLevelSeg button').forEach(b => b.classList.toggle('active', b.dataset.level===ONWR.level));
+  document.querySelectorAll('#onwrRainSeg button').forEach(b => b.classList.toggle('active', b.dataset.mode===ONWR.rainMode));
+  document.querySelectorAll('#onwrWinSeg button').forEach(b => b.classList.toggle('active', b.dataset.win===ONWR.rainWin));
+}
+async function onwrBuildAccum(){
+  if(ONWR.accumLayer){ map.removeLayer(ONWR.accumLayer); ONWR.accumLayer=null; }
+  if(!ONWR.zones[ONWR.level] || !ONWR.geo[ONWR.level]){
+    try{ await onwrLoadZones(ONWR.level); }
+    catch(e){
+      // ระดับตำบลไฟล์ต้นทาง 8 MB proxy อาจหมดเวลา → ถอยไปรายอำเภอแทน
+      if(ONWR.level==='subdistrict'){ try{ await onwrLoadZones('district'); ONWR.level='district'; onwrSyncSeg(); }catch(e2){} }
+    }
+  }
+  if(!onwrOn('lyOnwrAccum')) return true;                    // ผู้ใช้ปิดไปแล้วระหว่างโหลด
+  const st = ONWR.zones[ONWR.level], geo = ONWR.geo[ONWR.level];
+  if(!st || !geo) return false;
+  ONWR.accumLayer = L.geoJSON(geo, {pane:'onwrAccum', style:onwrAccumStyle,
+    onEachFeature:(f,l)=>{
+      l.bindTooltip(()=>onwrAccumInfo(f,false), {sticky:true});
+      l.bindPopup(()=>onwrAccumInfo(f,true), {maxWidth:280});
+    }}).addTo(map);
+  return true;
+}
+async function onwrSetAccum(on){
+  if(on){
+    onwrMsg(t('onwrLoading'));
+    const ok = await onwrBuildAccum();
+    onwrMsg(!ok ? t('onwrFail') : (ONWR.zones[ONWR.level]?.accum ? '' : t('onwrNoNowcast')));
+  }else if(ONWR.accumLayer){ map.removeLayer(ONWR.accumLayer); ONWR.accumLayer=null; onwrMsg(''); }
+  buildLegend();
+}
+function onwrSetLevel(level){
+  if(ONWR.level===level) return;
+  ONWR.level = level; onwrSyncSeg();
+  if(onwrOn('lyOnwrAccum')) onwrSetAccum(true);
+}
+
+/* ---- 3) ฝนสถานีรายชั่วโมง (ทุกหน่วยงานที่ สทนช. รวบรวม) ---- */
+const ONWR_AGENCY = {DWR:'กรมทรัพยากรน้ำ', HII:'สสน.', RID:'กรมชลประทาน', DISASTER:'ปภ.', TMD:'กรมอุตุนิยมวิทยา'};
+async function onwrLoadRain(){
+  const j = await onwrFetch('rain_stations');
+  if(!j?.stations || !j.windows || !j.fields) throw new Error('empty');
+  j._f = Object.fromEntries(j.fields.map((f,i)=>[f,i]));      // ชื่อคอลัมน์ → index (แถวสถานีเป็น array)
+  ONWR.rain = j;
+}
+const onwrRainSpec = () => ONWR.rain.windows[ONWR.rainWin] || ONWR.rain.windows['1h'];
+const onwrRainVal = s => { const f = ONWR.rain._f; return ONWR.rainWin==='24h' ? s[f.mm24] : s[f.mm]; };
+const onwrNum = (v,d=1) => v==null ? '–' : fmt(v,d);
+function onwrRainPopup(s){
+  const R = ONWR.rain, f = R._f;
+  const hist = s[f.hist] || [], hours = R.hours || [];
+  const mx = Math.max(5, ...hist.filter(v => v!=null));
+  const bars = hist.map((v,i)=>{
+    const h = v==null ? 0 : Math.max(2, Math.round(28*v/mx));
+    const lbl = hours[i] ? new Date(hours[i]).toLocaleTimeString(locale(), {hour:'2-digit', minute:'2-digit', timeZone:'Asia/Bangkok'}) : '';
+    return `<div style="flex:1;text-align:center;min-width:0">
+      <div style="height:30px;display:flex;align-items:flex-end;justify-content:center"><div style="width:70%;height:${h}px;background:${v==null?'var(--outline)':'var(--signal)'};border-radius:2px 2px 0 0"></div></div>
+      <div style="font-size:9px;color:var(--muted)">${lbl}</div><div style="font-size:9.5px;font-weight:600">${onwrNum(v)}</div></div>`;
+  }).join('');
+  const obs = s[f.obs];
+  const stale = obs ? (Date.now()-new Date(obs).getTime())/60000 > (R.stale_after_min||90) : true;
+  return `<div style="font-size:12px;line-height:1.5;min-width:220px">
+    <b style="font-size:13px">${esc(s[f.name])}</b><br>
+    <span style="color:var(--muted)">${esc(s[f.prov])}</span><br>
+    ${t('onwrAgency')}: ${esc(ONWR_AGENCY[s[f.agency]] || s[f.agency])}<br>
+    ${t('onwrRainNow')}: <b>${onwrNum(s[f.mm])}</b> ${t('onwrMm')}${s[f.src]===1 ? ` <span style="color:var(--muted)">(${t('onwrDerived')})</span>` : ''}<br>
+    ${t('onwrRain12')}: ${onwrNum(s[f.mm12])} · ${t('onwrRain24')}: <b>${onwrNum(s[f.mm24])}</b> ${t('onwrMm')}
+    <div style="font-size:10.5px;color:var(--muted);margin-top:4px">${t('onwrHist')}</div>
+    <div style="display:flex;gap:2px">${bars}</div>
+    <div style="font-size:10.5px;color:${stale?'var(--st-warn)':'var(--muted)'};margin-top:4px">${t('onwrLastObs')} ${onwrISO(obs)}${stale ? ' · '+t('onwrStale') : ''} · ${onwrLink}</div>
+  </div>`;
+}
+function onwrBuildRain(){
+  if(ONWR.rainLayer){ map.removeLayer(ONWR.rainLayer); ONWR.rainLayer=null; }
+  const R = ONWR.rain; if(!R) return;
+  const spec = onwrRainSpec(), f = R._f, g = L.layerGroup();
+  if(ONWR.rainMode==='heat' && spec.heat_bounds){
+    // ภาพ heat ทั้งประเทศจาก backend สทนช. (interpolate จากสถานี) · g= ผูกกับรอบข้อมูลกัน cache เก่า
+    L.imageOverlay(`${ONWR_IMG}/api/rain_heat?w=${ONWR.rainWin}&g=${R.generated}`, spec.heat_bounds,
+      {pane:'onwrHeat', opacity:.6, interactive:false}).addTo(g);
+  }else{
+    for(const s of R.stations){
+      if(!inBbox(s[f.lat], s[f.lon])) continue;
+      const v = onwrRainVal(s), k = v==null ? 0 : onwrClass(v, spec.breaks_mm), wet = k>0;
+      L.circleMarker([s[f.lat], s[f.lon]], {pane:'onwrDots', radius: wet?7:4, color:'#fff', weight:1.5, opacity:.9,
+          fillColor:onwrRGB(spec.dot_rgb[k]), fillOpacity: wet?.95:.5})
+        .bindTooltip(`${esc(s[f.name])} · ${onwrNum(v)} ${t('onwrMm')}`, {direction:'top', offset:[0,-6]})
+        .bindPopup(()=>onwrRainPopup(s), {maxWidth:300}).addTo(g);
+    }
+  }
+  ONWR.rainLayer = g.addTo(map);
+}
+async function onwrSetRain(on){
+  if(on){
+    onwrMsg(t('onwrLoading'));
+    if(!ONWR.rain){ try{ await onwrLoadRain(); }catch(e){ onwrMsg(t('onwrFail')); buildLegend(); return; } }
+    onwrMsg('');
+    if(onwrOn('lyOnwrRain')) onwrBuildRain();
+  }else if(ONWR.rainLayer){ map.removeLayer(ONWR.rainLayer); ONWR.rainLayer=null; }
+  buildLegend();
+}
+function onwrSetRainMode(mode){ ONWR.rainMode = mode; onwrSyncSeg(); if(ONWR.rainLayer){ onwrBuildRain(); buildLegend(); } }
+function onwrSetRainWin(w){ ONWR.rainWin = w; onwrSyncSeg(); if(ONWR.rainLayer){ onwrBuildRain(); buildLegend(); } }
+
+/* ---- 4) สถานีเรดาร์ที่ครอบคลุมนราธิวาส (จากรายการ 23 สถานีของ สทนช. · รัศมี 240 กม.) ---- */
+const ONWR_SITES = [
+  {code:'NRT', name:'สถานีเรดาร์นราธิวาส (ตากใบ)', en:'Narathiwat (Tak Bai) radar', lat:6.440442, lon:101.79196, r:240000, type:'C-Band'},
+  {code:'HYI', name:'สถานีเรดาร์หาดใหญ่',          en:'Hat Yai radar',               lat:6.933,    lon:100.393,   r:240000, type:'C-Band'},
+  {code:'STP', name:'สถานีเรดาร์สทิงพระ',          en:'Sathing Phra radar',          lat:7.449722, lon:100.46,    r:240000, type:'S-Band'}
+];
+function onwrBuildSites(){
+  if(ONWR.sitesLayer){ map.removeLayer(ONWR.sitesLayer); ONWR.sitesLayer=null; }
+  const g = L.layerGroup();
+  for(const s of ONWR_SITES){
+    const name = lang==='th' ? s.name : s.en;
+    L.circle([s.lat,s.lon], {pane:'onwrSites', radius:s.r, color:'#475569', weight:1.2, opacity:.7, dashArray:'6 4',
+      fill:true, fillColor:'#475569', fillOpacity:.03, interactive:false}).addTo(g);
+    const m = L.circleMarker([s.lat,s.lon], {pane:'onwrDots', radius:7, color:'#fff', weight:2, fillColor:'#142256', fillOpacity:1})
+      .bindPopup(`<div style="font-size:12px;line-height:1.5"><b style="font-size:13px">${esc(name)}</b> <span style="color:var(--muted)">${s.code}</span><br>
+        ${t('onwrSiteType')}: ${s.type}<br>${t('onwrSiteRadius')}: ${s.r/1000} ${t('onwrKm')}<br>${s.lat.toFixed(4)}, ${s.lon.toFixed(4)}<br>
+        <span style="color:var(--muted);font-size:10.5px">${t('onwrSiteSrc')} · ${onwrLink}</span></div>`);
+    if(ONWR.labels) m.bindTooltip(esc(name.replace(/^สถานีเรดาร์/,'').replace(/ radar$/,'')), {permanent:true, direction:'right', offset:[8,0], className:'onwrlbl'});
+    m.addTo(g);
+  }
+  ONWR.sitesLayer = g.addTo(map);
+}
+function onwrSetSites(on){
+  if(on) onwrBuildSites();
+  else if(ONWR.sitesLayer){ map.removeLayer(ONWR.sitesLayer); ONWR.sitesLayer=null; }
+  buildLegend();
+}
+function onwrSetLabels(on){ ONWR.labels = on; if(ONWR.sitesLayer) onwrBuildSites(); }
+
+/* ---- legend / ภาษา / รีเฟรช ---- */
+function onwrLegendHTML(){
+  let s = '';
+  const F = ONWR.frames;
+  if(ONWR.layer && map.hasLayer(ONWR.layer) && F?.levels_rgb){
+    const cells = F.levels_rgb.map(c => `<i style="background:${onwrRGB(c)}"></i>`).join('');
+    const ticks = [0,4,8,12,16,20].map(i => `<span>${F.levels_mm_hr[i] < 1 ? F.levels_mm_hr[i] : Math.round(F.levels_mm_hr[i])}</span>`).join('');
+    s += `<h4>${t('legOnwrRadar')}</h4><div class="ramp">${cells}</div><div class="ticks">${ticks}</div>`;
+  }
+  const st = ONWR.zones[ONWR.level];
+  if(ONWR.accumLayer && st?.accum) s += `<h4>${t('legOnwrAccum')}</h4>${onwrRamp(st.accum.breaks_mm, st.accum.breaks_rgb)}`;
+  if(ONWR.rainLayer && ONWR.rain){
+    const sp = onwrRainSpec();
+    s += `<h4>${t(ONWR.rainWin==='24h' ? 'legOnwrRain24' : 'legOnwrRain1')}</h4>${onwrRamp(sp.breaks_mm, ONWR.rainMode==='heat' ? sp.breaks_rgb : sp.dot_rgb)}`;
+  }
+  if(ONWR.sitesLayer) s += `<h4>${t('legOnwrSites')}</h4>`;
+  return s;
+}
+function onwrApplyLang(){
+  [['tOnwrCap','onwrCap'],['tOnwrRadar','lyOnwrRadar'],['tOnwrAccum','lyOnwrAccum'],['tOnwrRain','lyOnwrRain'],
+   ['tOnwrSites','lyOnwrSites'],['tOnwrLabels','lyOnwrLabels'],['sgDist','sgDist'],['sgSub','sgSub'],
+   ['sgDots','sgDots'],['sgHeat','sgHeat'],['sgW1','sgW1'],['sgW24','sgW24']]
+    .forEach(([id,k])=>{ const el = onwrEl(id); if(el) el.textContent = t(k); });
+  onwrRenderBar();
+  if(ONWR.sitesLayer) onwrBuildSites();                      // ป้ายชื่อสถานีตามภาษา
+}
+/* เรียกจาก loadAll (ปุ่มรีเฟรช/ทุก 10 นาที): โหลดใหม่เฉพาะชั้น สทนช. ที่เปิดอยู่ */
+async function loadOnwrActive(){
+  const jobs = [];
+  if(onwrOn('lyOnwrRain') && ONWR.rain) jobs.push(onwrLoadRain().then(()=>{ if(ONWR.rainLayer) onwrBuildRain(); }));
+  if(onwrOn('lyOnwrAccum') && ONWR.zones[ONWR.level])
+    jobs.push(onwrLoadZones(ONWR.level).then(()=>{ if(ONWR.accumLayer) ONWR.accumLayer.setStyle(onwrAccumStyle); }));
+  if(!jobs.length) return;
+  await Promise.all(jobs);
+  buildLegend();
+}
+(function setupOnwr(){
+  const wire = (id, fn) => { const el = onwrEl(id); if(el) el.onchange = e => fn(e.target.checked); };
+  wire('lyOnwrRadar', onwrSetRadar); wire('lyOnwrAccum', onwrSetAccum); wire('lyOnwrRain', onwrSetRain);
+  wire('lyOnwrSites', onwrSetSites); wire('lyOnwrLabels', onwrSetLabels);
+  // เปิดเรดาร์ Longdo → ปิดเรดาร์ สทนช. (คู่กับ onwrSetRadar)
+  const lg = onwrEl('lyRadar');
+  if(lg) lg.addEventListener('change', e => { if(e.target.checked && onwrOn('lyOnwrRadar')){ onwrEl('lyOnwrRadar').checked=false; onwrSetRadar(false); } });
+  document.querySelectorAll('#onwrLevelSeg button').forEach(b => b.onclick = () => onwrSetLevel(b.dataset.level));
+  document.querySelectorAll('#onwrRainSeg button').forEach(b => b.onclick = () => onwrSetRainMode(b.dataset.mode));
+  document.querySelectorAll('#onwrWinSeg button').forEach(b => b.onclick = () => onwrSetRainWin(b.dataset.win));
+  onwrSyncSeg();
+})();
+
+/* ---------- ปุ่มลัดบนแผนที่ ---------- */
 let wlFilterAbnormal=false, meMarker=null;
 const toolCtl=L.control({position:'topleft'});
 toolCtl.onAdd=()=>{ const d=L.DomUtil.create('div','maptools');
@@ -441,6 +837,7 @@ function buildLegend(){
       <div class="lg"><span class="sw sq" style="background:var(--signal)"></span>${t('legR2')}</div>
       <div class="lg"><span class="sw sq" style="background:#f97316"></span>${t('legR3')}</div>
       <div class="lg"><span class="sw sq" style="background:#dc2626"></span>${t('legR4')}</div>
+      ${onwrLegendHTML()}
       <h4>${t('legOther')}</h4>`;
     return d;
   };
@@ -458,7 +855,7 @@ async function loadAll(){
   const btn = document.getElementById('btnRefresh');
   btn.classList.add('loading'); btn.disabled = true;
   document.getElementById('updated').textContent = t('loading');
-  const results = await Promise.allSettled([loadWaterLevel(), loadRain(), loadDam(), loadSea(), loadCctv(), loadDdpm(), loadTelerid(), loadFlashFlood()]);
+  const results = await Promise.allSettled([loadWaterLevel(), loadRain(), loadDam(), loadSea(), loadCctv(), loadDdpm(), loadTelerid(), loadFlashFlood(), loadOnwrActive()]);
   const fails = results.filter(r=>r.status==='rejected').length;
   const now = new Date().toLocaleString(locale(),{dateStyle:'medium', timeStyle:'short'});
   document.getElementById('updated').innerHTML =
@@ -1247,6 +1644,7 @@ function applyLang(){
   [['tWL','lyWL'],['tRain','lyRain'],['tDam','lyDam'],['tSea','lySea'],['tCctv','lyCctv'],['tDdpm','lyDdpm'],['tTele','lyTele'],['tRisk','lyRisk'],['tRadar','lyRadar']]
     .forEach(([sp,key])=>{ const el=document.getElementById(sp); if(el) el.textContent = t(key); });
   renderRadarBar();   // ป้ายเวลา/ปุ่มเล่นในแถบเรดาร์เปลี่ยนภาษาด้วย
+  onwrApplyLang();
   document.getElementById('btnReport').textContent = t('report');
   document.getElementById('btnDdpm').textContent = t('extDdpm');
   document.getElementById('btnTelerid').textContent = t('extTelerid');
