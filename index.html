@@ -260,7 +260,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
   <div class="card">
     <h2>มาตรวัดน้ำต้องระวังเป็นพิเศษ <span class="where" id="whereSt"></span></h2>
     <div id="stList"><span class="spin"></span></div>
-    <div class="note">เกณฑ์: ล้นตลิ่ง / ≥70% ความจุลำน้ำ / กำลังขึ้นเร็ว · คลิกเพื่อดูบนแผนที่</div>
+    <div class="note">เกณฑ์เดียวกับ <a href="forecast.html">หน้าคาดการณ์</a>: ล้นตลิ่งจริง / ≥85% ของตลิ่ง / กำลังขึ้นเร็วเกินครึ่งตลิ่ง · คลิกเพื่อดูบนแผนที่</div>
   </div>
 
   <div class="card full">
@@ -273,7 +273,9 @@ footer a{color:var(--orange-warm);text-decoration:none}
   <div class="card full">
     <h2>อำเภอที่ต้องเฝ้าระวังเป็นพิเศษ (7 วันนี้) <span class="where" id="whereAmp"></span></h2>
     <div id="ampList"><span class="spin"></span> กำลังประเมิน…</div>
-    <div class="note">คะแนนรวมจาก: ฝนพยากรณ์ 7 วัน (Open-Meteo รายอำเภอ) + ดินอิ่มน้ำ (ฝน 3 วันที่ผ่านมา สสน.) + สถานีน้ำมาก/ล้นตลิ่งในอำเภอ · คลิกชื่ออำเภอเพื่อดูพยากรณ์เฉพาะจุด</div>
+    <div class="note">ระดับความเสี่ยงตั้งต้นจาก <b>ฝนพยากรณ์</b> (Open-Meteo รายอำเภอ) ตามเกณฑ์กรมอุตุฯ: ฝนหนัก ≥35 มม./วัน · ฝนหนักมาก ≥90 มม./วัน · หรือฝนสะสม 3 วันติด ≥70/120/200 มม.<br>
+      <b>ดินอิ่มน้ำ</b> (ฝน 3 วันที่ผ่านมา สสน.) และ <b>สถานีน้ำใกล้ตลิ่ง</b> เป็นตัวยกระดับ ใช้ได้เมื่อมีฝนหนักในพยากรณ์แล้วเท่านั้น — ฝนไม่ตกจึงไม่ขึ้นสีเตือน · สถานีที่ล้นตลิ่งอยู่จริงจะขึ้นสีส้มเสมอ<br>
+      ใช้เกณฑ์ชุดเดียวกับ <a href="forecast.html">หน้าคาดการณ์</a> · คลิกชื่ออำเภอเพื่อดูพยากรณ์เฉพาะจุด</div>
   </div>
 
   <div class="card full">
@@ -328,8 +330,10 @@ footer a{color:var(--orange-warm);text-decoration:none}
   <span style="margin-left:auto">อยู่ระหว่างการทดลองปรับปรุง · <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a></span>
 </footer>
 
+<script src="js/criteria.js?v=1"></script>
 <script>
 'use strict';
+const FC = window.FloodCriteria;
 /* ---------- พิกัดศูนย์กลาง 56 อำเภอ (สกัดจาก OpenGISData-Thailand districts.geojson) ---------- */
 const AMPHOES = [
 ["สตูล","ควนกาหลง",6.9588,100.0411],["สตูล","ควนโดน",6.7634,100.1055],["สตูล","ท่าแพ",6.8007,99.9239],["สตูล","ทุ่งหว้า",7.0776,99.8486],["สตูล","มะนัง",7.0072,99.9312],["สตูล","เมืองสตูล",6.6127,99.668],["สตูล","ละงู",6.9263,99.7861],
@@ -433,10 +437,14 @@ async function loadWater(){
         name: thName(st.tele_station_name).trim(), code: st.tele_station_oldcode||'',
         amphoe: thName(d.geocode?.amphoe_name), prov: thName(d.geocode?.province_name),
         pct: num(d.storage_percent), msl: num(d.waterlevel_msl), prev: num(d.waterlevel_msl_previous),
-        diff: num(d.diff_wl_bank), river: d.river_name||''
+        bank: FC.validBank(st.min_bank, st.left_bank, st.right_bank), ground: num(st.ground_level),
+        sit: num(d.situation_level), diff: num(d.diff_wl_bank), river: d.river_name||''
       });
     });
   });
+  // ใช้ตัวช่วยชุดเดียวกับหน้าคาดการณ์: เติม % ที่ขาด แล้วตัดสถานีซ้ำจากคนละหน่วยงาน
+  wlAll.forEach(s => { s.pct = FC.fillPct(s); });
+  wlAll = FC.dedupe(wlAll);
 }
 async function loadSoil(){
   try{
@@ -638,7 +646,10 @@ function renderStations(){
   let list = wlAll.filter(s=>s.prov===prov);
   if(amp) list = list.filter(s=>s.amphoe.includes(amp));
   const rising = s => s.msl!=null && s.prev!=null && (s.msl-s.prev) >= 0.03;
-  const hot = list.filter(s => (s.pct!=null && s.pct>100) || (s.pct!=null && s.pct>=70) || rising(s))
+  /* เกณฑ์เดียวกับหน้าคาดการณ์: ล้นตลิ่งต้องมีตลิ่งที่ถูกต้อง · ใกล้ตลิ่งคือ >= 85%
+     ของเดิมนับ >= 70% เป็น "น้ำมาก" ซึ่งเป็นระดับปกติของหลายสถานีในฤดูฝน */
+  const lvOf = s => FC.stationLevel(s);
+  const hot = list.filter(s => lvOf(s)!=='normal' || (rising(s) && (s.pct??0) >= FC.CRIT.PCT_MID))
     .sort((a,b)=>(b.pct??0)-(a.pct??0));
 
   /* แถบคำตอบด้านบนใช้จำนวนเดียวกันกับที่การ์ดนี้แสดงจริง
@@ -650,9 +661,9 @@ function renderStations(){
   if(!wlAll.length){ el.innerHTML = 'โหลดข้อมูลสถานีไม่สำเร็จ'; return; }
   if(!hot.length){ el.innerHTML = `<div style="color:var(--st-normal);font-size:12.5px">${amp?`อ.${amp}`:`จ.${prov}`} ไม่มีสถานีเข้าเกณฑ์เฝ้าระวังขณะนี้ (ทั้งหมด ${list.length} สถานี)</div>`; return; }
   el.innerHTML = hot.slice(0,8).map(s=>{
-    const over = s.pct!=null && s.pct>100;
-    const c = over?'var(--st-danger)': (s.pct>=70?'var(--signal)':'var(--st-watch)');
-    const t = over?'ล้นตลิ่ง': (s.pct>=70?`น้ำมาก ${Math.round(s.pct)}%`:'กำลังขึ้น');
+    const lv = lvOf(s);
+    const c = lv==='over'?'var(--st-danger)': (lv==='high'?'var(--signal)':'var(--st-watch)');
+    const t = lv==='over'?'ล้นตลิ่ง': (lv==='high'?`น้ำใกล้ตลิ่ง ${Math.round(s.pct)}%`:'กำลังขึ้น');
     return `<a class="st" style="border-left-color:${c};text-decoration:none;color:inherit" href="map.html">
       <span><span class="nm">${esc(s.name)}</span> <span class="sub">${esc(s.river)} · อ.${esc(s.amphoe)}</span></span>
       <span class="badge" style="background:${c}">${t}</span></a>`;
@@ -662,38 +673,52 @@ function renderAmphoes(list){
   const el = document.getElementById('ampList');
   const mets = meteoCache[prov];
   if(!mets){ el.innerHTML = '⚠️ โหลดไม่สำเร็จ'; return; }
+  /* เกณฑ์อยู่ใน js/criteria.js ชุดเดียวกับหน้าคาดการณ์
+     ฝนพยากรณ์เป็นตัวตั้งระดับ · ดินอิ่มน้ำและสถานีน้ำมากเป็นตัวยกระดับเมื่อมีฝนหนักจริงเท่านั้น
+     ของเดิมเอาสามอย่างมาบวกเป็นคะแนน ทำให้อำเภอที่ฝนไม่ตกแต่ดินชื้นและมีสถานีน้ำ 70%
+     ได้คะแนนถึงระดับ "สูง" (สีส้ม) ทั้งที่ไม่มีฝนมาเติม */
   const rows = list.map((a,i)=>{
-    const m = mets[i];
-    const rain7 = m?.daily ? m.daily.precipitation_sum.reduce((x,y)=>x+(y||0),0) : null;
+    const daily = mets[i]?.daily?.precipitation_sum || null;
+    const rain7 = daily ? daily.reduce((x,y)=>x+(y||0),0) : null;
+    const rain1max = daily ? Math.max(...daily.map(v=>+v||0)) : null;
+    const rain3max = daily ? FC.maxRoll3(daily) : null;
     const soil = soilByAmp[prov]?.[a[1]] ?? 0;
-    const hotSt = wlAll.filter(s=>s.prov===prov && s.amphoe.includes(a[1]) && s.pct!=null && s.pct>=70).length;
-    // คะแนน 0-100: ฝน7วัน (สูงสุด ~250มม.=60คะแนน) + ดินอิ่มน้ำ (150มม.=25) + สถานีน้ำมาก (อันละ 8, สูงสุด 15)
-    const score = rain7==null ? null :
-      Math.min(60, rain7/250*60) + Math.min(25, soil/150*25) + Math.min(15, hotSt*8);
-    return {a, rain7, soil, hotSt, score};
-  }).sort((x,y)=>(y.score??-1)-(x.score??-1));
-  const row = ({a,rain7,soil,hotSt,score})=>{
-    const c = score==null?'var(--ink-3)': score>=60?'var(--st-danger)': score>=40?'var(--st-warn)': score>=22?'var(--st-watch)':'var(--st-normal)';
-    const lb = score==null?'…': score>=60?'สูงมาก': score>=40?'สูง': score>=22?'ปานกลาง':'ต่ำ';
+    const inAmp = wlAll.filter(s=>s.prov===prov && s.amphoe.includes(a[1]));
+    const stOver = inAmp.filter(s=>FC.stationLevel(s)==='over').length;
+    const stHigh = inAmp.filter(s=>FC.stationLevel(s)==='high').length;
+    const r = FC.amphoeRisk({rain1max, rain3max, soil, stOver, stHigh});
+    return {a, rain7, rain1max, rain3max, soil, stOver, stHigh, r};
+  }).sort((x,y)=>(y.r.lv??-1)-(x.r.lv??-1) || (y.rain3max??0)-(x.rain3max??0));
+
+  const row = ({a,rain1max,rain3max,soil,stOver,stHigh,r})=>{
+    const bits = [`ฝนสูงสุด ${fmt1(rain1max)} มม./วัน`, `3 วันติด ${fmt1(rain3max)} มม.`];
+    if(soil >= FC.CRIT.SOIL_MOIST) bits.push(`ดิน ${fmt1(soil)} มม.`);
+    if(stOver) bits.push(`${stOver} สถานีล้นตลิ่ง`);
+    else if(stHigh) bits.push(`${stHigh} สถานีใกล้ตลิ่ง`);
     return `<div class="amp" onclick="pickAmp('${esc(a[1])}')">
       <span class="an">${esc(a[1])}</span>
-      <span class="abar"><i style="width:${Math.min(100,score??0)}%;background:${c}"></i></span>
-      <span class="badge" style="background:${c}">${lb}</span>
-      <span class="amm">ฝน7ว. ${fmt1(rain7)} มม.${soil?` · ดิน ${fmt1(soil)}`:''}${hotSt?` · ${hotSt} สถานีเฝ้าระวัง`:''}</span>
+      <span class="abar"><i style="width:${r.bar}%;background:${r.color}"></i></span>
+      <span class="badge" style="background:${r.color}">${r.label}</span>
+      <span class="amm">${bits.join(' · ')}</span>
     </div>`;
   };
   /* รายการเรียงจากเสี่ยงมากไปน้อยอยู่แล้ว หกอันดับแรกจึงเป็นอันที่ต้องเห็น
      ที่พับไว้คืออำเภอที่เสี่ยงน้อยที่สุด และบอกจำนวนไว้ตรง ๆ ว่าพับกี่อำเภอ
      คนที่ตามหาอำเภอตัวเองยังเลือกจากช่องเลือกอำเภอด้านบนได้เหมือนเดิม */
   const TOP = 6;
+  const hot = rows.filter(x=>(x.r.lv??0) >= 1);
   const head = rows.slice(0, TOP).map(row).join('');
   const rest = rows.slice(TOP);
-  el.innerHTML = head + (rest.length
+  /* ถ้าไม่มีอำเภอไหนถึงเกณฑ์เลย ต้องพูดออกมาตรง ๆ ว่าสัปดาห์นี้ฝนไม่ถึงเกณฑ์
+     ไม่ใช่ปล่อยให้แถบสีเขียวหกอันดูเหมือนกำลังจัดอันดับความเสี่ยง */
+  const lead = hot.length
+    ? ''
+    : `<div style="font-size:12.5px;color:var(--st-normal);margin-bottom:6px">สัปดาห์นี้ไม่มีอำเภอใดเข้าเกณฑ์เฝ้าระวัง — ฝนพยากรณ์ยังไม่ถึงเกณฑ์ฝนหนัก (35 มม./วัน) และไม่มีสถานีล้นตลิ่ง · เรียงตามลำดับฝนมากไปน้อย</div>`;
+  el.innerHTML = lead + head + (rest.length
     ? `<details class="fold"><summary>ดูอีก ${rest.length} อำเภอที่เสี่ยงน้อยกว่านี้</summary>
        <div class="fold-body">${rest.map(row).join('')}</div></details>`
     : '');
 }
-
 /* ---------- เรดาร์ตรวจอากาศระดับตำบล (ศูนย์อุตุฯ ภาคใต้ฝั่งตะวันออก / Google Sites) ---------- */
 /* หมายเหตุ: หน้าเรดาร์ต้นทางส่ง X-Frame-Options และภาพ (lh3.googleusercontent.com) ผูกกับสิทธิ์การเข้าถึงของหน้า Sites เอง
    ฝังเป็น iframe/รูปตรง ๆ จากโดเมนอื่นไม่ได้ (ทดสอบแล้ว 403/ถูกบล็อก) จึงเปิดลิงก์ในแท็บใหม่แทน */
