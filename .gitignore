@@ -4,3 +4,6 @@ shots/
 # ของที่ติดตั้งเฉพาะเครื่อง
 telerid-scraper/node_modules/
 node_modules/
+
+# แคช/สถานะของ wrangler ตอน deploy Cloudflare Worker (เฉพาะเครื่อง)
+.wrangler/
