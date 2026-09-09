@@ -116,7 +116,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
     <a href="forecast.html" class="on">คาดการณ์</a>
     <a href="history.html">ย้อนหลัง</a>
     <a href="repeat.html">พื้นที่เสี่ยง</a>
-    <a href="sim.html">แบบจำลอง</a>
+    <!-- <a href="sim.html">แบบจำลอง</a> -->
     <a href="shelter.html">ศูนย์พักพิง</a>
     <a href="route.html">เส้นทาง</a>
     <a href="resources.html">ทรัพยากร</a>
@@ -251,8 +251,9 @@ async function loadBoundaries(){
 let stations = [];      // {id,name,code,river,amphoe,prov,msl,bank,pct,dt,lat,lon,stationId,stationType,rate}
 let provRain3d = {};    // จังหวัด -> ฝนสะสม 3 วันสูงสุด (มม.)
 let wrfImgs = [];       // [{date,url}]
-let ffpiRows = [];      // ตำบลเสี่ยงฉับพลัน
+let ffpiRows;           // ตำบลเสี่ยงฉับพลัน · undefined = ยังโหลด · null = โหลดไม่สำเร็จ
 let damBanglang = null; // {pct, storage}
+let distRain;           // ฝนคาดการณ์รายอำเภอ · undefined = ยังโหลด · null = โหลดไม่สำเร็จ
 let horizon = 6;
 const inProv = () => true;
 let trendsLoaded = 0, trendsTotal = 0;
@@ -262,7 +263,7 @@ async function loadAll(){
   gMk.clearLayers();
   await loadStations();
   render();                      // แสดงผลทันทีด้วยข้อมูลปัจจุบัน (แนวโน้มจะทยอยตามมา)
-  await Promise.allSettled([loadTrends(), loadRain3d(), loadWrf(), loadFfpi(), loadDam()]);
+  await Promise.allSettled([loadTrends(), loadRain3d(), loadWrf(), loadFfpi(), loadDam(), loadDistRain()]);
   render();
   document.getElementById('updated').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'});
 }
@@ -350,12 +351,24 @@ async function loadWrf(){
     }));
   }catch(e){ wrfImgs = []; }
 }
+/* ฝนสะสมรายวันคาดการณ์รายอำเภอ (แบบจำลอง NWP กรมอุตุฯ · hpc.tmd.go.th/riskmap-district)
+   ต้นทางไม่เปิด CORS และเป็นไฟล์ทั้งประเทศ ~570 KB → ผ่าน tmd-proxy ที่กรองเหลือ 13 อำเภอนราธิวาสแล้ว */
+async function loadDistRain(){
+  try{
+    const j = await fetchJSON('https://tmd-proxy.newusmanwaji.workers.dev/riskmap', 30000);
+    distRain = (j?.districts||[]).length ? j : null;
+  }catch(e){ distRain = null; }
+}
+/* ตำบลเสี่ยงน้ำท่วมฉับพลัน (FFPI · สสน.)
+   คอลัมน์: รหัสตำบล, จังหวัด, อำเภอ, ตำบล, FFPI, ฝนสะสม 1 วันล่วงหน้า, สถานีโทรมาตร, ลุ่มน้ำ
+   ค่าตัวเลข (FFPI/ฝน) ไม่ได้ครอบด้วยเครื่องหมายคำพูด จึงต้องแยกทั้งแบบมีและไม่มีคำพูด
+   ชื่อจังหวัดต้นทางมี "จ." นำหน้า จึงต้องตัดออกก่อนเทียบ */
 async function loadFfpi(){
   try{
     const txt = await fetch('https://fews2.hii.or.th/model-output/data_portal/flashflood/flashflood_report.txt').then(r=>r.text());
-    ffpiRows = txt.split('\n').slice(1).map(l=>[...l.matchAll(/"([^"]*)"/g)].map(m=>m[1]))
-      .filter(c=>c.length>=5 && PROV_SET.has(c[1]));
-  }catch(e){ ffpiRows = []; }
+    ffpiRows = txt.split('\n').slice(1).map(l=>(l.match(/"[^"]*"|[^,]+/g)||[]).map(c=>c.replace(/^"|"$/g,'').trim()))
+      .filter(c=>c.length>=6 && PROV_SET.has(c[1].replace(/^จ\./,'')));
+  }catch(e){ ffpiRows = null; }
 }
 async function loadDam(){
   try{
@@ -486,6 +499,8 @@ function render(){
   });
   html += `</div>`;
 
+  html += distRainCard(distRainDays());
+
   if(horizon >= 12){
     html += `<div class="card"><h3>ดัชนีดินอิ่มน้ำ (ฝนสะสม 3 วันย้อนหลัง สูงสุดรายจังหวัด)</h3>`;
     PROVINCES.forEach(p=>{
@@ -509,7 +524,8 @@ function render72(panel){
       .bindPopup(`<b>${esc(s.name)}</b><br><span style="font-size:11px;color:var(--ink-3)">ระดับปัจจุบัน ${fmt(s.msl)} ม.รทก. · ดูคาดการณ์รายสถานีที่ +6/+12/+24 ชม.</span>`)
       .addTo(gMk);
   });
-  let html = `<div class="card"><h3>วิธีประเมินช่วง +72 ชม.</h3><div style="font-size:12px;color:var(--ink-2)">${HORIZON_INFO[72].method} · ระยะนี้ความไม่แน่นอนสูง จึงประเมินเป็น "ระดับความเสี่ยงรายจังหวัด" แทนตัวเลขรายสถานี</div></div>`;
+  let html = `<div class="card"><h3>วิธีประเมินช่วง +72 ชม.</h3><div style="font-size:12px;color:var(--ink-2)">${HORIZON_INFO[72].method} · ระยะนี้ความไม่แน่นอนสูง จึงประเมินเป็น "ระดับความเสี่ยงรายพื้นที่" แทนตัวเลขรายสถานี</div></div>`;
+  html += distRainCard(3);
   html += wrfCard(3);
   // ความเสี่ยงรายจังหวัด = ดินอิ่มน้ำ (ย้อนหลัง) เป็นฐาน · ให้ผู้ใช้อ่านร่วมกับแผนที่ฝนพยากรณ์
   html += `<div class="card"><h3>ความเสี่ยงพื้นฐานรายจังหวัด (จากดินอิ่มน้ำ)</h3>`;
@@ -539,6 +555,68 @@ function wrfCard(days){
   return `<div class="card"><h3>แผนที่ฝนพยากรณ์รายวัน (แบบจำลอง WRF-ROMS สสน.)</h3>
     ${imgs.map(im=>`<div style="margin:6px 0"><div style="font-size:11.5px;font-weight:600;color:var(--ink-2);margin-bottom:2px">${im.date||''}</div><img class="wrfimg" src="${im.url}" onclick="window.open(this.src,'_blank')" alt="แผนที่ฝนพยากรณ์รายวัน"></div>`).join('')}
     <div style="font-size:10.5px;color:var(--ink-3)">ที่มา: แบบจำลอง WRF-ROMS สสน. · ปริมาณฝนสะสมรายวัน (มม./วัน) · คลิกภาพเพื่อดูขนาดเต็มพร้อมแถบสี</div></div>`;
+}
+
+/* ตำบลเสี่ยงน้ำท่วมฉับพลัน · ต้นทางลงเฉพาะตำบลที่เข้าเกณฑ์ ถ้าไม่มีแถวคือ "ยังไม่มีตำบลเข้าเกณฑ์"
+   ซึ่งเป็นข้อมูลที่มีความหมาย ไม่ใช่ข้อผิดพลาด จึงบอกให้ชัดแทนที่จะซ่อนการ์ด
+   แต่ต้องแยก "โหลดไม่สำเร็จ" ออกจาก "ไม่มีตำบลเข้าเกณฑ์" ให้ชัด ไม่งั้นเน็ตล่มจะกลายเป็นข้อความปลอดภัยลวง
+   เรียงฝนคาดการณ์มากไปน้อย เพื่อไม่ให้ตำบลที่ฝนหนักสุดหลุดออกไปตอนตัดรายการ */
+function ffpiCard(){
+  const head = `<div class="card"><h3>ตำบลเสี่ยงน้ำท่วมฉับพลัน (FFPI สสน.)</h3>`;
+  const src  = `<div style="font-size:10.5px;color:var(--ink-3);margin-top:4px">ที่มา: แบบจำลองน้ำท่วมฉับพลัน สสน. · อัปเดตวันละครั้ง</div></div>`;
+  if(ffpiRows === undefined)
+    return `${head}<div style="font-size:12px;color:var(--ink-3)"><span class="spin"></span> กำลังโหลดพื้นที่เสี่ยงน้ำท่วมฉับพลัน…</div></div>`;
+  if(!ffpiRows)
+    return `${head}<div style="font-size:12px;color:var(--st-watch)">โหลดไม่สำเร็จ · ยังไม่ทราบสถานะพื้นที่เสี่ยงน้ำท่วมฉับพลัน ดูที่ <a href="https://fews2.hii.or.th/" target="_blank" rel="noopener">fews2.hii.or.th</a></div>${src}`;
+  if(!ffpiRows.length)
+    return `${head}<div style="font-size:12.5px;color:var(--st-normal)">ขณะนี้ไม่มีตำบลในนราธิวาสเข้าเกณฑ์เสี่ยงน้ำท่วมฉับพลัน</div>${src}`;
+
+  const MAX = 15;
+  const rows = ffpiRows.map(c => ({c, rain: num(c[5]), ffpi: num(c[4])}))
+    .sort((a,b) => (b.rain ?? -1) - (a.rain ?? -1));
+  let h = `${head}`;
+  rows.slice(0,MAX).forEach(({c,rain,ffpi})=>{
+    const rc = FC.tmdRainClass(rain);
+    h += `<div class="provcard"><span>${esc(c[3])} <span style="color:var(--ink-3);font-size:11px">${esc(c[2])}${ffpi!=null?' · FFPI '+fmt(ffpi,2):''}</span></span>
+      <span><b>${rain==null?'…':fmt(rain,0)+' มม.'}</b> <span class="badge" style="background:${rc.color}">${rc.short}</span></span></div>`;
+  });
+  if(rows.length > MAX)
+    h += `<div style="font-size:11px;color:var(--ink-3);margin-bottom:5px">และอีก ${rows.length-MAX} ตำบลที่ฝนคาดการณ์น้อยกว่านี้</div>`;
+  h += `<div style="font-size:10.5px;color:var(--ink-3)">ฝนสะสมคาดการณ์ 1 วันล่วงหน้าในตำบลที่ดัชนี FFPI สูง · พื้นที่ลาดชัน/ต้นน้ำ น้ำมาเร็วกว่าที่สถานีวัดจะทัน</div></div>`;
+  return h;
+}
+
+/* ช่วงเวลาที่เลือก → จำนวนวันของฝนคาดการณ์ที่ควรแสดง (ฝนเป็นรายวัน จึงปัดขึ้นเป็นวัน) */
+const distRainDays = () => horizon <= 24 ? 1 : Math.ceil(horizon / 24);
+
+/* ฝนสะสมรายวันคาดการณ์ รายอำเภอ · จำนวนวันที่แสดงตามช่วงเวลาที่เลือก
+   เรียงอำเภอที่ฝนหนักสุดขึ้นก่อน เพื่อให้เห็น "พื้นที่เสี่ยง" ได้ทันทีโดยไม่ต้องไล่อ่าน */
+function distRainCard(days){
+  const head = `<div class="card"><h3>ฝนคาดการณ์รายอำเภอ (แบบจำลอง NWP กรมอุตุฯ)</h3>`;
+  if(distRain === undefined) return `${head}<div style="font-size:12px;color:var(--ink-3)"><span class="spin"></span> กำลังโหลดฝนคาดการณ์รายอำเภอ…</div></div>`;
+  if(!distRain) return `${head}<div style="font-size:12px;color:var(--ink-3)">โหลดไม่สำเร็จ · ดูที่ <a href="https://hpc.tmd.go.th/riskmap-district" target="_blank" rel="noopener">hpc.tmd.go.th</a></div></div>`;
+
+  const n = Math.min(days, distRain.days.length);
+  const rows = distRain.districts
+    .map(d => ({...d, mx: Math.max(...d.rain.slice(0, n))}))
+    .sort((a,b) => b.mx - a.mx);
+  const dayLabel = i => (i===0 ? 'วันนี้' : i===1 ? 'พรุ่งนี้' : distRain.days[i].slice(0,6));
+
+  let h = `${head}<table style="width:100%;font-size:12px;border-collapse:collapse">
+    <tr><th style="text-align:left;font-weight:600;color:var(--ink-3);font-size:10.5px;padding-bottom:3px">อำเภอ</th>
+    ${Array.from({length:n},(_,i)=>`<th style="text-align:right;font-weight:600;color:var(--ink-3);font-size:10.5px">${dayLabel(i)}</th>`).join('')}
+    <th style="text-align:right;font-weight:600;color:var(--ink-3);font-size:10.5px">ระดับ</th></tr>`;
+  rows.forEach(d=>{
+    const rc = FC.tmdRainClass(d.mx);
+    h += `<tr style="cursor:pointer;border-top:1px solid var(--line)" onclick="fly(${d.lat},${d.lng})">
+      <td style="padding:3px 0">${esc(d.name)}</td>
+      ${d.rain.slice(0,n).map(mm=>`<td style="text-align:right;padding:3px 4px">${fmt(mm,0)}</td>`).join('')}
+      <td style="text-align:right"><span class="badge" style="background:${rc.color}">${rc.short}</span></td></tr>`;
+  });
+  h += `</table><div style="font-size:10.5px;color:var(--ink-3);margin-top:6px">
+    ตัวเลข = ฝนสะสมคาดการณ์ (มม./วัน) · ระดับจากวันที่ฝนมากที่สุดในช่วง · เกณฑ์กรมอุตุฯ: ≥35 ปานกลาง · ≥65 เสี่ยง · ≥125 เสี่ยงสูง · >250 วิกฤต<br>
+    ที่มา: <a href="https://hpc.tmd.go.th/riskmap-district" target="_blank" rel="noopener">แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุนิยมวิทยา</a> · รอบคาดการณ์ ${esc(distRain.run.replace(/^rain\.|\.json$/g,''))} · แตะแถวเพื่อดูตำแหน่งบนแผนที่</div></div>`;
+  return h;
 }
 
 /* ---------- ปุ่มเลือกช่วงเวลา (+6/12/24/72) ---------- */

@@ -30,11 +30,15 @@ PWA/Service Worker ทำงานเฉพาะบน https (GitHub Pages เ�
 | ไฟล์ | ชื่อ worker | ใช้กับ | ทดสอบ |
 |------|-------------|--------|--------|
 | `ddpm-proxy.worker.js` | `ddpm-proxy` | map.html — ภาพกล้อง ปภ. | `https://ddpm-proxy.<บัญชี>.workers.dev/stations/PTN07` |
-| `tmd-proxy.worker.js` | `tmd-proxy` | index.html — พยากรณ์ 7 วัน TMD | `https://tmd-proxy.<บัญชี>.workers.dev/region7days` |
+| `tmd-proxy.worker.js` | `tmd-proxy` | index.html — พยากรณ์ 7 วัน TMD · forecast.html — ฝนคาดการณ์รายอำเภอ | `https://tmd-proxy.<บัญชี>.workers.dev/region7days` และ `/riskmap` |
 | `onwr-proxy.worker.js` | `onwr-proxy` | map.html — 4 ชั้นเรดาร์ สทนช. (เรดาร์ TMD + คาดการณ์ 3 ชม. · ฝนสะสม 3 ชม. ล่วงหน้ารายอำเภอ/ตำบล · ฝนสถานีรายชั่วโมง · สถานีเรดาร์) | `https://onwr-proxy.<บัญชี>.workers.dev/frames` |
 
 `onwr-proxy` กรองข้อมูลให้เหลือเฉพาะนราธิวาสก่อนส่ง (ต้นทาง `zones?level=subdistrict` ใหญ่ 8 MB) และแคชผล 5 นาที
 ถ้ายังไม่ deploy หน้า map จะขึ้น "โหลดข้อมูล สทนช. ไม่สำเร็จ" เฉพาะชั้นเหล่านี้ ชั้นอื่นทำงานปกติ
+
+`tmd-proxy` เส้นทาง `/riskmap` ดึงฝนสะสมรายวันคาดการณ์รายอำเภอจาก hpc.tmd.go.th (ไฟล์ทั้งประเทศ ~570 KB)
+กรองเหลือ 13 อำเภอนราธิวาสแล้วแคช 1 ชม. → เหลือ ~2 KB · ถ้ายังไม่ deploy รอบใหม่
+หน้า forecast.html จะขึ้น "โหลดไม่สำเร็จ" เฉพาะการ์ดฝนรายอำเภอ ส่วนอื่นทำงานปกติ
 
 ---
 

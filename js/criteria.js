@@ -41,12 +41,29 @@ const CRIT = {
     {min:150, color:'var(--st-warn)',   short:'อิ่มน้ำ',     long:'อิ่มน้ำ เฝ้าระวัง'},
     {min:80,  color:'var(--st-watch)',  short:'ชื้นปานกลาง', long:'ชื้นปานกลาง'},
     {min:0,   color:'var(--st-normal)', short:'ปกติ',        long:'ปกติ'}
+  ],
+
+  /* ---- ฝนสะสมรายวันคาดการณ์รายอำเภอ ----
+     เกณฑ์ตามแผนที่เสี่ยงภัยรายอำเภอ กรมอุตุนิยมวิทยา (hpc.tmd.go.th/riskmap-district)
+     ใช้ชุดเดียวกับต้นทาง เพื่อให้สีบนหน้านี้ตรงกับที่เจ้าหน้าที่เห็นในเว็บกรมอุตุฯ */
+  TMD_RISK: [
+    {min:250, color:'#880E4F',           short:'วิกฤต',     long:'วิกฤต (>250 มม./วัน)'},
+    {min:125, color:'var(--st-danger)',  short:'เสี่ยงสูง', long:'เสี่ยงสูง (125-250 มม./วัน)'},
+    {min:65,  color:'var(--st-warn)',    short:'เสี่ยง',    long:'เสี่ยง (65-125 มม./วัน)'},
+    {min:35,  color:'var(--st-watch)',   short:'ปานกลาง',   long:'ปานกลาง (35-65 มม./วัน)'},
+    {min:0,   color:'var(--st-normal)',  short:'ต่ำ',       long:'ต่ำ (0-35 มม./วัน)'}
   ]
 };
 
 function rainClass(mm){
   if(mm==null) return {color:'var(--ink-3)', short:'ไม่มีข้อมูล', long:'ไม่มีข้อมูล'};
   return CRIT.RAIN3D.find(r => mm >= r.min);
+}
+
+/* ระดับเสี่ยงจากฝนสะสม "รายวัน" ตามเกณฑ์กรมอุตุฯ (ใช้กับฝนคาดการณ์รายอำเภอ) */
+function tmdRainClass(mm){
+  if(mm==null) return {color:'var(--ink-3)', short:'ไม่มีข้อมูล', long:'ไม่มีข้อมูล'};
+  return CRIT.TMD_RISK.find(r => mm >= r.min);
 }
 
 /* ระดับตลิ่งที่ใช้ได้: min_bank ถ้า > 0 · ถ้าไม่มี (สถานี ชป. ส่ง 0) ค่อยใช้ค่าต่ำสุดของตลิ่งซ้าย/ขวาที่ > 0
@@ -143,5 +160,5 @@ function amphoeRisk(x){
   return {lv, ...AMP_LV[lv], why: why.join(' · '), bar};
 }
 
-window.FloodCriteria = {CRIT, rainClass, validBank, fillPct, stationLevel, dedupe, maxRoll3, amphoeRisk, AMP_LV};
+window.FloodCriteria = {CRIT, rainClass, tmdRainClass, validBank, fillPct, stationLevel, dedupe, maxRoll3, amphoeRisk, AMP_LV};
 })();
