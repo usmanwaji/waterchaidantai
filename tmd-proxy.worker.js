@@ -22,7 +22,7 @@
 
   และ /riskmap-district = หน้าเว็บ "แผนที่เสี่ยงภัยรายอำเภอ" ของ hpc.tmd.go.th
   ที่เสิร์ฟผ่าน worker พร้อมล็อกตัวกรองไว้ที่นราธิวาส สำหรับฝัง iframe ใน forecast.html
-  (ต้นทางกรองจาก URL ไม่ได้ และตัวกรองของต้นทางเองก็พังอยู่ — ดูหมายเหตุที่ฟังก์ชัน)
+  (ต้นทางกรองจาก URL ไม่ได้ และช่องค้นหาของต้นทางก็ไม่รีเฟรชตารางเอง — ดูหมายเหตุที่ฟังก์ชัน)
   หน้านี้เรียกไฟล์ /static/... ของต้นทางซึ่งไม่เปิด CORS จึงพร็อกซี /static/ กับ /api/ ให้ด้วย
 
   ทดสอบ:  https://<worker>/region7days   ·   https://<worker>/today   ·   https://<worker>/riskmap
@@ -57,7 +57,7 @@ export default {
     if (request.method !== 'GET')     return new Response('Method Not Allowed', { status: 405, headers: cors() });
 
     const path = new URL(request.url).pathname.replace(/^\/+|\/+$/g, '');
-    if (!path) return new Response('TMD proxy OK — ใช้ /region7days, /today หรือ /riskmap', { headers: cors() });
+    if (!path) return new Response('TMD proxy OK — ใช้ /region7days, /today, /riskmap หรือ /riskmap-district', { headers: cors() });
     if (path === 'riskmap') return riskmap(request, ctx);
     if (path === 'riskmap-district') return riskmapDistrict();
     if (path.startsWith('static/') || path.startsWith('api/')) return hpcAsset(path);
@@ -144,9 +144,12 @@ async function riskmap(request, ctx) {
    ฝังหน้า https://hpc.tmd.go.th/riskmap-district ตรง ๆ ไม่ได้ตามที่ต้องการ เพราะ
    1) ต้นทางไม่มีพารามิเตอร์ใน URL ให้เลือกจังหวัด ต้องพิมพ์ในช่องค้นหาเอง
    2) ช่อง "รหัสจังหวัด" (#filter-province-code) ถูกคอมเมนต์ทิ้งไว้ใน HTML
-      แต่ riskmap_district.js ยังอ่าน inputPCode.value ตอนกรอง จึงโยน TypeError
-      ผลคือช่องค้นหาทั้งหมดของต้นทางใช้ไม่ได้เลย (ทดสอบแล้ว 2026-09-09 พิมพ์ชื่อ
-      จังหวัดแล้วตารางไม่เปลี่ยน ยังขึ้น 928 อำเภอ)
+      แต่ handleFilterChange ของ riskmap_district.js ยังอ่าน inputPCode.value
+      จึงโยน TypeError ตกก่อนถึงบรรทัด applyFiltersAndRender() ที่อยู่ถัดไป
+      ผลคือค่าที่พิมพ์ "ติด" ใน state แล้วแต่ตารางไม่วาดใหม่ ต้องไปสั่งอย่างอื่น
+      ที่ทำให้วาดใหม่ (เช่นเปลี่ยนวันในดรอปดาวน์) ถึงจะเห็นผลกรอง
+      (ทดสอบแล้ว 2026-09-09: พิมพ์ "นราธิวาส" ยังขึ้น 928 อำเภอ · พอเปลี่ยนวัน
+      กลายเป็น 13 อำเภอ — คือลำดับ "พิมพ์จังหวัดก่อน แล้วค่อยเลือกวัน")
    จึงดึง HTML มาแล้วแทรก (ก) ช่องรหัสจังหวัดที่หายไปกลับเข้าไปแบบซ่อน ซึ่งซ่อม
    ตัวกรองของต้นทางไปในตัว (ข) สคริปต์ตั้ง state.pName/pCode ให้กรองตั้งแต่เรนเดอร์
    รอบแรก และนับสรุป 4 ระดับใหม่ให้ตรงกับที่กรองแล้ว (ของเดิมนับทั้งประเทศ)
@@ -185,6 +188,12 @@ const RD_INJECT = `
   .nwp-header, .nwp-footer { display: none !important; }
   .main-content { padding-top: 10px !important; }
   #filter-province-name { background: #f3f5fc; cursor: not-allowed; }
+  /* ต้นทางล้นขอบบนจอแคบ เพราะลูกของ grid เป็น min-width:auto จึงกว้างตามตาราง */
+  @media (max-width: 720px) {
+    .nwp-district-layout { grid-template-columns: minmax(0, 1fr) !important; }
+    .nwp-district-layout > * { min-width: 0 !important; }
+    .district-table-panel .nwp-table-wrap, .district-table-panel { overflow-x: auto; }
+  }
 </style>
 <script>
 (function () {

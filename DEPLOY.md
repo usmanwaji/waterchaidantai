@@ -30,7 +30,7 @@ PWA/Service Worker ทำงานเฉพาะบน https (GitHub Pages เ�
 | ไฟล์ | ชื่อ worker | ใช้กับ | ทดสอบ |
 |------|-------------|--------|--------|
 | `ddpm-proxy.worker.js` | `ddpm-proxy` | map.html — ภาพกล้อง ปภ. | `https://ddpm-proxy.<บัญชี>.workers.dev/stations/PTN07` |
-| `tmd-proxy.worker.js` | `tmd-proxy` | index.html — พยากรณ์ 7 วัน TMD · forecast.html — ฝนคาดการณ์รายอำเภอ | `https://tmd-proxy.<บัญชี>.workers.dev/region7days` และ `/riskmap` |
+| `tmd-proxy.worker.js` | `tmd-proxy` | index.html — พยากรณ์ 7 วัน TMD · forecast.html — ฝนคาดการณ์รายอำเภอ + ปุ่มเปิดหน้าแผนที่เสี่ยงภัยรายอำเภอ | `https://tmd-proxy.<บัญชี>.workers.dev/region7days` · `/riskmap` · `/riskmap-district` |
 | `onwr-proxy.worker.js` | `onwr-proxy` | map.html — 4 ชั้นเรดาร์ สทนช. (เรดาร์ TMD + คาดการณ์ 3 ชม. · ฝนสะสม 3 ชม. ล่วงหน้ารายอำเภอ/ตำบล · ฝนสถานีรายชั่วโมง · สถานีเรดาร์) | `https://onwr-proxy.<บัญชี>.workers.dev/frames` |
 
 `onwr-proxy` กรองข้อมูลให้เหลือเฉพาะนราธิวาสก่อนส่ง (ต้นทาง `zones?level=subdistrict` ใหญ่ 8 MB) และแคชผล 5 นาที
@@ -39,6 +39,12 @@ PWA/Service Worker ทำงานเฉพาะบน https (GitHub Pages เ�
 `tmd-proxy` เส้นทาง `/riskmap` ดึงฝนสะสมรายวันคาดการณ์รายอำเภอจาก hpc.tmd.go.th (ไฟล์ทั้งประเทศ ~570 KB)
 กรองเหลือ 13 อำเภอนราธิวาสแล้วแคช 1 ชม. → เหลือ ~2 KB · ถ้ายังไม่ deploy รอบใหม่
 หน้า forecast.html จะขึ้น "โหลดไม่สำเร็จ" เฉพาะการ์ดฝนรายอำเภอ ส่วนอื่นทำงานปกติ
+
+`tmd-proxy` เส้นทาง `/riskmap-district` เสิร์ฟหน้าเว็บ "แผนที่เสี่ยงภัยรายอำเภอ" ของ hpc.tmd.go.th
+ให้ปุ่ม **คาดการณ์ปริมาณฝนรายอำเภอ** ใน forecast.html ฝังเป็น iframe โดยล็อกตัวกรองไว้ที่นราธิวาส
+(ต้นทางเลือกจังหวัดจาก URL ไม่ได้ และช่องค้นหาของต้นทางไม่วาดตารางใหม่ให้เอง ต้องพิมพ์จังหวัดก่อนแล้วเปลี่ยนวันซ้ำ — worker แทรกช่องที่หายไปกลับให้)
+เส้นทาง `/static/...` กับ `/api/...` ของ worker เป็นตัวส่งต่อไฟล์ที่หน้านั้นเรียก ห้ามลบ
+ถ้ายังไม่ deploy รอบใหม่ กดปุ่มแล้วกรอบจะขึ้นข้อความ `Unknown route` — ใช้ลิงก์ "เปิดหน้าเต็มที่เว็บกรมอุตุฯ" ในหัวกรอบแทนได้
 
 ---
 
