@@ -78,6 +78,18 @@ footer a{color:var(--st-warn);text-decoration:none}
 #imgModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.8);z-index:2000;align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
 #imgModal.show{display:flex}
 #imgModal img{max-width:95%;max-height:92vh;border-radius:10px}
+
+/* ปุ่ม + โมดัลฝนคาดการณ์รายอำเภอของกรมอุตุฯ */
+#btnDistRain{padding:7px 14px;border:1.5px solid var(--outline-strong);background:#fff;color:var(--navy-d);font-family:inherit;font-size:13px;font-weight:700;border-radius:10px;cursor:pointer}
+#btnDistRain:hover{border-color:var(--orange);color:var(--orange)}
+#rdModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.8);z-index:2100;align-items:center;justify-content:center;padding:16px}
+#rdModal.show{display:flex}
+.rd-box{background:#fff;border-radius:12px;width:min(1100px,100%);height:min(88vh,100%);display:flex;flex-direction:column;overflow:hidden}
+.rd-head{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--outline);font-size:13.5px;color:var(--navy-d)}
+.rd-head a{margin-left:auto;font-size:12px;color:var(--orange);text-decoration:none;white-space:nowrap}
+.rd-x{background:none;border:none;font-size:16px;line-height:1;cursor:pointer;color:var(--muted);padding:4px 6px}
+#rdFrame{flex:1;width:100%;border:0}
+@media(max-width:600px){.rd-head a{display:none}}
 .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line-mid);border-top-color:var(--orange);border-radius:50%;animation:spin 1s linear infinite;vertical-align:-2px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -131,6 +143,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
   <button class="hbtn" data-h="24">+24 ชม.</button>
   <button class="hbtn" data-h="48">+48 ชม.</button>
   <button class="hbtn" data-h="72">+72 ชม.</button>
+  <button type="button" id="btnDistRain">คาดการณ์ปริมาณฝนรายอำเภอ</button>
   <span id="conf"></span>
 </div>
 
@@ -143,6 +156,17 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
 </div>
 
 <div id="imgModal" onclick="this.classList.remove('show')"><img id="imgModalImg" alt="ภาพคาดการณ์ขยายเต็มจอ"></div>
+
+<div id="rdModal" role="dialog" aria-modal="true" aria-labelledby="rdTitle" aria-hidden="true">
+  <div class="rd-box">
+    <div class="rd-head">
+      <b id="rdTitle">คาดการณ์ปริมาณฝนรายอำเภอ · นราธิวาส</b>
+      <a href="https://hpc.tmd.go.th/riskmap-district" target="_blank" rel="noopener">เปิดหน้าเต็มที่เว็บกรมอุตุฯ ↗</a>
+      <button type="button" class="rd-x" id="rdClose" aria-label="ปิด">✕</button>
+    </div>
+    <iframe id="rdFrame" title="แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุนิยมวิทยา เฉพาะนราธิวาส" referrerpolicy="no-referrer"></iframe>
+  </div>
+</div>
 
 <footer>
   <span>แหล่งข้อมูล: thaiwater.net (สสน.) · HII · แบบจำลอง WRF-ROMS</span>
@@ -631,6 +655,28 @@ document.querySelectorAll('.hbtn').forEach(b=>{
     render();
   });
 });
+
+/* ---------- โมดัลฝนคาดการณ์รายอำเภอ (กรมอุตุฯ) ----------
+   ฝังหน้า hpc.tmd.go.th/riskmap-district ผ่าน tmd-proxy ที่ล็อกตัวกรองไว้ที่
+   นราธิวาสให้แล้ว — ต้นทางเลือกจังหวัดจาก URL ไม่ได้ และช่องค้นหาของต้นทางเองก็พัง
+   (อ่านรายละเอียดใน tmd-proxy.worker.js) · ใส่ src ตอนกดครั้งแรกเท่านั้น
+   หน้านี้โหลดแผนที่กับ API หลายเจ้าอยู่แล้ว ไม่ควรดึงเพิ่มถ้าผู้ใช้ยังไม่เปิดดู */
+const RD_SRC = 'https://tmd-proxy.newusmanwaji.workers.dev/riskmap-district';
+const rdModal = document.getElementById('rdModal');
+const rdFrame = document.getElementById('rdFrame');
+function rdOpen(){
+  if(!rdFrame.getAttribute('src')) rdFrame.setAttribute('src', RD_SRC);
+  rdModal.classList.add('show');
+  rdModal.setAttribute('aria-hidden','false');
+}
+function rdClose(){
+  rdModal.classList.remove('show');
+  rdModal.setAttribute('aria-hidden','true');
+}
+document.getElementById('btnDistRain').addEventListener('click', rdOpen);
+document.getElementById('rdClose').addEventListener('click', rdClose);
+rdModal.addEventListener('click', e=>{ if(e.target === rdModal) rdClose(); });
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape') rdClose(); });
 
 loadBoundaries();
 loadAll();
