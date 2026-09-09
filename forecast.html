@@ -116,6 +116,47 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
   #map{min-height:38vh}
   #side{padding:8px}
 }
+
+/* ===== มือถือ: ลดชั้นที่ซ้อนทับบนแผนที่ =====
+   ของเดิมบนจอแคบ แผนที่สูงแค่ ~38vh แต่มีคำอธิบายสี 6 บรรทัด + แถบมาตราส่วน
+   + เครดิต + ปุ่มซูม ลอยทับอยู่พร้อมกัน แถม shared.css ยกมุมล่างของ Leaflet
+   ขึ้น 58px เพื่อหลบแถบแท็บ ซึ่งถูกต้องกับหน้าแผนที่เต็มจอ แต่หน้านี้แผนที่
+   อยู่เหนือแผงข้อมูล ไม่ได้ติดขอบล่างจอ ผลคือทุกอย่างมากองกลางแผนที่ทับหมุดสถานี
+   วิธีแก้: ย้ายคำอธิบายสีออกจากแผนที่ไปเป็นแถบแนวนอนใต้แผนที่ ซ่อนแถบมาตราส่วน
+   และให้เครดิตกลับไปอยู่ชิดขอบล่างของแผนที่ตามปกติ */
+#legendBar{display:none}
+@media(max-width:768px){
+  #map .leaflet-bottom{margin-bottom:0}
+  #map .legend,#map .leaflet-control-scale{display:none}
+  #map .leaflet-control-attribution{font-size:9.5px;padding:1px 5px;background:rgba(255,255,255,.75)}
+  #map .leaflet-control-zoom{margin:8px 8px 0 0}
+  #map{flex:0 0 40vh;min-height:0;border-bottom:1px solid var(--outline)}
+
+  #legendBar{display:flex;flex-wrap:wrap;gap:2px 12px;align-items:center;
+    padding:5px 12px;background:#fff;border-bottom:1px solid var(--outline);
+    font-size:12px;color:var(--ink-2);white-space:nowrap;flex:0 0 auto}
+  #legendBar .lg{gap:5px;display:inline-flex}
+  #legendBar .sw{width:11px;height:11px;flex-basis:11px}
+
+  /* แถวเลือกช่วงเวลา: ห้าปุ่มแบ่งความกว้างเท่ากันแถวเดียว ปุ่มฝนรายอำเภอเต็มแถวถัดไป */
+  #horizons{gap:6px;padding:8px 10px}
+  .hbtn{flex:1 1 0;padding:6px 0;font-size:12.5px;text-align:center;min-width:0}
+  #btnDistRain{flex:1 0 100%;padding:6px 10px;font-size:12.5px;min-height:36px}
+
+  /* ท้ายหน้าซ้ำกับแถบแท็บ ย้ายแหล่งข้อมูลไปไว้ท้ายแผงข้อมูลแทน */
+  footer{display:none}
+  .srcnote{display:block}
+}
+.srcnote{display:none;font-size:11px;color:var(--ink-3);line-height:1.6;padding:6px 2px 10px}
+.srcnote a{color:var(--orange);text-decoration:none}
+
+/* ข้อจำกัดการคาดการณ์: กล่องเหลืองสูง ~120px กินพื้นที่แผงข้อมูลบนมือถือจนแทบไม่เหลือ
+   ให้พับได้ เปิดเป็นค่าเริ่มต้นบนจอคอม ปิดบนมือถือ ยังเห็นหัวข้อเตือนเสมอ */
+.disc summary{cursor:pointer;font-weight:600;list-style:none;display:flex;align-items:center;gap:6px}
+.disc summary::-webkit-details-marker{display:none}
+.disc summary::after{content:"▾";margin-left:auto;font-size:12px;opacity:.7;transition:transform .15s}
+.disc[open] summary::after{transform:rotate(180deg)}
+.disc .disc-body{margin-top:4px;font-weight:400}
 </style>
 <link rel="stylesheet" href="shared.css?v=5">
 </head>
@@ -150,9 +191,14 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
 
 <div id="wrap">
   <div id="map"></div>
+  <div id="legendBar" aria-label="คำอธิบายสีสถานะคาดการณ์"></div>
   <aside id="side">
-    <div class="disc">⚠️ <b>ข้อจำกัดการคาดการณ์:</b> หน้านี้ใช้การประมาณอย่างง่ายจาก <b>แนวโน้มระดับน้ำจริง</b> ของแต่ละสถานี ร่วมกับ <b>ฝนพยากรณ์แบบจำลอง WRF-ROMS (สสน.)</b> · ไม่ใช่แบบจำลองอุทกวิทยาเต็มรูปแบบ ความแม่นยำลดลงตามระยะเวลา โปรดใช้ประกอบกับประกาศของ ปภ./สทนช./กรมอุตุฯ เสมอ</div>
+    <details class="disc" id="disc">
+      <summary>⚠️ ข้อจำกัดการคาดการณ์</summary>
+      <div class="disc-body">หน้านี้ใช้การประมาณอย่างง่ายจาก <b>แนวโน้มระดับน้ำจริง</b> ของแต่ละสถานี ร่วมกับ <b>ฝนพยากรณ์แบบจำลอง WRF-ROMS (สสน.)</b> · ไม่ใช่แบบจำลองอุทกวิทยาเต็มรูปแบบ ความแม่นยำลดลงตามระยะเวลา โปรดใช้ประกอบกับประกาศของ ปภ./สทนช./กรมอุตุฯ เสมอ</div>
+    </details>
     <div id="panel"></div>
+    <div class="srcnote">แหล่งข้อมูล: thaiwater.net (สสน.) · HII · แบบจำลอง WRF-ROMS<br>อยู่ระหว่างการทดลองปรับปรุง · <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a></div>
   </aside>
 </div>
 
@@ -236,11 +282,14 @@ function ageHours(dt){
 }
 
 /* ---------- แผนที่ ---------- */
-const map = L.map('map', {zoomControl:false}).setView([6.20, 101.75], 10);
+const map = L.map('map', {zoomControl:false, attributionControl:false}).setView([6.20, 101.75], 10);
 L.control.zoom({position:'topright'}).addTo(map);
+// เครดิตแบบสั้น ไม่มีคำนำหน้า "Leaflet" เพื่อให้แถบเครดิตกินที่น้อยที่สุดบนแผนที่เล็ก
+// (ต้องเพิ่มก่อนแถบมาตราส่วน ไม่งั้นมาตราส่วนจะไปอยู่ใต้เครดิต)
+L.control.attribution({prefix:false, position:'bottomright'}).addTo(map);
 L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 map.createPane('bnd'); map.getPane('bnd').style.zIndex = 350;
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18, attribution:'© OpenStreetMap | สสน./HII'}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18, attribution:'© OpenStreetMap · สสน./HII'}).addTo(map);
 if (window.OMSRivers) window.OMSRivers.drawLeaflet(map);
 const gMk = L.layerGroup().addTo(map), gBnd = L.layerGroup().addTo(map);
 
@@ -252,6 +301,11 @@ legend.onAdd = () => {
   return d;
 };
 legend.addTo(map);
+// มือถือ: คำอธิบายสีแบบแถบแนวนอนใต้แผนที่ (CSS เลือกแสดงอันใดอันหนึ่งตามความกว้างจอ)
+document.getElementById('legendBar').innerHTML =
+  Object.values(CLS).map(c=>`<span class="lg"><span class="sw" style="background:${c.color}"></span>${c.label}</span>`).join('');
+// ข้อจำกัดการคาดการณ์: เปิดไว้บนจอคอม พับไว้บนมือถือเพื่อให้แผงข้อมูลมีที่
+if(window.matchMedia('(min-width:769px)').matches) document.getElementById('disc').open = true;
 
 const BND_SOURCES = [
   'https://raw.githubusercontent.com/apisit/thailand.json/master/thailand.json',
