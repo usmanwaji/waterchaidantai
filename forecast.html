@@ -90,7 +90,7 @@ footer a{color:var(--st-warn);text-decoration:none}
 .rd-head a{margin-left:auto;font-size:12px;color:var(--orange);text-decoration:none;white-space:nowrap}
 .rd-x{background:none;border:none;font-size:16px;line-height:1;cursor:pointer;color:var(--muted);padding:4px 6px}
 #rdFrame{flex:1;width:100%;border:0}
-@media(max-width:600px){.rd-head a{display:none}}
+@media(max-width:600px){.rd-head a{display:none}#rdModal{padding:8px}.rd-box{height:100%}}
 .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line-mid);border-top-color:var(--orange);border-radius:50%;animation:spin 1s linear infinite;vertical-align:-2px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -174,7 +174,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
   <span style="margin-left:auto">อยู่ระหว่างการทดลองปรับปรุง · <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a></span>
 </footer>
 
-<script src="js/criteria.js?v=1"></script>
+<script src="js/criteria.js?v=2"></script>
 <script>
 'use strict';
 const API = 'https://api-v3.thaiwater.net/api/v1/thaiwater30';
@@ -660,7 +660,8 @@ document.querySelectorAll('.hbtn').forEach(b=>{
 
 /* ---------- โมดัลฝนคาดการณ์รายอำเภอ (กรมอุตุฯ) ----------
    ฝังหน้า hpc.tmd.go.th/riskmap-district ผ่าน tmd-proxy ที่ล็อกตัวกรองไว้ที่
-   นราธิวาสให้แล้ว — ต้นทางเลือกจังหวัดจาก URL ไม่ได้ และช่องค้นหาของต้นทางเองก็พัง
+   นราธิวาสให้แล้ว — ต้นทางเลือกจังหวัดจาก URL ไม่ได้ และช่องค้นหาของต้นทางไม่วาด
+   ตารางใหม่ให้เอง (ต้องเปลี่ยนวันซ้ำอีกทีถึงจะเห็นผล)
    (อ่านรายละเอียดใน tmd-proxy.worker.js) · ใส่ src ตอนกดครั้งแรกเท่านั้น
    หน้านี้โหลดแผนที่กับ API หลายเจ้าอยู่แล้ว ไม่ควรดึงเพิ่มถ้าผู้ใช้ยังไม่เปิดดู */
 const RD_SRC = 'https://tmd-proxy.newusmanwaji.workers.dev/riskmap-district';
