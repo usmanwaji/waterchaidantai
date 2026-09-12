@@ -51,8 +51,7 @@
   var SHEET = [
     { head: 'คาดการณ์และย้อนหลัง', items: [
       { href: 'forecast.html',  label: 'คาดการณ์',   icon: 'cloud'  },
-      /* ปิดปุ่ม "แบบจำลอง" ไว้ก่อน — เก็บโค้ดไว้เผื่อเปิดกลับมาใช้ในอนาคต */
-      // { href: 'sim.html',       label: 'แบบจำลอง',   icon: 'wave'   },
+      { href: 'sim.html',       label: 'แบบจำลอง',   icon: 'wave'   },
       { href: 'history.html',   label: 'ย้อนหลัง',    icon: 'clock'  },
       { href: 'repeat.html',    label: 'พื้นที่เสี่ยง', icon: 'alert'  }
     ]},
