@@ -22,7 +22,7 @@ import path from 'node:path';
 
 const BASE = 'https://telerid.rid.go.th';
 const OUT = 'telerid-cam';
-const PROVINCES = ['สตูล', 'สงขลา', 'ปัตตานี', 'ยะลา', 'นราธิวาส'];
+const PROVINCES = ['นราธิวาส'];
 const CHUNK = 8;           // ดึงพร้อมกันทีละกี่สถานี
 const WS_TIMEOUT = 20000;  // รอข้อความแรกจาก websocket (ms)
 
@@ -57,7 +57,7 @@ async function main() {
         lon: s.geom && s.geom.coordinates ? s.geom.coordinates[0] : null,
       }));
   }, PROVINCES);
-  log('stations in 5 provinces:', stations.length);
+  log('stations in', PROVINCES.join(','), ':', stations.length);
 
   // ---- 2+3) websocket รายสถานี + โหลดภาพกล้อง (ทำใน page context ผ่าน WAF) ----
   const meta = [];
