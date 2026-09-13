@@ -321,6 +321,9 @@ footer a{color:var(--orange-warm);text-decoration:none}
     </div>
     </details>
   </div>
+
+  <!-- ผู้เข้าชมเว็บไซต์ · js/visits-widget.js เติมเนื้อหาให้ และซ่อนการ์ดทั้งใบถ้าอ่านยอดไม่ได้ -->
+  <div class="card full" id="visitCard" hidden></div>
 </div>
 
 <div id="wrfModal" onclick="this.classList.remove('show')"><img id="wrfModalImg" alt="แผนที่คาดการณ์ฝน WRF-ROMS ขยายเต็มจอ"></div>
@@ -875,9 +878,10 @@ setInterval(loadRadarImg, 10*60*1000);
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
-<script src="js/views.js?v=2" defer></script>
+<script src="js/views.js?v=3" defer></script>
+<script src="js/visits-widget.js?v=1" defer></script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
-<script src="js/tabbar.js?v=1" defer></script>
+<script src="js/tabbar.js?v=2" defer></script>
 </body>
 </html>

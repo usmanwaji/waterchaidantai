@@ -35,7 +35,8 @@
     grid:   '<rect x="3.4" y="3.4" width="7" height="7" rx="1.3"/><rect x="13.6" y="3.4" width="7" height="7" rx="1.3"/><rect x="3.4" y="13.6" width="7" height="7" rx="1.3"/><rect x="13.6" y="13.6" width="7" height="7" rx="1.3"/>',
     people: '<circle cx="9" cy="8.2" r="3.2"/><path d="M3.4 19.4c0-3.1 2.5-5.2 5.6-5.2s5.6 2.1 5.6 5.2"/><path d="M16.4 5.4a3 3 0 0 1 0 5.7"/><path d="M17.6 14.6c2 .6 3.4 2.3 3.4 4.8"/>',
     tools:  '<path d="M14.4 6.6a3.9 3.9 0 0 1 5.2 5.1l-8.3 8.3a2 2 0 0 1-2.8-2.8z"/><path d="M4.6 4.6l3.6 3.6"/><path d="M3.4 9.4h5"/>',
-    layers: '<path d="M12 3.4 3 8l9 4.6L21 8z"/><path d="M3 12.6 12 17.2l9-4.6"/><path d="M3 17.2 12 21.8l9-4.6"/>'
+    layers: '<path d="M12 3.4 3 8l9 4.6L21 8z"/><path d="M3 12.6 12 17.2l9-4.6"/><path d="M3 17.2 12 21.8l9-4.6"/>',
+    chart:  '<path d="M3.6 20.4h16.8"/><rect x="5.2" y="12.4" width="3.4" height="6"/><rect x="10.3" y="8.2" width="3.4" height="10.2"/><rect x="15.4" y="4.4" width="3.4" height="14"/>'
   };
 
   /* แถบล่าง: ห้าปลายทางที่คนใช้จริงตอนน้ำกำลังมา
@@ -64,7 +65,10 @@
     { head: 'สำหรับเจ้าหน้าที่', items: [
       { href: 'eoc.html',       label: 'ศูนย์บัญชาการ', icon: 'grid'   },
       { href: 'people.html',    label: 'กลุ่มเปราะบาง', icon: 'people' },
-      { href: 'admin.html',     label: 'ผู้ดูแล',      icon: 'tools'  }
+      { href: 'admin.html',     label: 'ผู้ดูแล',      icon: 'tools'  },
+      /* หน้าสถิติเปิดได้เฉพาะแอดมิน คนอื่นกดเข้าไปจะเจอหน้าให้ล็อกอินแทน
+         ปุ่มยังอยู่ในแผ่นเพราะการซ่อนปุ่มไม่ได้กันอะไรเลย ตัวกั้นจริงอยู่ที่ฐานข้อมูล */
+      { href: 'stats.html',     label: 'สถิติผู้เข้าชม', icon: 'chart' }
     ]}
   ];
 

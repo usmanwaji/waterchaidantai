@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#142256">
+<title>สถิติผู้เข้าชม | naraflood</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:var(--paper);--ink:var(--ink);--muted:var(--ink-3);--elevated:var(--card);--outline:var(--line);--outline-strong:var(--line-mid);--orange:var(--signal);--orange-d:var(--signal-hover);--shell:rgba(0,0,0,.72)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{font-family:'IBM Plex Sans Thai','IBM Plex Sans',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:100}
+header h1{font-size:17px;font-weight:700}
+header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
+.navtab{display:flex;gap:4px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:3px;overflow-x:auto}
+.navtab a{color:rgba(255,255,255,.72);text-decoration:none;font-size:12px;font-weight:600;padding:5px 11px;border-radius:6px;white-space:nowrap}
+.navtab a:hover{color:#fff;background:rgba(255,255,255,.10)}
+/* ปุ่มบัญชีผู้ใช้บนหัวเว็บมาจาก js/auth-ui.js เหมือนทุกหน้า จึงไม่ทำเองซ้ำ */
+#authUi{margin-left:auto}
+
+#content{flex:1;max-width:1000px;width:100%;margin:0 auto;padding:16px 16px 40px}
+.gatebox{max-width:440px;margin:60px auto;text-align:center;background:var(--elevated);border:1px solid var(--outline);border-radius:14px;padding:28px 24px;box-shadow:var(--lift-1)}
+.gatebox button{margin-top:14px;background:var(--orange);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer}
+
+.card{background:var(--elevated);border:1px solid var(--outline);border-radius:var(--r-media,12px);padding:16px;box-shadow:var(--lift-1);margin-bottom:14px}
+.card h2{font-size:14.5px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 .where{color:var(--muted);font-weight:400;font-size:11.5px}
+
+/* แถบเลือกช่วงเวลา — ชิปเดียวกับทั้งเว็บ */
+#bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.chip{padding:6px 14px;border:1px solid var(--outline-strong);background:var(--elevated);color:var(--ink);border-radius:999px;font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer}
+.chip.on{background:var(--signal);border-color:var(--signal);color:var(--signal-ink);font-weight:600}
+.ghost{margin-left:auto;background:var(--elevated);border:1px solid var(--outline-strong);color:var(--ink);border-radius:9px;padding:6px 12px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.ghost:hover{border-color:var(--signal);color:var(--signal)}
+
+/* ตัวเลขหลัก */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi{background:var(--card-2);border:1px solid var(--outline);border-radius:10px;padding:11px 13px;min-width:0}
+.kpi .k{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.kpi .v{font-size:25px;font-weight:600;line-height:1.2;margin-top:2px}
+.kpi .v small{font-size:12px;font-weight:400;color:var(--muted);margin-left:4px}
+.dlt{font-size:11px;font-weight:600}
+.dlt.up{color:var(--signal)}
+.dlt.down{color:var(--muted)}
+
+/* กราฟรายวัน: แท่งจาง = จำนวนครั้ง แท่งเข้ม = จำนวนคน */
+.chart{display:flex;align-items:flex-end;gap:2px;height:150px;border-bottom:1px solid var(--outline);padding:0 1px}
+.cbar{flex:1 1 0;min-width:0;height:100%;display:flex;align-items:flex-end;position:relative}
+.cbar .bg{position:absolute;left:0;right:0;bottom:0;background:var(--signal-wash);border-radius:3px 3px 0 0}
+.cbar .fg{position:relative;width:100%;background:var(--signal);border-radius:3px 3px 0 0;min-height:2px}
+/* เสาร์-อาทิตย์ทำเครื่องหมายที่เส้นฐาน ไม่ใช่เปลี่ยนสีพื้นแท่ง
+   เพราะพื้นจาง ๆ สองเฉดที่ต่างกันไม่ถึงขั้นความสว่างเดียวมองไม่เห็นบนจอกลางแดด */
+.cbar.wk::after{content:"";position:absolute;left:1px;right:1px;bottom:-3px;height:3px;background:var(--line-mid);border-radius:2px}
+.axis{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:5px}
+.legend{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px;border:1px solid var(--line-mid)}
+.legend i.rule{height:3px;border:none;border-radius:2px;vertical-align:3px}
+
+/* ตาราง/รายการสัดส่วน */
+.rows{display:grid;gap:7px}
+.row{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:baseline;font-size:12.5px}
+.row .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .nb{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .nb em{font-style:normal;color:var(--muted);font-weight:400;font-size:11.5px;margin-left:5px}
+.row .track{grid-column:1/-1;height:6px;background:var(--card-2);border-radius:4px;overflow:hidden}
+.row .track i{display:block;height:100%;background:var(--signal);border-radius:4px}
+.empty{color:var(--muted);font-size:12.5px;padding:8px 0}
+
+/* ชั่วโมงในรอบวัน */
+.hours{display:flex;align-items:flex-end;gap:2px;height:90px;border-bottom:1px solid var(--outline)}
+.hbar{flex:1 1 0;background:var(--signal);border-radius:2px 2px 0 0;min-height:2px}
+.hax{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:4px}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.note{font-size:10.5px;color:var(--muted);margin-top:10px;line-height:1.55}
+
+a,button,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(28,50,130,.15)}
+.navtab{scrollbar-width:none}
+.navtab::-webkit-scrollbar{display:none}
+@supports(padding:max(0px)){header{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}}
+@media(max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}}
+@media(max-width:640px){
+  header{padding:8px 10px;gap:8px}
+  header h1{font-size:15px}
+  .navtab{order:5;flex-basis:100%}
+  #authUi{margin-left:0;width:100%;justify-content:flex-end}
+  #content{padding:12px 10px 32px}
+  .chart{height:120px}
+  .kpi .v{font-size:21px}
+}
+</style>
+<link rel="stylesheet" href="shared.css?v=5">
+</head>
+<body>
+
+<header>
+  <h1>สถิติผู้เข้าชม<small>เฉพาะผู้ดูแลระบบ · naraflood.com</small></h1>
+  <nav class="navtab" aria-label="เมนูหลัก">
+    <a href="index.html">หน้าแรก</a>
+    <a href="admin.html">ผู้ดูแลระบบ</a>
+    <a href="eoc.html">EOC</a>
+  </nav>
+</header>
+
+<div id="content">
+  <div id="gate"></div>
+
+  <div id="panels" style="display:none">
+
+    <div id="bar">
+      <button type="button" class="chip" data-days="7">7 วัน</button>
+      <button type="button" class="chip on" data-days="30">30 วัน</button>
+      <button type="button" class="chip" data-days="90">90 วัน</button>
+      <button type="button" class="ghost" id="btnCsv">ดาวน์โหลด CSV</button>
+    </div>
+
+    <div class="card">
+      <h2>ภาพรวม <span class="where" id="rangeLbl"></span></h2>
+      <div class="kpis" id="kpis"></div>
+      <div class="note" id="cmpNote"></div>
+    </div>
+
+    <div class="card">
+      <h2>รายวัน <span class="where">แท่งเข้ม = ผู้เข้าชม · แท่งจาง = จำนวนครั้งที่เปิดหน้า</span></h2>
+      <div id="chart"></div>
+    </div>
+
+    <div class="card">
+      <h2>หน้าที่ถูกเปิดมากที่สุด</h2>
+      <div class="rows" id="pages"><div class="empty">กำลังโหลด…</div></div>
+      <div class="note">คอลัมน์ในวงเล็บคือจำนวนผู้เข้าชมที่ "เปิดหน้านี้เป็นหน้าแรกของวัน" จึงบอกได้ว่าคนเข้าเว็บนี้ทางประตูไหน</div>
+    </div>
+
+    <div class="two">
+      <div class="card">
+        <h2>อุปกรณ์</h2>
+        <div class="rows" id="devices"><div class="empty">กำลังโหลด…</div></div>
+      </div>
+      <div class="card">
+        <h2>มาจากที่ไหน</h2>
+        <div class="rows" id="refs"><div class="empty">กำลังโหลด…</div></div>
+        <div class="note">direct = พิมพ์ที่อยู่เว็บเอง กดจากบุ๊กมาร์ก หรือเปิดจากแอปที่ไม่ส่งที่มา · internal = กดลิงก์ภายในเว็บนี้เอง</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>ช่วงเวลาในรอบวัน <span class="where">เวลาไทย</span></h2>
+      <div id="hours"></div>
+      <div class="note">ใช้ดูว่าควรโพสต์แจ้งเตือนเวลาไหนคนถึงจะเห็นมากที่สุด</div>
+    </div>
+
+    <div class="note">
+      เก็บเป็นยอดรวมเท่านั้น ไม่เก็บคุกกี้ ไม่เก็บหมายเลขไอพี ไม่เก็บ user-agent
+      และไม่ผูกกับตัวบุคคล (สอดคล้อง PDPA) · ผู้เข้าชมนับจากเบราว์เซอร์ 1 เครื่องต่อ 1 วัน
+      คนเดียวเปิดจากมือถือและคอมพิวเตอร์จะนับเป็น 2
+    </div>
+
+  </div>
+</div>
+
+<script src="js/supabase-client.js?v=3"></script>
+<script src="js/auth-ui.js"></script>
+<script src="js/views.js?v=3" defer></script>
+<script>
+'use strict';
+
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = n => { try { return Number(n || 0).toLocaleString('th-TH'); } catch (e) { return String(n || 0); } };
+const el  = id => document.getElementById(id);
+
+let DAYS = 30;
+let SERIES = [];        // ช่วงปัจจุบัน (ไว้ทำ CSV ด้วย)
+let PAGES  = [];
+
+function dayLabel(iso, withYear) {
+  try {
+    return new Date(iso + 'T00:00:00+07:00').toLocaleDateString('th-TH',
+      withYear ? {day:'numeric',month:'short',year:'2-digit'} : {day:'numeric',month:'short'});
+  } catch (e) { return iso; }
+}
+
+/* ช่วงก่อนหน้าที่ยาวเท่ากัน ใช้บอกว่าคนเข้ามากขึ้นหรือน้อยลง
+   ฐานเป็น 0 แล้วมีคนเข้า = "เริ่มมีคนเข้า" ไม่ใช่ +∞% จึงไม่แสดงตัวเลข */
+function delta(now, prev) { return prev ? Math.round(((now - prev) / prev) * 100) : null; }
+function dltHtml(d) {
+  if (d === null || d === 0) return '';
+  return `<span class="dlt ${d > 0 ? 'up' : 'down'}">${d > 0 ? '▲' : '▼'} ${Math.abs(d)}%</span>`;
+}
+const sum = (rows, k) => rows.reduce((a, r) => a + Number(r[k] || 0), 0);
+
+/* ---------- ภาพรวม ---------- */
+function renderKpis(cur, prev) {
+  const v = sum(cur, 'visitors'), w = sum(cur, 'views');
+  const pv = sum(prev, 'visitors'), pw = sum(prev, 'views');
+  const perDay = cur.length ? Math.round(v / cur.length) : 0;
+  const perVisitor = v ? (w / v).toFixed(1) : '0.0';
+  const best = cur.reduce((m, r) => (r.visitors > (m?.visitors ?? -1) ? r : m), null);
+
+  el('kpis').innerHTML = `
+    <div class="kpi"><div class="k">ผู้เข้าชม ${dltHtml(delta(v, pv))}</div>
+      <div class="v">${fmt(v)}<small>คน</small></div></div>
+    <div class="kpi"><div class="k">เปิดหน้าเว็บ ${dltHtml(delta(w, pw))}</div>
+      <div class="v">${fmt(w)}<small>ครั้ง</small></div></div>
+    <div class="kpi"><div class="k">เฉลี่ยต่อวัน</div>
+      <div class="v">${fmt(perDay)}<small>คน/วัน</small></div></div>
+    <div class="kpi"><div class="k">ดูกี่หน้าต่อคน</div>
+      <div class="v">${perVisitor}<small>หน้า/คน</small></div></div>`;
+
+  el('cmpNote').innerHTML = (pv || pw)
+    ? `เทียบกับ ${DAYS} วันก่อนหน้า (${fmt(pv)} คน · ${fmt(pw)} ครั้ง)` +
+      (best && best.visitors ? ` · วันที่คนเข้ามากที่สุดคือ ${esc(dayLabel(best.day, true))} ${fmt(best.visitors)} คน` : '')
+    : 'ยังไม่มีข้อมูลของช่วงก่อนหน้าไว้เทียบ';
+}
+
+/* ---------- กราฟรายวัน ---------- */
+function renderChart(rows) {
+  const max = rows.reduce((m, r) => Math.max(m, Number(r.views || 0)), 0);
+  const bars = rows.map(r => {
+    const views = Number(r.views || 0), vis = Number(r.visitors || 0);
+    const hv = max ? Math.max(Math.round(views / max * 100), views ? 3 : 0) : 0;
+    const hu = max ? Math.max(Math.round(vis   / max * 100), vis   ? 2 : 0) : 0;
+    // เสาร์-อาทิตย์ให้พื้นหลังต่างออกไป จังหวะสัปดาห์จะได้อ่านออกจากกราฟ
+    const d = new Date(r.day + 'T00:00:00+07:00').getDay();
+    const wk = (d === 0 || d === 6) ? ' wk' : '';
+    return `<div class="cbar${wk}" title="${esc(dayLabel(r.day, true))} · ${fmt(vis)} คน · ${fmt(views)} ครั้ง">` +
+           `<span class="bg" style="height:${hv}%"></span>` +
+           `<span class="fg" style="height:${hu}%"></span></div>`;
+  }).join('');
+
+  el('chart').innerHTML =
+    `<div class="chart" role="img" aria-label="กราฟผู้เข้าชมรายวัน ${DAYS} วัน">${bars}</div>` +
+    `<div class="axis"><span>${rows.length ? esc(dayLabel(rows[0].day, true)) : ''}</span>` +
+    `<span>สูงสุด ${fmt(max)} ครั้ง/วัน</span>` +
+    `<span>${rows.length ? esc(dayLabel(rows[rows.length - 1].day, true)) : ''}</span></div>` +
+    `<div class="legend"><span><i style="background:var(--signal)"></i>ผู้เข้าชม (คน)</span>` +
+    `<span><i style="background:var(--signal-wash)"></i>เปิดหน้าเว็บ (ครั้ง)</span>` +
+    `<span><i class="rule" style="background:var(--line-mid)"></i>เสาร์–อาทิตย์</span></div>`;
+}
+
+/* ---------- รายการสัดส่วน ---------- */
+function renderRows(node, items, nameOf, valOf, subOf) {
+  if (!items.length) { node.innerHTML = '<div class="empty">ยังไม่มีข้อมูลในช่วงนี้</div>'; return; }
+  const max = items.reduce((m, x) => Math.max(m, Number(valOf(x) || 0)), 0) || 1;
+  node.innerHTML = items.map(x => {
+    const v = Number(valOf(x) || 0);
+    const sub = subOf ? subOf(x) : '';
+    return `<div class="row"><span class="nm" title="${esc(nameOf(x))}">${esc(nameOf(x))}</span>` +
+           `<span class="nb">${fmt(v)}${sub ? `<em>${esc(sub)}</em>` : ''}</span>` +
+           `<span class="track"><i style="width:${Math.round(v / max * 100)}%"></i></span></div>`;
+  }).join('');
+}
+
+const DEV_TH = { mobile:'มือถือ', tablet:'แท็บเล็ต', desktop:'คอมพิวเตอร์', unknown:'ไม่ทราบ' };
+
+function renderHours(items) {
+  const byKey = {};
+  items.forEach(x => { byKey[x.key] = Number(x.views || 0); });
+  const max = Math.max.apply(null, [1].concat(Object.values(byKey)));
+  let bars = '';
+  for (let h = 0; h < 24; h++) {
+    const k = String(h).padStart(2, '0');
+    const v = byKey[k] || 0;
+    bars += `<div class="hbar" style="height:${Math.max(Math.round(v / max * 100), v ? 3 : 0)}%" ` +
+            `title="${k}:00–${k}:59 · ${fmt(v)} ครั้ง"></div>`;
+  }
+  el('hours').innerHTML = `<div class="hours" role="img" aria-label="จำนวนครั้งที่เปิดหน้าแยกตามชั่วโมง">${bars}</div>` +
+    '<div class="hax"><span>00น.</span><span>06น.</span><span>12น.</span><span>18น.</span><span>23น.</span></div>';
+}
+
+/* ---------- โหลดข้อมูลทั้งกระดาน ---------- */
+async function loadAll() {
+  el('rangeLbl').textContent = DAYS + ' วันล่าสุด (รวมวันนี้)';
+
+  // ดึงยาวเป็น 2 เท่าในคำขอเดียว แล้วผ่าครึ่ง จะได้ช่วงก่อนหน้ามาเทียบโดยไม่ต้องยิงซ้ำ
+  const [daily, pages, devices, refs, hours] = await Promise.all([
+    sb.rpc('get_visit_daily',  { p_days: DAYS * 2 }),
+    sb.rpc('admin_visit_pages',{ p_days: DAYS }),
+    sb.rpc('admin_visit_dim',  { p_dim: 'device', p_days: DAYS }),
+    sb.rpc('admin_visit_dim',  { p_dim: 'ref',    p_days: DAYS }),
+    sb.rpc('admin_visit_dim',  { p_dim: 'hour',   p_days: DAYS })
+  ]);
+
+  if (daily.error) { fail(daily.error); return; }
+
+  const all = daily.data || [];
+  const cur  = all.slice(-DAYS);
+  const prev = all.slice(0, Math.max(all.length - DAYS, 0));
+  SERIES = cur;
+
+  renderKpis(cur, prev);
+  renderChart(cur);
+
+  if (pages.error) { fail(pages.error); return; }
+  PAGES = pages.data || [];
+  renderRows(el('pages'), PAGES,
+    p => p.path === '/' ? '/ (หน้าแรก)' : p.path,
+    p => p.views,
+    p => '(' + fmt(p.visitors) + ' คน)');
+
+  const devRows = (devices.data || []).map(d => ({ key: DEV_TH[d.key] || d.key, views: d.views }));
+  renderRows(el('devices'), devRows, d => d.key, d => d.views);
+  renderRows(el('refs'), refs.data || [], r => r.key, r => r.views);
+  renderHours(hours.data || []);
+}
+
+function fail(err) {
+  const miss = /does not exist|schema cache|function/i.test(err.message || '');
+  el('panels').innerHTML =
+    `<div class="card"><h2>ยังอ่านสถิติไม่ได้</h2><div class="empty">${esc(err.message || 'ไม่ทราบสาเหตุ')}</div>` +
+    (miss ? '<div class="note">ดูเหมือนยังไม่ได้ติดตั้งฐานข้อมูลส่วนนี้ — เปิด Supabase → SQL Editor → New query แล้ววางไฟล์ <b>supabase/schema-v10.sql</b> กด Run หนึ่งครั้ง จากนั้นรีเฟรชหน้านี้</div>' : '') +
+    '</div>';
+}
+
+/* ---------- CSV ---------- */
+function toCsv() {
+  const lines = ['วันที่,ผู้เข้าชม (คน),เปิดหน้าเว็บ (ครั้ง)'];
+  SERIES.forEach(r => lines.push([r.day, r.visitors, r.views].join(',')));
+  lines.push('', 'หน้า,เปิดหน้าเว็บ (ครั้ง),ผู้เข้าชมที่เข้ามาหน้านี้ก่อน (คน)');
+  PAGES.forEach(p => lines.push(['"' + String(p.path).replace(/"/g, '""') + '"', p.views, p.visitors].join(',')));
+  return lines.join('\n');
+}
+
+function downloadCsv() {
+  // BOM เพื่อให้ Excel ภาษาไทยเปิดแล้วไม่เป็นตัวต่างดาว
+  const blob = new Blob(['﻿' + toCsv()], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'naraflood-stats-' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* ---------- แถบเลือกช่วง ---------- */
+function wireBar() {
+  document.querySelectorAll('#bar .chip').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('#bar .chip').forEach(x => x.classList.remove('on'));
+      c.classList.add('on');
+      DAYS = Number(c.dataset.days) || 30;
+      loadAll().catch(e => fail(e));
+    });
+  });
+  el('btnCsv').addEventListener('click', downloadCsv);
+}
+
+/* ---------- ประตูเข้า: แอดมินเท่านั้น ---------- */
+function showGate(html) {
+  el('gate').innerHTML = `<div class="gatebox">${html}</div>`;
+  el('gate').style.display = 'block';
+  el('panels').style.display = 'none';
+}
+
+watchAuthState({
+  onSignedOut: () => {
+    showGate(`<h2 style="margin-bottom:8px">หน้านี้สำหรับผู้ดูแลระบบ</h2>
+      <p style="color:var(--muted);font-size:13px">กรุณาเข้าสู่ระบบด้วยบัญชี Google ที่ได้รับสิทธิ์แอดมิน</p>
+      <button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button>`);
+  },
+  onPending: (p) => {
+    showGate('<h2>บัญชีของคุณกำลังรออนุมัติ</h2><p style="color:var(--muted);font-size:13px;margin-top:6px">หน้านี้ใช้ได้เฉพาะผู้ดูแลระบบเท่านั้น</p>');
+  },
+  onRejected: (p) => {
+    showGate('<h2>ไม่มีสิทธิ์เข้าถึง</h2>');
+  },
+  onApproved: (p) => {
+    showGate('<h2>หน้านี้สำหรับผู้ดูแลระบบเท่านั้น</h2><p style="color:var(--muted);font-size:13px;margin-top:6px">บัญชีของคุณได้รับอนุมัติแล้ว แต่ไม่มีสิทธิ์แอดมิน</p>');
+  },
+  onAdmin: (p) => {
+    el('gate').style.display = 'none';
+    el('panels').style.display = 'block';
+    if (!el('panels').dataset.wired) { el('panels').dataset.wired = '1'; wireBar(); }
+    loadAll().catch(e => fail(e));
+  }
+});
+</script>
+<script src="js/pwa.js" defer></script>
+<script src="js/tabbar.js?v=2" defer></script>
+</body>
+</html>

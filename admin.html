@@ -73,6 +73,7 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
   <h1>ผู้ดูแลระบบ<small>อนุมัติผู้ใช้งาน · One Map ชายแดนใต้</small></h1>
   <nav class="navtab" aria-label="เมนูหลัก">
     <a href="index.html">หน้าแรก</a>
+    <a href="stats.html">สถิติผู้เข้าชม</a>
     <a href="route.html">เส้นทาง</a>
     <a href="resources.html">ทรัพยากร</a>
     <a href="eoc.html">EOC</a>
@@ -116,7 +117,7 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
 
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
-<script src="js/views.js?v=2" defer></script>
+<script src="js/views.js?v=3" defer></script>
 <script>
 'use strict';
 const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -292,6 +293,6 @@ watchAuthState({
 });
 </script>
 <script src="js/pwa.js" defer></script>
-<script src="js/tabbar.js?v=1" defer></script>
+<script src="js/tabbar.js?v=2" defer></script>
 </body>
 </html>

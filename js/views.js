@@ -1,21 +1,74 @@
-/* js/views.js · ป้ายจำนวนผู้เข้าชม มุมขวาล่างของทุกหน้า
+/* js/views.js · ป้ายจำนวนผู้เข้าชม มุมขวาล่างของทุกหน้า + ตัวนับกลางของเว็บ
  * ใส่ในทุกหน้า (หลัง js/supabase-client.js):
- *   <script src="js/views.js" defer></script>
+ *   <script src="js/views.js?v=3" defer></script>
  *
- * - นับผ่าน RPC bump_page_view() ใน Supabase (supabase/schema-v9.sql)
+ * - นับผ่าน RPC track_view() ใน Supabase (supabase/schema-v10.sql)
+ *   ถ้ายังไม่ได้รัน v10 จะถอยไปใช้ bump_page_view() ของ v9 ให้อัตโนมัติ
  * - นับหน้าละ 1 ครั้งต่อ session (กด F5 ซ้ำไม่เพิ่มยอด) · ครั้งต่อไปอ่านอย่างเดียว
- * - ถ้ายังไม่ได้รัน schema-v9.sql หรือออฟไลน์ → ซ่อนป้ายไปเงียบ ๆ ไม่ขึ้น error
- * - ไม่เก็บ cookie / IP / ตัวตนผู้ใช้ ฝั่ง client เก็บแค่ flag ใน sessionStorage
+ * - "ผู้เข้าชม" นับเบราว์เซอร์ละ 1 ครั้งต่อวัน โดยเก็บแค่ "วันที่" ไว้ใน localStorage
+ *   ไม่มีรหัสประจำตัว ไม่มี cookie ไม่มี IP ทั้งบนเครื่องและบนฐานข้อมูล (PDPA)
+ * - ถ้าออฟไลน์หรือ RPC ล้มเหลว → ซ่อนป้ายไปเงียบ ๆ ไม่ขึ้น error ไม่ทำหน้าพัง
  */
 (function () {
   'use strict';
 
   if (typeof sb === 'undefined' || !sb) return;   // ไม่มี supabase-client.js บนหน้านี้
 
+  /* ---------- ตัวช่วยเวลาไทย ----------
+     เครื่องผู้ใช้ตั้งโซนเวลาอะไรก็ได้ แต่ "วันนี้" ของสถิติต้องเป็นวันไทยเสมอ
+     ไม่งั้นยอดของคนที่ตั้งเครื่องเป็นโซนอื่นจะไปตกวันผิด */
+  function bkkDate() {
+    try {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit'
+      }).format(new Date());
+    } catch (e) { return new Date().toISOString().slice(0, 10); }
+  }
+
+  function bkkHour() {
+    try {
+      var h = parseInt(new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Bangkok', hour: '2-digit', hour12: false
+      }).format(new Date()), 10);
+      return isNaN(h) ? new Date().getHours() : (h % 24);
+    } catch (e) { return new Date().getHours(); }
+  }
+
+  /* ---------- มิติที่เก็บ: หยาบพอที่จะไม่ชี้ตัวใครได้ ---------- */
+  function deviceClass() {
+    var coarse = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
+    if (!coarse) return 'desktop';
+    var w = window.innerWidth || (window.screen && window.screen.width) || 0;
+    return w >= 768 ? 'tablet' : 'mobile';
+  }
+
+  /* ที่มา: เก็บเฉพาะชื่อโฮสต์ ไม่เก็บ path และไม่เก็บ query string
+     (ลิงก์จาก Google/Facebook มีคำค้นและรหัสติดมาใน query string จึงต้องตัดทิ้ง) */
+  function refHost() {
+    try {
+      if (!document.referrer) return 'direct';
+      var h = new URL(document.referrer).hostname.toLowerCase().replace(/^www\./, '');
+      var me = location.hostname.toLowerCase().replace(/^www\./, '');
+      return h === me ? 'internal' : h;
+    } catch (e) { return 'direct'; }
+  }
+
   /* หน้าไหน: ตัด origin และ index.html ออก ให้ '/' กับ '/index.html' นับรวมกัน */
   function currentPath() {
     var p = location.pathname.replace(/\/index\.html?$/i, '/');
     return p || '/';
+  }
+
+  var VISIT_KEY = 'nf_visit_day';
+
+  /* เป็นผู้เข้าชมคนใหม่ของวันนี้หรือยัง — ยังไม่เขียน flag จนกว่าจะส่งสำเร็จ
+     ถ้าเขียนก่อนแล้วเน็ตหลุด ยอดผู้เข้าชมของวันนั้นจะหายไปทั้งคน */
+  function isFirstVisitToday() {
+    try { return localStorage.getItem(VISIT_KEY) !== bkkDate(); }
+    catch (e) { return false; }    // โหมดส่วนตัว: ไม่นับ ดีกว่านับซ้ำทุกครั้งที่เปิด
+  }
+  function markVisitedToday() {
+    try { localStorage.setItem(VISIT_KEY, bkkDate()); } catch (e) {}
   }
 
   var fmt = function (n) {
@@ -60,7 +113,7 @@
     if (document.querySelector('.leaflet-control-attribution')) el.classList.add('above-attrib');
   }
 
-  function render(total, today) {
+  function render(total, today, visitorsToday) {
     el.innerHTML = '';
     var eye = document.createElement('span'); eye.textContent = '👁';
     var b = document.createElement('b'); b.textContent = fmt(total);
@@ -71,7 +124,8 @@
       t.textContent = '· วันนี้ ' + fmt(today);
       el.append(t);
     }
-    el.title = 'ผู้เข้าชมทั้งเว็บ ' + fmt(total) + ' ครั้ง · วันนี้ ' + fmt(today) + ' ครั้ง';
+    el.title = 'เปิดหน้าเว็บทั้งหมด ' + fmt(total) + ' ครั้ง · วันนี้ ' + fmt(today) + ' ครั้ง' +
+               (visitorsToday != null ? ' จากผู้เข้าชม ' + fmt(visitorsToday) + ' คน' : '');
     el.hidden = false;
   }
 
@@ -81,19 +135,41 @@
     var counted = false;
     try { counted = sessionStorage.getItem(key) === '1'; } catch (e) { /* private mode */ }
 
-    var res = counted
-      ? await sb.rpc('get_page_views')
-      : await sb.rpc('bump_page_view', { p_path: path });
+    var isNew = !counted && isFirstVisitToday();
+    var res;
 
-    if (res.error) return;                       // ยังไม่ได้รัน schema-v9.sql / ออฟไลน์ → ไม่ต้องแสดง
+    if (counted) {
+      res = await sb.rpc('get_page_views');
+    } else {
+      res = await sb.rpc('track_view', {
+        p_path: path,
+        p_new_visitor: isNew,
+        p_device: deviceClass(),
+        p_ref: refHost(),
+        p_hour: bkkHour()
+      });
+      // ยังไม่ได้รัน schema-v10.sql → ถอยไปใช้ตัวนับเดิมของ v9 ป้ายจะได้ไม่หาย
+      if (res.error) { res = await sb.rpc('bump_page_view', { p_path: path }); isNew = false; }
+    }
+
+    if (res.error) return;                       // ออฟไลน์ / ยังไม่ได้รัน v9 → ไม่ต้องแสดง
     var row = Array.isArray(res.data) ? res.data[0] : res.data;
     if (!row) return;
 
     if (!counted) { try { sessionStorage.setItem(key, '1'); } catch (e) {} }
-    render(row.total || 0, row.today || 0);
+    if (isNew) markVisitedToday();
+
+    render(row.total || 0, row.today || 0,
+           row.visitors_today == null ? null : row.visitors_today);
   }
 
-  function init() { mount(); run().catch(function () {}); }
+  function init() {
+    mount();
+    run()
+      .catch(function () {})
+      // การ์ดสถิติหน้าแรกรอสัญญาณนี้ ตัวเลขจะได้รวมการเข้าครั้งนี้ด้วย
+      .then(function () { document.dispatchEvent(new CustomEvent('naraflood:counted')); });
+  }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
