@@ -12,6 +12,8 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌤️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{--bg:var(--paper);--ink:var(--ink);--muted:var(--ink-3);--surface:var(--card-2);--surface-soft:var(--paper-2);--elevated:#ffffff;--outline:var(--line);--outline-strong:var(--line-mid);--orange:var(--signal);--orange-d:var(--signal-hover);--orange-focus:var(--signal-hover);--orange-warm:var(--st-watch);--navy:var(--ink-2);--navy-d:var(--ink);--peach:var(--line);--shell:rgba(0,0,0,.72);--success:var(--st-normal);--warning:var(--st-watch);--danger:var(--st-danger);--info:var(--signal)}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -142,6 +144,15 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .wtaCol .sub{font-size:10.5px;color:var(--muted);line-height:1.35}
 .wtaCol .val{font-size:22px;font-weight:800;margin-top:2px;line-height:1.1}
 .wtaCol .st{display:inline-block;padding:2px 16px;border-radius:99px;color:#fff;font-weight:700;font-size:12.5px;margin-top:5px}
+
+/* ฝนคาดการณ์รายอำเภอ 7 วัน (แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุฯ) */
+#drDays{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+#drMap{height:340px;border-radius:10px;border:1px solid var(--outline);overflow:hidden;background:var(--card-2);font-family:'Noto Sans Thai',Tahoma,sans-serif}
+.drNum{display:flex;align-items:center;justify-content:center;min-width:30px;height:22px;padding:0 4px;border-radius:6px;color:#fff;font-weight:800;font-size:11.5px;border:1.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);white-space:nowrap}
+.drLegend{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;margin-top:8px}
+.drLegend .lg{display:flex;align-items:center;gap:5px}
+.drLegend .sw{width:12px;height:12px;border-radius:3px;flex:0 0 12px}
+@media(max-width:768px){#drMap{height:280px}}
 
 /* ฝนพยากรณ์ 7 วัน */
 #wrfRow{display:flex;gap:8px;overflow-x:auto;padding:4px 0;-webkit-overflow-scrolling:touch}
@@ -276,6 +287,20 @@ footer a{color:var(--orange-warm);text-decoration:none}
     <div class="note">ระดับความเสี่ยงตั้งต้นจาก <b>ฝนพยากรณ์</b> (Open-Meteo รายอำเภอ) ตามเกณฑ์กรมอุตุฯ: ฝนหนัก ≥35 มม./วัน · ฝนหนักมาก ≥90 มม./วัน · หรือฝนสะสม 3 วันติด ≥70/120/200 มม.<br>
       <b>ดินอิ่มน้ำ</b> (ฝน 3 วันที่ผ่านมา สสน.) และ <b>สถานีน้ำใกล้ตลิ่ง</b> เป็นตัวยกระดับ ใช้ได้เมื่อมีฝนหนักในพยากรณ์แล้วเท่านั้น — ฝนไม่ตกจึงไม่ขึ้นสีเตือน · สถานีที่ล้นตลิ่งอยู่จริงจะขึ้นสีส้มเสมอ<br>
       ใช้เกณฑ์ชุดเดียวกับ <a href="forecast.html">หน้าคาดการณ์</a> · คลิกชื่ออำเภอเพื่อดูพยากรณ์เฉพาะจุด</div>
+  </div>
+
+  <div class="card full">
+    <h2>คาดการณ์ปริมาณฝนรายอำเภอ (กรมอุตุนิยมวิทยา) <span class="where">13 อำเภอ จ.นราธิวาส</span></h2>
+    <div id="drDays"><span class="spin"></span></div>
+    <div id="drMap"><div style="padding:14px;font-size:12.5px;color:var(--muted)"><span class="spin"></span> กำลังโหลดฝนคาดการณ์รายอำเภอ…</div></div>
+    <div class="drLegend" id="drLegend"></div>
+    <details class="fold">
+    <summary>ดูตารางฝนคาดการณ์รายวันครบทุกวัน</summary>
+    <div class="fold-body">
+    <div id="drTable"><span class="spin"></span> กำลังโหลด…</div>
+    </div>
+    </details>
+    <div class="note">ตัวเลขบนแผนที่/ตาราง = ฝนสะสมคาดการณ์ (มม./วัน) จากแบบจำลอง NWP กรมอุตุฯ · เกณฑ์: ≥35 ปานกลาง · ≥65 เสี่ยง · ≥125 เสี่ยงสูง · &gt;250 วิกฤต · แตะพื้นที่/หมุดบนแผนที่หรือแถวในตารางเพื่อดูฝนคาดการณ์ครบทุกวันของอำเภอนั้น · ที่มา: <a href="https://hpc.tmd.go.th/riskmap-district" target="_blank" rel="noopener">แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุนิยมวิทยา ↗</a></div>
   </div>
 
   <div class="card full">
@@ -836,6 +861,158 @@ async function loadRainForecast(){
 }
 function bigWrf(src){ document.getElementById('wrfModalImg').src = src; document.getElementById('wrfModal').classList.add('show'); }
 
+/* ---------- คาดการณ์ปริมาณฝนรายอำเภอ (แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุฯ ผ่าน tmd-proxy) ----------
+   ข้อมูลจากแบบจำลอง NWP กรมอุตุฯ (hpc.tmd.go.th/riskmap-district) กรองเหลือเฉพาะอำเภอนราธิวาส
+   ไว้แล้วที่ตัว worker (ดู /riskmap ใน tmd-proxy.worker.js) — เป็นข้อมูลรายอำเภอคนละชุดกับ
+   ฝนพยากรณ์ Open-Meteo ที่ใช้ในการ์ด "อำเภอที่ต้องเฝ้าระวัง" ด้านบน
+   รหัสอำเภอจากกรมอุตุฯ กับ pcode ของ geojson (สทลากจาก OpenGISData) คนละชุดกัน จึงจับคู่
+   แต่ละอำเภอด้วยจุดศูนย์กลางที่ใกล้กันที่สุดแทน (13 อำเภอ ไม่มีจุดไหนใกล้เคียงจนสับสน) */
+let distRain, distDistrictGeo, distRainDayIdx = 0, drMap, drLayer, drLabels = [], drFitted = false;
+async function loadDistRain(){
+  try{
+    const j = await fetch(TMD_PROXY+'/riskmap').then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+    distRain = (j?.districts||[]).length ? j : null;
+  }catch(e){ distRain = null; }
+  distRainDayIdx = 0;
+  renderDistRainDays();
+  renderDistRain();
+}
+function drNearestFeature(lat, lng, features, used){
+  let best=null, bestD=Infinity;
+  features.forEach(f=>{
+    if(used.has(f)) return;
+    const p = f.properties, dx = p.center_lat-lat, dy = p.center_lon-lng, d = dx*dx+dy*dy;
+    if(d<bestD){ bestD=d; best=f; }
+  });
+  return best;
+}
+function drMatch(){
+  if(!distRain || distRain._matched) return;
+  const feats = (distDistrictGeo?.features)||[];
+  const used = new Set();
+  distRain.districts.forEach(d=>{
+    d.feature = feats.length ? drNearestFeature(d.lat, d.lng, feats, used) : null;
+    if(d.feature) used.add(d.feature);
+  });
+  distRain._matched = true;
+}
+const drLL = d => d.feature ? [d.feature.properties.center_lat, d.feature.properties.center_lon] : [d.lat, d.lng];
+const drRainAt = (d,i) => d.rain && d.rain[i]!=null ? d.rain[i] : null;
+function drDayLabel(i){
+  if(!distRain) return '';
+  return i===0 ? 'วันนี้' : i===1 ? 'พรุ่งนี้' : (distRain.days[i]||'').slice(0,6);
+}
+function renderDistRainDays(){
+  const el = document.getElementById('drDays');
+  if(!el) return;
+  if(!distRain){ el.innerHTML=''; return; }
+  el.innerHTML = distRain.days.map((_,i)=>
+    `<button type="button" class="chip ${i===distRainDayIdx?'on':''}" data-di="${i}">${esc(drDayLabel(i))}</button>`).join('');
+  el.querySelectorAll('.chip').forEach(b=>{
+    b.onclick = ()=>{ distRainDayIdx = +b.dataset.di; renderDistRainDays(); renderDistRain(); };
+  });
+}
+async function ensureDrMap(){
+  if(drMap) return drMap;
+  const el = document.getElementById('drMap');
+  if(!el || typeof L==='undefined') return null;
+  el.innerHTML = '';
+  drMap = L.map(el, {zoomControl:true, scrollWheelZoom:false}).setView([6.15, 101.8], 9.4);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:17, attribution:'&copy; OpenStreetMap contributors'}).addTo(drMap);
+  if(!distDistrictGeo){
+    try{ distDistrictGeo = await fetch('js/onwr-nara-districts.geojson').then(r=>r.json()); }catch(e){ distDistrictGeo = null; }
+  }
+  return drMap;
+}
+function drPopup(d){
+  const rows = distRain.days.map((_,i)=>{
+    const mm = drRainAt(d,i), rc = FC.tmdRainClass(mm);
+    return `<tr style="${i===distRainDayIdx?'font-weight:700':''}"><td>${esc(drDayLabel(i))}</td>
+      <td style="text-align:right;padding-left:8px">${mm==null?'…':fmt1(mm)+' มม.'}</td>
+      <td style="text-align:right;padding-left:6px"><span class="badge" style="background:${rc.color}">${rc.short}</span></td></tr>`;
+  }).join('');
+  return `<div style="font-weight:700">${esc(d.name)}</div>
+    <table style="font-size:11.5px;width:100%;margin-top:4px;border-collapse:collapse">${rows}</table>`;
+}
+function renderDistRain(){
+  const mapEl = document.getElementById('drMap'), legEl = document.getElementById('drLegend'), tEl = document.getElementById('drTable');
+  if(!mapEl) return;
+  if(distRain === undefined){
+    mapEl.innerHTML = '<div style="padding:14px;font-size:12.5px;color:var(--muted)"><span class="spin"></span> กำลังโหลดฝนคาดการณ์รายอำเภอ…</div>';
+    if(tEl) tEl.innerHTML = '<span class="spin"></span> กำลังโหลด…';
+    if(legEl) legEl.innerHTML = '';
+    return;
+  }
+  if(!distRain){
+    if(drMap){ drMap.remove(); drMap=null; drLayer=null; drLabels=[]; drFitted=false; }
+    mapEl.innerHTML = `<div style="padding:14px;font-size:12.5px;color:var(--muted)">โหลดไม่สำเร็จ · ดูที่ <a href="https://hpc.tmd.go.th/riskmap-district" target="_blank" rel="noopener">hpc.tmd.go.th</a></div>`;
+    if(tEl) tEl.innerHTML = '';
+    if(legEl) legEl.innerHTML = '';
+    return;
+  }
+  ensureDrMap().then(map=>{
+    if(!map) return;
+    drMatch();
+    if(drLayer) map.removeLayer(drLayer);
+    drLabels.forEach(m=>map.removeLayer(m)); drLabels=[];
+    const feats = distRain.districts.filter(d=>d.feature).map(d=>d.feature);
+    if(feats.length){
+      drLayer = L.geoJSON({type:'FeatureCollection', features: feats}, {
+        style: feat=>{
+          const d = distRain.districts.find(x=>x.feature===feat);
+          const rc = FC.tmdRainClass(d ? drRainAt(d, distRainDayIdx) : null);
+          return {color:'#fff', weight:1, fillColor:rc.color, fillOpacity:(d && drRainAt(d,distRainDayIdx)==null)?0.12:0.55};
+        },
+        onEachFeature:(feat,l)=>{
+          const d = distRain.districts.find(x=>x.feature===feat);
+          if(d) l.bindPopup(()=>drPopup(d), {maxWidth:260});
+        }
+      }).addTo(map);
+    }
+    distRain.districts.forEach(d=>{
+      const mm = drRainAt(d, distRainDayIdx), rc = FC.tmdRainClass(mm);
+      const mk = L.marker(drLL(d), {icon: L.divIcon({className:'', html:
+        `<div class="drNum" style="background:${rc.color}">${mm==null?'…':Math.round(mm)}</div>`,
+        iconSize:[34,24], iconAnchor:[17,12]})});
+      mk.bindPopup(()=>drPopup(d), {maxWidth:260});
+      mk.addTo(map);
+      drLabels.push(mk);
+    });
+    if(!drFitted){
+      const pts = distRain.districts.map(drLL).filter(p=>p[0]!=null && p[1]!=null);
+      if(pts.length){ map.fitBounds(pts, {padding:[18,18]}); drFitted = true; }
+    }
+  });
+  if(legEl){
+    legEl.innerHTML = FC.CRIT.TMD_RISK.slice().reverse().map(r=>
+      `<span class="lg"><span class="sw" style="background:${r.color}"></span>${esc(r.short)}</span>`).join('');
+  }
+  if(tEl){
+    const rows = distRain.districts.map(d=>({d, mx: Math.max(0, ...(d.rain||[]).map(v=>+v||0))})).sort((a,b)=>b.mx-a.mx);
+    let h = `<table style="width:100%;font-size:12px;border-collapse:collapse">
+      <tr><th style="text-align:left;color:var(--muted);font-size:10.5px;font-weight:600;padding-bottom:3px">อำเภอ</th>
+      ${distRain.days.map((_,i)=>`<th style="text-align:right;color:var(--muted);font-size:10.5px;font-weight:600">${esc(drDayLabel(i))}</th>`).join('')}
+      <th style="text-align:right;color:var(--muted);font-size:10.5px;font-weight:600">ระดับ</th></tr>`;
+    rows.forEach(({d,mx})=>{
+      const rc = FC.tmdRainClass(mx);
+      const ll = drLL(d);
+      h += `<tr style="cursor:pointer;border-top:1px solid var(--outline)" onclick="drFly(${ll[0]},${ll[1]})">
+        <td style="padding:3px 0">${esc(d.name)}</td>
+        ${distRain.days.map((_,i)=>`<td style="text-align:right;padding:3px 4px">${fmt1(drRainAt(d,i))}</td>`).join('')}
+        <td style="text-align:right"><span class="badge" style="background:${rc.color}">${rc.short}</span></td></tr>`;
+    });
+    h += `</table>`;
+    tEl.innerHTML = h;
+  }
+}
+function drFly(lat, lon){
+  if(!drMap || lat==null || lon==null) return;
+  const box = document.getElementById('drMap');
+  if(box) window.scrollTo({top: box.getBoundingClientRect().top + window.scrollY - 70, behavior:'smooth'});
+  setTimeout(()=>drMap.flyTo([lat,lon], 12, {duration:.6}), 250);
+}
+window.drFly = drFly;
+
 /* ---------- ตัวเลือกจังหวัด/อำเภอ ---------- */
 function fillAmpSel(){
   const sel = document.getElementById('ampSel');
@@ -870,10 +1047,12 @@ renderWrfLegend();
 loadRainForecast();
 loadAll();
 loadTmd();
+loadDistRain();
 setInterval(loadTmd, 60*60*1000);
 setInterval(loadAll, 30*60*1000);
 setInterval(loadRainForecast, 60*60*1000);
 setInterval(loadRadarImg, 10*60*1000);
+setInterval(loadDistRain, 60*60*1000);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
