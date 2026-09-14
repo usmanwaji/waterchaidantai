@@ -150,6 +150,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
 #drMap{height:340px;border-radius:10px;border:1px solid var(--outline);overflow:hidden;background:var(--card-2);font-family:'Noto Sans Thai',Tahoma,sans-serif}
 .drNum{display:flex;align-items:center;justify-content:center;min-width:30px;height:22px;padding:0 4px;border-radius:6px;color:#fff;font-weight:800;font-size:11.5px;border:1.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);white-space:nowrap}
 .drLegend{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;margin-top:8px}
+.drTopHead{font-size:12.5px;font-weight:700;color:var(--navy-d);margin:12px 0 4px}
 .drLegend .lg{display:flex;align-items:center;gap:5px}
 .drLegend .sw{width:12px;height:12px;border-radius:3px;flex:0 0 12px}
 @media(max-width:768px){#drMap{height:280px}}
@@ -290,17 +291,18 @@ footer a{color:var(--orange-warm);text-decoration:none}
   </div>
 
   <div class="card full">
-    <h2>คาดการณ์ปริมาณฝนรายอำเภอ (กรมอุตุนิยมวิทยา) <span class="where">13 อำเภอ จ.นราธิวาส</span></h2>
+    <h2>คาดการณ์ปริมาณฝนรายอำเภอ 5 วัน (กรมอุตุนิยมวิทยา) <span class="where">13 อำเภอ จ.นราธิวาส</span></h2>
     <div id="drDays"><span class="spin"></span></div>
     <div id="drMap"><div style="padding:14px;font-size:12.5px;color:var(--muted)"><span class="spin"></span> กำลังโหลดฝนคาดการณ์รายอำเภอ…</div></div>
     <div class="drLegend" id="drLegend"></div>
+    <div id="drTop"></div>
     <details class="fold">
-    <summary>ดูตารางฝนคาดการณ์รายวันครบทุกวัน</summary>
+    <summary>ดูตารางฝนคาดการณ์รายวันครบทั้ง 13 อำเภอ</summary>
     <div class="fold-body">
     <div id="drTable"><span class="spin"></span> กำลังโหลด…</div>
     </div>
     </details>
-    <div class="note">ตัวเลขบนแผนที่/ตาราง = ฝนสะสมคาดการณ์ (มม./วัน) จากแบบจำลอง NWP กรมอุตุฯ · เกณฑ์: ≥35 ปานกลาง · ≥65 เสี่ยง · ≥125 เสี่ยงสูง · &gt;250 วิกฤต · แตะพื้นที่/หมุดบนแผนที่หรือแถวในตารางเพื่อดูฝนคาดการณ์ครบทุกวันของอำเภอนั้น · ที่มา: <a href="https://hpc.tmd.go.th/riskmap-district" target="_blank" rel="noopener">แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุนิยมวิทยา ↗</a></div>
+    <div class="note">ตัวเลขบนแผนที่/ตาราง = ฝนสะสมคาดการณ์ (มม./วัน) จากแบบจำลอง NWP กรมอุตุฯ · เกณฑ์: ≥35 ปานกลาง · ≥65 เสี่ยง · ≥125 เสี่ยงสูง · &gt;250 วิกฤต · อันดับเรียงจากฝนรวมตลอด 5 วัน ส่วนป้ายระดับมาจากวันที่ฝนหนักที่สุด · แตะพื้นที่/หมุดบนแผนที่หรือแถวในตารางเพื่อดูฝนคาดการณ์รายวันของอำเภอนั้น · ที่มา: <a href="https://hpc.tmd.go.th/riskmap-district" target="_blank" rel="noopener">แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุนิยมวิทยา ↗</a></div>
   </div>
 
   <div class="card full">
@@ -867,7 +869,10 @@ function bigWrf(src){ document.getElementById('wrfModalImg').src = src; document
    ฝนพยากรณ์ Open-Meteo ที่ใช้ในการ์ด "อำเภอที่ต้องเฝ้าระวัง" ด้านบน
    รหัสอำเภอจากกรมอุตุฯ กับ pcode ของ geojson (สทลากจาก OpenGISData) คนละชุดกัน จึงจับคู่
    แต่ละอำเภอด้วยจุดศูนย์กลางที่ใกล้กันที่สุดแทน (13 อำเภอ ไม่มีจุดไหนใกล้เคียงจนสับสน) */
+const DR_MAX_DAYS = 5;          // แสดงแค่ 5 วันข้างหน้า ต้นทางส่งมามากกว่านั้นก็ตัดทิ้ง
 let distRain, distDistrictGeo, distRainDayIdx = 0, drMap, drLayer, drLabels = [], drFitted = false;
+/* ต้นทางอาจส่งมาน้อยกว่า 5 วัน จึงยึดตามจำนวนที่ได้จริง ไม่ให้ขึ้นช่องว่าง */
+const drDayCount = () => distRain ? Math.min(DR_MAX_DAYS, distRain.days.length) : 0;
 async function loadDistRain(){
   try{
     const j = await fetch(TMD_PROXY+'/riskmap').then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
@@ -906,7 +911,8 @@ function renderDistRainDays(){
   const el = document.getElementById('drDays');
   if(!el) return;
   if(!distRain){ el.innerHTML=''; return; }
-  el.innerHTML = distRain.days.map((_,i)=>
+  if(distRainDayIdx >= drDayCount()) distRainDayIdx = 0;
+  el.innerHTML = distRain.days.slice(0, drDayCount()).map((_,i)=>
     `<button type="button" class="chip ${i===distRainDayIdx?'on':''}" data-di="${i}">${esc(drDayLabel(i))}</button>`).join('');
   el.querySelectorAll('.chip').forEach(b=>{
     b.onclick = ()=>{ distRainDayIdx = +b.dataset.di; renderDistRainDays(); renderDistRain(); };
@@ -925,7 +931,7 @@ async function ensureDrMap(){
   return drMap;
 }
 function drPopup(d){
-  const rows = distRain.days.map((_,i)=>{
+  const rows = distRain.days.slice(0, drDayCount()).map((_,i)=>{
     const mm = drRainAt(d,i), rc = FC.tmdRainClass(mm);
     return `<tr style="${i===distRainDayIdx?'font-weight:700':''}"><td>${esc(drDayLabel(i))}</td>
       <td style="text-align:right;padding-left:8px">${mm==null?'…':fmt1(mm)+' มม.'}</td>
@@ -935,12 +941,14 @@ function drPopup(d){
     <table style="font-size:11.5px;width:100%;margin-top:4px;border-collapse:collapse">${rows}</table>`;
 }
 function renderDistRain(){
-  const mapEl = document.getElementById('drMap'), legEl = document.getElementById('drLegend'), tEl = document.getElementById('drTable');
+  const mapEl = document.getElementById('drMap'), legEl = document.getElementById('drLegend'),
+        tEl = document.getElementById('drTable'), topEl = document.getElementById('drTop');
   if(!mapEl) return;
   if(distRain === undefined){
     mapEl.innerHTML = '<div style="padding:14px;font-size:12.5px;color:var(--muted)"><span class="spin"></span> กำลังโหลดฝนคาดการณ์รายอำเภอ…</div>';
     if(tEl) tEl.innerHTML = '<span class="spin"></span> กำลังโหลด…';
     if(legEl) legEl.innerHTML = '';
+    if(topEl) topEl.innerHTML = '';
     return;
   }
   if(!distRain){
@@ -948,6 +956,7 @@ function renderDistRain(){
     mapEl.innerHTML = `<div style="padding:14px;font-size:12.5px;color:var(--muted)">โหลดไม่สำเร็จ · ดูที่ <a href="https://hpc.tmd.go.th/riskmap-district" target="_blank" rel="noopener">hpc.tmd.go.th</a></div>`;
     if(tEl) tEl.innerHTML = '';
     if(legEl) legEl.innerHTML = '';
+    if(topEl) topEl.innerHTML = '';
     return;
   }
   /* Leaflet มาจาก CDN ซึ่ง service worker ไม่ได้แคชไว้ ต่างจากตัวหน้าเว็บ
@@ -995,23 +1004,58 @@ function renderDistRain(){
     legEl.innerHTML = FC.CRIT.TMD_RISK.slice().reverse().map(r=>
       `<span class="lg"><span class="sw" style="background:${r.color}"></span>${esc(r.short)}</span>`).join('');
   }
+  if(topEl) topEl.innerHTML = drTopHtml();
   if(tEl){
-    const rows = distRain.districts.map(d=>({d, mx: Math.max(0, ...(d.rain||[]).map(v=>+v||0))})).sort((a,b)=>b.mx-a.mx);
+    const n = drDayCount();
+    const rows = drStats().sort((a,b)=>b.total-a.total);   // เรียงเหมือนอันดับ 5 อำเภอด้านบน คอลัมน์ "รวม" จึงไล่ลงตามลำดับ
     let h = `<table style="width:100%;font-size:12px;border-collapse:collapse">
       <tr><th style="text-align:left;color:var(--muted);font-size:10.5px;font-weight:600;padding-bottom:3px">อำเภอ</th>
-      ${distRain.days.map((_,i)=>`<th style="text-align:right;color:var(--muted);font-size:10.5px;font-weight:600">${esc(drDayLabel(i))}</th>`).join('')}
+      ${distRain.days.slice(0,n).map((_,i)=>`<th style="text-align:right;color:var(--muted);font-size:10.5px;font-weight:600">${esc(drDayLabel(i))}</th>`).join('')}
+      <th style="text-align:right;color:var(--muted);font-size:10.5px;font-weight:600">รวม</th>
       <th style="text-align:right;color:var(--muted);font-size:10.5px;font-weight:600">ระดับ</th></tr>`;
-    rows.forEach(({d,mx})=>{
-      const rc = FC.tmdRainClass(mx);
+    rows.forEach(({d,total,peak})=>{
+      const rc = FC.tmdRainClass(peak);
       const ll = drLL(d);
       h += `<tr style="cursor:pointer;border-top:1px solid var(--outline)" onclick="drFly(${ll[0]},${ll[1]})">
         <td style="padding:3px 0">${esc(d.name)}</td>
-        ${distRain.days.map((_,i)=>`<td style="text-align:right;padding:3px 4px">${fmt1(drRainAt(d,i))}</td>`).join('')}
+        ${distRain.days.slice(0,n).map((_,i)=>`<td style="text-align:right;padding:3px 4px">${fmt1(drRainAt(d,i))}</td>`).join('')}
+        <td style="text-align:right;padding:3px 4px;font-weight:700">${fmt1(total)}</td>
         <td style="text-align:right"><span class="badge" style="background:${rc.color}">${rc.short}</span></td></tr>`;
     });
     h += `</table>`;
     tEl.innerHTML = h;
   }
+}
+/* ฝนรวมและฝนวันที่หนักที่สุดของแต่ละอำเภอ ในกรอบ 5 วันที่แสดงอยู่ */
+function drStats(){
+  const n = drDayCount();
+  return distRain.districts.map(d=>{
+    const vals = (d.rain||[]).slice(0,n).map(v=>+v||0);
+    let peak = 0, peakI = 0;
+    vals.forEach((v,i)=>{ if(v>peak){ peak=v; peakI=i; } });
+    return {d, total: vals.reduce((a,b)=>a+b,0), peak, peakI};
+  });
+}
+/* 5 อำเภอที่ฝนรวมมากที่สุดตลอดช่วง — ไม่ผูกกับปุ่มเลือกวัน จึงบอกกรอบไว้ที่หัวข้อให้ชัด
+   ใช้โครง .amp ชุดเดียวกับการ์ด "อำเภอที่ต้องเฝ้าระวัง" ให้หน้าตาเข้ากัน */
+function drTopHtml(){
+  const n = drDayCount();
+  if(!n) return '';
+  const rows = drStats().sort((a,b)=>b.total-a.total).slice(0,5);
+  const top = rows[0]?.total || 0;
+  if(!(top > 0))
+    return `<div class="drTopHead">ฝนรวม ${n} วันข้างหน้า</div>
+      <div style="font-size:12.5px;color:var(--st-normal)">ช่วงนี้ไม่มีอำเภอใดมีฝนคาดการณ์ — ทุกอำเภอได้ 0 มม.</div>`;
+  return `<div class="drTopHead">5 อำเภอฝนรวมมากที่สุด (${n} วันข้างหน้า)</div>` +
+    rows.map(({d,total,peak,peakI},i)=>{
+      const rc = FC.tmdRainClass(peak), ll = drLL(d);
+      return `<div class="amp" onclick="drFly(${ll[0]},${ll[1]})">
+        <span class="an">${i+1}. ${esc(d.name)}</span>
+        <span class="abar"><i style="width:${Math.round(total/top*100)}%;background:${rc.color}"></i></span>
+        <span class="badge" style="background:${rc.color}">${rc.short}</span>
+        <span class="amm">รวม <b>${fmt1(total)}</b> มม.<br>สูงสุด ${fmt1(peak)} (${esc(drDayLabel(peakI))})</span>
+      </div>`;
+    }).join('');
 }
 function drFly(lat, lon){
   if(!drMap || lat==null || lon==null) return;
