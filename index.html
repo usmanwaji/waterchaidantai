@@ -950,7 +950,15 @@ function renderDistRain(){
     if(legEl) legEl.innerHTML = '';
     return;
   }
-  ensureDrMap().then(map=>{
+  /* Leaflet มาจาก CDN ซึ่ง service worker ไม่ได้แคชไว้ ต่างจากตัวหน้าเว็บ
+     เน็ตไม่ดีตอนน้ำท่วมจึงมีสิทธิ์ได้หน้าเว็บจากแคชแต่ไม่ได้ไลบรารีแผนที่
+     กรณีนั้นตัวเลขฝนยังอ่านได้จากตาราง จึงกางตารางให้เลยแทนที่จะค้างที่วงหมุน */
+  if(typeof L === 'undefined'){
+    mapEl.style.height = 'auto';
+    mapEl.innerHTML = '<div style="padding:14px;font-size:12.5px;color:var(--muted)">โหลดไลบรารีแผนที่ไม่สำเร็จ · ดูตัวเลขฝนคาดการณ์ได้จากตารางด้านล่าง</div>';
+    if(tEl) tEl.closest('details')?.setAttribute('open','');
+  }
+  else ensureDrMap().then(map=>{
     if(!map) return;
     drMatch();
     if(drLayer) map.removeLayer(drLayer);
