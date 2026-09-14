@@ -75,15 +75,21 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 .hr .tt{font-weight:700;font-size:12.5px}
 .hr .mm{color:var(--signal);font-weight:600;font-size:10.5px}
 .hr .pp{color:var(--ink-3);font-size:10px}
-/* 7 วัน */
-.dayrow{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px dashed var(--card-2);font-size:12.5px}
-.dayrow:last-child{border-bottom:none}
-.dayrow .dn{width:64px;font-weight:600}
-.dayrow .ic{width:26px;text-align:center;font-size:17px}
-.dayrow .tmp{width:86px;color:var(--ink-2)}
-.dayrow .rbar{flex:1;height:9px;background:var(--card-2);border-radius:6px;overflow:hidden}
-.dayrow .rbar i{display:block;height:100%;background:linear-gradient(90deg,var(--signal),var(--signal))}
-.dayrow .rmm{width:66px;text-align:right;font-weight:700;color:var(--signal)}
+/* 7 วัน · แถวแนวนอนแบบเดียวกับรายชั่วโมง อยู่ในการ์ดพยากรณ์ใบเดียวกัน */
+#dayRow{display:flex;gap:6px;overflow-x:auto;padding:6px 0 4px;-webkit-overflow-scrolling:touch}
+.dy{flex:0 0 78px;text-align:center;background:var(--card);border:1px solid var(--card-2);border-radius:10px;padding:7px 3px;font-size:11px}
+.dy.rain{background:var(--signal-wash);border-color:var(--signal-wash)}
+.dy .dn{font-weight:700;font-size:12px}
+.dy .dd{color:var(--ink-3);font-size:10px}
+.dy .ic{font-size:22px;line-height:1.35}
+.dy .tt{font-weight:700;font-size:13px}
+.dy .tl{color:var(--ink-3);font-size:11px}
+.dy .pp{color:var(--signal);font-weight:600;font-size:10px;margin-top:2px}
+/* หัวข้อย่อยคั่นระหว่างแถวรายชั่วโมงกับรายวันในการ์ดเดียวกัน */
+.fcLabel{font-size:11.5px;font-weight:700;color:var(--ink-3);margin-top:10px}
+/* ปุ่มเลือกอำเภอในการ์ดพยากรณ์ · 13 อำเภอ จึงเลื่อนแนวนอนเหมือนแถวอื่น */
+#ampChips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 4px;-webkit-overflow-scrolling:touch}
+#ampChips .chip{flex:0 0 auto;padding:5px 12px;font-size:12.5px}
 /* จุดเฝ้าระวัง */
 .st{border:1px solid var(--line);border-left-width:5px;border-radius:8px;padding:6px 10px;margin-bottom:6px;font-size:12.5px;display:flex;justify-content:space-between;gap:6px;align-items:center}
 .st .nm{font-weight:600}
@@ -274,26 +280,21 @@ footer a{color:var(--orange-warm);text-decoration:none}
     <div class="note">ตัวเลขบนแผนที่/ตาราง = ฝนสะสมคาดการณ์ (มม./วัน) จากแบบจำลอง NWP กรมอุตุฯ · เกณฑ์: ≥35 ปานกลาง · ≥65 เสี่ยง · ≥125 เสี่ยงสูง · &gt;250 วิกฤต · อันดับเรียงจากฝนรวมตลอด 3 วัน ส่วนป้ายระดับมาจากวันที่ฝนหนักที่สุด · แตะพื้นที่/หมุดบนแผนที่หรือแถวในตารางเพื่อดูฝนคาดการณ์รายวันของอำเภอนั้น · ที่มา: <a href="https://hpc.tmd.go.th/riskmap-district" target="_blank" rel="noopener">แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุนิยมวิทยา ↗</a></div>
   </div>
 
-  <div class="card full">
-    <h2>พยากรณ์ 24 ชั่วโมงข้างหน้า (รายชั่วโมง) <span class="where" id="whereHour"></span></h2>
+  <!-- รายชั่วโมงกับรายวันเป็นพยากรณ์ชุดเดียวกัน (Open-Meteo จุดเดียวกัน) ต่างแค่ช่วงเวลา
+       จึงอยู่การ์ดเดียวกัน เลือกอำเภอทีเดียวได้ทั้งสองแถว · ทั้งสองแถวเลื่อนแนวนอน
+       ปริมาณฝนรายวันไม่ได้อยู่ในนี้ ดูที่การ์ดฝนรายอำเภอและแถบสรุปด้านบนแทน -->
+  <div class="card full" id="fcCard">
+    <h2>พยากรณ์อากาศ 24 ชั่วโมง และ 7 วัน <span class="where" id="whereHour"></span></h2>
+    <div id="ampChips"></div>
     <div id="nowBox"><span class="spin"></span> กำลังโหลด…</div>
+    <div class="fcLabel">รายชั่วโมง · 24 ชม.ข้างหน้า</div>
     <div id="hourRow"></div>
-    <div class="note">แหล่งข้อมูล: แบบจำลอง Open-Meteo (ผสาน GFS/ECMWF) ณ จุดศูนย์กลางอำเภอ · เวลาไทย</div>
+    <div class="fcLabel">รายวัน · 7 วันข้างหน้า</div>
+    <div id="dayRow"><span class="spin"></span></div>
+    <div class="note">แหล่งข้อมูล: แบบจำลอง Open-Meteo (ผสาน GFS/ECMWF) ณ จุดศูนย์กลางอำเภอที่เลือก · เวลาไทย · แถวรายวันแสดงอุณหภูมิสูง/ต่ำ และโอกาสเกิดฝน · ปริมาณฝนคาดการณ์ (มม.) ดูที่การ์ด <b>คาดการณ์ปริมาณฝนรายอำเภอ</b> และแถบสรุปด้านบน</div>
   </div>
 
-  <div class="card">
-    <h2>พยากรณ์รายวัน 7 วัน <span class="where" id="whereDay"></span></h2>
-    <!-- ฝนรวม 7 วันสรุปอยู่บนแถบคำตอบแล้ว รายวันเป็นรายละเอียดที่ดูทีหลังได้
-         และมีฉบับเต็มอยู่ที่หน้าคาดการณ์ -->
-    <details class="fold">
-    <summary>ดูรายวันทั้ง 7 วัน</summary>
-    <div class="fold-body">
-    <div id="dayList"><span class="spin"></span></div>
-    </div>
-    </details>
-  </div>
-
-  <div class="card">
+  <div class="card full">
     <h2>มาตรวัดน้ำต้องระวังเป็นพิเศษ <span class="where" id="whereSt"></span></h2>
     <div id="stList"><span class="spin"></span></div>
     <div class="note">เกณฑ์เดียวกับ <a href="forecast.html">หน้าคาดการณ์</a>: ล้นตลิ่งจริง / ≥85% ของตลิ่ง / กำลังขึ้นเร็วเกินครึ่งตลิ่ง · คลิกเพื่อดูบนแผนที่</div>
@@ -596,11 +597,11 @@ function renderAll(){
   const idx = list.indexOf(sel);
   const met = (meteoCache[prov]||[])[idx];
   const whereTxt = `${amp?'อ.'+amp:'อ.'+sel[1]+' (ตัวแทนจังหวัด)'} จ.${prov}`;
-  ['whereHour','whereDay','whereSt','whereAmp'].forEach(id=>{
+  ['whereHour','whereSt','whereAmp'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.textContent = id==='whereSt' ? (amp?`อ.${amp} จ.${prov}`:`จ.${prov}`) : (id==='whereAmp'?`จ.${prov}`:whereTxt);
   });
-  renderHour(met); renderDay(met); renderRain7(met, sel); renderStations(); renderAmphoes(list); renderRadarBar(); renderWaterta();
+  renderAmpChips(); renderHour(met); renderDay(met); renderRain7(met, sel); renderStations(); renderAmphoes(list); renderRadarBar(); renderWaterta();
 }
 function renderHour(met){
   const now = document.getElementById('nowBox'), row = document.getElementById('hourRow');
@@ -629,24 +630,46 @@ function renderHour(met){
   }
   row.innerHTML = html;
 }
+/* รายวัน 7 วัน · การ์ดแนวนอนแบบเดียวกับรายชั่วโมง
+   ไม่มีปริมาณฝนสะสมรายวันในนี้แล้ว เหลืออุณหภูมิสูง/ต่ำ กับโอกาสเกิดฝน
+   ตัวเลขปริมาณฝนอยู่ที่การ์ดฝนรายอำเภอ (กรมอุตุฯ) และแถบสรุปด้านบน */
+const TH_DAY = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+const TH_MON = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 function renderDay(met){
-  const el = document.getElementById('dayList');
+  const el = document.getElementById('dayRow');
+  if(!el) return;
   if(!met?.daily){ el.innerHTML = '⚠️ โหลดไม่สำเร็จ'; return; }
   const D = met.daily;
-  const names = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
-  const maxR = Math.max(...D.precipitation_sum, 10);
   el.innerHTML = D.time.map((t,i)=>{
-    const d = new Date(t+'T00:00:00+07:00');
-    const dn = i===0 ? 'วันนี้' : names[d.getDay()]+' '+d.getDate();
-    const [ic] = wmo(D.weather_code[i], D.precipitation_probability_max[i]);
-    const mm = D.precipitation_sum[i];
-    return `<div class="dayrow">
-      <span class="dn">${dn}</span><span class="ic">${ic}</span>
-      <span class="tmp">${Math.round(D.temperature_2m_min[i])}°-${Math.round(D.temperature_2m_max[i])}°</span>
-      <span class="rbar"><i style="width:${Math.min(100, mm/maxR*100)}%"></i></span>
-      <span class="rmm">${mm>0?fmt1(mm)+' มม.':'…'}</span>
+    /* t เป็นวันที่ตามเวลาไทยอยู่แล้ว (ขอ timezone=Asia/Bangkok ตอนเรียก API)
+       ถ้าแปลงเป็น Date แล้วอ่าน getDate() จะได้ตามโซนเวลาของเครื่องผู้ใช้
+       เครื่องที่ตั้งโซนเวลาก่อน UTC+7 จะเลื่อนไปวันก่อนหน้า จึงอ่านจากสตริงตรง ๆ
+       แล้วใช้ UTC คำนวณเฉพาะชื่อวันในสัปดาห์ */
+    const [Y,M,Dd] = t.split('-').map(Number);
+    const dow = new Date(Date.UTC(Y, M-1, Dd)).getUTCDay();
+    const dn = i===0 ? 'วันนี้' : i===1 ? 'พรุ่งนี้' : TH_DAY[dow];
+    const pp = D.precipitation_probability_max[i] ?? 0;
+    const [ic] = wmo(D.weather_code[i], pp);
+    return `<div class="dy${pp>=60?' rain':''}">
+      <div class="dn">${dn}</div>
+      <div class="dd">${Dd} ${TH_MON[M-1]}</div>
+      <div class="ic">${ic}</div>
+      <div class="tt">${Math.round(D.temperature_2m_max[i])}°</div>
+      <div class="tl">ต่ำสุด ${Math.round(D.temperature_2m_min[i])}°</div>
+      <div class="pp">โอกาส ${pp}%</div>
     </div>`;
   }).join('');
+}
+/* ปุ่มเลือกอำเภอในการ์ดพยากรณ์ · ใช้ค่า amp ตัวเดียวกับช่องเลือกอำเภอด้านบน
+   กดที่ไหนก็ได้ อีกฝั่งจะตามมาเอง เพราะ renderAll วาดปุ่มใหม่จากค่า amp ล่าสุดเสมอ */
+function renderAmpChips(){
+  const el = document.getElementById('ampChips');
+  if(!el) return;
+  el.innerHTML = `<button type="button" class="chip${amp?'':' on'}" data-amp="">ทั้งจังหวัด</button>` +
+    ampsOf(prov).map(a=>`<button type="button" class="chip${a[1]===amp?' on':''}" data-amp="${esc(a[1])}">${esc(a[1])}</button>`).join('');
+  el.querySelectorAll('.chip').forEach(b=>{
+    b.onclick = ()=>{ amp = b.dataset.amp; fillAmpSel(); renderAll(); };
+  });
 }
 /* ตัวเลขฝนรวม ดินอิ่มน้ำ และระดับสถานการณ์ อยู่ที่แถบคำตอบด้านบนที่เดียว
    เดิมการ์ดกรมอุตุฯ แสดงค่าชุดเดียวกันนี้ซ้ำอีกรอบในหน้าเดียวกัน
