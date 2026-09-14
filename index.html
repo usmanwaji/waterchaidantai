@@ -291,7 +291,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
   </div>
 
   <div class="card full">
-    <h2>คาดการณ์ปริมาณฝนรายอำเภอ 5 วัน (กรมอุตุนิยมวิทยา) <span class="where">13 อำเภอ จ.นราธิวาส</span></h2>
+    <h2>คาดการณ์ปริมาณฝนรายอำเภอ 3 วัน (กรมอุตุนิยมวิทยา) <span class="where">13 อำเภอ จ.นราธิวาส</span></h2>
     <div id="drDays"><span class="spin"></span></div>
     <div id="drMap"><div style="padding:14px;font-size:12.5px;color:var(--muted)"><span class="spin"></span> กำลังโหลดฝนคาดการณ์รายอำเภอ…</div></div>
     <div class="drLegend" id="drLegend"></div>
@@ -302,7 +302,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
     <div id="drTable"><span class="spin"></span> กำลังโหลด…</div>
     </div>
     </details>
-    <div class="note">ตัวเลขบนแผนที่/ตาราง = ฝนสะสมคาดการณ์ (มม./วัน) จากแบบจำลอง NWP กรมอุตุฯ · เกณฑ์: ≥35 ปานกลาง · ≥65 เสี่ยง · ≥125 เสี่ยงสูง · &gt;250 วิกฤต · อันดับเรียงจากฝนรวมตลอด 5 วัน ส่วนป้ายระดับมาจากวันที่ฝนหนักที่สุด · แตะพื้นที่/หมุดบนแผนที่หรือแถวในตารางเพื่อดูฝนคาดการณ์รายวันของอำเภอนั้น · ที่มา: <a href="https://hpc.tmd.go.th/riskmap-district" target="_blank" rel="noopener">แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุนิยมวิทยา ↗</a></div>
+    <div class="note">ตัวเลขบนแผนที่/ตาราง = ฝนสะสมคาดการณ์ (มม./วัน) จากแบบจำลอง NWP กรมอุตุฯ · เกณฑ์: ≥35 ปานกลาง · ≥65 เสี่ยง · ≥125 เสี่ยงสูง · &gt;250 วิกฤต · อันดับเรียงจากฝนรวมตลอด 3 วัน ส่วนป้ายระดับมาจากวันที่ฝนหนักที่สุด · แตะพื้นที่/หมุดบนแผนที่หรือแถวในตารางเพื่อดูฝนคาดการณ์รายวันของอำเภอนั้น · ที่มา: <a href="https://hpc.tmd.go.th/riskmap-district" target="_blank" rel="noopener">แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุนิยมวิทยา ↗</a></div>
   </div>
 
   <div class="card full">
@@ -869,7 +869,8 @@ function bigWrf(src){ document.getElementById('wrfModalImg').src = src; document
    ฝนพยากรณ์ Open-Meteo ที่ใช้ในการ์ด "อำเภอที่ต้องเฝ้าระวัง" ด้านบน
    รหัสอำเภอจากกรมอุตุฯ กับ pcode ของ geojson (สทลากจาก OpenGISData) คนละชุดกัน จึงจับคู่
    แต่ละอำเภอด้วยจุดศูนย์กลางที่ใกล้กันที่สุดแทน (13 อำเภอ ไม่มีจุดไหนใกล้เคียงจนสับสน) */
-const DR_MAX_DAYS = 5;          // แสดงแค่ 5 วันข้างหน้า ต้นทางส่งมามากกว่านั้นก็ตัดทิ้ง
+const DR_MAX_DAYS = 3;          // แสดงแค่ 3 วันข้างหน้า ต้นทางส่งมามากกว่านั้นก็ตัดทิ้ง
+const DR_TOP_N = 3;             // จำนวนอำเภอในอันดับฝนรวมมากที่สุด
 let distRain, distDistrictGeo, distRainDayIdx = 0, drMap, drLayer, drLabels = [], drFitted = false;
 /* ต้นทางอาจส่งมาน้อยกว่า 5 วัน จึงยึดตามจำนวนที่ได้จริง ไม่ให้ขึ้นช่องว่าง */
 const drDayCount = () => distRain ? Math.min(DR_MAX_DAYS, distRain.days.length) : 0;
@@ -1041,12 +1042,12 @@ function drStats(){
 function drTopHtml(){
   const n = drDayCount();
   if(!n) return '';
-  const rows = drStats().sort((a,b)=>b.total-a.total).slice(0,5);
+  const rows = drStats().sort((a,b)=>b.total-a.total).slice(0, DR_TOP_N);
   const top = rows[0]?.total || 0;
   if(!(top > 0))
     return `<div class="drTopHead">ฝนรวม ${n} วันข้างหน้า</div>
       <div style="font-size:12.5px;color:var(--st-normal)">ช่วงนี้ไม่มีอำเภอใดมีฝนคาดการณ์ — ทุกอำเภอได้ 0 มม.</div>`;
-  return `<div class="drTopHead">5 อำเภอฝนรวมมากที่สุด (${n} วันข้างหน้า)</div>` +
+  return `<div class="drTopHead">${DR_TOP_N} อำเภอฝนรวมมากที่สุด (${n} วันข้างหน้า)</div>` +
     rows.map(({d,total,peak,peakI},i)=>{
       const rc = FC.tmdRainClass(peak), ll = drLL(d);
       return `<div class="amp" onclick="drFly(${ll[0]},${ll[1]})">
