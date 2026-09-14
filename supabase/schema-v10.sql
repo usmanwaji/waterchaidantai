@@ -1,6 +1,10 @@
 -- ============================================================================
 -- schema-v10.sql — สถิติผู้เข้าชม (รายวัน / 7 วัน / 30 วัน) + กระดานเชิงลึกของแอดมิน
--- รันใน Supabase: SQL Editor → New query → paste → Run  (ต้องรัน schema-v9.sql มาก่อน)
+-- รันใน Supabase: SQL Editor → New query → paste → Run
+--
+-- ไฟล์นี้รันได้เลยโดยไม่ต้องรัน schema-v9.sql ก่อน ถ้ายังไม่เคยรัน v9 ไฟล์นี้จะ
+-- สร้างตาราง page_views กับฟังก์ชันของ v9 ให้ด้วย ถ้ารัน v9 ไปแล้วก็ไม่กระทบอะไร
+-- (ทุกคำสั่งเป็นแบบ if not exists / create or replace รันซ้ำกี่รอบก็ปลอดภัย)
 --
 -- หลักการเดียวกับ v9 คือเก็บเป็น "ยอดรวม" เท่านั้น
 --   ไม่เก็บ IP · ไม่เก็บ user-agent เต็ม · ไม่เก็บ cookie · ไม่ผูกกับตัวบุคคล
@@ -15,8 +19,20 @@
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
--- 1. ขยายตารางเดิมให้เก็บจำนวนผู้เข้าชม (ของเดิมเก็บแต่จำนวนครั้ง)
+-- 1. ตารางตัวนับ — ถ้ายังไม่เคยรัน schema-v9.sql ตารางนี้ยังไม่มี จึงสร้างให้ก่อน
+--    แล้วค่อยเพิ่มคอลัมน์ visitors (ของ v9 เก็บแต่จำนวนครั้ง ไม่ได้เก็บจำนวนคน)
 -- ---------------------------------------------------------------------------
+create table if not exists public.page_views (
+  path  text   not null,          -- '/', '/map.html', ... (normalize มาจากฝั่ง client)
+  day   date   not null,          -- วันที่ตามเวลาไทย
+  views bigint not null default 0,
+  primary key (path, day)
+);
+comment on table public.page_views is 'ตัวนับผู้เข้าชมรายหน้า/รายวัน — ข้อมูลรวม ไม่ระบุตัวบุคคล';
+
+alter table public.page_views enable row level security;
+-- ไม่สร้าง policy โดยตั้งใจ → anon/authenticated แตะตารางตรง ๆ ไม่ได้
+
 alter table public.page_views
   add column if not exists visitors bigint not null default 0;
 
@@ -52,17 +68,28 @@ stable
 as $fn$ select (now() at time zone 'Asia/Bangkok')::date $fn$;
 
 -- แอดมินของระบบ — ใช้กั้นสถิติเชิงลึก
+-- อ้าง profiles ผ่าน execute เพื่อให้ไฟล์นี้รันผ่านแม้โปรเจกต์ยังไม่มีตาราง profiles
+-- (ถ้าไม่มีตาราง = ยังไม่มีระบบสมาชิก จึงยังไม่มีใครเป็นแอดมิน ตอบ false ถูกแล้ว)
 create or replace function public.is_site_admin()
 returns boolean
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public
 as $fn$
-  select exists (
-    select 1 from public.profiles
-    where id = auth.uid() and role = 'admin' and status = 'approved'
-  );
+declare v_ok boolean;
+begin
+  if to_regclass('public.profiles') is null then
+    return false;
+  end if;
+  execute $q$
+    select exists (
+      select 1 from public.profiles
+      where id = auth.uid() and role = 'admin' and status = 'approved'
+    )
+  $q$ into v_ok;
+  return coalesce(v_ok, false);
+end;
 $fn$;
 
 -- ---------------------------------------------------------------------------
@@ -123,6 +150,47 @@ begin
            coalesce(sum(v.visitors) filter (where v.day = v_today), 0)::bigint
     from public.page_views v;
 end;
+$fn$;
+
+-- ---------------------------------------------------------------------------
+-- 4ก. ตัวนับของ v9 — เบราว์เซอร์ที่ยังแคช views.js ตัวเก่าเรียกสองตัวนี้อยู่
+--     และ views.js ตัวใหม่ก็ถอยมาใช้ตัวนี้ถ้า track_view เรียกไม่ได้
+--     สร้างไว้ด้วยเผื่อโปรเจกต์ที่ไม่เคยรัน schema-v9.sql
+-- ---------------------------------------------------------------------------
+create or replace function public.bump_page_view(p_path text)
+returns table (total bigint, today bigint)
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_path  text;
+  v_today date := public.bkk_today();
+begin
+  v_path := left(coalesce(nullif(btrim(p_path), ''), '/'), 120);
+
+  insert into public.page_views (path, day, views)
+  values (v_path, v_today, 1)
+  on conflict (path, day) do update
+    set views = page_views.views + 1;
+
+  return query
+    select coalesce(sum(v.views), 0)::bigint,
+           coalesce(sum(v.views) filter (where v.day = v_today), 0)::bigint
+    from public.page_views v;
+end;
+$fn$;
+
+create or replace function public.get_page_views()
+returns table (total bigint, today bigint)
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  select coalesce(sum(v.views), 0)::bigint,
+         coalesce(sum(v.views) filter (where v.day = public.bkk_today()), 0)::bigint
+  from public.page_views v;
 $fn$;
 
 -- ---------------------------------------------------------------------------
@@ -247,6 +315,8 @@ $fn$;
 -- 8. สิทธิ์การเรียก
 -- ---------------------------------------------------------------------------
 revoke all on function public.track_view(text, boolean, text, text, int) from public;
+revoke all on function public.bump_page_view(text)      from public;
+revoke all on function public.get_page_views()          from public;
 revoke all on function public.get_visit_summary()       from public;
 revoke all on function public.get_visit_daily(int)      from public;
 revoke all on function public.admin_visit_pages(int)    from public;
@@ -255,6 +325,8 @@ revoke all on function public.is_site_admin()           from public;
 revoke all on function public.bkk_today()               from public;
 
 grant execute on function public.track_view(text, boolean, text, text, int) to anon, authenticated;
+grant execute on function public.bump_page_view(text)      to anon, authenticated;
+grant execute on function public.get_page_views()          to anon, authenticated;
 grant execute on function public.get_visit_summary()       to anon, authenticated;
 grant execute on function public.get_visit_daily(int)      to anon, authenticated;
 grant execute on function public.bkk_today()               to anon, authenticated;
