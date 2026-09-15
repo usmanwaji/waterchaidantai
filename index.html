@@ -219,7 +219,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
 
 <div id="selbar">
   <span class="provlbl">จังหวัดนราธิวาส</span>
-  <select id="ampSel"><option value="">ทั้งจังหวัด</option></select>
+  <select id="ampSel"><option value="เมืองนราธิวาส">อ.เมืองนราธิวาส</option></select>
 </div>
 
 <div id="content">
@@ -1106,10 +1106,18 @@ function drFly(lat, lon){
 window.drFly = drFly;
 
 /* ---------- ตัวเลือกจังหวัด/อำเภอ ---------- */
+/* ไม่มีตัวเลือก "ทั้งจังหวัด" แยกต่างหาก เหมือนปุ่มเลือกอำเภอในการ์ดพยากรณ์
+   (amp='' ใช้จุดอำเภอเมืองอยู่แล้ว) จึงเอาอำเภอเมืองขึ้นก่อน และเลือกตัวนั้นไว้
+   ให้ตรงกับ amp='' ด้วย */
 function fillAmpSel(){
   const sel = document.getElementById('ampSel');
-  sel.innerHTML = '<option value="">ทั้งจังหวัด</option>' +
-    ampsOf(prov).map(a=>`<option value="${esc(a[1])}" ${a[1]===amp?'selected':''}>อ.${esc(a[1])}</option>`).join('');
+  const list = ampsOf(prov);
+  const main = list.find(a=>a[1].startsWith('เมือง'));
+  const ordered = main ? [main, ...list.filter(a=>a!==main)] : list;
+  sel.innerHTML = ordered.map(a=>{
+    const selected = a[1]===amp || (!amp && a===main);
+    return `<option value="${esc(a[1])}" ${selected?'selected':''}>อ.${esc(a[1])}</option>`;
+  }).join('');
 }
 function pickAmp(name){
   amp = name;
