@@ -661,12 +661,19 @@ function renderDay(met){
   }).join('');
 }
 /* ปุ่มเลือกอำเภอในการ์ดพยากรณ์ · ใช้ค่า amp ตัวเดียวกับช่องเลือกอำเภอด้านบน
-   กดที่ไหนก็ได้ อีกฝั่งจะตามมาเอง เพราะ renderAll วาดปุ่มใหม่จากค่า amp ล่าสุดเสมอ */
+   กดที่ไหนก็ได้ อีกฝั่งจะตามมาเอง เพราะ renderAll วาดปุ่มใหม่จากค่า amp ล่าสุดเสมอ
+   ไม่มีปุ่ม "ทั้งจังหวัด" แยกต่างหาก เพราะค่า amp='' ก็ใช้จุดอำเภอเมืองอยู่แล้ว
+   จึงเอาอำเภอเมืองขึ้นก่อน แล้วให้ปุ่มนั้นติด "on" แทนทั้งตอน amp='' และ amp='เมืองนราธิวาส' */
 function renderAmpChips(){
   const el = document.getElementById('ampChips');
   if(!el) return;
-  el.innerHTML = `<button type="button" class="chip${amp?'':' on'}" data-amp="">ทั้งจังหวัด</button>` +
-    ampsOf(prov).map(a=>`<button type="button" class="chip${a[1]===amp?' on':''}" data-amp="${esc(a[1])}">${esc(a[1])}</button>`).join('');
+  const list = ampsOf(prov);
+  const main = list.find(a=>a[1].startsWith('เมือง'));
+  const ordered = main ? [main, ...list.filter(a=>a!==main)] : list;
+  el.innerHTML = ordered.map(a=>{
+    const on = a[1]===amp || (!amp && a===main);
+    return `<button type="button" class="chip${on?' on':''}" data-amp="${esc(a[1])}">${esc(a[1])}</button>`;
+  }).join('');
   el.querySelectorAll('.chip').forEach(b=>{
     b.onclick = ()=>{ amp = b.dataset.amp; fillAmpSel(); renderAll(); };
   });
