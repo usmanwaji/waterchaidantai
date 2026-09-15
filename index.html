@@ -236,12 +236,8 @@ footer a{color:var(--orange-warm);text-decoration:none}
        จอแคบกว่า 768px #content เหลือคอลัมน์เดียวอยู่แล้ว จึงวางซ้อนกันเองอัตโนมัติ -->
   <div class="card" id="tmdCard">
     <h2>ข้อมูลทางการ กรมอุตุนิยมวิทยา <span class="where" id="tmdUpdated"></span></h2>
-    <!-- คำเตือนทางการอยู่นอกส่วนพับเสมอ ของที่ต้องเห็นห้ามซ่อน
-         พยากรณ์รายภาคกับแผนที่ฝนรายอำเภอกางไว้ตั้งแต่แรก (open) เป็นข้อมูลทางการ
-         ที่ต้องได้อ่านโดยไม่ต้องกด · ยังพับเก็บเองได้ถ้าอยากย่อการ์ด -->
+    <!-- ข้อมูลทางการทั้งการ์ดแสดงเสมอ ไม่มีปุ่มพับซ่อน -->
     <div id="tmdWarn"></div>
-    <details class="fold" open>
-    <summary>พยากรณ์รายภาคฉบับเต็ม และแผนที่ฝนรายอำเภอ</summary>
     <div class="fold-body">
     <div id="tmdGrid">
       <div>
@@ -254,7 +250,6 @@ footer a{color:var(--orange-warm);text-decoration:none}
       </div>
     </div>
     </div>
-    </details>
     <div class="note">ที่มา: กรมอุตุนิยมวิทยา (TMDAPI ทางการ) · พยากรณ์รายภาคออกใหม่ทุกวัน ~11:00 น. · ค่าตรวจวัด ณ 07:00 น. ฝนคือปริมาณสะสม 24 ชม.ที่ผ่านมา · การ์ดอื่นในหน้านี้เป็นแบบจำลอง Open-Meteo รายอำเภอ ใช้คู่กัน: ตัวเลขละเอียดจากแบบจำลอง + ภาพรวม/คำเตือนทางการจากกรมอุตุฯ · <a href="https://www.tmd.go.th" target="_blank" rel="noopener">เปิดเว็บกรมอุตุฯ ↗</a></div>
   </div>
 
@@ -299,8 +294,6 @@ footer a{color:var(--orange-warm);text-decoration:none}
 
   <div class="card" id="radarCard">
     <h2>เรดาร์ฝนนราธิวาส (กรมอุตุฯ) <span class="where" id="radarUpdated"></span></h2>
-    <details class="fold">
-    <summary>ดูภาพเรดาร์ย้อนหลัง 1 ชั่วโมง พร้อมแถบเทียบความแรงฝน</summary>
     <div class="fold-body">
     <div class="radarWrap">
       <div class="radarImgBox" id="radarImgBox">
@@ -326,7 +319,6 @@ footer a{color:var(--orange-warm);text-decoration:none}
       </div>
     </div>
     </div>
-    </details>
   </div>
 
   <div class="card full">
