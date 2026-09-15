@@ -99,39 +99,33 @@ footer{background:var(--navy-d);color:var(--ink-3);font-size:10.5px;padding:6px 
 footer a{color:var(--orange-warm);text-decoration:none}
 
 /* เรดาร์ตำบล */
+/* การ์ดเรดาร์อยู่ครึ่งขวาคู่กับการ์ดอำเภอเฝ้าระวังซึ่งสูงกว่ามาก
+   ปล่อยให้ยืดเท่ากันจะเหลือพื้นที่ว่างเปล่าใต้ส่วนที่พับอยู่ทั้งแถบ จึงให้สูงเท่าเนื้อหาจริง */
+#radarCard{align-self:start}
 #radarBar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
 .rchip{padding:6px 13px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-family:inherit;font-size:12.5px;font-weight:600;border-radius:9px;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-block}
 .rchip.on{background:var(--navy);border-color:var(--navy);color:#fff}
 #radarOpen{display:inline-flex;align-items:center;gap:6px;background:var(--orange);color:#fff;border:none;border-radius:9px;padding:8px 16px;font-family:inherit;font-size:13px;font-weight:700;text-decoration:none;margin-top:4px}
 #radarOpen:hover{background:var(--orange-d)}
 
-/* แถบวัดความแรงฝน (rain-intensity scale) ข้างภาพเรดาร์ */
-.radarWrap{display:flex;gap:12px;align-items:stretch;justify-content:center;flex-wrap:wrap}
-.radarImgBox{position:relative;display:inline-block;max-width:100%;line-height:0}
+/* แถบวัดความแรงฝน (rain-intensity scale) ใต้ภาพเรดาร์
+   การ์ดเรดาร์กว้างครึ่งจอแล้ว วางแถบเป็นแท่งตั้งไว้ข้างภาพจะเบียดจนภาพเล็กและแถบไปตกบรรทัดใหม่
+   จึงวางภาพเต็มความกว้างการ์ด แล้ววางแถบแนวนอนไว้ใต้ภาพเหมือนกันทุกขนาดจอ */
+.radarWrap{display:flex;flex-direction:column;gap:10px}
+.radarImgBox{position:relative;max-width:100%;line-height:0}
 #radarFreeze{position:absolute;inset:0;width:100%;height:100%;display:none;border-radius:8px;border:1px solid var(--line);cursor:pointer}
-.rainScale{display:flex;flex-direction:column;flex:0 0 auto;align-self:stretch;min-height:300px;font-size:11px}
+.rainScale{display:flex;flex-direction:column;width:100%;font-size:11px}
 .rainScale .rsTitle{text-align:center;font-weight:800;color:var(--navy);font-size:11.5px;line-height:1.15;margin-bottom:4px}
 .rainScale .rsTitle small{font-weight:600;color:var(--ink-3);font-size:9.5px}
-.rainScale .rsBody{display:flex;flex:1 1 auto;gap:0}
-.rainScale .rsBar{display:flex;flex-direction:column;width:26px;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px var(--line-mid)}
+.rainScale .rsBody{display:flex;flex-direction:column;flex:1 1 auto;gap:0}
+.rainScale .rsBar{display:flex;width:100%;height:20px;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px var(--line-mid)}
 .rainScale .rsBar span{display:block}
-.rainScale .rsLabels{display:flex;flex-direction:column;margin-left:6px}
-.rainScale .rsGrp{display:flex;align-items:center;border-left:2px solid var(--line-mid);padding-left:6px}
-.rainScale .rsGrp b{font-weight:800;color:var(--ink-2);font-size:11px;line-height:1.1}
+.rainScale .rsLabels{display:flex;margin-top:6px}
+.rainScale .rsGrp{display:flex;align-items:center;justify-content:center;text-align:center;
+  border-top:2px solid var(--line-mid);padding-top:4px;margin-right:2px}
+.rainScale .rsGrp b{font-weight:800;color:var(--ink-2);font-size:10.5px;line-height:1.1}
 .rainScale .rsGrp small{display:block;font-weight:600;color:var(--ink-3);font-size:9px}
-/* บนมือถือ: วางภาพเรดาร์เต็มความกว้าง แล้วพลิกแถบวัดความแรงฝนเป็นแนวนอนไว้ใต้ภาพ
-   (แบบเดิมเป็นแท่งตั้งสูง 300px ต่อท้ายภาพ ทำให้การ์ดยาวและอ่านยากบนจอแคบ) */
-@media(max-width:768px){
-  .radarWrap{flex-direction:column;gap:10px}
-  .rainScale{min-height:0;width:100%}
-  .rainScale .rsBody{flex-direction:column}
-  .rainScale .rsBar{flex-direction:row;width:100%;height:20px}
-  .rainScale .rsLabels{flex-direction:row;margin-left:0;margin-top:6px}
-  .rainScale .rsGrp{border-left:none;border-top:2px solid var(--line-mid);padding-left:0;padding-top:4px;
-    justify-content:center;text-align:center;margin-right:2px}
-  .rainScale .rsGrp b{font-size:10.5px}
-  #radarImg{max-height:none!important}
-}
+#radarImg{max-height:none!important}
 
 /* สถานการณ์น้ำท่า (telemeter gauges) */
 .wtaRow{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-around;align-items:flex-start}
@@ -292,7 +286,10 @@ footer a{color:var(--orange-warm);text-decoration:none}
     <div class="note">ระดับน้ำจริง เทียบเส้นเฝ้าระวัง (เหลือง) และตลิ่ง (แดง) · X.73, X.119A (ม.รทก.) อัปเดตสดจาก thaiwater.net (สสน.) · NWT02 สะพานข้ามคลองบากง (อ.รือเสาะ) อัปเดตสดจากระบบ ปภ. (<a href="https://cctv.disaster.go.th/stations/NWT02" target="_blank" rel="noopener">cctv.disaster.go.th</a>) ใช้แทน X.199 ที่ไม่มีในข้อมูลเปิด</div>
   </div>
 
-  <div class="card full">
+  <!-- แถวนี้จับคู่ "อำเภอที่ต้องเฝ้าระวัง" กับ "เรดาร์ฝน" ไว้ข้างกันครึ่งหน้าจอละใบ
+       อันซ้ายคืออำเภอที่ต้องจับตาในสัปดาห์นี้ อันขวาคือฝนที่กำลังตกอยู่จริงตอนนี้
+       จอแคบกว่า 768px #content เหลือคอลัมน์เดียวอยู่แล้ว จึงวางซ้อนกันเองอัตโนมัติ -->
+  <div class="card">
     <h2>อำเภอที่ต้องเฝ้าระวังเป็นพิเศษ (7 วันนี้) <span class="where" id="whereAmp"></span></h2>
     <div id="ampList"><span class="spin"></span> กำลังประเมิน…</div>
     <div class="note">ระดับความเสี่ยงตั้งต้นจาก <b>ฝนพยากรณ์</b> (Open-Meteo รายอำเภอ) ตามเกณฑ์กรมอุตุฯ: ฝนหนัก ≥35 มม./วัน · ฝนหนักมาก ≥90 มม./วัน · หรือฝนสะสม 3 วันติด ≥70/120/200 มม.<br>
@@ -300,7 +297,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
       ใช้เกณฑ์ชุดเดียวกับ <a href="forecast.html">หน้าคาดการณ์</a> · คลิกชื่ออำเภอเพื่อดูพยากรณ์เฉพาะจุด</div>
   </div>
 
-  <div class="card full">
+  <div class="card" id="radarCard">
     <h2>เรดาร์ฝนนราธิวาส (กรมอุตุฯ) <span class="where" id="radarUpdated"></span></h2>
     <details class="fold">
     <summary>ดูภาพเรดาร์ย้อนหลัง 1 ชั่วโมง พร้อมแถบเทียบความแรงฝน</summary>
