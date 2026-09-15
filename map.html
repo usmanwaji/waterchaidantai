@@ -221,8 +221,13 @@ footer a:hover{text-decoration:underline}
   #sidebar.open{transform:translateX(0)}
   /* การ์ดสรุป 5 ช่องในแผงกว้าง 330px เหลือช่องละ ~60px · ให้ไหลลงแถวใหม่เองแทน */
   #summary{grid-template-columns:repeat(auto-fit,minmax(92px,1fr));padding:10px 8px 6px}
-  /* คำอธิบายสัญลักษณ์เดิมสูงได้ถึง 46vh บังแผนที่เกือบครึ่งจอ */
-  .legend{max-height:30vh;font-size:11.5px;line-height:1.6}
+  /* คำอธิบายสัญลักษณ์ (ระดับน้ำ/ฝน/เรดาร์) บังแผนที่บนจอเล็ก
+     ย่อให้เล็กลงอีกและโปร่งแสงขึ้น (จาก 95% เหลือ 65% ความทึบ) ให้เห็นแผนที่ข้างใต้ได้
+     ใช้ #map .legend (ไม่ใช่ .legend เฉย ๆ) เพราะ shared.css โหลดทีหลังและมีกฎ .legend
+     ในเบรกพอยท์เดียวกัน (font-size:12.5px) ความจำเพาะเท่ากันจึงชนะเพราะมาทีหลัง ต้องเพิ่ม #map นำหน้า */
+  #map .legend{max-height:22vh;font-size:10.5px;line-height:1.45;padding:6px 9px;background:rgba(255,255,255,.65)}
+  #map .legend h4{font-size:10.5px;margin:2px 0 1px}
+  #map .legend .sw{width:10px;height:10px;flex:0 0 10px}
   /* กฎ #search ด้านบนแรงกว่า element selector ใน shared.css จึงต้องระบุซ้ำ
      ต่ำกว่า 16px iOS จะซูมหน้าจอทุกครั้งที่แตะช่องค้นหา */
   #search{font-size:16px}
