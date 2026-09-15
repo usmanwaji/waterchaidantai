@@ -33,12 +33,9 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 #btnRefresh{background:var(--orange);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;transition:background .15s}
 #btnRefresh:hover{background:var(--orange-d)}
 
-#selbar{background:var(--elevated);border-bottom:1px solid var(--outline);padding:8px 14px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:90}
 .chip{padding:6px 14px;border:1px solid var(--outline-strong);background:#fff;color:var(--ink);font-family:inherit;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
 .chip:hover{border-color:var(--orange);color:var(--orange)}
 .chip.on{background:var(--orange);border-color:var(--orange);color:#fff}
-.provlbl{padding:6px 14px;background:var(--orange);color:#fff;font-size:13px;font-weight:700;border-radius:8px;white-space:nowrap}
-#ampSel{padding:7px 10px;border:1px solid var(--outline-strong);border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;color:var(--ink);background:#fff;max-width:220px}
 
 #content{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:12px 14px 30px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
 /* กล่องในกริดต้องยอมหดได้ ไม่งั้นเนื้อหากว้าง ๆ (แถวเลื่อนแนวนอน/ภาพ) จะดันคอลัมน์
@@ -52,14 +49,7 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
   #content{grid-template-columns:1fr;padding:10px 8px 24px}
   header h1 small{display:none}
   #updated{display:none}
-  /* header และ #selbar เดิม sticky ที่ top:0 ทั้งคู่ แถบเลือกอำเภอจึงมุดหายใต้ header
-     บนมือถือให้ header เลื่อนขึ้นไปตามปกติ แล้วปักหมุดเฉพาะแถบเลือกอำเภอที่ผู้ใช้ต้องใช้จริง */
-  header{position:static}
-  #selbar{top:0;padding:8px}
   .card{padding:13px}
-  /* กฎ #ampSel ด้านบนแรงกว่า element selector ใน shared.css จึงต้องระบุซ้ำ
-     ต่ำกว่า 16px iOS จะซูมหน้าจอทุกครั้งที่แตะ */
-  #ampSel{font-size:16px;max-width:none;flex:1}
 }
 
 /* ตอนนี้ */
@@ -216,11 +206,6 @@ footer a{color:var(--orange-warm);text-decoration:none}
   <div id="updated">…</div>
   <button id="btnRefresh" onclick="loadAll()">รีเฟรช</button>
 </header>
-
-<div id="selbar">
-  <span class="provlbl">จังหวัดนราธิวาส</span>
-  <select id="ampSel"><option value="เมืองนราธิวาส">อ.เมืองนราธิวาส</option></select>
-</div>
 
 <div id="content">
   <!-- แถบคำตอบ: อยู่บนสุดเพราะเป็นสิ่งเดียวที่คนส่วนใหญ่เปิดเว็บนี้มาดู
@@ -675,7 +660,7 @@ function renderAmpChips(){
     return `<button type="button" class="chip${on?' on':''}" data-amp="${esc(a[1])}">${esc(a[1])}</button>`;
   }).join('');
   el.querySelectorAll('.chip').forEach(b=>{
-    b.onclick = ()=>{ amp = b.dataset.amp; fillAmpSel(); renderAll(); };
+    b.onclick = ()=>{ amp = b.dataset.amp; renderAll(); };
   });
 }
 /* ตัวเลขฝนรวม ดินอิ่มน้ำ และระดับสถานการณ์ อยู่ที่แถบคำตอบด้านบนที่เดียว
@@ -1106,21 +1091,10 @@ function drFly(lat, lon){
 window.drFly = drFly;
 
 /* ---------- ตัวเลือกจังหวัด/อำเภอ ---------- */
-/* ไม่มีตัวเลือก "ทั้งจังหวัด" แยกต่างหาก เหมือนปุ่มเลือกอำเภอในการ์ดพยากรณ์
-   (amp='' ใช้จุดอำเภอเมืองอยู่แล้ว) ลำดับอำเภอเรียงตาม AMPHOES (เมืองนราธิวาสอยู่แรกอยู่แล้ว)
-   ตัวนั้นถูกเลือกไว้แทนทั้งตอน amp='' และ amp='เมืองนราธิวาส' */
-function fillAmpSel(){
-  const sel = document.getElementById('ampSel');
-  const list = ampsOf(prov);
-  const main = mainAmp(prov);
-  sel.innerHTML = list.map(a=>{
-    const selected = a[1]===amp || (!amp && a===main);
-    return `<option value="${esc(a[1])}" ${selected?'selected':''}>อ.${esc(a[1])}</option>`;
-  }).join('');
-}
+/* เลือกอำเภอผ่านปุ่มในการ์ดพยากรณ์ (renderAmpChips) เท่านั้น
+   เดิมมี #ampSel เป็นช่องเลือกอำเภอแยกอยู่ด้านบนสุดของหน้า ถูกลบไปแล้วเพราะซ้ำกับปุ่ม */
 function pickAmp(name){
   amp = name;
-  fillAmpSel();
   renderAll();
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -1129,7 +1103,6 @@ document.querySelectorAll('.chip[data-prov]').forEach(b=>{
     document.querySelectorAll('.chip[data-prov]').forEach(x=>x.classList.remove('on'));
     b.classList.add('on');
     prov = b.dataset.prov; amp = '';
-    fillAmpSel();
     if(!meteoCache[prov]){
       document.getElementById('ampList').innerHTML = '<span class="spin"></span> กำลังประเมิน…';
       try{ await loadMeteo(prov); }catch(e){}
@@ -1137,9 +1110,7 @@ document.querySelectorAll('.chip[data-prov]').forEach(b=>{
     renderAll();
   };
 });
-document.getElementById('ampSel').onchange = e => { amp = e.target.value; renderAll(); };
 
-fillAmpSel();
 renderRadarBar();
 loadRadarImg();
 renderWrfLegend();
