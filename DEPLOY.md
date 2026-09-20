@@ -1,6 +1,6 @@
 # DEPLOY — waterchaidantai (One Map ชายแดนใต้)
 
-ขั้นตอน deploy: **(1) เว็บหน้าเว็บ → GitHub Pages** · **(2) ฐานข้อมูล → Supabase (schema v6–v8)** · **(3) แจ้งเตือน → LINE + Edge Function**
+ขั้นตอน deploy: **(1) เว็บหน้าเว็บ → GitHub Pages** · **(2) ฐานข้อมูล → Supabase (schema v6–v8)** · **(3) แจ้งเตือน → Telegram + Edge Function**
 
 Project ref (Supabase): `tnvzeahfugmmrydtnsdv`
 Site: https://usmanwaji.github.io/waterchaidantai/
@@ -82,20 +82,27 @@ select path, sum(views) as views from public.page_views group by path order by v
 
 ---
 
-## 3) แจ้งเตือนน้ำผ่าน LINE (Edge Function `notify-water`)
+## 3) แจ้งเตือนน้ำผ่าน Telegram (Edge Function `notify-water`)
 
-> LINE Notify ปิดบริการแล้ว (มี.ค. 2025) — ระบบใช้ **LINE Messaging API (LINE Official Account)**
+> ใช้ **Telegram Bot API** เพราะส่งข้อความได้ไม่จำกัดและไม่มีค่าใช้จ่าย
+> ต่างจาก LINE OA ที่จำกัดโควตาข้อความต่อเดือน (LINE Notify เองก็ปิดบริการไปแล้ว มี.ค. 2025)
 
-### 3.1 เตรียม LINE OA
-1. สร้าง **LINE Official Account** (https://manager.line.biz) และเปิดใช้ **Messaging API**
-2. ที่ **LINE Developers Console** (https://developers.line.biz) → เลือก channel ของ OA →
-   - แท็บ **Messaging API** → คัดลอก **Channel access token (long-lived)**
-3. หาปลายทาง (id ที่จะส่งถึง):
-   - ให้ OA เป็นเพื่อนกับผู้ใช้ หรือเชิญ OA เข้ากลุ่ม LINE ของอำเภอ
-   - ตั้ง Webhook แล้วอ่าน `source.userId` (ขึ้นต้น `U…`) หรือ `source.groupId` (`C…`)
-   - id นี้ใส่ในกฎแจ้งเตือนเป็น `line:U…` หรือ `line:C…` (กลุ่ม)
+### 3.1 เตรียมบอท Telegram
+1. เปิด Telegram แล้วทักหา **@BotFather** → ส่ง `/newbot` → ตั้งชื่อและ username (ต้องลงท้ายด้วย `bot`)
+2. BotFather จะให้ **token** หน้าตาแบบ `123456789:AAH...` — เก็บไว้ใช้ข้อ 3.2
+3. เอา username ของบอทไปใส่ค่า `TG_BOT` ในไฟล์ `alert.html` (ไม่ต้องใส่ `@`)
+   เพื่อให้ปุ่ม "เปิดบอทใน Telegram" ในหน้าแจ้งเตือนชี้ถูกตัว
+4. หาปลายทาง (chat id ที่จะส่งถึง):
+   - **รายคน:** ให้ผู้ใช้กด `/start` ในห้องแชทของบอทก่อน (ไม่กดก่อน บอทจะส่งหาไม่ได้)
+   - **กลุ่มอำเภอ/อปท.:** เชิญบอทเข้ากลุ่ม แล้วพิมพ์อะไรก็ได้ในกลุ่มหนึ่งครั้ง
+   - เปิด `https://api.telegram.org/bot<TOKEN>/getUpdates` แล้วอ่าน `message.chat.id`
+   - ใส่ในกฎแจ้งเตือนเป็น `telegram:123456789` (รายคน) หรือ `telegram:-1001234567890` (กลุ่ม)
 
-> หมายเหตุ: LINE push ส่งได้เฉพาะผู้ที่ **เพิ่ม OA เป็นเพื่อน** หรือ **กลุ่มที่ OA อยู่** เท่านั้น (push หาผู้ใช้ทั่วไปที่ไม่ได้เพิ่มเพื่อนไม่ได้)
+> หมายเหตุ: บอทส่งข้อความได้เฉพาะคนที่ **กด `/start` แล้ว** หรือ **กลุ่มที่บอทอยู่** เท่านั้น
+> (ส่งหาคนที่ไม่เคยทักบอทไม่ได้ — กันสแปมเหมือนกับฝั่ง LINE)
+
+> ตอนนี้ยังไม่มี webhook ที่ตอบ chat id ให้ผู้ใช้อัตโนมัติ เจ้าหน้าที่จึงต้องอ่านจาก `getUpdates` ให้
+> ถ้าต้องการให้ประชาชนสมัครเองได้ ต้องเพิ่มฟังก์ชัน webhook รับ `/start` แล้วตอบ chat id กลับ
 
 ### 3.2 Deploy function + secrets
 ```bash
@@ -104,7 +111,7 @@ supabase link --project-ref tnvzeahfugmmrydtnsdv
 
 supabase functions deploy notify-water --no-verify-jwt
 
-supabase secrets set LINE_CHANNEL_ACCESS_TOKEN=<channel access token จากข้อ 3.1>
+supabase secrets set TELEGRAM_BOT_TOKEN=<token จาก BotFather ข้อ 3.1>
 supabase secrets set CRON_SECRET=<สุ่มสตริงยาว ๆ เอง>
 supabase secrets set SITE_URL=https://usmanwaji.github.io/waterchaidantai
 ```
@@ -132,13 +139,14 @@ select cron.schedule(
 
 ### 3.4 เพิ่มกฎ + ทดสอบ
 - เพิ่มกฎที่หน้า **alert.html** (ล็อกอินสมาชิกอนุมัติ → ⚙️ กติกาแจ้งเตือน → + เพิ่มกฎ)
-  เช่น metric `% ของตลิ่ง`, threshold `80`, channel `line:C…`
+  เช่น metric `% ของตลิ่ง`, threshold `80`, channel `telegram:-1001234567890`
 - ทดสอบยิงเองครั้งเดียว:
 ```bash
 curl -X POST 'https://tnvzeahfugmmrydtnsdv.supabase.co/functions/v1/notify-water' \
   -H 'x-cron-secret: <CRON_SECRET>'
 ```
-คืนค่า `{"ok":true,"checked":N,"fired":M}` · ข้อความจริงจะเข้า LINE และถูกบันทึกใน `alert_log`
+คืนค่า `{"ok":true,"checked":N,"fired":M}` · ข้อความจริงจะเข้า Telegram และถูกบันทึกใน `alert_log`
+(ถ้า `fired` ขึ้นแต่ข้อความไม่เข้า ให้ดู log ของฟังก์ชันใน Supabase — จะมีเหตุผลจาก Telegram เช่น chat id ผิด หรือผู้ใช้บล็อกบอท)
 
 > `cooldown_min` (ค่าเริ่มต้น 180 นาที) กันสแปม — ตอนทดสอบถ้าอยากให้ยิงซ้ำทันที ให้ลบแถวล่าสุดใน `alert_log` ของกฎนั้น
 

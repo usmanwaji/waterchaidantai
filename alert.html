@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#142256">
 <title>แจ้งเตือนน้ำ | One Map ชายแดนใต้ · waterchaidantai</title>
-<meta name="description" content="รับแจ้งเตือนระดับน้ำ/ฝนของอำเภอคุณผ่าน LINE · และจัดการกติกาการแจ้งเตือนสำหรับสมาชิก">
+<meta name="description" content="รับแจ้งเตือนระดับน้ำ/ฝนของอำเภอคุณผ่าน Telegram · และจัดการกติกาการแจ้งเตือนสำหรับสมาชิก">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔔</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -54,7 +54,7 @@ footer a{color:var(--st-watch);text-decoration:none}
 </head>
 <body>
 <header>
-  <h1>แจ้งเตือนน้ำ<small>รับเตือนอำเภอของคุณผ่าน LINE</small></h1>
+  <h1>แจ้งเตือนน้ำ<small>รับเตือนอำเภอของคุณผ่าน Telegram</small></h1>
   <nav class="navtab" aria-label="เมนูหลัก">
     <a href="index.html">หน้าแรก</a>
     <a href="check.html">เช็คพื้นที่ฉัน</a>
@@ -72,15 +72,18 @@ footer a{color:var(--st-watch);text-decoration:none}
   <!-- ประชาชน -->
   <div class="card">
     <h2>รับแจ้งเตือนระดับน้ำของอำเภอคุณ</h2>
-    <p>เมื่อสถานีน้ำใกล้บ้านคุณระดับสูงถึงเกณฑ์เฝ้าระวัง ระบบจะส่งข้อความเข้า LINE ให้ทันที · ไม่ต้องเปิดเว็บเฝ้าเอง เหมาะเวลาน้ำมาตอนกลางคืน</p>
-    <div class="step"><div class="n">1</div><div>เพิ่มเพื่อน <b>LINE Official Account</b> ของระบบ หรือเข้ากลุ่ม LINE ของอำเภอคุณ (ลิงก์/QR ด้านล่าง)</div></div>
-    <div class="step"><div class="n">2</div><div>กด <b>เพิ่มเพื่อน</b> · เท่านี้ก็จะได้รับข้อความเตือนอัตโนมัติ</div></div>
-    <div class="step"><div class="n">3</div><div>ต้องการหยุด บล็อก OA หรือออกจากกลุ่มได้ทุกเมื่อ</div></div>
+    <p>เมื่อสถานีน้ำใกล้บ้านคุณระดับสูงถึงเกณฑ์เฝ้าระวัง ระบบจะส่งข้อความเข้า <b>Telegram</b> ให้ทันที · ไม่ต้องเปิดเว็บเฝ้าเอง เหมาะเวลาน้ำมาตอนกลางคืน</p>
+    <div class="step"><div class="n">1</div><div>ติดตั้งแอป <b>Telegram</b> แล้วกดปุ่มด้านล่างเพื่อเปิดบอทแจ้งเตือน</div></div>
+    <div class="step"><div class="n">2</div><div>กด <b>Start / เริ่ม</b> ในห้องแชทของบอท — ขั้นนี้คือการอนุญาตให้บอทส่งข้อความหาคุณ</div></div>
+    <div class="step"><div class="n">3</div><div>แจ้ง <b>chat id</b> ของคุณให้เจ้าหน้าที่อำเภอ เพื่อผูกกับสถานีที่ต้องการเฝ้าระวัง (ดูวิธีหาด้านล่าง)</div></div>
+    <div class="step"><div class="n">4</div><div>ต้องการหยุด กด <b>Block</b> บอท หรือออกจากกลุ่มได้ทุกเมื่อ</div></div>
     <div class="row" style="margin-top:10px">
-      <a class="btn" id="tgLink" href="#" target="_blank" rel="noopener">เพิ่มเพื่อน LINE OA</a>
-      <span class="muted">ยังไม่ได้ตั้งค่าลิงก์ · สมาชิกตั้งได้ในส่วนจัดการด้านล่าง</span>
+      <a class="btn" id="tgLink" href="#" target="_blank" rel="noopener">เปิดบอทใน Telegram</a>
+      <span class="muted" id="tgHint"></span>
     </div>
-    <p class="muted" style="margin-top:10px">หมายเหตุ: LINE Notify ปิดบริการแล้ว (มี.ค. 2025) ระบบจึงใช้ LINE Messaging API (LINE OA) ในการส่งแจ้งเตือน</p>
+    <p class="muted" style="margin-top:10px"><b>กลุ่มของอำเภอ/อปท.:</b> เชิญบอทเข้ากลุ่ม Telegram ของหน่วยงาน แล้วให้เจ้าหน้าที่ผูก chat id ของกลุ่ม ทุกคนในกลุ่มจะได้รับเตือนพร้อมกัน</p>
+    <p class="muted"><b>หา chat id อย่างไร:</b> หลังกด Start แล้ว เจ้าหน้าที่เปิด <code>https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code> จะเห็น <code>message.chat.id</code> ของคุณ · chat id เป็นเลขบวก = แชทส่วนตัว · ขึ้นต้น <code>-100</code> = กลุ่ม</p>
+    <p class="muted">ใช้ Telegram เพราะส่งข้อความได้ไม่จำกัดและไม่มีค่าใช้จ่าย ต่างจาก LINE OA ที่จำกัดโควตาต่อเดือน (LINE Notify ปิดบริการไปแล้ว มี.ค. 2025)</p>
   </div>
 
   <!-- สมาชิก: จัดการกติกา -->
@@ -101,7 +104,7 @@ footer a{color:var(--st-watch);text-decoration:none}
       <div class="row" style="margin-top:8px">
         <select id="fMetric"><option value="wl_pct_bank">% ของตลิ่ง</option><option value="rain_24h">ฝน 24 ชม. (มม.)</option></select>
         <input id="fThreshold" type="number" placeholder="เกณฑ์ เช่น 80" style="width:120px">
-        <input id="fChannel" placeholder="ช่องทาง เช่น line:Uxxxx หรือ line:Cxxxx (กลุ่ม)" style="flex:1;min-width:180px">
+        <input id="fChannel" placeholder="ช่องทาง เช่น telegram:123456789 หรือ telegram:-1001234567890 (กลุ่ม)" style="flex:1;min-width:180px">
         <input id="fCooldown" type="number" value="180" title="cooldown (นาที)" style="width:90px">
       </div>
       <div class="row" style="margin-top:8px">
@@ -132,6 +135,10 @@ footer a{color:var(--st-watch);text-decoration:none}
 <script src="js/views.js?v=3" defer></script>
 <script>
 'use strict';
+/* ชื่อบอท Telegram ที่ใช้ส่งแจ้งเตือน (ไม่ต้องใส่ @) — สร้างด้วย @BotFather แล้วแก้ตรงนี้ที่เดียว
+   ต้องเป็นบอทตัวเดียวกับ TELEGRAM_BOT_TOKEN ที่ตั้งไว้ใน Supabase secrets
+   ปล่อยว่างไว้ = ปุ่มจะขึ้นว่ายังไม่ได้ตั้งค่า แทนที่จะพาไปลิงก์เสีย */
+const TG_BOT = '';
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const STATUS = {enabled:{c:'var(--st-normal)',l:'เปิด'}, disabled:{c:'var(--ink-3)',l:'ปิด'}};
@@ -182,6 +189,22 @@ async function saveRule(){
   if(error){ alert('บันทึกไม่สำเร็จ: '+error.message); return; }
   $('ruleForm').classList.add('hide'); loadRules();
 }
+
+/* ปุ่มเปิดบอท · ถ้ายังไม่ตั้งชื่อบอท อย่าปล่อยให้กดแล้วไปหน้าเสีย ให้บอกตรง ๆ ว่ายังไม่ได้ตั้งค่า */
+(function initBotLink(){
+  const a = $('tgLink'), hint = $('tgHint');
+  if(!a) return;
+  if(TG_BOT){
+    a.href = 'https://t.me/' + encodeURIComponent(TG_BOT);
+    if(hint) hint.textContent = '@' + TG_BOT;
+  }else{
+    a.removeAttribute('href');
+    a.setAttribute('aria-disabled','true');
+    a.style.opacity = '.55';
+    a.style.pointerEvents = 'none';
+    if(hint) hint.textContent = 'ยังไม่ได้ตั้งชื่อบอท · ผู้ดูแลระบบแก้ค่า TG_BOT ในไฟล์ alert.html';
+  }
+})();
 
 $('btnAddRule').onclick = ()=> $('ruleForm').classList.toggle('hide');
 $('btnCancelRule').onclick = ()=> $('ruleForm').classList.add('hide');

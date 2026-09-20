@@ -1,24 +1,27 @@
 // supabase/functions/notify-water/index.ts
 //
 // Deno Edge Function — เครื่องยนต์แจ้งเตือนน้ำ (roadmap ข้อ 2)
-// ตรวจระดับน้ำ/ฝน เทียบกับ alert_rules ทุก ~15 นาที แล้วยิงข้อความเข้า LINE (LINE Messaging API / LINE OA)
+// ตรวจระดับน้ำ/ฝน เทียบกับ alert_rules ทุก ~15 นาที แล้วยิงข้อความเข้า Telegram (Bot API)
 // พร้อมกัน cooldown ไม่ให้สแปม และบันทึกลง alert_log
 //
 // Deploy:
 //   supabase functions deploy notify-water
-//   supabase secrets set LINE_CHANNEL_ACCESS_TOKEN=<LINE OA channel access token>  CRON_SECRET=some-long-random
+//   supabase secrets set TELEGRAM_BOT_TOKEN=<token จาก @BotFather>  CRON_SECRET=some-long-random
 // ตั้งเวลา (Supabase Dashboard → Edge Functions → Schedules) ทุก 15 นาที:
 //   */15 * * * *   → POST ไปที่ฟังก์ชันนี้ พร้อม header x-cron-secret: <CRON_SECRET>
 //
-// หมายเหตุ: LINE Notify ปิดบริการแล้ว (มี.ค. 2025) — ฉบับนี้ใช้ LINE Messaging API (LINE OA)
-//           ช่อง channel ในกฎเก็บเป็น 'line:<userId|groupId>' (Uxxxx = ผู้ใช้, Cxxxx = กลุ่ม)
-//           วิธีได้ id: ให้ OA เป็นเพื่อน/เชิญเข้ากลุ่ม แล้วอ่าน source.userId/groupId จาก webhook
+// ทำไม Telegram: ส่งข้อความไม่จำกัดและไม่มีค่าใช้จ่าย ต่างจาก LINE OA ที่จำกัดโควตาต่อเดือน
+//           (LINE Notify เองก็ปิดบริการไปแล้ว มี.ค. 2025)
+//           ช่อง channel ในกฎเก็บเป็น 'telegram:<chat_id>'
+//           chat_id เป็นบวก = แชทส่วนตัว · เป็นลบ (-100...) = กลุ่ม/แชนแนล
+//           วิธีได้ chat_id: ทักบอท (หรือเชิญบอทเข้ากลุ่ม) แล้วเปิด
+//           https://api.telegram.org/bot<TOKEN>/getUpdates จะเห็น message.chat.id
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!; // ข้าม RLS ได้ (เขียน alert_log)
-const LINE_TOKEN = Deno.env.get("LINE_CHANNEL_ACCESS_TOKEN");
+const TG_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
 const CRON_SECRET = Deno.env.get("CRON_SECRET");
 const SITE = Deno.env.get("SITE_URL") ?? "https://waterchaidantai.com";
 
@@ -40,8 +43,8 @@ Deno.serve(async (req: Request) => {
   if (CRON_SECRET && req.headers.get("x-cron-secret") !== CRON_SECRET) {
     return new Response("Unauthorized", { status: 401 });
   }
-  if (!LINE_TOKEN) {
-    return new Response("LINE_CHANNEL_ACCESS_TOKEN not set", { status: 500 });
+  if (!TG_TOKEN) {
+    return new Response("TELEGRAM_BOT_TOKEN not set", { status: 500 });
   }
 
   const sb = createClient(SUPABASE_URL, SERVICE_ROLE);
@@ -77,7 +80,7 @@ Deno.serve(async (req: Request) => {
     if (!hit) continue;
 
     const msg = buildMessage(rule, hit);
-    const ok = await sendLine(rule.channel, msg);
+    const ok = await sendTelegram(rule.channel, msg);
     await sb.from("alert_log").insert({
       rule_id: rule.id,
       payload: { value: hit.value, station: hit.station, message: msg, channel: rule.channel, sent: ok },
@@ -112,21 +115,23 @@ function buildMessage(rule: Rule, hit: { value: number; station: string }): stri
   return `${level} ${hit.station}\nค่า ${round1(hit.value)} ${unit} (เกณฑ์ ${rule.threshold})\nดูสด: ${link}`;
 }
 
-async function sendLine(channel: string, text: string): Promise<boolean> {
-  // channel = 'line:<userId|groupId>' — push ผ่าน LINE Messaging API
-  const to = channel.startsWith("line:") ? channel.slice("line:".length) : null;
-  if (!to) return false; // รองรับเฉพาะช่องทาง line: ในฉบับนี้
+async function sendTelegram(channel: string, text: string): Promise<boolean> {
+  // channel = 'telegram:<chat_id>' — chat_id บวก = แชทส่วนตัว · ลบ (-100...) = กลุ่ม/แชนแนล
+  const to = channel.startsWith("telegram:") ? channel.slice("telegram:".length).trim() : null;
+  if (!to) return false; // รองรับเฉพาะช่องทาง telegram: ในฉบับนี้
   try {
-    const res = await fetch("https://api.line.me/v2/bot/message/push", {
+    // ส่งเป็นข้อความเปล่า ไม่ใช้ parse_mode เพราะชื่อสถานีมี _ * [ ] ปนได้
+    // ถ้าใช้ Markdown แล้วไม่ escape ให้ครบ Telegram จะตีกลับทั้งข้อความ
+    const res = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${LINE_TOKEN}`,
-      },
-      body: JSON.stringify({ to, messages: [{ type: "text", text }] }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: to, text, disable_web_page_preview: true }),
     });
+    // ที่พลาดบ่อยคือผู้ใช้บล็อกบอท หรือ chat_id ผิด — ต้องเห็นสาเหตุใน log ของฟังก์ชัน
+    // ไม่งั้นเวลาน้ำมาจริงแล้วข้อความไม่ถึง จะไล่หาสาเหตุไม่ได้
+    if (!res.ok) console.error("telegram sendMessage failed", res.status, await res.text().catch(() => ""));
     return res.ok;
-  } catch { return false; }
+  } catch (e) { console.error("telegram sendMessage error", e); return false; }
 }
 
 // helpers

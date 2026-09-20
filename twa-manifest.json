@@ -1,0 +1,41 @@
+{
+  "packageId": "com.naraflood.app",
+  "host": "naraflood.com",
+  "name": "naraflood — เฝ้าระวังอุทกภัย จ.นราธิวาส",
+  "launcherName": "naraflood",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "themeColor": "#423d38",
+  "themeColorDark": "#000000",
+  "navigationColor": "#423d38",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#00000000",
+  "navigationDividerColorDark": "#00000000",
+  "backgroundColor": "#fcfaf7",
+  "enableNotifications": false,
+  "startUrl": "/index.html",
+  "iconUrl": "https://naraflood.com/icon-512.png",
+  "maskableIconUrl": "https://naraflood.com/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "android"
+  },
+  "appVersionCode": 1,
+  "appVersion": "1",
+  "shortcuts": [
+    { "name": "เช็คพื้นที่ฉัน", "shortName": "เช็คพื้นที่", "url": "/check.html", "chosenIconUrl": "https://naraflood.com/icon-512.png" },
+    { "name": "ระดับน้ำ (แผนที่)", "shortName": "ระดับน้ำ", "url": "/map.html", "chosenIconUrl": "https://naraflood.com/icon-512.png" },
+    { "name": "ศูนย์พักพิง", "shortName": "ศูนย์พักพิง", "url": "/shelter.html", "chosenIconUrl": "https://naraflood.com/icon-512.png" }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://naraflood.com/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://naraflood.com/",
+  "minSdkVersion": 21,
+  "additionalTrustedOrigins": []
+}
