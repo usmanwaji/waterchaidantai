@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#142256">
+<title>นโยบายความเป็นส่วนตัว | One Map ชายแดนใต้ · waterchaidantai</title>
+<meta name="description" content="ข้อมูลที่ naraflood.com เก็บ ใช้ทำอะไร ใครเห็นได้บ้าง และวิธีขอลบ/แก้ไขข้อมูลของคุณ">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔒</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:var(--paper);--ink:var(--ink);--muted:var(--ink-3);--orange:var(--signal);--orange-d:var(--signal-hover);--navy:var(--ink-2);--navy-d:var(--ink);--peach:var(--line);--outline:var(--line);--outline-strong:var(--line-mid);--shell:rgba(0,0,0,.72)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.12)}
+header h1{font-size:17px;font-weight:700;line-height:1.2}
+header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
+.navtab{display:flex;gap:4px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:3px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.navtab::-webkit-scrollbar{display:none}
+.navtab a{color:rgba(255,255,255,.72);text-decoration:none;font-size:12px;font-weight:600;padding:4px 10px;border-radius:7px;white-space:nowrap}
+.navtab a.on{background:var(--orange);color:#fff}
+#content{flex:1;max-width:820px;width:100%;margin:0 auto;padding:14px}
+.card{background:#fff;border:1px solid var(--outline);border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:14px}
+.card h2{font-size:15px;color:var(--navy-d);margin-bottom:10px}
+.card h3{font-size:13px;color:var(--navy-d);margin:14px 0 6px}
+p,li{line-height:1.7;margin-bottom:8px}
+ul{padding-left:20px}
+.muted{color:var(--muted);font-size:12.5px}
+.notice{background:var(--st-watch-wash);border:1px solid var(--st-watch-wash);border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--st-warn);margin-bottom:14px}
+.tblwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px;margin:8px 0}
+th,td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--card-2);vertical-align:top}
+th{background:var(--card-2);color:var(--navy-d);font-weight:700;white-space:nowrap}
+.pub{display:inline-block;padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:700;color:#fff;background:var(--st-danger);white-space:nowrap}
+.priv{display:inline-block;padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:700;color:#fff;background:var(--st-normal);white-space:nowrap}
+footer{background:var(--navy-d);color:var(--ink-3);font-size:10.5px;padding:6px 14px;display:flex;gap:10px;flex-wrap:wrap}
+footer a{color:var(--st-watch);text-decoration:none}
+@media(max-width:768px){header h1 small{display:none}#content{padding:10px 8px 22px}.tblwrap{-webkit-overflow-scrolling:touch}table{min-width:560px}}
+</style>
+<link rel="stylesheet" href="shared.css?v=5">
+</head>
+<body>
+<header>
+  <h1>นโยบายความเป็นส่วนตัว<small>ข้อมูลที่เก็บ ใช้ทำอะไร ใครเห็นได้บ้าง</small></h1>
+  <nav class="navtab" aria-label="เมนูหลัก">
+    <a href="index.html">หน้าแรก</a>
+    <a href="alert.html">แจ้งเตือน</a>
+    <a href="privacy.html" class="on">ความเป็นส่วนตัว</a>
+  </nav>
+</header>
+
+<div id="content">
+
+  <div class="notice">
+    เอกสารนี้เขียนโดยผู้พัฒนาเว็บ อธิบายตามจริงว่าระบบเก็บ/ใช้/แสดงข้อมูลอะไรบ้าง
+    <b>ไม่ใช่เอกสารที่ผ่านการตรวจสอบทางกฎหมาย</b> — หากต้องใช้เป็นหลักฐานด้าน PDPA
+    อย่างเป็นทางการ ควรให้ผู้เชี่ยวชาญด้านกฎหมายตรวจสอบอีกครั้งก่อนเผยแพร่ในนามหน่วยงาน
+  </div>
+
+  <div class="card">
+    <h2>เว็บนี้คือใคร</h2>
+    <p><b>naraflood.com / waterchaidantai</b> เป็นแดชบอร์ดติดตามสถานการณ์น้ำท่วมจังหวัดนราธิวาส
+    ที่รวบรวมข้อมูลสาธารณะจากหลายหน่วยงาน (กรมอุตุนิยมวิทยา, สสน./thaiwater.net, สทนช., กรมชลประทาน,
+    ปภ., Open-Meteo) มาแสดงในที่เดียว จัดทำและดูแลโดยอาสาสมัครอิสระ
+    <b>ไม่ใช่เว็บทางการของหน่วยงานราชการ</b> อยู่ระหว่างทดลองปรับปรุงต่อเนื่อง
+    ติดต่อผู้ดูแล: <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a></p>
+  </div>
+
+  <div class="card">
+    <h2>ข้อมูลที่เก็บ</h2>
+    <p class="muted">แต่ละแถวคือข้อมูลคนละชุด ไม่ได้เก็บทุกอย่างจากทุกคน — เก็บเฉพาะส่วนที่ตรงกับสิ่งที่คุณใช้งาน</p>
+    <div class="tblwrap"><table>
+      <tr><th>ใช้ฟีเจอร์ไหน</th><th>เก็บอะไร</th><th>ใครเห็นได้</th></tr>
+      <tr>
+        <td>เปิดดูเว็บทั่วไป</td>
+        <td>จำนวนครั้งเข้าชมต่อหน้า/วัน + หมวดอุปกรณ์/ที่มา/ช่วงเวลา (ตัวเลขสรุปรวม)</td>
+        <td><span class="priv">ไม่ระบุตัวบุคคล</span><br><span class="muted">ไม่มีคุกกี้ ไม่เก็บหมายเลขไอพี ไม่มีรหัสประจำตัว</span></td>
+      </tr>
+      <tr>
+        <td>สมัครแจ้งเตือนผ่านบอท Telegram</td>
+        <td>Telegram chat id ของคุณ + ระดับที่เลือก (เฝ้าระวัง/ล้นตลิ่ง)</td>
+        <td><span class="priv">เจ้าหน้าที่ที่ได้รับอนุมัติ</span> เท่านั้น (ผ่านหน้า "จัดการกติกาแจ้งเตือน")</td>
+      </tr>
+      <tr>
+        <td>เข้าสู่ระบบด้วย Google (สมาชิก/เจ้าหน้าที่)</td>
+        <td>อีเมล ชื่อ เบอร์โทร (ถ้ากรอก) จาก Google — ใช้ยืนยันตัวตนและอนุมัติสิทธิ์เข้าใช้ระบบภายใน</td>
+        <td><span class="priv">ผู้ดูแลระบบ</span> เท่านั้น</td>
+      </tr>
+      <tr>
+        <td>แจ้งจุดน้ำท่วมถนน (เจ้าหน้าที่/สมาชิกที่อนุมัติแล้ว)</td>
+        <td>ชื่อและเบอร์โทรผู้รายงาน + ตำแหน่ง/ความลึกน้ำ</td>
+        <td><span class="pub">สาธารณะ</span> — แสดงบนหน้าเส้นทาง (route.html) ให้ทุกคนเห็นชื่อ-เบอร์ผู้รายงานได้ เพื่อให้ติดต่อยืนยันสถานการณ์ได้จริง</td>
+      </tr>
+      <tr>
+        <td>ทะเบียนกลุ่มเปราะบาง (เจ้าหน้าที่จังหวัด)</td>
+        <td>ชื่อ ที่อยู่ถึงระดับหมู่บ้าน ประเภทความเปราะบาง (เช่น ผู้ป่วยติดเตียง/พิการ/ตั้งครรภ์) ความช่วยเหลือที่ต้องการ เบอร์ติดต่อ</td>
+        <td><span class="priv">เจ้าหน้าที่ผู้ดูแลจังหวัดนั้นเท่านั้น</span><br><span class="muted">เป็นข้อมูลอ่อนไหวตาม PDPA — ไม่เปิดเผยต่อสาธารณะ</span></td>
+      </tr>
+      <tr>
+        <td>บันทึกเหตุการณ์ / คำขอทรัพยากรกู้ภัย (ปฏิบัติการภายใน)</td>
+        <td>รายละเอียดเหตุการณ์ หน่วยงานที่ขอ เบอร์ติดต่อ (ถ้ามี)</td>
+        <td>ผู้ที่ล็อกอินเข้าระบบ (ไม่จำเป็นต้องเป็นสมาชิกที่อนุมัติแล้ว)</td>
+      </tr>
+    </table></div>
+    <p class="muted">ตัวอย่าง API สาธารณะที่เว็บดึงมาแสดง (กรมอุตุฯ, thaiwater.net, Open-Meteo ฯลฯ)
+    ไม่มีการส่งข้อมูลส่วนตัวของคุณออกไปหาผู้ให้บริการเหล่านี้ — เป็นการดึงข้อมูลพยากรณ์/ระดับน้ำมาแสดงเท่านั้น</p>
+  </div>
+
+  <div class="card">
+    <h2>บริการภายนอกที่เกี่ยวข้อง</h2>
+    <ul>
+      <li><b>Supabase</b> — ฐานข้อมูลและระบบยืนยันตัวตน (เก็บทุกอย่างในตารางด้านบน)</li>
+      <li><b>Telegram Bot API</b> — ส่งข้อความแจ้งเตือนไปยัง chat id ที่คุณสมัครไว้</li>
+      <li><b>Google Sign-In</b> — ใช้เฉพาะตอนเจ้าหน้าที่/สมาชิกเข้าสู่ระบบจัดการหลังบ้าน ผู้เยี่ยมชมทั่วไปไม่ต้องล็อกอิน</li>
+      <li><b>Cloudflare Workers</b> — พร็อกซีเรียก API สาธารณะบางตัวที่ไม่เปิด CORS ให้เว็บ ไม่เก็บข้อมูลผู้ใช้เพิ่มเติม</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>สิทธิ์ของคุณ</h2>
+    <ul>
+      <li><b>ยกเลิกแจ้งเตือน Telegram:</b> พิมพ์ <code>/stop</code> ในบอทได้ทันที — หยุดส่งข้อความทันที
+        (แถวข้อมูลเดิมจะถูก "ปิดใช้งาน" ไว้ในฐานข้อมูล ไม่ได้ลบทิ้งทันทีเพื่อรักษาประวัติการแจ้งเตือน
+        หากต้องการให้ลบข้อมูลออกจริง ติดต่ออีเมลด้านล่าง)</li>
+      <li><b>ขอดู/แก้ไข/ลบข้อมูลของคุณ:</b> อีเมลหาผู้ดูแล พร้อมระบุว่าเป็นข้อมูลชุดไหน (เช่น Telegram chat id,
+        บัญชี Google, รายงานน้ำท่วมที่เคยแจ้ง)</li>
+      <li><b>บัญชีเจ้าหน้าที่/สมาชิก:</b> ผู้ดูแลระบบลบบัญชีให้ได้ตามคำขอ</li>
+    </ul>
+    <p>ติดต่อ: <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a></p>
+  </div>
+
+  <p class="muted" style="text-align:center;margin:8px 0 20px">ปรับปรุงล่าสุด: 20 กันยายน 2569</p>
+
+</div>
+
+<footer>
+  <span>waterchaidantai · One Map ชายแดนใต้</span>
+  <a href="index.html">หน้าแรก</a><a href="alert.html">แจ้งเตือน</a>
+</footer>
+
+<script src="js/pwa.js" defer></script>
+<script src="js/ui.js" defer></script>
+<script src="js/tabbar.js?v=2" defer></script>
+</body>
+</html>
