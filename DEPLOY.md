@@ -82,43 +82,64 @@ select path, sum(views) as views from public.page_views group by path order by v
 
 ---
 
-## 3) แจ้งเตือนน้ำผ่าน Telegram (Edge Function `notify-water`)
+## 3) แจ้งเตือนน้ำผ่าน Telegram (Edge Functions `telegram-webhook` + `notify-water`)
 
 > ใช้ **Telegram Bot API** เพราะส่งข้อความได้ไม่จำกัดและไม่มีค่าใช้จ่าย
 > ต่างจาก LINE OA ที่จำกัดโควตาข้อความต่อเดือน (LINE Notify เองก็ปิดบริการไปแล้ว มี.ค. 2025)
 
 ### 3.1 เตรียมบอท Telegram
 1. เปิด Telegram แล้วทักหา **@BotFather** → ส่ง `/newbot` → ตั้งชื่อและ username (ต้องลงท้ายด้วย `bot`)
-2. BotFather จะให้ **token** หน้าตาแบบ `123456789:AAH...` — เก็บไว้ใช้ข้อ 3.2
+2. BotFather จะให้ **token** หน้าตาแบบ `123456789:AAH...` — เก็บไว้ใช้ข้อ 3.2 และ 3.3
 3. เอา username ของบอทไปใส่ค่า `TG_BOT` ในไฟล์ `alert.html` (ไม่ต้องใส่ `@`)
    เพื่อให้ปุ่ม "เปิดบอทใน Telegram" ในหน้าแจ้งเตือนชี้ถูกตัว
-4. หาปลายทาง (chat id ที่จะส่งถึง):
-   - **รายคน:** ให้ผู้ใช้กด `/start` ในห้องแชทของบอทก่อน (ไม่กดก่อน บอทจะส่งหาไม่ได้)
-   - **กลุ่มอำเภอ/อปท.:** เชิญบอทเข้ากลุ่ม แล้วพิมพ์อะไรก็ได้ในกลุ่มหนึ่งครั้ง
-   - เปิด `https://api.telegram.org/bot<TOKEN>/getUpdates` แล้วอ่าน `message.chat.id`
-   - ใส่ในกฎแจ้งเตือนเป็น `telegram:123456789` (รายคน) หรือ `telegram:-1001234567890` (กลุ่ม)
 
 > หมายเหตุ: บอทส่งข้อความได้เฉพาะคนที่ **กด `/start` แล้ว** หรือ **กลุ่มที่บอทอยู่** เท่านั้น
 > (ส่งหาคนที่ไม่เคยทักบอทไม่ได้ — กันสแปมเหมือนกับฝั่ง LINE)
 
-> ตอนนี้ยังไม่มี webhook ที่ตอบ chat id ให้ผู้ใช้อัตโนมัติ เจ้าหน้าที่จึงต้องอ่านจาก `getUpdates` ให้
-> ถ้าต้องการให้ประชาชนสมัครเองได้ ต้องเพิ่มฟังก์ชัน webhook รับ `/start` แล้วตอบ chat id กลับ
+### 3.2 Deploy webhook ให้ประชาชนสมัครเองได้ (Edge Function `telegram-webhook`)
 
-### 3.2 Deploy function + secrets
+ฟังก์ชันนี้ทำให้กด `/start` ในบอทแล้วเลือกระดับได้เลย **ไม่ต้องให้เจ้าหน้าที่เปิด
+`getUpdates` อ่าน chat id ให้ทีละคน** — สมัครที่จับคู่ได้คือระดับ "ทั้งจังหวัดนราธิวาส"
+เท่านั้น (ตั้งใจไม่ทำเลือกรายอำเภอ เพราะเครื่องยนต์แจ้งเตือนใน `notify-water` จับคู่กฎ
+ด้วยจังหวัดหรือรหัสสถานีที่แน่นอนเท่านั้น ไม่เคยอ่านชื่ออำเภอจากสถานี — ทำปุ่มเลือก
+อำเภอไปจะได้กฎที่ดูถูกต้องแต่กรองไม่ได้จริง) ใครอยากได้แจ้งเตือนเฉพาะสถานีเดียว
+ให้พิมพ์ `/status` ในบอทเพื่อดู chat id แล้วแจ้งเจ้าหน้าที่ตั้งกฎเองในข้อ 3.5
+
+```bash
+supabase functions deploy telegram-webhook --no-verify-jwt
+
+supabase secrets set TELEGRAM_BOT_TOKEN=<token จาก BotFather ข้อ 3.1>
+supabase secrets set TELEGRAM_WEBHOOK_SECRET=<สุ่มสตริงยาว ๆ เอง ไม่ใช่ตัวเดียวกับ CRON_SECRET>
+```
+
+แล้วผูก webhook เข้ากับบอท (ทำครั้งเดียว):
+```bash
+curl "https://api.telegram.org/bot<TOKEN>/setWebhook" \
+  -d url="https://tnvzeahfugmmrydtnsdv.supabase.co/functions/v1/telegram-webhook" \
+  -d secret_token="<TELEGRAM_WEBHOOK_SECRET เดียวกับด้านบน>"
+```
+ต้องได้ `{"ok":true,"result":true,...}` กลับมา · ตรวจสอบทีหลังได้ด้วย
+`https://api.telegram.org/bot<TOKEN>/getWebhookInfo`
+
+- `secret_token` คือด่านกันคนอื่นยิง POST ปลอมมาที่ endpoint นี้ (Telegram จะแนบ
+  header `X-Telegram-Bot-Api-Secret-Token` มาให้ทุกครั้ง ฟังก์ชันเทียบค่าเอง)
+- `--no-verify-jwt` จำเป็นเหมือนกับ `notify-water` เพราะ Telegram ไม่ส่ง JWT ของ Supabase มา
+
+### 3.3 Deploy function ยิงแจ้งเตือน (Edge Function `notify-water`) + secrets
 ```bash
 supabase login
 supabase link --project-ref tnvzeahfugmmrydtnsdv
 
 supabase functions deploy notify-water --no-verify-jwt
 
-supabase secrets set TELEGRAM_BOT_TOKEN=<token จาก BotFather ข้อ 3.1>
+supabase secrets set TELEGRAM_BOT_TOKEN=<token เดียวกับข้อ 3.1/3.2>
 supabase secrets set CRON_SECRET=<สุ่มสตริงยาว ๆ เอง>
 supabase secrets set SITE_URL=https://usmanwaji.github.io/waterchaidantai
 ```
 - `--no-verify-jwt` จำเป็น เพราะฟังก์ชันถูกเรียกโดยตัวตั้งเวลา ไม่ใช่ผู้ใช้ล็อกอิน (ป้องกันด้วย `CRON_SECRET` แทน)
 - **ไม่ต้อง** ตั้ง `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` — Supabase ใส่ให้อัตโนมัติ
 
-### 3.3 ตั้งเวลาให้รันทุก 15 นาที (Supabase SQL Editor)
+### 3.4 ตั้งเวลาให้รันทุก 15 นาที (Supabase SQL Editor)
 ```sql
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
@@ -129,7 +150,7 @@ select cron.schedule(
   $$
   select net.http_post(
     url     := 'https://tnvzeahfugmmrydtnsdv.supabase.co/functions/v1/notify-water',
-    headers := jsonb_build_object('Content-Type','application/json','x-cron-secret','<CRON_SECRET เดียวกับ 3.2>'),
+    headers := jsonb_build_object('Content-Type','application/json','x-cron-secret','<CRON_SECRET เดียวกับ 3.3>'),
     body    := '{}'::jsonb
   );
   $$
@@ -137,9 +158,14 @@ select cron.schedule(
 ```
 (หรือใช้ Dashboard → Edge Functions → notify-water → Schedules แต่ต้องใส่ header `x-cron-secret` เอง)
 
-### 3.4 เพิ่มกฎ + ทดสอบ
+### 3.5 เพิ่มกฎเฉพาะทาง (ถ้าต้องการ) + ทดสอบ
+ถ้าทำข้อ 3.2 แล้ว ประชาชนทั่วไปสมัครรับแจ้งเตือนทั้งจังหวัดเองได้จากปุ่มในบอทอยู่แล้ว
+ไม่ต้องเพิ่มกฎในนี้ · เข้าหน้านี้เฉพาะตอนต้องการกฎที่ระบบไม่รองรับเอง เช่น
+**เฉพาะสถานีเดียว** หรือ **กลุ่ม/หน่วยงานที่อยากตั้งเกณฑ์เอง**
+
 - เพิ่มกฎที่หน้า **alert.html** (ล็อกอินสมาชิกอนุมัติ → ⚙️ กติกาแจ้งเตือน → + เพิ่มกฎ)
   เช่น metric `% ของตลิ่ง`, threshold `80`, channel `telegram:-1001234567890`
+  (chat id ของผู้ใช้แต่ละคนดูได้จากพิมพ์ `/status` ในบอท ไม่ต้องเปิด `getUpdates` เอง)
 - ทดสอบยิงเองครั้งเดียว:
 ```bash
 curl -X POST 'https://tnvzeahfugmmrydtnsdv.supabase.co/functions/v1/notify-water' \
