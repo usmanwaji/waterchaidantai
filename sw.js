@@ -5,7 +5,7 @@
  *   • ข้อมูล API (GET) → network-first แล้วเก็บชุดล่าสุดไว้ ใช้ตอนออฟไลน์ ("last good data")
  * เพิ่มเลขเวอร์ชันเมื่อแก้ไฟล์เพื่อบังคับอัปเดตแคช
  */
-const VERSION = 'oms-v24';
+const VERSION = 'oms-v25';
 const SHELL = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 
@@ -17,7 +17,7 @@ const SHELL_ASSETS = [
   // ต้องใส่ ?v= ให้ตรงกับที่หน้าเว็บเรียกจริง เพราะแคชอ้างอิง URL เต็มรวม query string
   'js/tabbar.js?v=2','js/visits-widget.js?v=1',
   'shared.css?v=5',
-  'manifest.json','icon.svg','icon-512.png'
+  'manifest.json','icon.svg','icon-512.png','icon-512-maskable.png'
 ];
 
 self.addEventListener('install', event => {
