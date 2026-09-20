@@ -15,7 +15,7 @@
   "enableNotifications": false,
   "startUrl": "/index.html",
   "iconUrl": "https://naraflood.com/icon-512.png",
-  "maskableIconUrl": "https://naraflood.com/icon-512.png",
+  "maskableIconUrl": "https://naraflood.com/icon-512-maskable.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./android.keystore",
