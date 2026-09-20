@@ -138,7 +138,7 @@ footer a{color:var(--st-watch);text-decoration:none}
 /* ชื่อบอท Telegram ที่ใช้ส่งแจ้งเตือน (ไม่ต้องใส่ @) — สร้างด้วย @BotFather แล้วแก้ตรงนี้ที่เดียว
    ต้องเป็นบอทตัวเดียวกับ TELEGRAM_BOT_TOKEN ที่ตั้งไว้ใน Supabase secrets
    ปล่อยว่างไว้ = ปุ่มจะขึ้นว่ายังไม่ได้ตั้งค่า แทนที่จะพาไปลิงก์เสีย */
-const TG_BOT = '';
+const TG_BOT = 'NaraFloodbot';
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const STATUS = {enabled:{c:'var(--st-normal)',l:'เปิด'}, disabled:{c:'var(--ink-3)',l:'ปิด'}};
