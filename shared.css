@@ -104,6 +104,9 @@
   /* ---------- บันได z มีชื่อ ห้าม z-index ดิบในคอมโพเนนต์ ----------
      ค่าสูงกว่า 1000 เพราะ Leaflet บนหน้า map และ route วาดตัวเองถึง ~1000
      แถบล่างต้องลอยเหนือแผนที่เสมอ ไม่งั้นแท็บหายไปทั้งหน้า */
+  /* ปุ่มลอยอยู่เหนือแผนที่ แต่ต้องต่ำกว่าแถบล่างและฉากหลังของแผ่นเมนู
+     ไม่งั้นเปิดแผ่น "เพิ่มเติม" แล้วปุ่มติดตั้งจะลอยทะลุขึ้นมาทับฉากหลัง */
+  --z-fab:1150;
   --z-bar:1200;
   --z-scrim:1250;
   --z-sheet:1300;
@@ -113,6 +116,9 @@
      ต้องอ้างตัวเลขชุดเดียวกัน ไม่งั้นจะมีอยู่หน้าเดียวที่เนื้อหาโดนแถบล่างบัง
      แล้วไม่มีใครหาสาเหตุเจอ */
   --tabbar-h:58px;
+  /* ปุ่มติดตั้งแอปลอยเหนือแถบล่าง ของมุมล่างซ้ายอื่น (คำอธิบายสีของแผนที่)
+     ต้องหลบด้วยตัวเลขเดียวกันนี้ ไม่ใช่ตัวเลขที่กะเอาแยกกันคนละที่ */
+  --install-fab-h:44px;
 
   /* ---------- ระยะ ฐาน 4px ---------- */
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
@@ -530,8 +536,12 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
   .chip,.provlbl{min-height:40px;padding:8px 14px;display:inline-flex;align-items:center}
   select,input:not([type=checkbox]):not([type=radio]){min-height:40px}
   .btn.sm,.langbtn,.pop-btn,.hbtn,.pbtn,.vbtn{min-height:38px;min-width:38px}
-  /* Leaflet วาดปุ่มควบคุมของตัวเองที่ขนาดตายตัว ปล่อยไว้ */
-  button:not(.leaflet-container button):not(.leaflet-control button):not(.tabbar button){min-height:36px}
+  /* Leaflet วาดปุ่มควบคุมของตัวเองที่ขนาดตายตัว ปล่อยไว้
+     .install-x (ปุ่มปิดปุ่มติดตั้ง) ก็ยกเว้นด้วย เพราะมันเป็นวงกลมที่คร่อมมุม
+     ของปุ่มหลัก ถูกยืดเป็น 36px แล้วจะกลายเป็นวงรี และเป้าที่ใหญ่ขึ้นตรงนั้น
+     คือเป้าที่นิ้วกดโดนโดยไม่ได้ตั้งใจ แล้วปุ่มติดตั้งหายไปทั้งปุ่ม
+     เป้าหลักที่ต้องได้ 44px คือตัวปุ่มติดตั้งเอง ซึ่งได้อยู่แล้ว */
+  button:not(.leaflet-container button):not(.leaflet-control button):not(.tabbar button):not(.install-x){min-height:36px}
   label input[type=checkbox],label input[type=radio]{min-width:20px;min-height:20px}
 }
 
@@ -619,4 +629,141 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
 /* ---------- เคารพการตั้งค่าลดการเคลื่อนไหว ---------- */
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+
+/* =========================================================================
+   9. ปุ่มติดตั้งแอป ลอยมุมล่างซ้าย (markup ถูกใส่โดย js/install.js)
+   กดปุ่มนี้ Android จะติดตั้งเว็บเป็นแอปและวางไอคอนไว้บนหน้าจอโฮมให้เลย
+   ปุ่มมีทั้งไอคอนและคำเหมือนแถบล่าง ปุ่มกลมเปล่าไม่บอกใครว่ากดแล้วได้อะไร
+   ซึ่งบนของที่ขอ "ติดตั้ง" ยิ่งต้องบอก เพราะคนไม่กดของที่เดาไม่ออก
+   ========================================================================= */
+.install-dock{
+  position:fixed;z-index:var(--z-fab);
+  /* ประกาศค่าธรรมดาไว้ก่อนหนึ่งชุด แล้วทับด้วยชุดที่คิด safe area
+     เบราว์เซอร์ที่ไม่รู้จัก env()/max() จะทิ้งบรรทัดหลังและยังได้ตำแหน่งที่ถูก
+     ถ้าประกาศแต่ชุดหลัง ปุ่มจะไปโผล่กลางหน้าตามตำแหน่ง static */
+  left:var(--s3);
+  left:max(var(--s3),env(safe-area-inset-left));
+  /* เหนือแถบแท็บ ไม่ใช่ทับ — ปุ่มที่คร่อมแถบล่างทำให้กดแท็บซ้ายสุดพลาด */
+  bottom:calc(var(--tabbar-h) + var(--s3));
+  bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--s3));
+  opacity:0;transform:translateY(10px);pointer-events:none;
+  transition:opacity .22s var(--ease),transform .22s var(--ease);
+}
+.install-dock.show{opacity:1;transform:translateY(0);pointer-events:auto}
+.install-fab{
+  display:inline-flex;align-items:center;gap:var(--s2);
+  height:var(--install-fab-h);
+  /* ขวาเว้นมากกว่าซ้าย เพราะปุ่มปิดลอยคร่อมมุมขวาบนอยู่
+     ถ้าเว้นเท่ากันวงกลมปุ่มปิดจะทับตัวอักษรท้ายคำ */
+  padding:0 var(--s5) 0 var(--s3);
+  border:none;border-radius:var(--r-commit);
+  background:var(--signal);color:var(--signal-ink);
+  font-family:inherit;font-size:13.5px;font-weight:600;line-height:1;
+  box-shadow:var(--lift-2);cursor:pointer;
+  transition:background .15s var(--ease),transform .06s var(--ease);
+}
+.install-fab:hover{background:var(--signal-hover)}
+.install-fab:active{transform:scale(.96)}
+.install-fab svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;display:block}
+/* ปุ่มปิด: ของที่ชวนติดตั้งต้องปิดได้ ไม่งั้นมันคือของที่ต้องทนอยู่กับมัน
+   วางเยื้องมุมขวาบนของปุ่มหลัก ให้เป้าสัมผัสสองอันไม่ทับกัน */
+.install-x{
+  position:absolute;top:-8px;right:-8px;
+  width:28px;height:28px;min-height:28px;display:grid;place-items:center;
+  border:1px solid var(--line-mid);border-radius:var(--r-commit);
+  background:var(--card);color:var(--ink-3);
+  cursor:pointer;box-shadow:var(--lift-1);padding:0;
+}
+.install-x:hover{color:var(--ink);border-color:var(--line-strong)}
+.install-x svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2;
+  stroke-linecap:round;display:block}
+/* จอคอมไม่มีแถบล่าง ปุ่มจึงลงไปชิดขอบล่างได้ */
+@media(min-width:769px){
+  .install-dock{bottom:var(--s4);bottom:calc(var(--s4) + env(safe-area-inset-bottom))}
+}
+/* คำอธิบายสีของ Leaflet อยู่มุมล่างซ้ายเหมือนกัน (map.html, forecast.html)
+   ตอนปุ่มโผล่ต้องยกให้พ้น ไม่งั้นบรรทัดบนของคีย์สีระดับน้ำถูกปุ่มทับ */
+body.has-install-fab .leaflet-bottom.leaflet-left{
+  margin-bottom:calc(var(--install-fab-h) + var(--s5));
+}
+@media(max-width:768px){
+  body.has-install-fab .leaflet-bottom.leaflet-left{
+    margin-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--install-fab-h) + var(--s5));
+  }
+}
+
+/* ---------- แผ่นบอกวิธีติดตั้งด้วยมือ ----------
+   ใช้กับเบราว์เซอร์ที่ไม่มี beforeinstallprompt (Safari บน iOS เป็นหลัก)
+   คนละตัวกับ .sheet ของแถบแท็บ เพราะ .sheet ถูกซ่อนบนจอคอม
+   แต่แผ่นนี้ต้องใช้ได้ทุกความกว้าง เบราว์เซอร์ที่ติดตั้งมือก็มีบนจอคอม */
+.install-scrim{
+  position:fixed;inset:0;z-index:var(--z-scrim);
+  background:rgba(16,32,41,.55);
+  opacity:0;pointer-events:none;transition:opacity .22s var(--ease);
+}
+.install-scrim.show{opacity:1;pointer-events:auto}
+.install-sheet{
+  position:fixed;inset:auto 0 0 0;z-index:var(--z-sheet);
+  width:min(560px,100%);margin:0 auto;
+  background:var(--card);color:var(--ink);
+  border-radius:var(--r-sheet) var(--r-sheet) 0 0;
+  box-shadow:var(--lift-3);
+  padding:var(--s3) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom));
+  transform:translateY(100%);transition:transform .28s var(--ease);
+  max-height:85vh;overflow-y:auto;
+}
+.install-sheet.show{transform:translateY(0)}
+.install-sheet h2{font-size:16px;font-weight:700;line-height:var(--lh-tight);margin-bottom:var(--s2)}
+.install-lead{font-size:13px;line-height:var(--lh-thai);color:var(--ink-2);margin-bottom:var(--s3)}
+/* ขั้นตอนมีเลขกำกับ เพราะลำดับคือเนื้อหา ไม่ใช่การประดับ */
+.install-steps{list-style:none;counter-reset:ist;margin:0 0 var(--s3);padding:0}
+.install-steps li{
+  counter-increment:ist;position:relative;
+  padding:0 0 0 var(--s6);margin-bottom:var(--s3);
+  font-size:13.5px;line-height:var(--lh-thai);
+}
+.install-steps li::before{
+  content:counter(ist);position:absolute;left:0;top:1px;
+  width:24px;height:24px;display:grid;place-items:center;
+  border-radius:var(--r-commit);
+  background:var(--signal-wash);color:var(--signal);
+  font-size:12.5px;font-weight:700;line-height:1;
+}
+.install-sheet-actions{display:flex;gap:var(--s2);flex-wrap:wrap}
+.install-btn{
+  flex:1 1 auto;min-height:42px;padding:0 var(--s4);
+  border:none;border-radius:var(--r-control);
+  background:var(--signal);color:var(--signal-ink);
+  font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;
+}
+.install-btn:hover{background:var(--signal-hover)}
+.install-btn.ghost{background:var(--card-2);color:var(--ink-2);border:1px solid var(--line-mid)}
+.install-btn.ghost:hover{background:var(--paper-2);color:var(--ink)}
+
+/* ---------- ป้ายยืนยันหลังติดตั้งเสร็จ ----------
+   ตอนติดตั้งเสร็จ Android ไม่บอกอะไรเลยนอกจากไอคอนที่โผล่บนหน้าจอโฮม
+   ซึ่งคนที่ยังอยู่บนหน้าเว็บมองไม่เห็น ป้ายนี้คือคำตอบว่า "แล้วมันไปอยู่ไหน" */
+.install-toast{
+  position:fixed;z-index:var(--z-sheet);
+  left:var(--s3);right:var(--s3);bottom:calc(var(--tabbar-h) + var(--s3));
+  left:max(var(--s3),env(safe-area-inset-left));
+  right:max(var(--s3),env(safe-area-inset-right));
+  bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--s3));
+  max-width:420px;
+  background:var(--ink);color:var(--signal-ink);
+  font-size:13px;font-weight:500;line-height:var(--lh-thai);
+  padding:10px var(--s3);border-radius:var(--r-control);
+  box-shadow:var(--lift-3);
+  opacity:0;transform:translateY(10px);
+  transition:opacity .22s var(--ease),transform .22s var(--ease);
+}
+.install-toast.show{opacity:1;transform:translateY(0)}
+@media(min-width:769px){
+  .install-toast{bottom:var(--s4);bottom:calc(var(--s4) + env(safe-area-inset-bottom))}
+}
+/* ปุ่มลอยกับแผ่นบอกวิธีเป็น chrome ของหน้าจอ ไม่ใช่เนื้อหา ไม่ต้องติดไปบนกระดาษ */
+@media print{
+  .install-dock,.install-sheet,.install-scrim,.install-toast{display:none!important}
 }
