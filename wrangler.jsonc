@@ -1,0 +1,30 @@
+// wrangler.jsonc — ค่าตั้งของ Cloudflare Workers สำหรับเสิร์ฟเว็บนี้เป็น static assets
+//
+// ที่มา: ไฟล์นี้ถูกสร้างโดยบอท cloudflare-workers-and-pages เมื่อ 24 ก.ค. 2026
+// ตอนลองต่อ repo เข้ากับ Cloudflare (สาขา cloudflare/workers-autoconfig
+// กับ -2 ซึ่งต่างกันแค่ชื่อโปรเจกต์: waterchaidantai กับ waterchaidantaitmd)
+// เก็บไฟล์ไว้บน main เพื่อให้ลบสองสาขานั้นได้โดยไม่เสียค่าตั้งนี้ไป
+//
+// ของจริงที่ใช้อยู่ตอนนี้: เว็บ deploy ด้วย GitHub Pages → naraflood.com
+// (ดู DEPLOY.md ข้อ 1) ไฟล์นี้ยังไม่ได้ใช้เสิร์ฟหน้าเว็บ
+//
+// อย่าสับสนกับ Worker สามตัวในรีโปนี้ (tmd-proxy.worker.js, onwr-proxy.worker.js,
+// ddpm-proxy.worker.js) ซึ่งเป็น proxy แก้ CORS ให้ API ราชการ แต่ละตัว
+// deploy แยกเป็น Worker ของตัวเองตาม DEPLOY.md ข้อ 1.1 ไม่ได้อ่านค่าจากไฟล์นี้
+//
+// ถ้าวันหนึ่งจะย้ายมาเสิร์ฟด้วย Workers จริง ต้องทบทวน assets.directory ก่อน
+// เพราะ "." คือทั้งรีโป ซึ่งรวมไฟล์ที่ไม่ใช่ของหน้าเว็บ (*.md, supabase/, telerid-scraper/)
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "waterchaidantai",
+  "compatibility_date": "2026-07-24",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "."
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
+}
