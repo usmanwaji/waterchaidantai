@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>สไลด์บรรยาย naraflood.com · เว็บเฝ้าระวังน้ำท่วมจังหวัดนราธิวาส</title>
+<meta name="description" content="สไลด์บรรยายเกี่ยวกับ naraflood.com — ที่มา โครงสร้างหน้าเว็บ แหล่งข้อมูล เกณฑ์เตือนภัย และสถาปัตยกรรมระบบ">
+<meta name="robots" content="noindex">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================================
+   slides.html · สไลด์บรรยายเกี่ยวกับ naraflood.com
+   ไฟล์นี้ตั้งใจให้ยืนได้ด้วยตัวเอง ไม่ผูกกับ shared.css
+   เพราะเวลาบรรยายจริงมักเปิดจากไฟล์เดียวบนเครื่องที่ไม่มีเน็ต
+   token สีชุดนี้คัดมาจาก shared.css เพื่อให้สไลด์กับเว็บจริงเป็นของชุดเดียวกัน
+   ========================================================================= */
+:root{
+  --paper:#f2f4fa; --paper-2:#e8ecf6; --card:#fdfdff; --card-2:#f3f5fc;
+  --line:#dfe4f0; --line-mid:#bcc4da; --line-strong:#8189a6;
+  --ink:#1a1f33; --ink-2:#454d68; --ink-3:#666e8c;
+  --signal:#1c3282; --signal-hover:#142663; --signal-deep:#0e1a45;
+  --signal-wash:#e7ebf7; --signal-ink:#f8faff;
+  --brand-yellow:#ffd400;
+  --st-normal:#15803d;  --st-normal-wash:#dcfce7;
+  --st-watch:#a16207;   --st-watch-wash:#fef3c7;
+  --st-warn:#c2410c;    --st-warn-wash:#ffedd5;
+  --st-danger:#be123c;  --st-danger-wash:#ffe4e6;
+  --lift-1:0 0 0 1px rgba(26,31,51,.045),0 2px 6px rgba(28,50,130,.07);
+  --lift-2:0 0 0 1px rgba(26,31,51,.035),0 8px 22px rgba(28,50,130,.11);
+  --ui:'IBM Plex Sans Thai','IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--ui); color:var(--ink); background:var(--paper-2);
+  line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- เวที: สไลด์ 16:9 ที่ย่อตามจอด้วย scale เดียว ----------
+   ใช้ระบบพิกัดคงที่ 1280x720 แล้วย่อทั้งแผ่น ทำให้ทุกอย่างบนสไลด์
+   มีสัดส่วนเดียวกันเสมอ ไม่ว่าจะฉายโปรเจกเตอร์ จอโน้ตบุ๊ก หรือมือถือ */
+#stage{
+  position:fixed; inset:0; display:grid; place-items:center; overflow:hidden;
+}
+.deck{ position:relative; width:1280px; height:720px; transform-origin:center center; }
+.slide{
+  position:absolute; inset:0; background:var(--card); border-radius:18px;
+  box-shadow:var(--lift-2); padding:56px 64px 64px;
+  display:none; flex-direction:column; overflow:hidden;
+}
+.slide.on{ display:flex; animation:in .28s cubic-bezier(.23,1,.32,1) both }
+@keyframes in{ from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none} }
+
+/* ---------- หัวสไลด์ ---------- */
+.eyebrow{
+  font-size:14px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--signal); margin:0 0 10px;
+}
+h1{ font-size:44px; line-height:1.25; margin:0 0 10px; font-weight:700; letter-spacing:-.01em }
+h2{ font-size:34px; line-height:1.3; margin:0 0 6px; font-weight:700; letter-spacing:-.01em }
+.sub{ font-size:19px; color:var(--ink-2); margin:0 0 26px; max-width:78ch }
+/* เนื้อสไลด์จัดกลางแนวตั้งในพื้นที่ที่เหลือ แผ่นที่เนื้อสั้นจึงไม่ลอยอยู่บนสุด
+   ส่วนหมายเหตุที่เป็นลูกโดยตรงของ .slide ยังถูกดันลงไปชิดขอบล่างเหมือนเดิม */
+.slide-body{ flex:1; min-height:0; display:flex; flex-direction:column; justify-content:center }
+
+/* ---------- แผ่นเปิด ---------- */
+.cover{
+  background:linear-gradient(160deg,var(--signal-deep),var(--signal) 58%,#24409c);
+  color:var(--signal-ink); justify-content:center; padding:64px 72px;
+}
+.cover h1{ font-size:64px; margin:0 0 16px }
+.cover .sub{ color:#cfd8f4; font-size:22px; max-width:66ch }
+.cover .eyebrow{ color:var(--brand-yellow) }
+.cover .rule{ width:96px; height:5px; background:var(--brand-yellow); border-radius:99px; margin:26px 0 }
+.cover .meta{ font-size:16px; color:#b8c4ec; margin-top:8px }
+
+/* ---------- การ์ด/กริด ---------- */
+.grid{ display:grid; gap:16px }
+.g2{ grid-template-columns:repeat(2,1fr) }
+.g3{ grid-template-columns:repeat(3,1fr) }
+.g4{ grid-template-columns:repeat(4,1fr) }
+.card{
+  background:var(--card-2); border:1px solid var(--line); border-radius:14px;
+  padding:18px 20px;
+}
+.card h3{ font-size:19px; margin:0 0 6px; font-weight:600 }
+.card p{ font-size:15.5px; color:var(--ink-2); margin:0 }
+.card .tag{
+  display:inline-block; font-size:12.5px; font-weight:600; color:var(--signal);
+  background:var(--signal-wash); border-radius:99px; padding:3px 10px; margin-bottom:8px;
+}
+
+/* ---------- รายการ ---------- */
+ul.pts{ margin:0; padding:0; list-style:none; display:grid; gap:14px }
+ul.pts li{ position:relative; padding-left:28px; font-size:19px; color:var(--ink-2) }
+ul.pts li::before{
+  content:''; position:absolute; left:6px; top:12px; width:9px; height:9px;
+  border-radius:3px; background:var(--signal);
+}
+ul.pts li b{ color:var(--ink); font-weight:600 }
+ul.sm li{ font-size:16.5px }
+ul.sm li::before{ top:10px; width:7px; height:7px }
+
+/* ---------- ตัวเลขเด่น ---------- */
+.stat{ background:var(--card-2); border:1px solid var(--line); border-radius:14px; padding:18px 20px }
+.stat .n{ font-size:40px; font-weight:700; line-height:1.1; letter-spacing:-.02em; color:var(--signal) }
+.stat .l{ font-size:14.5px; color:var(--ink-3); margin-top:4px }
+
+/* ---------- แถบระดับสถานะ ---------- */
+.levels{ display:grid; gap:10px }
+.lv{ display:grid; grid-template-columns:132px 1fr; gap:14px; align-items:center }
+.lv .chip{
+  font-size:14.5px; font-weight:600; text-align:center; border-radius:99px; padding:6px 10px;
+}
+.lv .txt{ font-size:16.5px; color:var(--ink-2) }
+.c-normal{ background:var(--st-normal-wash); color:var(--st-normal) }
+.c-watch{ background:var(--st-watch-wash); color:var(--st-watch) }
+.c-warn{ background:var(--st-warn-wash); color:var(--st-warn) }
+.c-danger{ background:var(--st-danger-wash); color:var(--st-danger) }
+
+/* ---------- ผังสถาปัตยกรรม ---------- */
+.arch{ display:grid; grid-template-columns:1fr 46px 1fr 46px 1fr; align-items:stretch; gap:0 }
+.arch .box{
+  background:var(--card-2); border:1px solid var(--line-mid); border-radius:14px; padding:16px 18px;
+}
+.arch .box h4{ font-size:17px; margin:0 0 8px; font-weight:600 }
+.arch .box ul{ margin:0; padding-left:18px; font-size:14.5px; color:var(--ink-2); line-height:1.7 }
+.arch .arrow{ display:grid; place-items:center; color:var(--line-strong); font-size:24px }
+
+/* ---------- ตาราง ---------- */
+table{ width:100%; border-collapse:collapse; font-size:16px }
+th,td{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--line) }
+th{ font-size:13.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); font-weight:600 }
+td b{ font-weight:600; color:var(--ink) }
+tr:last-child td{ border-bottom:0 }
+
+/* ---------- หมายเหตุท้ายแผ่น ---------- */
+.slide > .note{ margin-top:auto }
+.note{
+  margin-top:18px; padding-top:16px; font-size:14px; color:var(--ink-3);
+  border-top:1px solid var(--line);
+}
+.kbd{
+  font-family:var(--ui); font-size:13px; background:var(--paper-2);
+  border:1px solid var(--line-mid); border-bottom-width:2px; border-radius:6px; padding:1px 7px;
+}
+
+/* ---------- เลขหน้า/แถบความคืบหน้า ---------- */
+.pager{
+  position:fixed; right:18px; bottom:14px; z-index:5;
+  font-size:13.5px; color:var(--ink-3); background:rgba(253,253,255,.9);
+  border:1px solid var(--line); border-radius:99px; padding:5px 13px;
+  font-variant-numeric:tabular-nums;
+}
+.bar{ position:fixed; left:0; top:0; height:3px; background:var(--signal); z-index:6; transition:width .25s }
+.nav{
+  position:fixed; left:18px; bottom:14px; z-index:5; display:flex; gap:8px;
+}
+.nav button{
+  font-family:var(--ui); font-size:14px; color:var(--ink-2); cursor:pointer;
+  background:rgba(253,253,255,.9); border:1px solid var(--line); border-radius:99px;
+  padding:5px 14px; min-height:32px;
+}
+.nav button:hover{ border-color:var(--line-strong); color:var(--ink) }
+.nav button:focus-visible{ outline:2px solid var(--signal); outline-offset:2px }
+
+/* ---------- พิมพ์เป็น PDF: หนึ่งสไลด์ต่อหนึ่งหน้ากระดาษแนวนอน ---------- */
+@media print{
+  @page{ size:1280px 720px; margin:0 }
+  body{ background:#fff }
+  #stage{ position:static; display:block; overflow:visible }
+  .deck{ width:auto; height:auto; transform:none!important }
+  .slide{
+    position:static; display:flex!important; animation:none;
+    width:1280px; height:720px; border-radius:0; box-shadow:none;
+    break-after:page; page-break-after:always;
+  }
+  .pager,.nav,.bar{ display:none }
+}
+</style>
+</head>
+<body>
+
+<div class="bar" id="bar" style="width:0"></div>
+
+<div id="stage">
+<div class="deck" id="deck">
+
+  <!-- 1 ───────────────────────────────────────────── -->
+  <section class="slide cover on">
+    <p class="eyebrow">สไลด์บรรยาย</p>
+    <h1>naraflood.com</h1>
+    <div class="rule"></div>
+    <p class="sub">รวมข้อมูลสถานการณ์น้ำท่วมจังหวัดนราธิวาสไว้ในที่เดียว<br>สำหรับประชาชนและเจ้าหน้าที่ที่ต้องตัดสินใจเร็วในวันที่ฝนตกหนัก</p>
+    <p class="meta">เว็บเปิดใช้งานฟรี · ติดตั้งเป็นแอปได้ · จัดทำโดยอาสาสมัครอิสระ</p>
+  </section>
+
+  <!-- 2 ───────────────────────────────────────────── -->
+  <section class="slide">
+    <p class="eyebrow">ปัญหาที่ตั้งต้น</p>
+    <h2>ข้อมูลมีครบ แต่อยู่คนละที่</h2>
+    <p class="sub">ตอนน้ำกำลังมา คนที่ต้องตัดสินใจไม่ได้ขาดข้อมูล — เขาขาดเวลาไล่เปิดทีละเว็บ</p>
+    <div class="slide-body">
+      <div class="grid g3">
+        <div class="card"><span class="tag">กระจัดกระจาย</span><h3>ห้าหน่วยงาน ห้าเว็บ</h3><p>ระดับน้ำอยู่ที่ สสน./ชลประทาน · ฝนพยากรณ์อยู่ที่กรมอุตุฯ · เรดาร์อยู่ที่ สทนช. · กล้องอยู่ที่ ปภ. แต่ละที่คนละรูปแบบ</p></div>
+        <div class="card"><span class="tag">อ่านยาก</span><h3>ตัวเลขดิบไม่ตอบคำถาม</h3><p>“ระดับน้ำ 6.20 ม.” ไม่ได้บอกว่าต้องกังวลไหม ถ้าไม่รู้ว่าตลิ่งอยู่ที่เท่าไรและน้ำกำลังขึ้นหรือลง</p></div>
+        <div class="card"><span class="tag">ไม่ทันเวลา</span><h3>รู้ตอนน้ำถึงบ้านแล้ว</h3><p>ข่าวสารมาถึงชาวบ้านช้ากว่าตัวน้ำ โดยเฉพาะพื้นที่ปลายน้ำที่มีเวลาเตรียมตัวเพียงไม่กี่ชั่วโมง</p></div>
+      </div>
+      <div class="grid g2" style="margin-top:20px">
+        <div class="card"><h3>คำถามที่คนถามจริงมีแค่สี่ข้อ</h3><p>ตอนนี้เป็นยังไง · น้ำอยู่ตรงไหน · บ้านฉันโดนไหม · ไปไหนได้ — เว็บทั้งเว็บถูกจัดเรียงตามสี่คำถามนี้ ไม่ใช่ตามชื่อหน่วยงานเจ้าของข้อมูล</p></div>
+        <div class="card"><h3>ออกแบบเผื่อสภาพจริง</h3><p>มือถือกลางแดด เน็ตช้า แบตใกล้หมด และคนใช้ที่ไม่เคยเห็นเว็บนี้มาก่อน — ซึ่งคือคนส่วนใหญ่ตอนน้ำกำลังมา</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 ───────────────────────────────────────────── -->
+  <section class="slide">
+    <p class="eyebrow">ภาพรวม</p>
+    <h2>เว็บเดียว ตอบสี่คำถาม</h2>
+    <p class="sub">แถบล่างมีปลายทางหลักเพียงสี่อัน ที่เหลืออยู่ในแผ่น “เพิ่มเติม” — เมนูเหมือนกันทุกหน้าไม่มีข้อยกเว้น</p>
+    <div class="slide-body">
+      <div class="grid g4">
+        <div class="card"><span class="tag">ตอนนี้เป็นยังไง</span><h3>สถานการณ์</h3><p>หน้าแรก — สรุปฝน ดินอิ่มน้ำ และสถานีที่ต้องเฝ้าระวัง</p></div>
+        <div class="card"><span class="tag">น้ำอยู่ตรงไหน</span><h3>แผนที่น้ำ</h3><p>สถานีวัดระดับน้ำ เรดาร์ฝน เขื่อน และกล้อง ปภ. บนแผนที่เดียว</p></div>
+        <div class="card"><span class="tag">บ้านฉันโดนไหม</span><h3>พื้นที่ฉัน</h3><p>เลือกอำเภอหรือใช้ตำแหน่งปัจจุบัน แล้วได้คำตอบในหน้าเดียว</p></div>
+        <div class="card"><span class="tag">ไปไหนได้</span><h3>ศูนย์พักพิง</h3><p>ศูนย์ที่เปิดรับใกล้ที่สุด พร้อมเส้นทางและความจุ</p></div>
+      </div>
+      <div class="grid g3" style="margin-top:20px">
+        <div class="card"><h3>คาดการณ์และย้อนหลัง</h3><p>คาดการณ์ · ย้อนหลัง (ภาพดาวเทียม) · พื้นที่เสี่ยงน้ำท่วมซ้ำซาก</p></div>
+        <div class="card"><h3>ลงมือ</h3><p>เส้นทางเลี่ยงน้ำท่วม · ทรัพยากรและเครื่องจักรสาธารณภัย · สมัครรับแจ้งเตือน</p></div>
+        <div class="card"><h3>สำหรับเจ้าหน้าที่</h3><p>ศูนย์บัญชาการ (EOC) · ทะเบียนกลุ่มเปราะบาง · ผู้ดูแลระบบ · สถิติผู้เข้าชม</p></div>
+      </div>
+    </div>
+    <p class="note">ปลายทางหลักมีสี่อันโดยตั้งใจ — ถ้าต้องการอันที่หก แปลว่าสองอันควรยุบเป็นอันเดียว</p>
+  </section>
+
+  <!-- 4 ───────────────────────────────────────────── -->
+  <section class="slide">
+    <p class="eyebrow">หน้าแรก · index</p>
+    <h2>สรุปให้ก่อน แล้วค่อยแจกแจง</h2>
+    <p class="sub">คนเปิดหน้าแรกเพื่อหาคำตอบว่า “ต้องกังวลไหม” — ไม่ใช่เพื่อดูตาราง</p>
+    <div class="slide-body">
+      <div class="grid g2">
+        <div>
+          <ul class="pts">
+            <li><b>แถบสรุปสถานการณ์</b> — สถานะรวมของจังหวัดในบรรทัดเดียว</li>
+            <li><b>ฝนพยากรณ์ 24 ชม. และ 7 วัน</b> รายอำเภอ จากแบบจำลอง Open-Meteo</li>
+            <li><b>ดัชนีดินอิ่มน้ำ</b> — ฝนสะสม 3 วันที่ผ่านมา ตัวเร่งที่คนมักมองข้าม</li>
+            <li><b>สถานีเฝ้าระวัง</b> — ระดับน้ำเทียบระดับตลิ่ง พร้อมทิศทางว่ากำลังขึ้นหรือลด</li>
+            <li><b>แผนที่ฝนคาดการณ์ 13 อำเภอ</b> พร้อมตัวเลขบนแผนที่ จากกรมอุตุนิยมวิทยา</li>
+          </ul>
+        </div>
+        <div class="grid" style="gap:14px; align-content:start">
+          <div class="stat"><div class="n">13</div><div class="l">อำเภอในจังหวัดนราธิวาสที่มีข้อมูลฝนคาดการณ์รายวัน</div></div>
+          <div class="stat"><div class="n">24 ชม. / 7 วัน</div><div class="l">ช่วงพยากรณ์สองระดับ — ระดับตัดสินใจวันนี้ และระดับวางแผนทั้งสัปดาห์</div></div>
+          <div class="stat"><div class="n">1 เกณฑ์</div><div class="l">หน้าแรกกับหน้าคาดการณ์ใช้เกณฑ์ชุดเดียวกัน แก้ที่เดียวเปลี่ยนพร้อมกัน</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 ───────────────────────────────────────────── -->
+  <section class="slide">
+    <p class="eyebrow">เช็คพื้นที่ฉัน · check</p>
+    <h2>คำตอบในหน้าเดียว ไม่ต้องแปลตัวเลขเอง</h2>
+    <p class="sub">หน้านี้ทำงานแทนคนใช้ — รับ “ที่ไหน” แล้วคืน “เสี่ยงแค่ไหน และควรทำอะไร”</p>
+    <div class="slide-body">
+      <div class="grid g3">
+        <div class="card"><span class="tag">ขั้นที่ 1</span><h3>บอกพื้นที่</h3><p>เลือกอำเภอจากรายการ หรือกดใช้ตำแหน่งปัจจุบัน — ไม่ต้องสมัครสมาชิก ไม่ต้องกรอกอะไร</p></div>
+        <div class="card"><span class="tag">ขั้นที่ 2</span><h3>เห็นระดับความเสี่ยง</h3><p>ระบบรวมฝนพยากรณ์ ดินอิ่มน้ำ และระดับน้ำสถานีใกล้เคียง ออกมาเป็นระดับเดียวที่อ่านได้ทันที</p></div>
+        <div class="card"><span class="tag">ขั้นที่ 3</span><h3>รู้ว่าต้องทำอะไร</h3><p>คำแนะนำตามระดับ พร้อมทางลัดไปศูนย์พักพิงใกล้ที่สุดและปุ่มสมัครรับแจ้งเตือน</p></div>
+      </div>
+      <div class="levels" style="margin-top:26px">
+        <div class="lv"><span class="chip c-normal">ปกติ</span><span class="txt">ติดตามข่าวตามปกติ ไม่มีสัญญาณที่ต้องเตรียมตัวเป็นพิเศษ</span></div>
+        <div class="lv"><span class="chip c-watch">เฝ้าระวัง</span><span class="txt">เริ่มเก็บของขึ้นที่สูง ตรวจสอบเส้นทางออกจากพื้นที่ไว้ล่วงหน้า</span></div>
+        <div class="lv"><span class="chip c-warn">เตือนภัย</span><span class="txt">เตรียมกระเป๋าฉุกเฉิน ย้ายรถและกลุ่มเปราะบางไปจุดปลอดภัย</span></div>
+        <div class="lv"><span class="chip c-danger">วิกฤต</span><span class="txt">อพยพตามคำสั่งของหน่วยงานในพื้นที่ทันที อย่ารอให้น้ำถึงบ้าน</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 ───────────────────────────────────────────── -->
+  <section class="slide">
+    <p class="eyebrow">แผนที่น้ำ · map</p>
+    <h2>ทุกชั้นข้อมูลซ้อนอยู่บนแผนที่เดียว</h2>
+    <p class="sub">แทนที่จะสลับเว็บ ให้สลับชั้นข้อมูลบนแผนที่เดิม — จุดอ้างอิงเชิงพื้นที่จึงไม่หายไประหว่างทาง</p>
+    <div class="slide-body">
+      <div class="grid g2">
+        <div class="card"><h3>สถานีวัดระดับน้ำ</h3><p>ระดับปัจจุบันเทียบระดับตลิ่ง สีตามสถานะ กดดูกราฟย้อนหลังรายสถานีได้ · ที่มา: thaiwater.net (สสน.) และกรมชลประทาน</p></div>
+        <div class="card"><h3>เรดาร์และฝนคาดการณ์ สทนช.</h3><p>เรดาร์กรมอุตุฯ พร้อมคาดการณ์ 3 ชม. · ฝนสะสม 3 ชม. ล่วงหน้ารายอำเภอ/ตำบล · ฝนรายสถานีรายชั่วโมง</p></div>
+        <div class="card"><h3>กล้อง CCTV ปภ.</h3><p>ภาพจากกล้องตรวจสถานการณ์น้ำในพื้นที่ ดูสภาพจริงได้โดยไม่ต้องลงพื้นที่</p></div>
+        <div class="card"><h3>เขื่อนและอ่างเก็บน้ำ</h3><p>ปริมาณน้ำกักเก็บและการระบาย ตัวแปรที่เปลี่ยนสถานการณ์ปลายน้ำได้ภายในไม่กี่ชั่วโมง</p></div>
+      </div>
+      <div class="card" style="margin-top:18px; background:var(--signal-wash); border-color:#c9d3ef">
+        <h3>ขอบเขตข้อมูลถูกตัดเหลือเฉพาะนราธิวาสตั้งแต่ต้นทาง</h3>
+        <p>ชั้นข้อมูลระดับตำบลของ สทนช. ทั้งประเทศมีขนาดราว 8 MB — ระบบกรองเหลือเฉพาะจังหวัดก่อนส่งถึงเครื่องผู้ใช้ และแคชไว้ 5 นาที เพื่อให้เปิดได้จริงบนเน็ตมือถือกลางพายุ</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 ───────────────────────────────────────────── -->
+  <section class="slide">
+    <p class="eyebrow">คาดการณ์ · forecast</p>
+    <h2>ฝนคือต้นเหตุ ดินและระดับน้ำคือตัวเร่ง</h2>
+    <p class="sub">หลักคิดของเกณฑ์: ดินชื้นในฤดูที่ฝนไม่ตกไม่ทำให้เกิดน้ำท่วม จึงต้องไม่ขึ้นสีเตือน</p>
+    <div class="slide-body">
+      <div class="grid g2">
+        <div>
+          <h3 style="font-size:18px;margin:0 0 10px">เกณฑ์ฝนพยากรณ์ (กรมอุตุนิยมวิทยา)</h3>
+          <table>
+            <tr><th>ตัวชี้วัด</th><th>เกณฑ์</th></tr>
+            <tr><td>ฝนตกหนัก</td><td><b>35 มม./วัน</b></td></tr>
+            <tr><td>ฝนตกหนักมาก</td><td><b>90 มม./วัน</b></td></tr>
+            <tr><td>ฝนสะสม 3 วันข้างหน้า</td><td><b>70 / 120 / 200 มม.</b></td></tr>
+            <tr><td>ดินอิ่มน้ำ (ฝนสะสม 3 วันที่ผ่านมา)</td><td><b>80 / 150 / 250 มม.</b></td></tr>
+          </table>
+        </div>
+        <div>
+          <h3 style="font-size:18px;margin:0 0 10px">เกณฑ์ระดับน้ำรายสถานี</h3>
+          <table>
+            <tr><th>ตัวชี้วัด</th><th>เกณฑ์</th></tr>
+            <tr><td>น้ำกำลังขึ้น</td><td><b>0.02 ม./ชม.</b> (12 ซม. ใน 6 ชม.)</td></tr>
+            <tr><td>น้ำขึ้นเร็ว</td><td><b>0.05 ม./ชม.</b> (30 ซม. ใน 6 ชม.)</td></tr>
+            <tr><td>น้ำมาก (เกณฑ์ สสน.)</td><td><b>70% ของตลิ่ง</b></td></tr>
+            <tr><td>ใกล้ตลิ่ง เฝ้าระวังแม้ทรงตัว</td><td><b>85% ของตลิ่ง</b></td></tr>
+            <tr><td>ข้อมูลเก่าเกินกว่าจะใช้คาดการณ์</td><td><b>เกิน 6 ชม.</b></td></tr>
+          </table>
+        </div>
+      </div>
+      <p class="note">ฝนรวม 250 มม. ที่กระจาย 7 วัน ไม่อันตรายเท่า 200 มม. ใน 3 วัน — เกณฑ์จึงดูฝนสะสมต่อเนื่อง ไม่ใช่ยอดรวมทั้งสัปดาห์</p>
+    </div>
+  </section>
+
+  <!-- 8 ───────────────────────────────────────────── -->
+  <section class="slide">
+    <p class="eyebrow">ลงมือ</p>
+    <h2>ศูนย์พักพิง เส้นทาง และทรัพยากร</h2>
+    <p class="sub">สามหน้าที่ถูกเปิดมากที่สุดในวันที่ต้องย้ายคนจริง</p>
+    <div class="slide-body">
+      <div class="grid g3">
+        <div class="card"><span class="tag">ไปไหนได้</span><h3>ศูนย์พักพิงชั่วคราว</h3><p>รายชื่อศูนย์ที่เปิดรับ เรียงตามระยะทางจากตำแหน่งผู้ใช้ พร้อมความจุ ผู้ประสานงาน และปุ่มนำทาง</p></div>
+        <div class="card"><span class="tag">ไปยังไง</span><h3>เส้นทางน้ำท่วม</h3><p>จุดที่น้ำท่วมขังและถนนที่ผ่านไม่ได้ เพื่อให้เลือกเส้นทางเลี่ยงก่อนออกรถ ไม่ใช่หลังติดอยู่กลางทาง</p></div>
+        <div class="card"><span class="tag">ใครช่วยได้</span><h3>ทรัพยากรและเครื่องจักร</h3><p>เรือ รถยกสูง เครื่องสูบน้ำ และกำลังพลในพื้นที่ พร้อมช่องทางร้องขอจากหน่วยงาน</p></div>
+      </div>
+      <div class="grid g3" style="margin-top:20px">
+        <div class="card"><h3>ย้อนหลัง</h3><p>ขอบเขตน้ำท่วมจากภาพถ่ายดาวเทียม GISTDA เทียบกับเหตุการณ์ในอดีต</p></div>
+        <div class="card"><h3>พื้นที่เสี่ยงซ้ำซาก</h3><p>พื้นที่ที่ท่วมซ้ำทุกปี ใช้วางแผนล่วงหน้าตั้งแต่ก่อนเข้าฤดูฝน</p></div>
+        <div class="card"><h3>แบบจำลอง (DEM 30 ม.)</h3><p>จำลองระดับน้ำบนแบบจำลองความสูงภูมิประเทศ เพื่อดูว่าน้ำจะไปถึงไหนที่ระดับต่าง ๆ</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 ───────────────────────────────────────────── -->
+  <section class="slide">
+    <p class="eyebrow">แจ้งเตือน · alert</p>
+    <h2>สมัครเองได้ในแชท ไม่ต้องรอใครอนุมัติ</h2>
+    <p class="sub">ช่องทางแจ้งเตือนย้ายมาอยู่บน Telegram — เปิดใช้งานได้ทันทีและส่งถึงมือถือแม้ไม่ได้เปิดเว็บทิ้งไว้</p>
+    <div class="slide-body">
+      <div class="grid g3">
+        <div class="card"><span class="tag">ขั้นที่ 1</span><h3>เปิดบอท</h3><p>ค้นหา <b>@NaraFloodbot</b> ใน Telegram แล้วพิมพ์ <b>/start</b></p></div>
+        <div class="card"><span class="tag">ขั้นที่ 2</span><h3>เลือกระดับความไว</h3><p>เลือกว่าจะให้เตือนตั้งแต่ระดับเฝ้าระวัง หรือเฉพาะตอนเข้าขั้นวิกฤต</p></div>
+        <div class="card"><span class="tag">ขั้นที่ 3</span><h3>รับข้อความอัตโนมัติ</h3><p>ระบบตรวจเกณฑ์ตามรอบ แล้วส่งเฉพาะตอนที่สถานการณ์ข้ามเกณฑ์จริง</p></div>
+      </div>
+      <div class="grid g2" style="margin-top:20px">
+        <div class="card"><h3>เตือนเท่าที่จำเป็น</h3><p>การเตือนบ่อยเกินไปทำให้คนปิดการแจ้งเตือนทิ้ง ซึ่งอันตรายกว่าการไม่เตือนเลย ระบบจึงส่งเมื่อข้ามเกณฑ์ ไม่ใช่ส่งรายงานทุกชั่วโมง</p></div>
+        <div class="card"><h3>ประวัติการเตือนเปิดเผย</h3><p>หน้าแจ้งเตือนแสดงประวัติการเตือนล่าสุดให้ทุกคนย้อนดูได้ ว่าระบบเคยเตือนอะไรไปแล้วบ้างและตรงกับสถานการณ์จริงแค่ไหน</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 ──────────────────────────────────────────── -->
+  <section class="slide">
+    <p class="eyebrow">สำหรับเจ้าหน้าที่</p>
+    <h2>ส่วนที่ต้องล็อกอิน</h2>
+    <p class="sub">ข้อมูลสาธารณะเปิดให้ทุกคน ส่วนข้อมูลที่กระทบความเป็นส่วนตัวถูกกั้นด้วยสิทธิ์ที่ระดับฐานข้อมูล</p>
+    <div class="slide-body">
+      <div class="grid g4">
+        <div class="card"><h3>ศูนย์บัญชาการ (EOC)</h3><p>รวมเหตุการณ์ คำร้องขอทรัพยากร และสถานะศูนย์พักพิงในหน้าเดียวสำหรับผู้บัญชาการเหตุการณ์</p></div>
+        <div class="card"><h3>ทะเบียนกลุ่มเปราะบาง</h3><p>ผู้สูงอายุ ผู้ป่วยติดเตียง และผู้พิการที่ต้องช่วยก่อน — จำกัดสิทธิ์ตามขอบเขตจังหวัดของผู้ใช้</p></div>
+        <div class="card"><h3>ผู้ดูแลระบบ</h3><p>อนุมัติบัญชีเจ้าหน้าที่ กำหนดสิทธิ์ และตั้งค่ากฎการแจ้งเตือน</p></div>
+        <div class="card"><h3>สถิติผู้เข้าชม</h3><p>หน้าที่ถูกเปิดมากที่สุด อุปกรณ์ และแหล่งที่มา ใช้ตัดสินว่าจะปรับปรุงตรงไหนต่อ</p></div>
+      </div>
+      <div class="card" style="margin-top:22px; background:var(--signal-wash); border-color:#c9d3ef">
+        <h3>การซ่อนปุ่มไม่ใช่การรักษาความปลอดภัย</h3>
+        <p>ปุ่มของหน้าที่ต้องมีสิทธิ์ยังแสดงอยู่ในเมนูตามปกติ คนที่ไม่มีสิทธิ์กดแล้วจะเจอหน้าให้ล็อกอินแทน — ตัวกั้นจริงอยู่ที่นโยบายสิทธิ์ระดับแถวในฐานข้อมูล ไม่ใช่ที่หน้าเว็บ</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 ──────────────────────────────────────────── -->
+  <section class="slide">
+    <p class="eyebrow">แหล่งข้อมูล</p>
+    <h2>ทุกตัวเลขมีเจ้าของ</h2>
+    <p class="sub">เว็บนี้ไม่ผลิตข้อมูลเอง หน้าที่ของมันคือรวบรวม แปลให้อ่านง่าย และอ้างที่มาให้ตรวจสอบย้อนได้</p>
+    <div class="slide-body">
+      <table>
+        <tr><th>แหล่ง</th><th>ใช้กับอะไร</th></tr>
+        <tr><td><b>กรมอุตุนิยมวิทยา (TMD)</b></td><td>พยากรณ์ 7 วันรายภาค · แผนที่เสี่ยงภัยและฝนคาดการณ์รายอำเภอ · ภาพเรดาร์</td></tr>
+        <tr><td><b>สสน. — thaiwater.net</b></td><td>ระดับน้ำรายสถานีและระดับตลิ่ง · ฝนสะสม · ข้อมูลเขื่อนและอ่างเก็บน้ำ</td></tr>
+        <tr><td><b>สทนช. (ONWR)</b></td><td>เรดาร์พร้อมคาดการณ์ 3 ชม. · ฝนสะสมล่วงหน้ารายอำเภอ/ตำบล · ขอบเขตอำเภอและตำบล</td></tr>
+        <tr><td><b>กรมชลประทาน (RID)</b></td><td>สถานีวัดระดับน้ำในลำน้ำสายหลัก</td></tr>
+        <tr><td><b>ปภ. (DDPM)</b></td><td>ภาพกล้องตรวจสถานการณ์น้ำในพื้นที่</td></tr>
+        <tr><td><b>GISTDA</b></td><td>ขอบเขตพื้นที่น้ำท่วมย้อนหลังจากภาพถ่ายดาวเทียม</td></tr>
+        <tr><td><b>Open-Meteo</b></td><td>แบบจำลองพยากรณ์ฝนและอากาศ 24 ชม. / 7 วัน รายพิกัด</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- 12 ──────────────────────────────────────────── -->
+  <section class="slide">
+    <p class="eyebrow">สถาปัตยกรรม</p>
+    <h2>เว็บนิ่ง ๆ ที่ยังดึงข้อมูลสดได้</h2>
+    <p class="sub">ทั้งระบบไม่มีเซิร์ฟเวอร์ที่ต้องดูแล ค่าใช้จ่ายจึงอยู่ในระดับที่อาสาสมัครรับไหวในระยะยาว</p>
+    <div class="slide-body">
+      <div class="arch">
+        <div class="box">
+          <h4>หน้าเว็บ</h4>
+          <ul>
+            <li>HTML/CSS/JS ล้วน ไม่มีขั้นตอน build</li>
+            <li>โฮสต์บน GitHub Pages</li>
+            <li>PWA + Service Worker ติดตั้งเป็นแอปและเปิดซ้ำได้ตอนเน็ตล่ม</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="box">
+          <h4>ตัวกลางข้อมูล</h4>
+          <ul>
+            <li>Cloudflare Workers แก้ปัญหา API ราชการที่ไม่เปิด CORS</li>
+            <li>กรองข้อมูลให้เหลือเฉพาะนราธิวาสก่อนส่ง</li>
+            <li>แคช 5 นาที – 1 ชม. ลดภาระต้นทางและโหลดเร็วขึ้น</li>
+          </ul>
+        </div>
+        <div class="arrow">→</div>
+        <div class="box">
+          <h4>ฐานข้อมูลและแจ้งเตือน</h4>
+          <ul>
+            <li>Supabase — บัญชีผู้ใช้ สิทธิ์ระดับแถว ศูนย์พักพิง เหตุการณ์</li>
+            <li>Edge Functions ตรวจเกณฑ์และส่งแจ้งเตือน</li>
+            <li>Telegram Bot API เป็นช่องทางถึงผู้ใช้</li>
+          </ul>
+        </div>
+      </div>
+      <div class="grid g3" style="margin-top:24px">
+        <div class="stat"><div class="n">570 KB → 2 KB</div><div class="l">ขนาดไฟล์ฝนคาดการณ์ทั้งประเทศ หลังกรองเหลือ 13 อำเภอและแคชไว้ 1 ชม.</div></div>
+        <div class="stat"><div class="n">8 MB</div><div class="l">ชั้นข้อมูลระดับตำบลของ สทนช. ทั้งประเทศ ถูกตัดเหลือเฉพาะนราธิวาสที่ตัวกลาง ก่อนถึงมือถือผู้ใช้</div></div>
+        <div class="stat"><div class="n">0 เซิร์ฟเวอร์</div><div class="l">ไม่มีเครื่องที่ต้องแพตช์หรือต่ออายุ ทุกชิ้นอยู่บนบริการที่มีชั้นใช้ฟรี</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 ──────────────────────────────────────────── -->
+  <section class="slide">
+    <p class="eyebrow">ระบบออกแบบ</p>
+    <h2>สีคือข้อมูล ไม่ใช่ของตกแต่ง</h2>
+    <p class="sub">กฎเหล็กของระบบสี: สีสถานะสงวนไว้ให้สถานการณ์เท่านั้น ห้ามใช้กับปุ่มหรือเมนูเด็ดขาด</p>
+    <div class="slide-body">
+      <div class="grid g2">
+        <div>
+          <ul class="pts sm">
+            <li><b>สีของเว็บ</b> คือน้ำเงินกรมท่า ใช้กับปุ่ม แท็บ ชิป และลิงก์ทั้งหมด</li>
+            <li><b>สีของสถานการณ์</b> คือเขียว–เหลือง–ส้ม–แดง ใช้เฉพาะตอนบอกระดับความเสี่ยง</li>
+            <li>ถ้าเอาสีส้มไปใช้กับปุ่มรีเฟรช พอมีอำเภอเสี่ยงระดับส้มขึ้นมาจริง <b>สีจะหมดแรงเตือน</b> เพราะตาคนชินไปแล้ว</li>
+            <li><b>เมนูล่างเหมือนกันทุกหน้า</b> สร้างจากแหล่งความจริงแหล่งเดียว เมนูที่ไม่ตรงกันระหว่างหน้าคือข้อบกพร่อง</li>
+            <li><b>ไอคอนวาดเป็นเส้น ไม่ใช้ emoji</b> เพราะ emoji เรนเดอร์ไม่เหมือนกันระหว่าง Android, iOS และ Windows</li>
+            <li><b>ทุกข้อความวัดค่าความต่างสีจริงอย่างน้อย 4.5:1</b> เพราะคนอ่านหน้านี้กลางแดด</li>
+          </ul>
+        </div>
+        <div class="grid" style="gap:12px; align-content:start">
+          <div class="card"><h3 style="color:var(--signal)">สีของเว็บ</h3><p>ปุ่ม · แท็บ · ลิงก์ · ชิปตัวกรอง — ไม่มีความหมายเชิงเตือนภัย</p></div>
+          <div class="levels">
+            <div class="lv"><span class="chip c-normal">ปกติ</span><span class="txt">สถานะเท่านั้น</span></div>
+            <div class="lv"><span class="chip c-watch">เฝ้าระวัง</span><span class="txt">สถานะเท่านั้น</span></div>
+            <div class="lv"><span class="chip c-warn">เตือนภัย</span><span class="txt">สถานะเท่านั้น</span></div>
+            <div class="lv"><span class="chip c-danger">วิกฤต</span><span class="txt">สถานะเท่านั้น</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 ──────────────────────────────────────────── -->
+  <section class="slide">
+    <p class="eyebrow">การเข้าถึง</p>
+    <h2>เปิดจากเบราว์เซอร์ หรือติดตั้งเป็นแอป</h2>
+    <p class="sub">คนส่วนใหญ่เจอเว็บนี้ครั้งแรกจากลิงก์ที่เพื่อนส่งมา — ทางเข้าจึงต้องไม่มีขั้นตอนให้สะดุด</p>
+    <div class="slide-body">
+      <div class="grid g3">
+        <div class="card"><span class="tag">เว็บ</span><h3>naraflood.com</h3><p>เปิดได้ทันทีทุกเครื่อง ไม่ต้องสมัครสมาชิกสำหรับข้อมูลสาธารณะทั้งหมด</p></div>
+        <div class="card"><span class="tag">PWA</span><h3>ติดตั้งลงหน้าจอ</h3><p>กด “เพิ่มไปยังหน้าจอโฮม” แล้วใช้งานเหมือนแอป · Service Worker เก็บหน้าไว้ให้เปิดซ้ำได้แม้สัญญาณขาด</p></div>
+        <div class="card"><span class="tag">Android</span><h3>แอปบน Play Store</h3><p>ห่อเว็บเป็นแอปด้วย TWA พร้อมนโยบายความเป็นส่วนตัวและภาพหน้าจอตามเกณฑ์ของ Play Console</p></div>
+      </div>
+      <div class="grid g2" style="margin-top:20px">
+        <div class="card"><h3>ความเป็นส่วนตัว</h3><p>ข้อมูลสาธารณะไม่ต้องล็อกอิน ตำแหน่งที่ตั้งใช้ในเครื่องเพื่อคำนวณระยะทางและไม่ถูกเก็บเป็นประวัติ รายละเอียดทั้งหมดอยู่ที่หน้านโยบายความเป็นส่วนตัว</p></div>
+        <div class="card"><h3>แชร์ต่อได้ทันที</h3><p>ทุกหน้าเป็นลิงก์ของตัวเอง ส่งต่อในกลุ่มไลน์หมู่บ้านแล้วเปิดตรงเข้าหน้าที่ต้องการได้เลย</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15 ──────────────────────────────────────────── -->
+  <section class="slide">
+    <p class="eyebrow">ข้อจำกัดที่ต้องพูดให้ชัด</p>
+    <h2>เครื่องมือประกอบการตัดสินใจ ไม่ใช่ประกาศทางการ</h2>
+    <div class="slide-body">
+      <div class="grid g2">
+        <div class="card" style="background:var(--st-watch-wash); border-color:#e7d9a8">
+          <h3>ไม่ใช่เว็บของหน่วยงานราชการ</h3>
+          <p>จัดทำและดูแลโดยอาสาสมัครอิสระ ต้องใช้ร่วมกับประกาศของหน่วยงานที่รับผิดชอบพื้นที่เสมอ เมื่อมีคำสั่งอพยพให้ยึดคำสั่งนั้นเป็นหลัก</p>
+        </div>
+        <div class="card"><h3>ข้อมูลเท่าที่ต้นทางส่งมา</h3><p>ถ้าสถานีวัดขัดข้องหรือ API ต้นทางล่ม หน้าเว็บจะบอกตรง ๆ ว่าโหลดไม่สำเร็จ และไม่แสดงค่าที่เก่ากว่า 6 ชั่วโมงเป็นสถานการณ์ปัจจุบัน</p></div>
+        <div class="card"><h3>พยากรณ์คือความน่าจะเป็น</h3><p>ฝนคาดการณ์มาจากแบบจำลอง ไม่ใช่สิ่งที่เกิดขึ้นแน่นอน เกณฑ์สีจึงบอก “ระดับที่ควรเตรียมตัว” ไม่ใช่คำรับประกันว่าน้ำจะท่วมหรือไม่ท่วม</p></div>
+        <div class="card"><h3>ครอบคลุมเฉพาะนราธิวาส</h3><p>ขอบเขตข้อมูลถูกตัดไว้ที่ 13 อำเภอโดยตั้งใจ เพื่อให้ข้อมูลลึกพอใช้งานจริง มีโครงสร้างเดียวกันที่ขยายไปจังหวัดอื่นได้ในอนาคต</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 16 ──────────────────────────────────────────── -->
+  <section class="slide cover">
+    <p class="eyebrow">สรุป</p>
+    <h1>ข้อมูลที่ใช้ตัดสินใจได้<br>ภายในสามสิบวินาที</h1>
+    <div class="rule"></div>
+    <p class="sub">เปิดเว็บ → เห็นสถานการณ์รวม → เช็คพื้นที่ตัวเอง → รู้ว่าต้องเตรียมอะไรและไปที่ไหน<br>และถ้าไม่อยากเปิดเอง ให้บอทส่งมาบอกเมื่อสถานการณ์ข้ามเกณฑ์</p>
+    <p class="meta"><b>naraflood.com</b> · แจ้งเตือน: <b>@NaraFloodbot</b> บน Telegram · นโยบายความเป็นส่วนตัว: naraflood.com/privacy.html</p>
+  </section>
+
+</div>
+</div>
+
+<div class="nav">
+  <button type="button" id="prev" aria-label="สไลด์ก่อนหน้า">← ก่อนหน้า</button>
+  <button type="button" id="next" aria-label="สไลด์ถัดไป">ถัดไป →</button>
+  <button type="button" id="print" aria-label="บันทึกเป็น PDF">บันทึก PDF</button>
+</div>
+<div class="pager" id="pager">1 / 16</div>
+
+<script>
+(function(){
+  'use strict';
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var deck   = document.getElementById('deck');
+  var pager  = document.getElementById('pager');
+  var bar    = document.getElementById('bar');
+  var i = 0;
+
+  /* เลขสไลด์ผูกกับ #hash เพื่อให้ส่งลิงก์ชี้ตรงแผ่นที่กำลังพูดถึงได้ */
+  function show(n, push){
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function(s, k){ s.classList.toggle('on', k === i); });
+    pager.textContent = (i + 1) + ' / ' + slides.length;
+    bar.style.width = ((i + 1) / slides.length * 100) + '%';
+    if (push !== false) history.replaceState(null, '', '#' + (i + 1));
+  }
+
+  /* ย่อทั้งแผ่นด้วย scale เดียว แทนการให้แต่ละชิ้นยืดหดเอง
+     สัดส่วนบนจอมือถือจึงเท่ากับที่เห็นตอนฉายโปรเจกเตอร์เป๊ะ ๆ */
+  function fit(){
+    var pad = window.innerWidth < 700 ? 8 : 28;
+    var s = Math.min((window.innerWidth - pad * 2) / 1280, (window.innerHeight - pad * 2) / 720);
+    deck.style.transform = 'scale(' + s + ')';
+  }
+
+  document.getElementById('next').addEventListener('click', function(){ show(i + 1); });
+  document.getElementById('prev').addEventListener('click', function(){ show(i - 1); });
+  document.getElementById('print').addEventListener('click', function(){ window.print(); });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); show(i + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(i - 1); }
+    else if (e.key === 'Home') { show(0); }
+    else if (e.key === 'End') { show(slides.length - 1); }
+  });
+
+  /* ปัดซ้ายขวาบนมือถือ — เกณฑ์ 45px กันการปัดพลาดตอนเลื่อนอ่าน */
+  var x0 = null, y0 = null;
+  document.addEventListener('touchstart', function(e){
+    x0 = e.changedTouches[0].clientX; y0 = e.changedTouches[0].clientY;
+  }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) show(i + (dx < 0 ? 1 : -1));
+    x0 = y0 = null;
+  }, {passive:true});
+
+  window.addEventListener('resize', fit);
+  fit();
+  show(Math.max(0, (parseInt(location.hash.slice(1), 10) || 1) - 1), false);
+})();
+</script>
+</body>
+</html>
