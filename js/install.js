@@ -98,15 +98,82 @@
     if (shown || installed() || snoozed()) return;
     shown = true;
     var d = build();
-    /* คลาสบน body ให้ของอื่นที่อยู่มุมล่างซ้ายหลบได้ (คำอธิบายสีของแผนที่) */
-    document.body.classList.add('has-install-fab');
-    requestAnimationFrame(function () { d.classList.add('show'); });
+    requestAnimationFrame(function () { d.classList.add('show'); dodge(); });
   }
 
   function hide() {
     shown = false;
     document.body.classList.remove('has-install-fab');
     if (dock) dock.classList.remove('show');
+  }
+
+  /* ---------- ให้ของมุมล่างซ้ายหลบ เฉพาะตัวที่ปุ่มทับจริง ----------
+     คำอธิบายสีของ Leaflet อยู่มุมล่างซ้ายเหมือนกัน แต่ "มุมล่างซ้ายของแผนที่"
+     ไม่ได้อยู่ที่มุมล่างซ้ายของจอทุกหน้า: หน้าแผนที่กับเส้นทางแผนที่เต็มจอ
+     ขอบล่างของแผนที่คือขอบล่างของจอจริง แต่หน้าคาดการณ์บนมือถือแผนที่สูง 44vh
+     แล้ววางแผงข้อมูลไว้ใต้มัน คำอธิบายสีจึงอยู่กลางหน้า ห่างจากปุ่มเป็นร้อย px
+
+     รอบแรกใส่คลาสให้ทุกหน้าโดยไม่ดู แล้วกฎใน shared.css ยกคำอธิบายสีขึ้น 126px
+     บนหน้าคาดการณ์ หัวตารางจึงทะลุขอบบนของแผนที่ออกไป (วัดจริงแล้ว: บนสุด
+     ของกล่องอยู่เหนือขอบแผนที่ 16px) ตรงนี้จึงเปลี่ยนไปวัดก่อนว่าปุ่มทับจริงไหม
+     แล้วค่อยใส่คลาส วิธีนี้ถูกทุกหน้าโดยไม่ต้องไล่ชื่อหน้าเอาไว้ในโค้ด */
+  var GAP = 8;                    /* เผื่อระยะหายใจ ไม่ให้ชิดกันเป๊ะ */
+
+  function hits(el) {
+    if (!dock || !el) return false;
+    var a = dock.getBoundingClientRect();
+    var b = el.getBoundingClientRect();
+    if (!b.width || !b.height) return false;   /* ซ่อนอยู่ ไม่ต้องหลบ */
+    return !(b.bottom < a.top - GAP || b.top > a.bottom + GAP ||
+             b.right  < a.left - GAP || b.left > a.right + GAP);
+  }
+
+  function dodge() {
+    var body = document.body;
+    if (!shown) { body.classList.remove('has-install-fab'); return; }
+
+    /* ถอดคลาสก่อนวัด เพื่อดูตำแหน่ง "ตามธรรมชาติ" ของมัน
+       ถ้าวัดตอนที่มันถูกยกขึ้นไปแล้ว มันจะไม่ทับปุ่มอีก แล้วคลาสจะถูกถอด
+       ตกลงมาทับใหม่ วัดใหม่ว่าทับ ใส่คลาสอีก — กระพริบไม่จบ */
+    body.classList.remove('has-install-fab');
+    var els = document.querySelectorAll('.leaflet-bottom.leaflet-left');
+    for (var i = 0; i < els.length; i++) {
+      if (hits(els[i])) { body.classList.add('has-install-fab'); return; }
+    }
+  }
+
+  /* คำอธิบายสีของแผนที่โตขึ้นได้เมื่อมีแถวเพิ่ม และบางหน้าสร้างมันหลังโหลด
+     ข้อมูลเสร็จ จึงต้องวัดใหม่เมื่อ DOM ขยับ ไม่ใช่วัดครั้งเดียวตอนเปิดหน้า
+
+     หน่วง 250ms แบบ trailing ไม่ใช้ rAF เพราะ Leaflet เพิ่ม-ลบ tile รัว ๆ
+     ตอนลากแผนที่ ถ้าวัดทุกเฟรมจะได้ถอด-ใส่คลาสบน body ทุกเฟรมไปด้วย
+     ซึ่งบังคับให้เบราว์เซอร์คำนวณสไตล์ใหม่ทั้งหน้าในจังหวะที่นิ้วกำลังลากอยู่ */
+  var timer = null;
+  function scheduleDodge() {
+    if (!shown) return;
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(function () { timer = null; dodge(); }, 250);
+  }
+
+  /* tile ที่เกิด-ดับตอนลากแผนที่อยู่ใน .leaflet-pane ทั้งหมด และไม่เคย
+     เปลี่ยนตำแหน่งของคำอธิบายสีเลย กรองออกก่อนเพื่อไม่ต้องตั้งเวลาวัดเปล่า ๆ */
+  function relevant(list) {
+    for (var i = 0; i < list.length; i++) {
+      var t = list[i].target;
+      if (t && t.closest && t.closest('.leaflet-pane')) continue;
+      return true;
+    }
+    return false;
+  }
+
+  function watchLayout() {
+    window.addEventListener('resize', scheduleDodge);
+    window.addEventListener('orientationchange', scheduleDodge);
+    if (window.MutationObserver) {
+      new MutationObserver(function (list) {
+        if (relevant(list)) scheduleDodge();
+      }).observe(document.documentElement, { childList: true, subtree: true });
+    }
   }
 
   /* ---------- ขอติดตั้ง ----------
@@ -252,6 +319,7 @@
 
   function start() {
     if (installed() || snoozed()) return;
+    watchLayout();
 
     /* บนมือถือ แสดงปุ่มไว้ก่อนแม้ beforeinstallprompt ยังไม่มา
        เพราะบางเครื่องส่งช้า และ Safari บน iOS ไม่ส่งเลยแต่ติดตั้งมือได้
