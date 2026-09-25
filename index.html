@@ -48,14 +48,16 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 @media(max-width:768px){
   #content{grid-template-columns:1fr;padding:10px 8px 24px}
   /* มือถือ: ยกการ์ดเรดาร์ขึ้นบนสุดของหน้า (จอใหญ่คงลำดับเดิมใน HTML) */
-  /* มือถือ: เรียงการ์ดกรมอุตุฯ บนสุด — เรดาร์ (ตอนนี้) → คาดการณ์ (ล่วงหน้า) → ข้อมูลทางการ (เมื่อวาน) */
-  #radarCard{order:-3}
+  /* มือถือ: เรียงการ์ดกรมอุตุฯ บนสุด — เรดาร์ (ตอนนี้) → ฝน 3 ชม. → คาดการณ์ (ล่วงหน้า) → ข้อมูลทางการ (เมื่อวาน) */
+  #radarCard{order:-4}
+  #qpfCard{order:-3}
   #drCard{order:-2}
   #tmdCard{order:-1}
   /* มือถือ: ภาพเรดาร์กว้างเต็มจอ · ดึงออกนอกขอบการ์ด (13px + ขอบ 1px) และขอบหน้า (8px) */
   #radarCard .radarImgBox{margin:0 -22px;max-width:none}
   #radarImg{width:100%;max-width:none!important;border-radius:0!important;border-left:0!important;border-right:0!important}
   #radarFreeze{border-radius:0!important;border-left:0!important;border-right:0!important}
+  #qpfBox{margin:0 -22px;border-radius:0;border-left:0;border-right:0}
   .t-desk{display:none}
   header h1 small{display:none}
   #updated{display:none}
@@ -121,6 +123,13 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .radarImgBox{position:relative;max-width:100%;line-height:0}
 #radarFreeze{position:absolute;inset:0;width:100%;height:100%;display:none;border-radius:8px;border:1px solid var(--line);cursor:pointer}
 #radarImg{max-height:none!important}
+
+/* ฝน 3 ชม.ข้างหน้า · ภาพ QPF ทั้งประเทศ ครอปเฉพาะนราธิวาสด้วย QPF_CROP */
+#qpfCard{align-self:start}
+#qpfBox{display:block;position:relative;overflow:hidden;line-height:0;border-radius:8px;border:1px solid var(--line);background:var(--card-2)}
+#qpfBox[hidden]{display:none}
+#qpfImg{display:block;width:100%}
+#qpfMsg{font-size:12.5px;padding:6px 0}
 
 /* สถานการณ์น้ำท่า (telemeter gauges) */
 .wtaRow{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-around;align-items:flex-start}
@@ -311,6 +320,16 @@ footer a{color:var(--orange-warm);text-decoration:none}
       </div>
     </div>
     </div>
+  </div>
+
+  <div class="card" id="qpfCard">
+    <h2>คาดการณ์ฝน 3 ชั่วโมงข้างหน้า (กรมอุตุฯ) <span class="where" id="qpfUpdated"></span></h2>
+    <a id="qpfBox" target="_blank" rel="noopener" title="แตะเพื่อดูภาพเต็ม" hidden><img id="qpfImg" alt="คาดการณ์ฝน 3 ชั่วโมงข้างหน้า จ.นราธิวาส"></a>
+    <div id="qpfMsg" class="note"><span class="spin"></span> กำลังโหลด…</div>
+    <details class="fold fold-note">
+    <summary>คำอธิบาย</summary>
+    <div class="note">ภาพคาดการณ์ฝนระยะสั้น 3 ชั่วโมง (QPF) จากเรดาร์ผสมทั่วประเทศของกรมอุตุนิยมวิทยา ตัดมาเฉพาะบริเวณ จ.นราธิวาส · ออกใหม่ทุกชั่วโมง · แตะภาพเพื่อดูภาพเต็มทั้งประเทศ · ที่มา: <a href="https://satda.tmd.go.th/wp-content/uploads/data/radar_composite/radar_composite.php" target="_blank" rel="noopener">satda.tmd.go.th ↗</a></div>
+    </details>
   </div>
 
   <!-- ผู้เข้าชมเว็บไซต์ · js/visits-widget.js เติมเนื้อหาให้ และซ่อนการ์ดทั้งใบถ้าอ่านยอดไม่ได้ -->
@@ -768,6 +787,50 @@ function loadRadarImg(){
   if(upd) upd.textContent = 'โหลดล่าสุด ' + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
 }
 
+/* ---------- คาดการณ์ฝน 3 ชม.ข้างหน้า (QPF เรดาร์ผสม กรมอุตุฯ) ----------
+   ชื่อไฟล์เป็นเวลาออกภาพ UTC ปัดชั่วโมง เช่น qpf_202609251400.gif = 21:00 น. เวลาไทย
+   ไม่มีลิงก์ "ล่าสุด" จึงไล่ลองจากชั่วโมงปัจจุบันถอยหลังไปจนเจอภาพแรกที่มีจริง
+   <img> โหลดข้ามโดเมนได้โดยไม่ต้องผ่าน proxy เพราะไม่ได้อ่านพิกเซล */
+const QPF_BASE = 'https://satda.tmd.go.th/wp-content/uploads/data/radar_composite/max/qpf_';
+const QPF_TRIES = 6;
+/* กรอบ จ.นราธิวาส เป็นสัดส่วนของภาพเต็ม (0–1) · null = แสดงทั้งภาพ */
+const QPF_CROP = null;
+function qpfStamp(d){
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getUTCFullYear()}${p(d.getUTCMonth()+1)}${p(d.getUTCDate())}${p(d.getUTCHours())}00`;
+}
+function loadQpf(){
+  const box = document.getElementById('qpfBox'), img = document.getElementById('qpfImg'),
+        msg = document.getElementById('qpfMsg'), upd = document.getElementById('qpfUpdated');
+  if(!box || !img) return;
+  const start = new Date(); start.setUTCMinutes(0,0,0);
+  let i = 0;
+  const tryNext = () => {
+    if(i >= QPF_TRIES){
+      if(box.hidden){ msg.hidden = false; msg.innerHTML = 'โหลดภาพไม่สำเร็จ · ดูที่ <a href="https://satda.tmd.go.th/wp-content/uploads/data/radar_composite/radar_composite.php" target="_blank" rel="noopener">satda.tmd.go.th</a>'; }
+      return;
+    }
+    const t = new Date(start.getTime() - i*3600e3), url = QPF_BASE + qpfStamp(t) + '.gif';
+    i++;
+    const probe = new Image();
+    probe.onload = () => {
+      if(QPF_CROP){
+        const {x, y, w, h} = QPF_CROP;
+        box.style.aspectRatio = `${probe.naturalWidth*w} / ${probe.naturalHeight*h}`;
+        img.style.cssText = `position:absolute;max-width:none;width:${100/w}%;left:${-x/w*100}%;top:${-y/h*100}%`;
+      }
+      img.src = url;
+      box.href = url;
+      box.hidden = false;
+      msg.hidden = true;
+      if(upd) upd.textContent = 'ออกเมื่อ ' + t.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Bangkok'}) + ' น.';
+    };
+    probe.onerror = tryNext;
+    probe.src = url;
+  };
+  tryNext();
+}
+
 /* หยุดภาพเรดาร์ (GIF) ชั่วคราวตอน hover/แตะ โดยวาดเฟรมปัจจุบันลง canvas ทับไว้ */
 (function initRadarFreeze(){
   const box = document.getElementById('radarImgBox');
@@ -1037,12 +1100,14 @@ document.querySelectorAll('.chip[data-prov]').forEach(b=>{
 
 renderRadarBar();
 loadRadarImg();
+loadQpf();
 loadAll();
 loadTmd();
 loadDistRain();
 setInterval(loadTmd, 60*60*1000);
 setInterval(loadAll, 30*60*1000);
 setInterval(loadRadarImg, 10*60*1000);
+setInterval(loadQpf, 10*60*1000);
 setInterval(loadDistRain, 60*60*1000);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
