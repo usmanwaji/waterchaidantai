@@ -118,10 +118,13 @@
         tile('30 วันล่าสุด', m.visitors_30, m.views_30, delta(m.visitors_30, m.visitors_prev30)) +
       '</div>' +
       chart(rows) +
+      /* คำอธิบายพับไว้เหมือนการ์ดอื่นในหน้าแรก (ดู .fold-note ใน shared.css)
+         การ์ดนี้ถูกสร้างด้วย JS ทีหลัง จึงต้องเขียนโครง details เองตรงนี้ */
+      '<details class="fold fold-note"><summary>คำอธิบาย</summary>' +
       '<div class="note">นับผู้เข้าชมจากเบราว์เซอร์ 1 เครื่องต่อ 1 วัน · ' +
         'สะสมทั้งหมด ' + fmt(m.visitors_total) + ' คน ' + fmt(m.views_total) + ' ครั้ง' +
         (m.first_day ? ' ตั้งแต่ ' + dayLabel(m.first_day) : '') + ' · ' +
-        'ไม่เก็บคุกกี้ ไม่เก็บหมายเลขไอพี และไม่ระบุตัวบุคคล</div>';
+        'ไม่เก็บคุกกี้ ไม่เก็บหมายเลขไอพี และไม่ระบุตัวบุคคล</div></details>';
     card.hidden = false;
   }
 

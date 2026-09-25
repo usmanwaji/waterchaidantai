@@ -175,7 +175,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .tmdObsRow .hv{width:44px;text-align:right;color:var(--ink-3)}
 
 </style>
-<link rel="stylesheet" href="shared.css?v=7">
+<link rel="stylesheet" href="shared.css?v=8">
 </head>
 <body>
 
@@ -228,7 +228,10 @@ footer a{color:var(--orange-warm);text-decoration:none}
     <div id="hourRow"></div>
     <div class="fcLabel">รายวัน · 7 วันข้างหน้า</div>
     <div id="dayRow"><span class="spin"></span></div>
+    <details class="fold fold-note">
+    <summary>คำอธิบาย</summary>
     <div class="note">แหล่งข้อมูล: แบบจำลอง Open-Meteo (ผสาน GFS/ECMWF) ณ จุดศูนย์กลางอำเภอที่เลือก · เวลาไทย · แถวรายวันแสดงอุณหภูมิสูง/ต่ำ และโอกาสเกิดฝน · ปริมาณฝนคาดการณ์ (มม.) ดูที่การ์ด <b>คาดการณ์ปริมาณฝนรายอำเภอ</b> และแถบสรุปด้านบน</div>
+    </details>
   </div>
 
   <!-- แถวนี้จับคู่ "ข้อมูลทางการ" กับ "ฝนคาดการณ์รายอำเภอ" ไว้ข้างกันครึ่งหน้าจอละใบ
@@ -250,7 +253,10 @@ footer a{color:var(--orange-warm);text-decoration:none}
       </div>
     </div>
     </div>
+    <details class="fold fold-note">
+    <summary>คำอธิบาย</summary>
     <div class="note">ที่มา: กรมอุตุนิยมวิทยา (TMDAPI ทางการ) · พยากรณ์รายภาคออกใหม่ทุกวัน ~11:00 น. · ค่าตรวจวัด ณ 07:00 น. ฝนคือปริมาณสะสม 24 ชม.ที่ผ่านมา · การ์ดอื่นในหน้านี้เป็นแบบจำลอง Open-Meteo รายอำเภอ ใช้คู่กัน: ตัวเลขละเอียดจากแบบจำลอง + ภาพรวม/คำเตือนทางการจากกรมอุตุฯ · <a href="https://www.tmd.go.th" target="_blank" rel="noopener">เปิดเว็บกรมอุตุฯ ↗</a></div>
+    </details>
   </div>
 
   <div class="card" id="drCard">
@@ -265,20 +271,29 @@ footer a{color:var(--orange-warm);text-decoration:none}
     <div id="drTable"><span class="spin"></span> กำลังโหลด…</div>
     </div>
     </details>
+    <details class="fold fold-note">
+    <summary>คำอธิบาย</summary>
     <div class="note">ตัวเลขบนแผนที่/ตาราง = ฝนสะสมคาดการณ์ (มม./วัน) จากแบบจำลอง NWP กรมอุตุฯ · เกณฑ์: ≥35 ปานกลาง · ≥65 เสี่ยง · ≥125 เสี่ยงสูง · &gt;250 วิกฤต · อันดับเรียงจากฝนรวมตลอด 3 วัน ส่วนป้ายระดับมาจากวันที่ฝนหนักที่สุด · แตะพื้นที่/หมุดบนแผนที่หรือแถวในตารางเพื่อดูฝนคาดการณ์รายวันของอำเภอนั้น · ที่มา: <a href="https://hpc.tmd.go.th/riskmap-district" target="_blank" rel="noopener">แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุนิยมวิทยา ↗</a></div>
+    </details>
   </div>
 
   <div class="card full">
     <h2>มาตรวัดน้ำต้องระวังเป็นพิเศษ <span class="where" id="whereSt"></span></h2>
     <div id="stList"><span class="spin"></span></div>
+    <details class="fold fold-note">
+    <summary>คำอธิบาย</summary>
     <div class="note">เกณฑ์เดียวกับ <a href="forecast.html">หน้าคาดการณ์</a>: ล้นตลิ่งจริง / ≥85% ของตลิ่ง / กำลังขึ้นเร็วเกินครึ่งตลิ่ง · คลิกเพื่อดูบนแผนที่</div>
+    </details>
   </div>
 
   <div class="card full">
     <h2>สถานการณ์น้ำท่า · สถานีหลัก <span class="where">NWT02 · X.73 · X.119A</span></h2>
     <div class="swipe-hint">ปัดไปทางซ้ายเพื่อดูสถานีถัดไป (3 สถานี)</div>
     <div id="wtaRow" class="wtaRow"><span class="spin"></span> กำลังโหลด…</div>
+    <details class="fold fold-note">
+    <summary>คำอธิบาย</summary>
     <div class="note">ระดับน้ำจริง เทียบเส้นเฝ้าระวัง (เหลือง) และตลิ่ง (แดง) · X.73, X.119A (ม.รทก.) อัปเดตสดจาก thaiwater.net (สสน.) · NWT02 สะพานข้ามคลองบากง (อ.รือเสาะ) อัปเดตสดจากระบบ ปภ. (<a href="https://cctv.disaster.go.th/stations/NWT02" target="_blank" rel="noopener">cctv.disaster.go.th</a>) ใช้แทน X.199 ที่ไม่มีในข้อมูลเปิด</div>
+    </details>
   </div>
 
   <!-- แถวนี้จับคู่ "อำเภอที่ต้องเฝ้าระวัง" กับ "เรดาร์ฝน" ไว้ข้างกันครึ่งหน้าจอละใบ
@@ -287,9 +302,12 @@ footer a{color:var(--orange-warm);text-decoration:none}
   <div class="card">
     <h2>อำเภอที่ต้องเฝ้าระวังเป็นพิเศษ (7 วันนี้) <span class="where" id="whereAmp"></span></h2>
     <div id="ampList"><span class="spin"></span> กำลังประเมิน…</div>
+    <details class="fold fold-note">
+    <summary>คำอธิบาย</summary>
     <div class="note">ระดับความเสี่ยงตั้งต้นจาก <b>ฝนพยากรณ์</b> (Open-Meteo รายอำเภอ) ตามเกณฑ์กรมอุตุฯ: ฝนหนัก ≥35 มม./วัน · ฝนหนักมาก ≥90 มม./วัน · หรือฝนสะสม 3 วันติด ≥70/120/200 มม.<br>
       <b>ดินอิ่มน้ำ</b> (ฝน 3 วันที่ผ่านมา สสน.) และ <b>สถานีน้ำใกล้ตลิ่ง</b> เป็นตัวยกระดับ ใช้ได้เมื่อมีฝนหนักในพยากรณ์แล้วเท่านั้น — ฝนไม่ตกจึงไม่ขึ้นสีเตือน · สถานีที่ล้นตลิ่งอยู่จริงจะขึ้นสีส้มเสมอ<br>
       ใช้เกณฑ์ชุดเดียวกับ <a href="forecast.html">หน้าคาดการณ์</a> · คลิกชื่ออำเภอเพื่อดูพยากรณ์เฉพาะจุด</div>
+    </details>
   </div>
 
   <div class="card" id="radarCard">
@@ -1117,7 +1135,7 @@ setInterval(loadDistRain, 60*60*1000);
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
 <script src="js/views.js?v=3" defer></script>
-<script src="js/visits-widget.js?v=1" defer></script>
+<script src="js/visits-widget.js?v=2" defer></script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/tabbar.js?v=2" defer></script>
