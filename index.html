@@ -47,6 +47,8 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 .card h2 .where{font-size:11px;color:var(--muted);font-weight:400}
 @media(max-width:768px){
   #content{grid-template-columns:1fr;padding:10px 8px 24px}
+  /* มือถือ: ยกการ์ดเรดาร์ขึ้นบนสุดของหน้า (จอใหญ่คงลำดับเดิมใน HTML) */
+  #radarCard{order:-1}
   header h1 small{display:none}
   #updated{display:none}
   .card{padding:13px}
@@ -108,23 +110,9 @@ footer a{color:var(--orange-warm);text-decoration:none}
 #radarOpen{display:inline-flex;align-items:center;gap:6px;background:var(--orange);color:#fff;border:none;border-radius:9px;padding:8px 16px;font-family:inherit;font-size:13px;font-weight:700;text-decoration:none;margin-top:4px}
 #radarOpen:hover{background:var(--orange-d)}
 
-/* แถบวัดความแรงฝน (rain-intensity scale) ใต้ภาพเรดาร์
-   การ์ดเรดาร์กว้างครึ่งจอแล้ว วางแถบเป็นแท่งตั้งไว้ข้างภาพจะเบียดจนภาพเล็กและแถบไปตกบรรทัดใหม่
-   จึงวางภาพเต็มความกว้างการ์ด แล้ววางแถบแนวนอนไว้ใต้ภาพเหมือนกันทุกขนาดจอ */
 .radarWrap{display:flex;flex-direction:column;gap:10px}
 .radarImgBox{position:relative;max-width:100%;line-height:0}
 #radarFreeze{position:absolute;inset:0;width:100%;height:100%;display:none;border-radius:8px;border:1px solid var(--line);cursor:pointer}
-.rainScale{display:flex;flex-direction:column;width:100%;font-size:11px}
-.rainScale .rsTitle{text-align:center;font-weight:800;color:var(--navy);font-size:11.5px;line-height:1.15;margin-bottom:4px}
-.rainScale .rsTitle small{font-weight:600;color:var(--ink-3);font-size:9.5px}
-.rainScale .rsBody{display:flex;flex-direction:column;flex:1 1 auto;gap:0}
-.rainScale .rsBar{display:flex;width:100%;height:20px;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px var(--line-mid)}
-.rainScale .rsBar span{display:block}
-.rainScale .rsLabels{display:flex;margin-top:6px}
-.rainScale .rsGrp{display:flex;align-items:center;justify-content:center;text-align:center;
-  border-top:2px solid var(--line-mid);padding-top:4px;margin-right:2px}
-.rainScale .rsGrp b{font-weight:800;color:var(--ink-2);font-size:10.5px;line-height:1.1}
-.rainScale .rsGrp small{display:block;font-weight:600;color:var(--ink-3);font-size:9px}
 #radarImg{max-height:none!important}
 
 /* สถานการณ์น้ำท่า (telemeter gauges) */
@@ -146,41 +134,8 @@ footer a{color:var(--orange-warm);text-decoration:none}
 #drTable{overflow-x:auto}
 .drLegend .lg{display:flex;align-items:center;gap:5px}
 .drLegend .sw{width:12px;height:12px;border-radius:3px;flex:0 0 12px}
+@media(min-width:769px){#fcFold>summary{display:none}}
 @media(max-width:768px){#drMap{height:280px}}
-
-/* ฝนพยากรณ์ 7 วัน — แผนที่ใหญ่ใบเดียว + ปุ่มเลือกวัน (แบบเดียวกับ #drDays ของการ์ดฝนรายอำเภอ)
-   เดิมเป็นรูปย่อ 172x139 เจ็ดใบในรางเลื่อนแนวนอน แต่ละช่องกริด ~9 กม. เหลือบนจอแค่ ~6px
-   ใบเดียวเต็มความกว้างการ์ดทำให้ช่องกริดใหญ่ขึ้นเกือบสองเท่า และไม่ต้องเลื่อนหาวัน */
-#wrfDays{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-/* กรอบแผนที่ใช้ aspect-ratio เท่ากรอบครอบตัดพอดี (ใส่ inline จาก WRF_CROP) แล้ววางภาพด้วยเปอร์เซ็นต์
-   ภาพจึงตามความกว้างจอเองโดยไม่ต้องมี JS คอยคำนวณใหม่ตอนหมุนจอ และเห็นกรอบครอบตัดครบทุกด้าน
-   ไม่มีส่วนไหนถูกตัดทิ้งเงียบ ๆ แบบที่ต้องระวังตอนใช้ขนาดตายตัวกับ Math.max
-   เพดาน 480px บนจอคอม: กว้างกว่านี้ช่องกริดใหญ่เกิน 16px จนอ่านเป็นลายตาราง ไม่ใช่แผนที่ */
-.wrfMap{display:block;width:100%;max-width:480px;margin:0 auto;padding:0;
-  overflow:hidden;border:1px solid var(--line);border-radius:var(--r-control);
-  background:var(--card-2);cursor:zoom-in;font:inherit}
-/* aspect-ratio อยู่ที่กรอบในซึ่งไม่มีขอบ ไม่ใช่ที่ปุ่ม: Chrome ให้ <button> เป็น border-box
-   aspect-ratio จึงไปล็อกกรอบนอกรวมเส้นขอบ 1px แล้วกรอบในที่ภาพอิงเปอร์เซ็นต์เพี้ยนจาก 30:24
-   วัดแล้วกรอบที่เห็นเลื่อนขึ้นเหนือ ~0.05° แยกกรอบในออกมาเปอร์เซ็นต์จึงตรงกรอบครอบตัดพอดี */
-.wrfFrame{display:block;position:relative;width:100%}
-/* ภาพต้นฉบับขยายขึ้น ~11 เท่าบนมือถือ (สามจังหวัดกินแค่ราว 30x24 พิกเซลของภาพทั้งเอเชียตะวันออกเฉียงใต้)
-   ถ้าปล่อยให้เบราว์เซอร์เกลี่ยสีระหว่างพิกเซล แถบฝนที่แยกกันชัดในต้นฉบับจะเบลอเป็นเนื้อเดียว
-   จนเทียบกับแถบสีด้านล่างไม่ได้ pixelated วาดแต่ละพิกเซลเป็นบล็อกสีทึบ หนึ่งบล็อก = หนึ่งช่องกริด
-   ~9 กม. ของแบบจำลองจริง ไม่ได้เพิ่มรายละเอียด แต่ทำให้รายละเอียดที่มีอยู่อ่านออก
-   -webkit-optimize-contrast คงไว้บรรทัดแรกเป็นทางถอยของเบราว์เซอร์เก่าที่ไม่รู้จัก pixelated
-   (ไม่ใส่ที่ภาพเต็มใน #wrfModal เพราะตรงนั้นย่อลง ไม่ได้ขยาย pixelated ตอนย่อจะทำให้ตัวหนังสือแตก)
-   max-width:none กันกฎ img ทั่วไปมาหนีบภาพที่ตั้งใจให้กว้างกว่ากรอบหลายสิบเท่า */
-.wrfFrame img{position:absolute;max-width:none;image-rendering:-webkit-optimize-contrast;image-rendering:pixelated;
-  transition:opacity .15s var(--ease)}
-/* ระหว่างโหลดภาพของวันใหม่ ภาพเก่ายังค้างอยู่ จางไว้บอกว่ายังไม่ใช่ของวันที่เลือก */
-.wrfMap.loading .wrfFrame img{opacity:.35}
-.wrfCap{font-size:12px;color:var(--ink-2);text-align:center;margin-top:6px}
-.wrfCap b{color:var(--ink)}
-.wrfLegend{display:flex;flex-wrap:wrap;gap:2px;align-items:center;margin-top:8px;font-size:10px;color:var(--ink-2)}
-.wrfLegend .sw{padding:2px 6px;border-radius:3px;color:var(--ink);font-weight:600;font-size:9.5px}
-#wrfModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.85);z-index:2000;align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
-#wrfModal.show{display:flex}
-#wrfModal img{max-width:95%;max-height:92vh;border-radius:8px;background:#fff}
 
 /* การ์ดข้อมูลทางการกรมอุตุฯ */
 /* การ์ดนี้กว้างครึ่งหน้าจอแล้ว แบ่งสองคอลัมน์ในนั้นอีกจะแคบจนอ่านไม่ออก จึงวางซ้อนกัน */
@@ -244,12 +199,17 @@ footer a{color:var(--orange-warm);text-decoration:none}
        ปริมาณฝนรายวันไม่ได้อยู่ในนี้ ดูที่การ์ดฝนรายอำเภอและแถบสรุปด้านบนแทน -->
   <div class="card full" id="fcCard">
     <h2>พยากรณ์อากาศ 24 ชั่วโมง และ 7 วัน <span class="where" id="whereHour"></span></h2>
+    <details class="fold" id="fcFold" open>
+    <summary>ดูพยากรณ์อากาศ</summary>
     <div id="ampChips"></div>
     <div id="nowBox"><span class="spin"></span> กำลังโหลด…</div>
     <div class="fcLabel">รายชั่วโมง · 24 ชม.ข้างหน้า</div>
     <div id="hourRow"></div>
     <div class="fcLabel">รายวัน · 7 วันข้างหน้า</div>
     <div id="dayRow"><span class="spin"></span></div>
+    </details>
+    <!-- มือถือ: พับการ์ดไว้ก่อนตอนเปิดหน้า แตะหัวข้อเพื่อกาง · จอใหญ่กางไว้เสมอและไม่แสดงปุ่มพับ -->
+    <script>if(matchMedia('(max-width:768px)').matches) document.getElementById('fcFold').open = false;</script>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
     <div class="note">แหล่งข้อมูล: แบบจำลอง Open-Meteo (ผสาน GFS/ECMWF) ณ จุดศูนย์กลางอำเภอที่เลือก · เวลาไทย · แถวรายวันแสดงอุณหภูมิสูง/ต่ำ และโอกาสเกิดฝน · ปริมาณฝนคาดการณ์ (มม.) ดูที่การ์ด <b>คาดการณ์ปริมาณฝนรายอำเภอ</b> และแถบสรุปด้านบน</div>
@@ -340,44 +300,13 @@ footer a{color:var(--orange-warm);text-decoration:none}
         <img id="radarImg" alt="เรดาร์ฝนนราธิวาส ล่าสุด" style="max-width:100%;max-height:936px;border-radius:8px;border:1px solid var(--line);cursor:pointer;background:var(--card-2);display:block" onclick="window.open('https://sites.google.com/view/naramet-radar/narathiwat?authuser=0','_blank','noopener')">
         <canvas id="radarFreeze" onclick="window.open('https://sites.google.com/view/naramet-radar/narathiwat?authuser=0','_blank','noopener')"></canvas>
       </div>
-      <div class="rainScale" aria-label="แถบวัดความแรงฝนจากสีบนเรดาร์">
-        <div class="rsTitle">ความแรงฝน<br><small>(อ่านจากสีบนภาพ)</small></div>
-        <div class="rsBody">
-          <div class="rsBar" aria-hidden="true">
-            <span style="flex:1;background:#ffcfeb"></span><span style="flex:1;background:#ff90d7"></span><span style="flex:1;background:#ff3fce"></span><span style="flex:1;background:#e6009c"></span><span style="flex:1;background:#b30060"></span>
-            <span style="flex:1;background:#e00000"></span><span style="flex:1;background:#ff2a00"></span><span style="flex:1;background:#ff5c00"></span>
-            <span style="flex:1;background:#ff8c00"></span><span style="flex:1;background:#ffb200"></span><span style="flex:1;background:#ffd200"></span><span style="flex:1;background:#f2e400"></span>
-            <span style="flex:1;background:#74dd00"></span><span style="flex:1;background:#10c000"></span><span style="flex:1;background:#008800"></span>
-          </div>
-          <div class="rsLabels">
-            <div class="rsGrp" style="flex:5"><span><b>ฝนหนักมาก</b><small>เฝ้าระวัง/อพยพ</small></span></div>
-            <div class="rsGrp" style="flex:3"><b>ฝนหนัก</b></div>
-            <div class="rsGrp" style="flex:4"><b>ฝนปานกลาง</b></div>
-            <div class="rsGrp" style="flex:3"><b>ฝนเล็กน้อย</b></div>
-          </div>
-        </div>
-      </div>
     </div>
     </div>
-  </div>
-
-  <div class="card full">
-    <h2>แผนที่คาดการณ์ฝนล่วงหน้า 7 วัน (WRF-ROMS สสน.) <span class="where">โฟกัส นราธิวาส · ยะลา · ปัตตานี</span></h2>
-    <details class="fold">
-    <summary>ดูแผนที่คาดการณ์ฝนรายวัน 7 วัน</summary>
-    <div class="fold-body">
-    <div id="wrfRow"><span class="spin"></span> กำลังโหลด…</div>
-    <div class="wrfLegend" id="wrfLegend"></div>
-    <div class="note">แผนที่ครอบตัดจากภาพต้นฉบับ เหลือเฉพาะสามจังหวัดชายแดนใต้ (นราธิวาส ยะลา ปัตตานี) · ต้นฉบับเป็นกริด ~9x9 กม. กรอบนี้ขยายขึ้นกว่า 10 เท่า ภาพจึงหยาบเป็นบล็อกสีตามขนาดกริดจริง · คลิกภาพเพื่อดูฉบับเต็มทั้งโดเมนพร้อมแถบสีและพิกัด ค่าฝนเป็นปริมาณสะสมต่อวัน (มม./วัน) ความแม่นยำลดลงตามระยะเวลาคาดการณ์</div>
-    </div>
-    </details>
   </div>
 
   <!-- ผู้เข้าชมเว็บไซต์ · js/visits-widget.js เติมเนื้อหาให้ และซ่อนการ์ดทั้งใบถ้าอ่านยอดไม่ได้ -->
   <div class="card full" id="visitCard" hidden></div>
 </div>
-
-<div id="wrfModal" onclick="this.classList.remove('show')"><img id="wrfModalImg" alt="แผนที่คาดการณ์ฝน WRF-ROMS ขยายเต็มจอ"></div>
 
 <footer>
   <span>ข้อมูล: กรมอุตุนิยมวิทยา (TMDAPI) · Open-Meteo · thaiwater.net (สสน.) · ศูนย์กลางอำเภอจาก OpenGISData-Thailand</span>
@@ -869,115 +798,6 @@ function loadRadarImg(){
   }, true);
 })();
 
-/* ---------- แผนที่คาดการณ์ฝนล่วงหน้า 7 วัน (WRF-ROMS, โดเมน Southeast Asia 9x9กม. · มีครบ 7 วัน) ---------- */
-/* กรอบครอบตัด (พิกเซลจากภาพต้นฉบับ 1016x708) ครอบเฉพาะสามจังหวัดชายแดนใต้
-   นราธิวาส ยะลา ปัตตานี แทนที่จะเป็นภาคใต้ตอนล่างทั้งแถบ
-
-   มาตราส่วนของภาพต้นฉบับ วัดจากกริดละติจูด/ลองจิจูดในภาพไว้ตั้งแต่รอบก่อน
-   (กรอบเดิม x 217-324 = 97-104.5°E · y 349-435 = 10.5-4.5°N):
-       x = 217 + (lon - 97) * 14.267      y = 349 + (10.5 - lat) * 14.333
-   สองแกนได้ px ต่อองศาใกล้กันมาก (14.27 กับ 14.33) จึงเชื่อได้ว่าเป็นเชิงเส้น
-
-   ขอบเขตจริงของสามจังหวัด: ปัตตานี 6.55-6.95°N / 101.0-101.6°E ·
-   ยะลา 5.6-6.6°N / 100.7-101.5°E · นราธิวาส 5.9-6.7°N / 101.4-102.1°E
-   เผื่อขอบกันกรอบเบี้ยวเป็น 5.41-7.08°N, 100.36-102.47°E → x 265-295, y 398-422
-   ขอบเผื่อแคบสุดอยู่ที่ชายฝั่งปัตตานีด้านเหนือ 0.13° (~14 กม.) รองมาคือ
-   ยะลาด้านใต้ 0.19° ถ้าวันหนึ่งกริดของต้นฉบับขยับ อาการจะโผล่ที่ขอบบนก่อน
-
-   กรอบแสดงผลใช้ aspect-ratio 30/24 ตามกรอบนี้พอดี (ดู .wrfMap) จึงเห็นครบทุกด้าน
-   ถ้าจะแก้ตัวเลขกรอบ แก้ที่นี่ที่เดียว อัตราส่วนกรอบแสดงผลตามมาเอง
-   ด้านละติจูดเป็นตัวกำหนดขนาด ส่วนลองจิจูดได้ที่เผื่อมาฟรี 0.34-0.37°
-
-   หมายเหตุความละเอียด: ต้นฉบับเป็นกริด ~9x9 กม. กรอบนี้กว้าง 30 พิกเซล
-   ขยายขึ้นจอ ~11 เท่าบนมือถือ (~16 เท่าที่เพดาน 480px) ภาพจึงหยาบเป็นบล็อกสี ซึ่งตรงกับความละเอียดของข้อมูลจริง
-   ไม่ใช่ความคมที่หายไป ใครอยากได้ภาพเต็มความละเอียดกดที่ภาพเพื่อดูฉบับเต็มได้ */
-const WRF_CROP = { x1:265, y1:398, x2:295, y2:422, W:1016, H:708 };
-const WRF_BANDS = [
-  {c:'var(--signal-wash)', t:'1-5'}, {c:'#7fa8d9', t:'5-10'},
-  {c:'var(--st-normal-wash)', t:'10-20'}, {c:'var(--st-normal)', t:'20-35'},
-  {c:'#f2e01a', t:'35-50'}, {c:'#f5a623', t:'50-70'}, {c:'#c6791f', t:'70-90'},
-  {c:'#f2401a', t:'90-150'}, {c:'var(--st-danger)', t:'150-200'},
-  {c:'#701010', t:'200-300', dark:true}, {c:'#a832c8', t:'>300', dark:true}
-];
-function renderWrfLegend(){
-  const el = document.getElementById('wrfLegend');
-  if(!el) return;
-  el.innerHTML = '<b style="font-size:10.5px;color:var(--ink-2)">ฝนสะสม (มม./วัน):</b>' +
-    WRF_BANDS.map(b=>`<span class="sw" style="background:${b.c};${b.dark?'color:#fff':''}">${b.t}</span>`).join('');
-}
-/* วันที่เลือกเก็บเป็นสตริงวันที่ ไม่ใช่ลำดับ เพราะหน้านี้โหลดข้อมูลใหม่ทุกชั่วโมง
-   พอข้ามเที่ยงคืน ลำดับที่ 0 จะเลื่อนไปเป็นวันถัดไป ถ้าจำเป็นลำดับ คนที่เลือก "พรุ่งนี้" ไว้
-   จะถูกย้ายไปดูวันอื่นเงียบ ๆ โดยป้ายยังดูเหมือนเดิม */
-let wrfDaysData = [], wrfSel = null;
-/* วันนี้ตามเวลาไทย ใช้ตัดสินป้าย "วันนี้/พรุ่งนี้" ให้ตรงกับการ์ดฝนรายอำเภอ
-   ไม่ใช้เวลาเครื่อง เพราะคนที่เปิดจากต่างประเทศจะได้ป้ายผิดวัน */
-function wrfTodayBkk(){ return new Date(Date.now()+7*3600e3).toISOString().slice(0,10); }
-function wrfDayLabel(dstr){
-  const t = wrfTodayBkk();
-  const tm = new Date(Date.parse(t+'T00:00:00Z')+86400e3).toISOString().slice(0,10);
-  if(dstr===t) return 'วันนี้';
-  if(dstr===tm) return 'พรุ่งนี้';
-  try{ return new Date(dstr+'T00:00:00+07:00').toLocaleDateString('th-TH',{day:'numeric',month:'short'}); }
-  catch(e){ return dstr; }
-}
-function wrfLongDate(dstr){
-  try{ return new Date(dstr+'T00:00:00+07:00').toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'short'}); }
-  catch(e){ return dstr; }
-}
-async function loadRainForecast(){
-  const row = document.getElementById('wrfRow');
-  if(!row) return;
-  try{
-    const j = await fetch(`${API}/public/rain7day_forecast`).then(r=>r.json());
-    const days = (j?.data?.pre_rain_sea?.data || []).slice(0,7);
-    if(!days.length) throw new Error('no data');
-    wrfDaysData = days.map(d=>({
-      url: `${API}/shared/image?image=${encodeURIComponent(d.media_path)}`,
-      date: String(d.media_datetime||'').slice(0,10)
-    }));
-    if(!wrfDaysData.some(d=>d.date===wrfSel)) wrfSel = wrfDaysData[0].date;
-    renderWrf();
-  }catch(e){
-    wrfDaysData = [];
-    row.innerHTML = '⚠️ โหลดแผนที่ฝนพยากรณ์ไม่สำเร็จ · ดูที่ <a href="https://nationalthaiwater.onwr.go.th/forecast/rainfall" target="_blank" rel="noopener">nationalthaiwater.onwr.go.th</a>';
-  }
-}
-function renderWrf(){
-  const row = document.getElementById('wrfRow');
-  if(!row || !wrfDaysData.length) return;
-  const cur = wrfDaysData.find(d=>d.date===wrfSel) || wrfDaysData[0];
-  /* วางภาพด้วยเปอร์เซ็นต์ของกรอบ: กว้าง/สูงของภาพ = ภาพเต็ม ÷ กรอบครอบตัด
-     left/top = -มุมกรอบ ÷ ขนาดกรอบ (top ของ absolute อิงความสูงกรอบ ซึ่ง aspect-ratio ล็อกไว้แล้ว) */
-  const cw = WRF_CROP.x2-WRF_CROP.x1, ch = WRF_CROP.y2-WRF_CROP.y1;
-  const pct = n => (n*100).toFixed(3)+'%';
-  const imgStyle = `width:${pct(WRF_CROP.W/cw)};height:${pct(WRF_CROP.H/ch)};left:${pct(-WRF_CROP.x1/cw)};top:${pct(-WRF_CROP.y1/ch)}`;
-  row.innerHTML =
-    `<div id="wrfDays" role="group" aria-label="เลือกวันของแผนที่ฝนพยากรณ์">` +
-      wrfDaysData.map(d=>
-        `<button type="button" class="chip ${d.date===cur.date?'on':''}" aria-pressed="${d.date===cur.date}" data-wd="${esc(d.date)}">${esc(wrfDayLabel(d.date))}</button>`
-      ).join('') +
-    `</div>` +
-    `<button type="button" class="wrfMap loading" aria-label="ดูภาพต้นฉบับเต็มทั้งโดเมน">` +
-      `<span class="wrfFrame" style="aspect-ratio:${cw}/${ch}">` +
-        `<img src="${esc(cur.url)}" loading="lazy" style="${imgStyle}" alt="ฝนสะสมพยากรณ์ ${esc(wrfLongDate(cur.date))} บริเวณนราธิวาส ยะลา ปัตตานี">` +
-      `</span>` +
-    `</button>` +
-    /* ไม่ใส่ "+N วัน" ในป้าย: ปุ่มบอก "วันนี้/พรุ่งนี้" จากวันที่จริงของภาพ แต่ลำดับในข้อมูล
-       ไม่ได้บอกว่าภาพแรกคือวันนี้หรือพรุ่งนี้ ถ้าใส่ทั้งสองอย่างจะได้ "วันนี้ (+1 วัน)" ที่ขัดกันเอง */
-    `<div class="wrfCap">ฝนสะสมพยากรณ์ <b>${esc(wrfLongDate(cur.date))}</b> · แตะแผนที่เพื่อดูภาพเต็ม</div>`;
-
-  const box = row.querySelector('.wrfMap'), img = box.querySelector('img');
-  const done = ()=>box.classList.remove('loading');
-  img.addEventListener('load', done);
-  img.addEventListener('error', ()=>{ done(); row.querySelector('.wrfCap').textContent = '⚠️ โหลดภาพของวันนี้ไม่สำเร็จ ลองเลือกวันอื่นหรือแตะเพื่อเปิดภาพต้นฉบับ'; });
-  if(img.complete && img.naturalWidth) done();
-  box.onclick = ()=>bigWrf(cur.url);
-  row.querySelectorAll('#wrfDays .chip').forEach(b=>{
-    b.onclick = ()=>{ wrfSel = b.dataset.wd; renderWrf(); };
-  });
-}
-function bigWrf(src){ document.getElementById('wrfModalImg').src = src; document.getElementById('wrfModal').classList.add('show'); }
-
 /* ---------- คาดการณ์ปริมาณฝนรายอำเภอ (แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุฯ ผ่าน tmd-proxy) ----------
    ข้อมูลจากแบบจำลอง NWP กรมอุตุฯ (hpc.tmd.go.th/riskmap-district) กรองเหลือเฉพาะอำเภอนราธิวาส
    ไว้แล้วที่ตัว worker (ดู /riskmap ใน tmd-proxy.worker.js) — เป็นข้อมูลรายอำเภอคนละชุดกับ
@@ -1204,14 +1024,11 @@ document.querySelectorAll('.chip[data-prov]').forEach(b=>{
 
 renderRadarBar();
 loadRadarImg();
-renderWrfLegend();
-loadRainForecast();
 loadAll();
 loadTmd();
 loadDistRain();
 setInterval(loadTmd, 60*60*1000);
 setInterval(loadAll, 30*60*1000);
-setInterval(loadRainForecast, 60*60*1000);
 setInterval(loadRadarImg, 10*60*1000);
 setInterval(loadDistRain, 60*60*1000);
 </script>
