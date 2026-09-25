@@ -304,7 +304,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
     <div id="wtaRow" class="wtaRow"><span class="spin"></span> กำลังโหลด…</div>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
-    <div class="note">ระดับน้ำจริง เทียบเส้นเฝ้าระวัง (เหลือง) และตลิ่ง (แดง) · เลือกอำเภอเพื่อดู 3 สถานีที่สำคัญที่สุดในอำเภอนั้น จากทั้ง สสน./ชป. (thaiwater) และ ปภ. (cctv.disaster.go.th · สถานี NWT แตะชื่อเพื่อดูกล้อง): เรียงจากสถานการณ์ (ล้นตลิ่ง → ใกล้ตลิ่ง ≥85% → กำลังขึ้น) แล้วตาม % ความจุลำน้ำ เสมอกันดูสถานีหลักของหน่วยงานก่อน สถานีที่ไม่มีข้อมูลตลิ่งอยู่ท้ายสุด · อำเภอที่มีสถานีไม่ถึง 3 แห่ง เติมด้วยสถานีที่ใกล้ที่สุด (ไม่เกิน 35 กม.) ติดป้าย "สถานีใกล้เคียง" · เส้นเฝ้าระวังใช้ค่าของหน่วยงานถ้ามี ไม่มีจึงใช้ 85% ของตลิ่ง (เกณฑ์เดียวกับหน้าคาดการณ์) · สถานี ปภ. ใช้ป้ายระดับของ ปภ. (เฝ้าระวัง / เตรียมรับมือ / อพยพ / ต้องอพยพ) · X.73, X.119A (ม.รทก.) อัปเดตสดจาก thaiwater.net (สสน.) · NWT02 สะพานข้ามคลองบากง (อ.รือเสาะ) อัปเดตสดจากระบบ ปภ. (<a href="https://cctv.disaster.go.th/stations/NWT02" target="_blank" rel="noopener">cctv.disaster.go.th</a>) ใช้แทน X.199 ที่ไม่มีในข้อมูลเปิด</div>
+    <div class="note">ระดับน้ำจริง เทียบเส้นเฝ้าระวัง (เหลือง) และตลิ่ง (แดง) · เลือกอำเภอเพื่อดู 3 สถานีที่สำคัญที่สุดในอำเภอนั้น จากทั้ง สสน./ชป. (thaiwater) และ ปภ. (cctv.disaster.go.th · สถานี NWT แตะชื่อเพื่อดูกล้อง): เรียงจากสถานการณ์ (ล้นตลิ่ง → ใกล้ตลิ่ง ≥85% → กำลังขึ้น) แล้วตาม % ความจุลำน้ำ เสมอกันดูสถานีหลักของหน่วยงานก่อน สถานีที่ไม่มีข้อมูลตลิ่งอยู่ท้ายสุด · ใช้เฉพาะสถานีในเขตอำเภอนั้น (ตามที่หน่วยงานระบุ) · รวมโทรมาตร ชป. (telerid.rid.go.th) ซึ่งอัปเดตตามรอบที่สคริปต์ดึงข้อมูล ค่าที่เก่ากว่า 6 ชม. แสดงเป็นสีเทา · เส้นเฝ้าระวังใช้ค่าของหน่วยงานถ้ามี ไม่มีจึงใช้ 85% ของตลิ่ง (เกณฑ์เดียวกับหน้าคาดการณ์) · สถานี ปภ. ใช้ป้ายระดับของ ปภ. (เฝ้าระวัง / เตรียมรับมือ / อพยพ / ต้องอพยพ) · X.73, X.119A (ม.รทก.) อัปเดตสดจาก thaiwater.net (สสน.) · NWT02 สะพานข้ามคลองบากง (อ.รือเสาะ) อัปเดตสดจากระบบ ปภ. (<a href="https://cctv.disaster.go.th/stations/NWT02" target="_blank" rel="noopener">cctv.disaster.go.th</a>) ใช้แทน X.199 ที่ไม่มีในข้อมูลเปิด</div>
     </details>
   </div>
 
@@ -402,6 +402,7 @@ let meteoCache = {};          // จังหวัด -> array ผลพยา�
 let wlAll = [];               // สถานีน้ำทั้ง 5 จังหวัด
 let nwt02 = null;             // สถานี ปภ. NWT02 (สะพานข้ามคลองบากง) · ใช้แทน X.199
 let ddpmAll = [];             // สถานีวัดน้ำ ปภ. (cctv.disaster.go.th) ในจังหวัด
+let ridAll = [];              // โทรมาตร ชป. (telerid.rid.go.th) ในจังหวัด
 let wtaAmp = '';              // อำเภอที่เลือกในการ์ดน้ำท่า · '' = สถานีหลัก 3 สถานี
 let soilByAmp = {};           // 'จังหวัด|อำเภอบางส่วน' ไม่ใช้ · เก็บรายจังหวัด: {จังหวัด: {อำเภอ: มม.}}
 
@@ -443,7 +444,7 @@ async function loadTmd(){
 async function loadAll(){
   document.getElementById('updated').innerHTML = '<span class="spin"></span>';
   meteoCache = {};   // บังคับพยากรณ์ใหม่
-  await Promise.allSettled([loadMeteo(prov), loadWater(), loadSoil(), loadDdpm()]);
+  await Promise.allSettled([loadMeteo(prov), loadWater(), loadSoil(), loadDdpm(), loadRid()]);
   renderAll();
   document.getElementById('updated').textContent = 'อัปเดต ' + new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
 }
@@ -475,7 +476,8 @@ async function loadWater(){
         bank: FC.validBank(st.min_bank, st.left_bank, st.right_bank), ground: num(st.ground_level),
         sit: num(d.situation_level), diff: num(d.diff_wl_bank), river: d.river_name||'',
         lat: num(st.tele_station_lat), lng: num(st.tele_station_long),
-        key: !!st.is_key_station, crit: num(st.critical_level_msl)
+        key: !!st.is_key_station, crit: num(st.critical_level_msl),
+        dt: d.waterlevel_datetime ? new Date(String(d.waterlevel_datetime).replace(' ','T')+'+07:00') : null
       });
     });
   });
@@ -512,6 +514,29 @@ const DDPM_LV = {
   4:{l:'อพยพ',        c:'var(--st-danger)', r:3},
   5:{l:'ต้องอพยพ',    c:'var(--st-danger)', r:3}
 };
+/* โทรมาตรกรมชลประทาน (telerid.rid.go.th) · telerid บล็อก IP ต่างประเทศ หน้าเว็บจึงเรียกตรงไม่ได้
+   ใช้ไฟล์ที่ telerid-scraper (รันบนคอมในไทย) ส่งขึ้นสาขา cam ชุดเดียวกับชั้น "โทรมาตร ชป." ในหน้าแผนที่
+   ความสดขึ้นกับรอบที่รันสคริปต์ จึงเก็บเวลาอ่านค่า (dt) ไว้เช็กข้อมูลเก่า
+   ชื่ออำเภอในไฟล์ไม่สม่ำเสมอ ("ตากใบ", "อ.ตากใบ", "เมือง") จึงปรับให้ตรงกับรายชื่ออำเภอก่อน
+   ค่า -9.99 คือเซนเซอร์ไม่ส่งค่า ไม่ใช่ระดับน้ำจริง */
+const RID_URL = 'https://raw.githubusercontent.com/usmanwaji/waterchaidantai/cam/stations.json';
+const wtaAmpName = a => { const x = String(a||'').replace(/^อำเภอ|^อ\./,'').trim(); return x==='เมือง' ? 'เมือง'+prov : x; };
+async function loadRid(){
+  try{
+    const j = await fetch(RID_URL, {cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+    ridAll = (j?.stations||[]).filter(d=>d.province===prov).map(d=>{
+      let cur = num(d.level); if(cur!=null && cur <= -9) cur = null;
+      const bank = num(d.critical) ?? num(d.bank), warn = num(d.warning);
+      const r = cur==null || bank==null ? 0 : cur >= bank ? 3 : (warn!=null && cur >= warn) ? 2 : 0;
+      return {code:d.code, name:(d.name||'').trim(), amphoe:wtaAmpName(d.amphur), prov:d.province, river:'',
+        lat:num(d.lat), lng:num(d.lon), cur, bank, warn: warn!=null && bank!=null && warn < bank ? warn : null,
+        ground: cur!=null && bank!=null ? Math.max(0, Math.min(bank, cur) - 3) : null,
+        unit:'ม.', src:'rid', dt: cur!=null && d.dt ? new Date(d.dt) : null, rank:r,
+        st: cur==null ? {l:'รอข้อมูล', c:'var(--ink-3)'} : r===3 ? {l:'ล้นตลิ่ง', c:'var(--st-danger)'}
+          : r===2 ? {l:'เฝ้าระวัง', c:'var(--st-watch)'} : {l:'ปกติ', c:'var(--st-normal)'}};
+    });
+  }catch(e){ ridAll = []; }
+}
 /* เกณฑ์ "เฝ้าระวัง" ของ ปภ. (mediumLevelThreshold) มีเฉพาะในรายละเอียดรายสถานี
    โหลดเฉพาะสถานีที่แสดงอยู่ (ไม่เกิน 3) แล้ววาดใหม่ · ใช้เป็นเส้นเหลืองบนมาตรวัด */
 const ddpmThr = {};
@@ -612,23 +637,25 @@ function wtaMain(){
    ใช้เกณฑ์ชุดเดียวกับการ์ด "มาตรวัดน้ำต้องระวังเป็นพิเศษ" (FC.stationLevel)
    เสมอกันจึงดูสถานีหลักของหน่วยงาน (is_key_station) แล้วตาม % ความจุลำน้ำ
    สถานีที่ไม่มีตลิ่งวาดมาตรวัดไม่ได้ จึงไว้ท้ายสุด
-   รวมสถานี สสน./ชป. (thaiwater) กับสถานี ปภ. (NWT01–NWT10) · สถานี ปภ. จัดอันดับจากระดับเตือนของ ปภ. เอง
-   อำเภอที่มีไม่ถึง 3 จึงเติมด้วยสถานีใกล้ที่สุด
-   (ไม่เกิน WTA_NEAR_KM) ติดป้าย "ใกล้เคียง" ไว้ให้เห็นชัด · ส่วนใหญ่อยู่ลำน้ำเดียวกัน
-   เช่น ตากใบ → X.119/X.119A แม่น้ำโก-ลก · เมืองนราธิวาส → X.73 แม่น้ำบางนรา */
-const WTA_NEAR_KM = 35;
+   รวมทุกแหล่ง: สสน./ชป. (thaiwater) · ปภ. (NWT01–NWT10) · โทรมาตร ชป. (telerid)
+   สถานี ปภ./ชป.telerid จัดอันดับจากระดับเตือนของหน่วยงานเอง
+   ใช้เฉพาะสถานีที่หน่วยงานระบุว่าอยู่ในอำเภอนั้น ไม่เอาสถานีอำเภอข้างเคียงมาเติม
+   (ไม่ใช้ขอบเขตอำเภอจาก geojson ตัดสิน เพราะไฟล์ย่อขอบไว้ สถานีริมแม่น้ำโก-ลก/ชายฝั่งตกนอกเขต)
+   ค่าที่เก่ากว่า WTA_STALE_H ชม. ยังแสดงแต่เป็นสีเทาและอยู่ท้าย · สถานีที่ไม่มีค่าเลยไม่แสดง นับไว้บอกเฉย ๆ */
+const WTA_STALE_H = 6;
 const wtaKm = (a,b,c,d) => { const R=Math.PI/180, x=Math.sin((c-a)*R/2)**2 + Math.cos(a*R)*Math.cos(c*R)*Math.sin((d-b)*R/2)**2; return 12742*Math.asin(Math.sqrt(x)); };
 function wtaNorm(s){
   const def = WTA.find(w=>w.code===String(s.code).trim()) || {};
-  return {code:String(s.code||'').trim(), name:s.name, amphoe:s.amphoe.replace(/^อำเภอ/,''), prov:s.prov, river:s.river,
+  return {code:String(s.code||'').trim(), name:s.name, amphoe:wtaAmpName(s.amphoe), prov:s.prov, river:s.river, dt:s.dt,
     bank:s.bank, ground:s.ground, warn:def.warn ?? s.crit ?? null, cur:s.msl, prev:s.prev, pct:s.pct, key:s.key, unit:'ม.(รทก.)',
     lat:s.lat, lng:s.lng};
 }
 const WTA_SAME_KM = 1;    // สถานีต่างหน่วยงานที่ห่างกันไม่ถึงนี้ถือว่าวัดจุดเดียวกัน
 function wtaPick(a){
-  const ownWl = wlAll.filter(s=>s.prov===prov && s.amphoe.includes(a));
-  const ownDd = ddpmAll.filter(s=>s.amphoe===a);
-  const list = ownWl.map(wtaNorm).concat(ownDd.map(s=>({...s})));
+  const all = wlAll.filter(s=>s.prov===prov && wtaAmpName(s.amphoe)===a).map(wtaNorm)
+    .concat(ddpmAll.filter(s=>wtaAmpName(s.amphoe)===a).map(s=>({...s})))
+    .concat(ridAll.filter(s=>s.amphoe===a).map(s=>({...s})));
+  const list = all.filter(s=>s.cur!=null);
   const rankOf = s => {
     if(s.rank!=null) return s.rank;
     const lv = FC.stationLevel({msl:s.cur, bank:s.bank, pct:s.pct, ground:s.ground});
@@ -637,44 +664,44 @@ function wtaPick(a){
     // กำลังขึ้นใช้จัดอันดับอย่างเดียว ป้ายสถานะยังดูจากระดับน้ำ ให้ตรงกับมุม "สถานีหลัก"
     return (s.cur!=null && s.prev!=null && s.cur-s.prev >= 0.03 && (s.pct??0) >= FC.CRIT.PCT_MID) ? 1 : 0;
   };
-  const prep = l => l.forEach(s=>{ s.r = rankOf(s); s.ok = (s.cur!=null) + (s.bank!=null); s.rising = s.cur!=null && s.prev!=null && s.cur-s.prev >= 0.03; });
-  prep(list);
-  list.sort((x,y)=> (y.ok===2)-(x.ok===2) || y.r-x.r || (!!y.key)-(!!x.key) || (y.pct??-1)-(x.pct??-1) || y.ok-x.ok);
+  const now = Date.now();
+  list.forEach(s=>{
+    s.r = rankOf(s); s.ok = (s.cur!=null) + (s.bank!=null);
+    s.rising = s.cur!=null && s.prev!=null && s.cur-s.prev >= 0.03;
+    s.stale = !!(s.dt && !isNaN(s.dt) && now - s.dt > WTA_STALE_H*3600e3);
+  });
+  list.sort((x,y)=> x.stale-y.stale || (y.ok===2)-(x.ok===2) || y.r-x.r || (!!y.key)-(!!x.key) || (y.pct??-1)-(x.pct??-1) || y.ok-x.ok);
   /* เลือกทีละสถานีตามอันดับ แต่ข้ามตัวที่อยู่ติดกับตัวที่เลือกแล้ว (ต่างหน่วยงานวัดจุดเดียวกัน)
      ให้ 3 ช่องครอบคลุมหลายจุด · ถ้าไม่พอค่อยเอาตัวที่ข้ามกลับมา */
   const close = (x,y) => x.lat!=null && y.lat!=null && wtaKm(x.lat, x.lng, y.lat, y.lng) < WTA_SAME_KM;
   const top = [];
-  list.forEach(s=>{ if(top.length<3 && !top.some(t=>close(t,s))) top.push(s); });
+  // ข้อมูลสดมาก่อนเสมอ: สดและไม่ซ้ำจุด → สดที่ซ้ำจุด → ข้อมูลเก่า
+  list.forEach(s=>{ if(top.length<3 && !s.stale && !top.some(t=>close(t,s))) top.push(s); });
+  list.forEach(s=>{ if(top.length<3 && !s.stale && !top.includes(s)) top.push(s); });
+  list.forEach(s=>{ if(top.length<3 && !top.includes(s) && !top.some(t=>close(t,s))) top.push(s); });
   list.forEach(s=>{ if(top.length<3 && !top.includes(s)) top.push(s); });
-  const nOwn = top.length;
-  const c = ampsOf(prov).find(x=>x[1]===a);
-  if(top.length < 3 && c){
-    const pool = wlAll.filter(s=>!ownWl.includes(s)).map(wtaNorm)
-      .concat(ddpmAll.filter(s=>!ownDd.includes(s)).map(s=>({...s})));
-    const near = pool.filter(s=>s.lat!=null && s.lng!=null && s.cur!=null && s.bank!=null)
-      .map(s=>({...s, near:true, dist:wtaKm(c[2], c[3], s.lat, s.lng)}))
-      .filter(s=>s.dist <= WTA_NEAR_KM)
-      .sort((x,y)=>x.dist-y.dist);
-    near.forEach(s=>{ if(top.length<3 && !top.some(t=>close(t,s))) top.push(s); });
-    prep(top.filter(s=>s.near));
-  }
-  return {total:list.length, nOwn, top:top.map(s=>{
+  return {total:all.length, withData:list.length, top:top.map(s=>{
     // ไม่มีเส้นเฝ้าระวังจากหน่วยงาน → ใช้ 85% ของตลิ่ง (FC.CRIT.PCT_HIGH) ถ้ารู้พื้นท้องน้ำ
-    if(s.src!=='ddpm' && s.warn==null && s.bank!=null && s.ground!=null && s.bank > s.ground)
+    if(!s.src && s.warn==null && s.bank!=null && s.ground!=null && s.bank > s.ground)
       s.warn = s.ground + (s.bank-s.ground)*FC.CRIT.PCT_HIGH/100;
     if(!s.st) s.st = s.r===3 ? {c:'var(--st-danger)', l:'ล้นตลิ่ง'}
                    : s.r===2 ? {c:'var(--st-watch)', l:'เฝ้าระวัง'}
-                   : s.cur==null ? {c:'var(--ink-3)', l:'รอข้อมูล'} : {c:'var(--st-normal)', l:'ปกติ'};
+                   : {c:'var(--st-normal)', l:'ปกติ'};
+    if(s.stale) s.st = {c:'var(--ink-3)', l:'ข้อมูลเก่า'};
     return s;
   })};
 }
+const wtaWhen = d => {
+  const o = {timeZone:'Asia/Bangkok'}, t = d.toLocaleTimeString('th-TH',{...o, hour:'2-digit', minute:'2-digit'}) + ' น.';
+  return d.toLocaleDateString('en-CA',o) === new Date().toLocaleDateString('en-CA',o) ? t : d.toLocaleDateString('th-TH',{...o, day:'numeric', month:'short'}) + ' ' + t;
+};
 function wtaCol(s){
   const cur = s.cur, below = cur!=null && s.bank!=null ? (s.bank-cur) : null;
   // มาตรวัดต้องมีตลิ่ง · ไม่รู้พื้นท้องน้ำก็ตั้งพื้นล่างของมาตรไว้ต่ำกว่าค่าที่ต่ำกว่าระหว่างน้ำกับตลิ่ง 3 ม.
   const g = s.bank==null ? '' : wtaGauge({...s, ground: s.ground!=null && s.ground < s.bank ? s.ground : Math.min(s.bank, cur ?? s.bank) - 3}, cur);
   const sub = [s.amphoe ? 'อ.'+esc(s.amphoe) : '', s.prov && s.prov!==prov ? 'จ.'+esc(s.prov) : '', esc(s.river||'')].filter(Boolean).join(' · ');
   return `<div class="wtaCol">
-    ${s.near ? `<div class="wtaNear">สถานีใกล้เคียง · ห่าง ${Math.round(s.dist)} กม.</div>` : ''}
+    ${s.src==='rid' || s.stale ? `<div class="wtaNear">${s.src==='rid'?'โทรมาตร ชป.':''}${s.src==='rid'&&s.dt?' · ':''}${s.dt?'ข้อมูล '+wtaWhen(s.dt):''}</div>` : ''}
     <div class="nm">${s.src==='ddpm'
       ? `<a href="https://cctv.disaster.go.th/stations/${encodeURIComponent(s.code)}" target="_blank" rel="noopener" style="color:inherit">${esc(s.code)} · ${esc(s.name)} ↗</a>`
       : `${s.code?esc(s.code)+' · ':''}${esc(s.name)}`}</div>
@@ -709,10 +736,12 @@ function renderWaterta(){
   }else{
     const p = wtaPick(wtaAmp);
     cols = p.top;
-    const nNear = cols.length - p.nOwn;
-    if(where) where.textContent = `อ.${wtaAmp} · ` + (p.total ? `${p.nOwn} จาก ${p.total} สถานีในอำเภอ` : 'ไม่มีสถานีในอำเภอ') + (nNear ? ` + ${nNear} ใกล้เคียง` : '');
-    if(!wlAll.length && !ddpmAll.length) msg = 'โหลดข้อมูลสถานีไม่สำเร็จ';
-    else if(!cols.length) msg = `อ.${esc(wtaAmp)} ไม่มีสถานีวัดระดับน้ำ (สสน./ชป./ปภ.) ทั้งในอำเภอและในระยะ ${WTA_NEAR_KM} กม.`;
+    const noData = p.total - p.withData;
+    if(where) where.textContent = `อ.${wtaAmp} · ` + (p.withData ? `${cols.length} จาก ${p.withData} สถานีที่มีข้อมูล` : 'ไม่มีสถานีที่มีข้อมูล') + (noData ? ` · อีก ${noData} ไม่มีค่าล่าสุด` : '');
+    if(!wlAll.length && !ddpmAll.length && !ridAll.length) msg = 'โหลดข้อมูลสถานีไม่สำเร็จ';
+    else if(!cols.length) msg = p.total
+      ? `อ.${esc(wtaAmp)} มีสถานีวัดระดับน้ำ ${p.total} แห่ง แต่ขณะนี้ไม่มีค่าล่าสุดจากสถานีใดเลย`
+      : `อ.${esc(wtaAmp)} ยังไม่มีสถานีวัดระดับน้ำในเขตอำเภอ จากทุกแหล่ง (สสน./ชป./ปภ.)`;
   }
   if(hint){ hint.hidden = cols.length < 2; hint.textContent = `ปัดไปทางซ้ายเพื่อดูสถานีถัดไป (${cols.length} สถานี)`; }
   ddpmNeedThr(cols.filter(s=>s.src==='ddpm').map(s=>s.code));
