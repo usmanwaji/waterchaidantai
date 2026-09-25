@@ -138,6 +138,12 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .wtaCol .st{display:inline-block;padding:2px 16px;border-radius:99px;color:#fff;font-weight:700;font-size:12.5px;margin-top:5px}
 #wtaChips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;-webkit-overflow-scrolling:touch}
 #wtaChips .chip{flex:0 0 auto;padding:5px 12px;font-size:12.5px}
+/* ปุ่มอำเภอแยกสีตามลุ่มน้ำ · --bc = สีของลุ่มน้ำ (ตั้งจาก WTA_BASINS) */
+#wtaChips .chip[data-basin]{border-color:var(--bc);color:var(--bc);background:color-mix(in srgb, var(--bc) 8%, #fff)}
+#wtaChips .chip[data-basin]:hover{border-color:var(--bc);color:var(--bc);background:color-mix(in srgb, var(--bc) 16%, #fff)}
+#wtaChips .chip[data-basin].on{background:var(--bc);border-color:var(--bc);color:#fff}
+#wtaChips .wtaBasin{flex:0 0 auto;align-self:center;font-size:11px;font-weight:700;color:var(--bc);padding:0 2px 0 8px;white-space:nowrap}
+#wtaChips .wtaBasin:first-of-type{padding-left:0}
 .wtaEmpty{font-size:12.5px;color:var(--ink-3);padding:6px 0}
 .wtaNear{display:inline-block;font-size:10.5px;font-weight:600;color:var(--ink-2);background:var(--card-2);border:1px dashed var(--outline-strong);border-radius:99px;padding:1px 8px;margin-bottom:3px}
 
@@ -700,13 +706,30 @@ function wtaCol(s){
     <div class="st" style="background:${s.st.c}">${s.st.l}</div>
   </div>`;
 }
+/* อำเภอจัดกลุ่มตามลุ่มน้ำ ให้อำเภอที่น้ำไหลถึงกันอยู่ติดกันในแถวปุ่ม และใช้สีเดียวกัน
+   อำเภอที่ไม่อยู่ในกลุ่มใด (จังหวัดอื่น) ต่อท้ายตามลำดับเดิม */
+const WTA_BASINS = [
+  {name:'ลุ่มน้ำบางนรา', color:'#1d6fb8', amps:['เมืองนราธิวาส','ระแงะ','เจาะไอร้อง','สุไหงปาดี','ยี่งอ']},
+  {name:'ลุ่มน้ำสายบุรี', color:'#7b3fa0', amps:['สุคิริน','จะแนะ','ศรีสาคร','รือเสาะ','บาเจาะ']},
+  {name:'ลุ่มน้ำโก-ลก',  color:'#0f7f73', amps:['แว้ง','สุไหงโก-ลก','ตากใบ']}
+];
 function renderWtaChips(){
   const el = document.getElementById('wtaChips'); if(!el) return;
   const main = prov==='นราธิวาส' ? [['', 'สถานีหลัก']] : [];
   if(!main.length && !wtaAmp) wtaAmp = mainAmp(prov)[1];
   const x = el.scrollLeft;   // วาดปุ่มใหม่แล้วแถวจะเด้งกลับซ้ายสุด · คืนตำแหน่งเดิมให้
-  el.innerHTML = main.concat(ampsOf(prov).map(a=>[a[1], a[1]])).map(([v,l])=>
-    `<button type="button" class="chip${v===wtaAmp?' on':''}" data-wamp="${esc(v)}">${esc(l)}</button>`).join('');
+  const names = ampsOf(prov).map(a=>a[1]);
+  const chip = (v, l, c) => `<button type="button" class="chip${v===wtaAmp?' on':''}" data-wamp="${esc(v)}"${c?` data-basin style="--bc:${c}"`:''}>${esc(l)}</button>`;
+  let html = main.map(([v,l])=>chip(v,l)).join('');
+  const used = new Set();
+  WTA_BASINS.forEach(g=>{
+    const list = g.amps.filter(a=>names.includes(a));
+    if(!list.length) return;
+    list.forEach(a=>used.add(a));
+    html += `<span class="wtaBasin" style="--bc:${g.color}">${g.name}</span>` + list.map(a=>chip(a, a, g.color)).join('');
+  });
+  html += names.filter(a=>!used.has(a)).map(a=>chip(a, a)).join('');
+  el.innerHTML = html;
   el.querySelectorAll('.chip').forEach(b=>{
     b.onclick = ()=>{ wtaAmp = b.dataset.wamp; renderWaterta(); };
   });
