@@ -57,14 +57,14 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 /* ตอนนี้ */
 #nowBox{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 #nowBox .big{font-size:44px;line-height:1}
-#nowBox .t{font-size:30px;font-weight:700}
+#nowBox .t{font-size:30px;font-weight:700;color:var(--signal)}
+#nowBox .t small{font-size:14px}
 #nowBox .d{font-size:12px;color:var(--muted);line-height:1.5}
 /* แถวรายชั่วโมง */
 #hourRow{display:flex;gap:6px;overflow-x:auto;padding:6px 0 4px;-webkit-overflow-scrolling:touch}
 .hr{flex:0 0 62px;text-align:center;background:var(--card);border:1px solid var(--card-2);border-radius:10px;padding:6px 2px;font-size:11px}
 .hr.rain{background:var(--signal-wash);border-color:var(--signal-wash)}
 .hr .ic{font-size:19px;line-height:1.3}
-.hr .tt{font-weight:700;font-size:12.5px}
 .hr .mm{color:var(--signal);font-weight:600;font-size:10.5px}
 .hr .pp{color:var(--ink-3);font-size:10px}
 /* 7 วัน · แถวแนวนอนแบบเดียวกับรายชั่วโมง อยู่ในการ์ดพยากรณ์ใบเดียวกัน */
@@ -74,8 +74,7 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 .dy .dn{font-weight:700;font-size:12px}
 .dy .dd{color:var(--ink-3);font-size:10px}
 .dy .ic{font-size:22px;line-height:1.35}
-.dy .tt{font-weight:700;font-size:13px}
-.dy .tl{color:var(--ink-3);font-size:11px}
+.dy .tt{font-weight:700;font-size:13px;color:var(--signal)}
 .dy .pp{color:var(--signal);font-weight:600;font-size:10px;margin-top:2px}
 /* หัวข้อย่อยคั่นระหว่างแถวรายชั่วโมงกับรายวันในการ์ดเดียวกัน */
 .fcLabel{font-size:11.5px;font-weight:700;color:var(--ink-3);margin-top:10px}
@@ -212,7 +211,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
     <script>if(matchMedia('(max-width:768px)').matches) document.getElementById('fcFold').open = false;</script>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
-    <div class="note">แหล่งข้อมูล: แบบจำลอง Open-Meteo (ผสาน GFS/ECMWF) ณ จุดศูนย์กลางอำเภอที่เลือก · เวลาไทย · แถวรายวันแสดงอุณหภูมิสูง/ต่ำ และโอกาสเกิดฝน · ปริมาณฝนคาดการณ์ (มม.) ดูที่การ์ด <b>คาดการณ์ปริมาณฝนรายอำเภอ</b> และแถบสรุปด้านบน</div>
+    <div class="note">แหล่งข้อมูล: แบบจำลอง Open-Meteo (ผสาน GFS/ECMWF) ณ จุดศูนย์กลางอำเภอที่เลือก · เวลาไทย · แสดงเฉพาะฝน: ปริมาณฝน (มม.) และโอกาสเกิดฝน รายชั่วโมงและรายวัน</div>
     </details>
   </div>
 
@@ -400,8 +399,8 @@ async function loadMeteo(p){
   const list = ampsOf(p);
   const lats = list.map(a=>a[2]).join(','), lons = list.map(a=>a[3]).join(',');
   const u = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}`+
-    `&hourly=temperature_2m,precipitation,precipitation_probability,weather_code,wind_speed_10m`+
-    `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max`+
+    `&hourly=precipitation,precipitation_probability,weather_code`+
+    `&daily=weather_code,precipitation_sum,precipitation_probability_max`+
     `&forecast_days=7&timezone=Asia%2FBangkok`;
   const j = await fetch(u).then(r=>r.json());
   meteoCache[p] = Array.isArray(j) ? j : [j];
@@ -557,8 +556,8 @@ function renderHour(met){
   const [ic,lb] = wmo(H.weather_code[i0], H.precipitation_probability[i0]);
   now.innerHTML = `
     <div class="big">${ic}</div>
-    <div class="t">${Math.round(H.temperature_2m[i0])}°</div>
-    <div class="d">${lb}<br>ฝน ชม.นี้ ${fmt1(H.precipitation[i0])} มม. · โอกาส ${H.precipitation_probability[i0]??'…'}%<br>ลม ${fmt1(H.wind_speed_10m[i0])} กม./ชม.</div>`;
+    <div class="t">${fmt1(H.precipitation[i0])} <small>มม.</small></div>
+    <div class="d">${lb}<br>ฝน ชม.นี้ · โอกาส ${H.precipitation_probability[i0]??'…'}%</div>`;
   let html = '';
   for(let i=i0; i<Math.min(i0+24, H.time.length); i++){
     const [ic2] = wmo(H.weather_code[i], H.precipitation_probability[i]);
@@ -566,7 +565,6 @@ function renderHour(met){
     html += `<div class="hr ${mm>=1?'rain':''}">
       <div>${H.time[i].slice(11,16)}</div>
       <div class="ic">${ic2}</div>
-      <div class="tt">${Math.round(H.temperature_2m[i])}°</div>
       <div class="mm">${mm>0?fmt1(mm)+' มม.':'…'}</div>
       <div class="pp">${H.precipitation_probability[i]??0}%</div>
     </div>`;
@@ -574,8 +572,7 @@ function renderHour(met){
   row.innerHTML = html;
 }
 /* รายวัน 7 วัน · การ์ดแนวนอนแบบเดียวกับรายชั่วโมง
-   ไม่มีปริมาณฝนสะสมรายวันในนี้แล้ว เหลืออุณหภูมิสูง/ต่ำ กับโอกาสเกิดฝน
-   ตัวเลขปริมาณฝนอยู่ที่การ์ดฝนรายอำเภอ (กรมอุตุฯ) และแถบสรุปด้านบน */
+   เน้นเฉพาะฝน: ปริมาณฝนสะสมรายวัน (มม.) กับโอกาสเกิดฝน ไม่แสดงอุณหภูมิ */
 const TH_DAY = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
 const TH_MON = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 function renderDay(met){
@@ -597,8 +594,7 @@ function renderDay(met){
       <div class="dn">${dn}</div>
       <div class="dd">${Dd} ${TH_MON[M-1]}</div>
       <div class="ic">${ic}</div>
-      <div class="tt">${Math.round(D.temperature_2m_max[i])}°</div>
-      <div class="tl">ต่ำสุด ${Math.round(D.temperature_2m_min[i])}°</div>
+      <div class="tt">${fmt1(D.precipitation_sum[i]??0)} มม.</div>
       <div class="pp">โอกาส ${pp}%</div>
     </div>`;
   }).join('');
