@@ -113,6 +113,15 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .radarImgBox{position:relative;max-width:100%;line-height:0}
 #radarFreeze{position:absolute;inset:0;width:100%;height:100%;display:none;border-radius:8px;border:1px solid var(--line);cursor:pointer}
 #radarImg{max-height:none!important}
+/* สรุปเรดาร์เป็นข้อความใต้ภาพ */
+#radarNote{margin-top:10px;padding:10px 12px;border-radius:var(--r-control);background:var(--card-2);font-size:13px;line-height:1.65;color:var(--ink)}
+#radarNote .rnHead{font-weight:800;color:var(--navy-d)}
+#radarNote .rnHead small{font-weight:600;color:var(--ink-3);font-size:11px}
+#radarNote ul{margin:4px 0 0;padding:0;list-style:none}
+#radarNote li{display:flex;gap:6px;align-items:baseline}
+#radarNote li i{flex:0 0 10px;height:10px;border-radius:3px;transform:translateY(1px)}
+#radarNote .rnFc{margin-top:6px;color:var(--ink-2)}
+#radarNote .rnSrc{margin-top:6px;font-size:11px;color:var(--ink-3)}
 
 /* คาดการณ์ฝนระยะสั้น · ภาพฝนโปร่งใสรายช่วง 15 นาทีของกรมอุตุฯ วางบนแผนที่ Leaflet */
 #ncCard{align-self:start}
@@ -325,6 +334,8 @@ footer a{color:var(--orange-warm);text-decoration:none}
         <canvas id="radarFreeze" onclick="window.open('https://sites.google.com/view/naramet-radar/narathiwat?authuser=0','_blank','noopener')"></canvas>
       </div>
     </div>
+    <!-- สรุปเรดาร์เป็นข้อความ · เติมโดย ncSummarize() ซ่อนไว้จนกว่าจะวิเคราะห์ภาพได้ -->
+    <div id="radarNote" hidden aria-live="polite"></div>
     </div>
   </div>
 
@@ -1000,6 +1011,9 @@ async function loadNowcast(){
   }
   if(j.generated_at === ncGen) return;              // ยังเป็นชุดเดิม ไม่ต้องโหลดภาพใหม่
   ncGen = j.generated_at;
+  // สรุปข้อความใต้เรดาร์ไม่ต้องพึ่ง Leaflet · เรียกก่อนเช็กไลบรารีแผนที่ ให้ขึ้นได้แม้แผนที่โหลดไม่สำเร็จ
+  const nowAt = list.findIndex(f=>f.is_now);
+  ncSummarize(list, Math.min(Math.max(0, nowAt >= 0 ? nowAt : (j.now_index ?? 0)), list.length-1));
   if(typeof L === 'undefined'){
     mapEl.innerHTML = '<div style="padding:14px;font-size:12.5px;color:var(--muted)">โหลดไลบรารีแผนที่ไม่สำเร็จ</div>';
     return;
@@ -1025,6 +1039,145 @@ async function loadNowcast(){
   document.getElementById('ncUpdated').textContent = 'ข้อมูล ' + ncHm(ncFrames[ncNow].t) + ' น.';
   ncShow(0);
   ncTick();
+}
+/* ---------- สรุปเรดาร์เป็นข้อความรายอำเภอ (ใต้ภาพ "ตอนนี้ฝนตกที่ไหน") ----------
+   อ่านสีทีละพิกเซลจากเฟรม "ตอนนี้" ของ Southern Nowcasting (ชุดเดียวกับแผนที่ฝนระยะสั้น)
+   เพราะภาพนี้มีพิกัด (bounds) ชัดเจน ส่วน GIF เรดาร์ด้านบนไม่มีพิกัดให้เทียบกับเขตอำเภอ
+   ภาพต้นทางไม่เปิด CORS จึงโหลดผ่าน tmd-proxy (/nowcast-img) canvas จึงอ่านพิกเซลได้
+   ภาพวางบนแผนที่แบบ Leaflet imageOverlay = ยืดตรงในพิกัด Web Mercator จึงแปลงแกนตั้งแบบ Mercator
+   สีในภาพเป็นชุดสีตายตัว ~16 สี: เขียว = เล็กน้อย · เหลือง/ส้ม = ปานกลาง · ส้มแดง/แดง = หนัก · แดงอมม่วง = หนักมาก */
+const RN_LV = [null,
+  {t:'ฝนเล็กน้อย', c:'#00BD00'},
+  {t:'ฝนปานกลาง', c:'#FFC800'},
+  {t:'ฝนหนัก',    c:'#F10000'},
+  {t:'ฝนหนักมาก', c:'#E5005C'}];
+const RN_FC_MIN = 60;     // ดูเฟรมคาดการณ์ถึงกี่นาทีข้างหน้า
+const RN_MIN_COVER = .02; // ฝนต้องคลุมอย่างน้อย 2% ของพื้นที่อำเภอจึงนับว่า "มีฝน" กันจุดสีหลงจุดเดียว
+function rnLevel(r,g,b,a){
+  if(a < 128) return 0;
+  if(r < 100) return 1;
+  if(g >= 140) return 2;
+  if(b >= 50) return 4;
+  return 3;
+}
+const rnMerc = lat => Math.log(Math.tan(Math.PI/4 + lat*Math.PI/360));
+const rnLat = y => (2*Math.atan(Math.exp(y)) - Math.PI/2) * 180/Math.PI;
+function rnInRing(x, y, ring){
+  let inside = false;
+  for(let i=0, j=ring.length-1; i<ring.length; j=i++){
+    const [xi,yi] = ring[i], [xj,yj] = ring[j];
+    if((yi>y) !== (yj>y) && x < (xj-xi)*(y-yi)/(yj-yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+let rnGeoP = null;
+const rnGeo = () => rnGeoP ||= fetch('js/onwr-nara-districts.geojson').then(r=>r.json()).then(g=>g.features.map(f=>{
+  const ring = f.geometry.coordinates[0];
+  const xs = ring.map(p=>p[0]), ys = ring.map(p=>p[1]);
+  return {name:f.properties.name_th, ring, W:Math.min(...xs), E:Math.max(...xs), S:Math.min(...ys), N:Math.max(...ys)};
+})).catch(e=>{ rnGeoP = null; throw e; });
+function rnImg(name){
+  return new Promise((ok, bad)=>{
+    const im = new Image();
+    im.crossOrigin = 'anonymous';
+    im.onload = ()=>ok(im);
+    im.onerror = ()=>bad(new Error('img'));
+    im.src = TMD_PROXY + '/nowcast-img/' + encodeURIComponent(name);
+  });
+}
+/* คืน [{name, cover (0-1), lv (ระดับสูงสุดที่มีอย่างน้อย 3 พิกเซล)}] ตามลำดับอำเภอใน geojson */
+function rnAnalyze(im, bounds, dists){
+  const [[S,W],[N,E]] = bounds, w = im.naturalWidth, h = im.naturalHeight;
+  const yN = rnMerc(N), yS = rnMerc(S);
+  const px = lon => (lon-W)/(E-W)*w, py = lat => (yN-rnMerc(lat))/(yN-yS)*h;
+  const aW = Math.min(...dists.map(d=>d.W)), aE = Math.max(...dists.map(d=>d.E));
+  const aS = Math.min(...dists.map(d=>d.S)), aN = Math.max(...dists.map(d=>d.N));
+  const x0 = Math.max(0, Math.floor(px(aW))), x1 = Math.min(w, Math.ceil(px(aE)));
+  const y0 = Math.max(0, Math.floor(py(aN))), y1 = Math.min(h, Math.ceil(py(aS)));
+  if(x1<=x0 || y1<=y0) return null;
+  const cv = document.createElement('canvas');
+  cv.width = x1-x0; cv.height = y1-y0;
+  const ctx = cv.getContext('2d', {willReadFrequently:true});
+  ctx.drawImage(im, x0, y0, cv.width, cv.height, 0, 0, cv.width, cv.height);
+  const data = ctx.getImageData(0, 0, cv.width, cv.height).data;   // โยน SecurityError ถ้าภาพไม่มี CORS
+  return dists.map(d=>{
+    let tot = 0, wet = 0; const n = [0,0,0,0,0];
+    const dx0 = Math.max(x0, Math.floor(px(d.W))), dx1 = Math.min(x1, Math.ceil(px(d.E)));
+    const dy0 = Math.max(y0, Math.floor(py(d.N))), dy1 = Math.min(y1, Math.ceil(py(d.S)));
+    for(let y=dy0; y<dy1; y++){
+      const lat = rnLat(yN - (y+.5)/h*(yN-yS));
+      for(let x=dx0; x<dx1; x++){
+        const lon = W + (x+.5)/w*(E-W);
+        if(!rnInRing(lon, lat, d.ring)) continue;
+        tot++;
+        const k = ((y-y0)*cv.width + (x-x0))*4;
+        const lv = rnLevel(data[k], data[k+1], data[k+2], data[k+3]);
+        if(lv){ wet++; n[lv]++; }
+      }
+    }
+    let lv = 0;
+    for(let i=4; i>=1; i--) if(n[i] >= 3){ lv = i; break; }
+    const cover = tot ? wet/tot : 0;
+    return {name:d.name, cover, lv: cover >= RN_MIN_COVER ? (lv || 1) : 0};
+  });
+}
+const rnSpread = c => c >= .6 ? 'เกือบทั้งอำเภอ' : c >= .25 ? 'หลายพื้นที่' : 'บางพื้นที่';
+let rnGen = '';
+async function ncSummarize(list, nowIdx){
+  const el = document.getElementById('radarNote');
+  if(!el) return;
+  const gen = ncGen;
+  if(rnGen === gen) return;
+  try{
+    const now = list[nowIdx];
+    const t0 = ncUtc(now.dt || '');
+    const fc = list.slice(nowIdx+1).filter(f=>{
+      const m = (ncUtc(f.dt||'') - t0)/60000;
+      return f.name && f.bounds && m > 0 && m <= RN_FC_MIN;
+    });
+    const dists = await rnGeo();
+    const [nowIm, ...fcIm] = await Promise.all([now, ...fc].map(f=>rnImg(f.name).catch(()=>null)));
+    if(!nowIm) throw new Error('no image');
+    const cur = rnAnalyze(nowIm, now.bounds, dists);
+    if(!cur) throw new Error('out of bounds');
+    if(gen !== ncGen) return;   // มีชุดใหม่เข้ามาระหว่างรอภาพ ให้รอบใหม่เป็นคนเขียน
+
+    // อำเภอที่ยังไม่มีฝนตอนนี้ แต่เฟรมคาดการณ์มีฝนเข้า → จดนาทีแรกที่เจอ
+    const incoming = new Map();
+    fc.forEach((f,i)=>{
+      if(!fcIm[i]) return;
+      const r = rnAnalyze(fcIm[i], f.bounds, dists);
+      if(!r) return;
+      const m = Math.round((ncUtc(f.dt||'') - t0)/60000);
+      r.forEach((d,k)=>{ if(d.lv && !cur[k].lv && !incoming.has(d.name)) incoming.set(d.name, {m, lv:d.lv}); });
+    });
+
+    const wet = cur.filter(d=>d.lv).sort((a,b)=> b.lv-a.lv || b.cover-a.cover);
+    let html = `<div class="rnHead">สรุปจากเรดาร์ ${ncHm(t0)} น. <small>· อัปเดตอัตโนมัติทุก 15 นาที</small></div>`;
+    if(!wet.length){
+      html += `<div>☀️ ตอนนี้ยังไม่พบกลุ่มฝนในเขต จ.นราธิวาส</div>`;
+    }else{
+      html += `<div>🌧️ ตอนนี้มีฝนใน <b>${wet.length}</b> จาก ${cur.length} อำเภอ</div><ul>`;
+      for(let lv=4; lv>=1; lv--){
+        const g = wet.filter(d=>d.lv===lv);
+        if(g.length) html += `<li><i style="background:${RN_LV[lv].c}"></i><span><b>${RN_LV[lv].t}:</b> ${g.map(d=>`${esc(d.name)} (${rnSpread(d.cover)})`).join(', ')}</span></li>`;
+      }
+      html += `</ul>`;
+    }
+    if(fc.length && fcIm.some(Boolean)){
+      const inc = [...incoming].sort((a,b)=>a[1].m-b[1].m);
+      html += `<div class="rnFc">⏱️ ${inc.length
+        ? `ภายใน 1 ชม. คาดว่าฝนจะเข้า: ${inc.map(([n,v])=>`${esc(n)} (~${v.m} นาที)`).join(', ')}`
+        : wet.length ? 'ภายใน 1 ชม. ยังไม่คาดว่าฝนจะขยายไปอำเภออื่น' : 'ภายใน 1 ชม. ยังไม่คาดว่าจะมีฝนเข้า'}</div>`;
+    }
+    html += `<div class="rnSrc">วิเคราะห์อัตโนมัติจากสีบนภาพเรดาร์กรมอุตุฯ (ชุดเดียวกับแผนที่ฝนระยะสั้น) เทียบกับเขตอำเภอ · เป็นค่าประมาณ ใช้ดูภาพรวม</div>`;
+    el.innerHTML = html;
+    el.hidden = false;
+    rnGen = gen;
+  }catch(e){
+    // ยังวิเคราะห์ไม่ได้ (เช่น worker ยังไม่มี /nowcast-img) → ซ่อนไว้ ไม่แสดงข้อความค้าง
+    if(!rnGen) el.hidden = true;
+  }
 }
 (function initNowcastControls(){
   const play = document.getElementById('ncPlay'), sl = document.getElementById('ncSlider');
