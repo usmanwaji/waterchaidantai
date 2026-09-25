@@ -139,6 +139,8 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .drLegend .sw{width:12px;height:12px;border-radius:3px;flex:0 0 12px}
 @media(min-width:769px){#fcFold>summary{display:none}.t-mob{display:none}}
 @media(max-width:768px){#drMap{height:280px}}
+/* แผนที่ในการ์ดไม่ได้อยู่ใต้แถบแท็บ จึงไม่ต้องยกมุมล่างขึ้นแบบหน้าแผนที่เต็มจอ (shared.css) · เครดิต Leaflet ชิดขอบล่าง */
+#drMap .leaflet-bottom{margin-bottom:0!important}
 
 /* การ์ดข้อมูลทางการกรมอุตุฯ */
 /* การ์ดนี้กว้างครึ่งหน้าจอแล้ว แบ่งสองคอลัมน์ในนั้นอีกจะแคบจนอ่านไม่ออก จึงวางซ้อนกัน */
@@ -840,9 +842,15 @@ function drMatch(){
 }
 const drLL = d => d.feature ? [d.feature.properties.center_lat, d.feature.properties.center_lon] : [d.lat, d.lng];
 const drRainAt = (d,i) => d.rain && d.rain[i]!=null ? d.rain[i] : null;
+/* '27-Sep-2026' → '27 ก.ย.' */
+const DR_TH_MON = {Jan:'ม.ค.',Feb:'ก.พ.',Mar:'มี.ค.',Apr:'เม.ย.',May:'พ.ค.',Jun:'มิ.ย.',Jul:'ก.ค.',Aug:'ส.ค.',Sep:'ก.ย.',Oct:'ต.ค.',Nov:'พ.ย.',Dec:'ธ.ค.'};
+function drThaiDate(s){
+  const m = /^(\d{1,2})-([A-Za-z]{3})/.exec(s||'');
+  return m ? `${+m[1]} ${DR_TH_MON[m[2]]||m[2]}` : (s||'').slice(0,6);
+}
 function drDayLabel(i){
   if(!distRain) return '';
-  return i===0 ? 'วันนี้' : i===1 ? 'พรุ่งนี้' : (distRain.days[i]||'').slice(0,6);
+  return i===0 ? 'วันนี้' : i===1 ? 'พรุ่งนี้' : drThaiDate(distRain.days[i]);
 }
 function renderDistRainDays(){
   const el = document.getElementById('drDays');
