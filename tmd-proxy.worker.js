@@ -25,8 +25,11 @@
   (ต้นทางกรองจาก URL ไม่ได้ และช่องค้นหาของต้นทางก็ไม่รีเฟรชตารางเอง — ดูหมายเหตุที่ฟังก์ชัน)
   หน้านี้เรียกไฟล์ /static/... ของต้นทางซึ่งไม่เปิด CORS จึงพร็อกซี /static/ กับ /api/ ให้ด้วย
 
+  และ /nowcast = รายการภาพฝนระยะสั้น 15 นาที (Southern Nowcasting) ของ satda.tmd.go.th
+  (leaflet_layers/layers.json) ต้นทางไม่เปิด CORS จึงส่งต่อให้ · ตัวภาพ PNG หน้าเว็บดึงตรงได้
+
   ทดสอบ:  https://<worker>/region7days   ·   https://<worker>/today   ·   https://<worker>/riskmap
-          https://<worker>/riskmap-district
+          https://<worker>/riskmap-district   ·   https://<worker>/nowcast
   ------------------------------------------------------------------
 */
 
@@ -45,6 +48,10 @@ const PROV_NAME  = 'นราธิวาส';
 const HPC = 'https://hpc.tmd.go.th';
 const HPC_PAGE_CACHE_SECONDS = 900;
 
+// ฝนระยะสั้นภาคใต้ — ต้นทางออกใหม่ทุก 15 นาที
+const NOWCAST_UPSTREAM = 'https://satda.tmd.go.th/wp-content/uploads/data/dashboard/radar_map/leaflet_layers/layers.json';
+const NOWCAST_CACHE_SECONDS = 300;
+
 // จำกัด endpoint ที่พิสูจน์แล้วว่าใช้งานได้เท่านั้น
 const ROUTES = {
   region7days: `${UPSTREAM}/WeatherForecast7DaysByRegion/v1/?uid=${UID}&ukey=${UKEY}&format=json`,
@@ -57,9 +64,10 @@ export default {
     if (request.method !== 'GET')     return new Response('Method Not Allowed', { status: 405, headers: cors() });
 
     const path = new URL(request.url).pathname.replace(/^\/+|\/+$/g, '');
-    if (!path) return new Response('TMD proxy OK — ใช้ /region7days, /today, /riskmap หรือ /riskmap-district', { headers: cors() });
+    if (!path) return new Response('TMD proxy OK — ใช้ /region7days, /today, /riskmap /riskmap-district หรือ /nowcast', { headers: cors() });
     if (path === 'riskmap') return riskmap(request, ctx);
     if (path === 'riskmap-district') return riskmapDistrict();
+    if (path === 'nowcast') return nowcast();
     if (path.startsWith('static/') || path.startsWith('api/')) return hpcAsset(path);
     const target = ROUTES[path];
     if (!target) return new Response('Unknown route', { status: 404, headers: cors() });
@@ -81,6 +89,27 @@ export default {
     return new Response(upstream.body, { status: upstream.status, headers });
   }
 };
+
+/* ---------- /nowcast : รายการภาพฝนระยะสั้นภาคใต้ (ส่งต่อพร้อม CORS) ---------- */
+async function nowcast() {
+  let r;
+  try {
+    r = await fetch(`${NOWCAST_UPSTREAM}?t=${Math.floor(Date.now() / (NOWCAST_CACHE_SECONDS * 1000))}`, {
+      signal: AbortSignal.timeout(20000),
+      cf: { cacheTtl: NOWCAST_CACHE_SECONDS, cacheEverything: true }
+    });
+  } catch (e) {
+    return new Response('Upstream fetch failed', { status: 502, headers: cors() });
+  }
+  return new Response(r.body, {
+    status: r.status,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': `public, max-age=${NOWCAST_CACHE_SECONDS}`,
+      ...cors()
+    }
+  });
+}
 
 /* ---------- /riskmap : ฝนสะสมรายวันคาดการณ์รายอำเภอ (นราธิวาส) ---------- */
 async function riskmap(request, ctx) {
