@@ -304,7 +304,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
     <div id="wtaRow" class="wtaRow"><span class="spin"></span> กำลังโหลด…</div>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
-    <div class="note">ระดับน้ำจริง เทียบเส้นเฝ้าระวัง (เหลือง) และตลิ่ง (แดง) · เลือกอำเภอเพื่อดู 3 สถานีที่สำคัญที่สุดในอำเภอนั้น: เรียงจากสถานการณ์ (ล้นตลิ่ง → ใกล้ตลิ่ง ≥85% → กำลังขึ้น) แล้วตาม % ความจุลำน้ำ เสมอกันดูสถานีหลักของหน่วยงานก่อน สถานีที่ไม่มีข้อมูลตลิ่งอยู่ท้ายสุด · อำเภอที่มีสถานีไม่ถึง 3 แห่ง เติมด้วยสถานีที่ใกล้ที่สุด (ไม่เกิน 35 กม.) ติดป้าย "สถานีใกล้เคียง" · เส้นเฝ้าระวังใช้ค่าของหน่วยงานถ้ามี ไม่มีจึงใช้ 85% ของตลิ่ง (เกณฑ์เดียวกับหน้าคาดการณ์) · X.73, X.119A (ม.รทก.) อัปเดตสดจาก thaiwater.net (สสน.) · NWT02 สะพานข้ามคลองบากง (อ.รือเสาะ) อัปเดตสดจากระบบ ปภ. (<a href="https://cctv.disaster.go.th/stations/NWT02" target="_blank" rel="noopener">cctv.disaster.go.th</a>) ใช้แทน X.199 ที่ไม่มีในข้อมูลเปิด</div>
+    <div class="note">ระดับน้ำจริง เทียบเส้นเฝ้าระวัง (เหลือง) และตลิ่ง (แดง) · เลือกอำเภอเพื่อดู 3 สถานีที่สำคัญที่สุดในอำเภอนั้น จากทั้ง สสน./ชป. (thaiwater) และ ปภ. (cctv.disaster.go.th · สถานี NWT แตะชื่อเพื่อดูกล้อง): เรียงจากสถานการณ์ (ล้นตลิ่ง → ใกล้ตลิ่ง ≥85% → กำลังขึ้น) แล้วตาม % ความจุลำน้ำ เสมอกันดูสถานีหลักของหน่วยงานก่อน สถานีที่ไม่มีข้อมูลตลิ่งอยู่ท้ายสุด · อำเภอที่มีสถานีไม่ถึง 3 แห่ง เติมด้วยสถานีที่ใกล้ที่สุด (ไม่เกิน 35 กม.) ติดป้าย "สถานีใกล้เคียง" · เส้นเฝ้าระวังใช้ค่าของหน่วยงานถ้ามี ไม่มีจึงใช้ 85% ของตลิ่ง (เกณฑ์เดียวกับหน้าคาดการณ์) · สถานี ปภ. ใช้ป้ายระดับของ ปภ. (เฝ้าระวัง / เตรียมรับมือ / อพยพ / ต้องอพยพ) · X.73, X.119A (ม.รทก.) อัปเดตสดจาก thaiwater.net (สสน.) · NWT02 สะพานข้ามคลองบากง (อ.รือเสาะ) อัปเดตสดจากระบบ ปภ. (<a href="https://cctv.disaster.go.th/stations/NWT02" target="_blank" rel="noopener">cctv.disaster.go.th</a>) ใช้แทน X.199 ที่ไม่มีในข้อมูลเปิด</div>
     </details>
   </div>
 
@@ -401,6 +401,7 @@ let amp = '';                 // '' = ทั้งจังหวัด (ใช�
 let meteoCache = {};          // จังหวัด -> array ผลพยากรณ์ตามลำดับอำเภอ
 let wlAll = [];               // สถานีน้ำทั้ง 5 จังหวัด
 let nwt02 = null;             // สถานี ปภ. NWT02 (สะพานข้ามคลองบากง) · ใช้แทน X.199
+let ddpmAll = [];             // สถานีวัดน้ำ ปภ. (cctv.disaster.go.th) ในจังหวัด
 let wtaAmp = '';              // อำเภอที่เลือกในการ์ดน้ำท่า · '' = สถานีหลัก 3 สถานี
 let soilByAmp = {};           // 'จังหวัด|อำเภอบางส่วน' ไม่ใช้ · เก็บรายจังหวัด: {จังหวัด: {อำเภอ: มม.}}
 
@@ -442,7 +443,7 @@ async function loadTmd(){
 async function loadAll(){
   document.getElementById('updated').innerHTML = '<span class="spin"></span>';
   meteoCache = {};   // บังคับพยากรณ์ใหม่
-  await Promise.allSettled([loadMeteo(prov), loadWater(), loadSoil(), loadDdpmNwt02()]);
+  await Promise.allSettled([loadMeteo(prov), loadWater(), loadSoil(), loadDdpm()]);
   renderAll();
   document.getElementById('updated').textContent = 'อัปเดต ' + new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
 }
@@ -459,15 +460,15 @@ async function loadMeteo(p){
   return meteoCache[p];
 }
 async function loadWater(){
-  if(wlAll.length) return;
+  // ดึงใหม่ทุกรอบ (ปุ่มรีเฟรช/ทุก 30 นาที) · ประกอบใส่ตัวแปรชั่วคราวก่อน การ์ดจะได้ไม่ว่างระหว่างโหลด
   const res = await Promise.allSettled(Object.values(PROV_CODE).map(c =>
     fetch(`${API}/public/waterlevel?province_code=${c}`).then(r=>r.json())));
-  wlAll = [];
+  const next = [];
   res.forEach(r=>{
     if(r.status!=='fulfilled' || !Array.isArray(r.value?.data)) return;
     r.value.data.forEach(d=>{
       const st = d.station||{};
-      wlAll.push({
+      next.push({
         name: thName(st.tele_station_name).trim(), code: st.tele_station_oldcode||'',
         amphoe: thName(d.geocode?.amphoe_name), prov: thName(d.geocode?.province_name),
         pct: num(d.storage_percent), msl: num(d.waterlevel_msl), prev: num(d.waterlevel_msl_previous),
@@ -479,8 +480,8 @@ async function loadWater(){
     });
   });
   // ใช้ตัวช่วยชุดเดียวกับหน้าคาดการณ์: เติม % ที่ขาด แล้วตัดสถานีซ้ำจากคนละหน่วยงาน
-  wlAll.forEach(s => { s.pct = FC.fillPct(s); });
-  wlAll = FC.dedupe(wlAll);
+  next.forEach(s => { s.pct = FC.fillPct(s); });
+  if(next.length) wlAll = FC.dedupe(next);
 }
 async function loadSoil(){
   try{
@@ -497,27 +498,48 @@ async function loadSoil(){
     });
   }catch(e){ soilByAmp = {}; }
 }
-/* NWT02 (สะพานข้ามคลองบากง อ.รือเสาะ) จากระบบ ปภ. · ใช้แทน X.199 ที่ไม่มีในข้อมูลเปิด
-   ดึงสดจาก ArcGIS FeatureServer ของ ปภ. (CORS สาธารณะ) */
-const DDPM_NWT02 = 'https://gis-portal.disaster.go.th/arcgis/rest/services/Map_DDPM_CCTV/DDPM_CCTV_STATION_PROD/FeatureServer/0/query?where=code%3D%27NWT02%27&outFields=current_water_level,river_bank_level,water_level_status,updated_at&returnGeometry=false&f=json';
-function ddpmWtaStatus(txt){
-  const s = String(txt||'').toUpperCase();
-  if(s==='LOW')    return {l:'ปกติ',      c:'var(--st-normal)'};
-  if(s==='MEDIUM') return {l:'เฝ้าระวัง',  c:'var(--st-watch)'};
-  if(s==='HIGH')   return {l:'น้ำมาก',     c:'var(--st-warn)'};
-  if(s==='VERYHIGH'||s==='CRITICAL'||s==='CRISIS') return {l:'ล้นตลิ่ง', c:'var(--st-danger)'};
-  return {l:'รอข้อมูล', c:'var(--ink-3)'};
+/* สถานีวัดน้ำ ปภ. (ระบบกล้อง cctv.disaster.go.th) · นราธิวาสมี NWT01–NWT10
+   API ไม่เปิด CORS จึงอ่านผ่าน ddpm-proxy (Worker ตัวเดียวกับที่ map.js ใช้ดึงภาพกล้อง)
+   เดิมอ่าน NWT02 จาก ArcGIS FeatureServer ของ ปภ. แต่ชุดนั้นค้างที่ 19 ส.ค. 2569 จึงเลิกใช้
+   waterLevelStatus เทียบเกณฑ์รายสถานีของ ปภ.: 0 ไม่มีข้อมูล · 1 ต่ำกว่าเฝ้าระวัง · 2 เฝ้าระวัง
+   · 3 เตรียมรับมือ · 4 อพยพ · 5 ต้องอพยพ (ชื่อระดับตามหน้าเว็บ ปภ. · ระดับ 1 ปภ. ใช้ "ติดตาม"
+   หน้านี้ใช้ "ปกติ" ให้ตรงกับสถานีอื่น) · r = อันดับในสเกลเดียวกับ wtaPick */
+const DDPM_PROXY = 'https://ddpm-proxy.newusmanwaji.workers.dev';
+const DDPM_LV = {
+  1:{l:'ปกติ',        c:'var(--st-normal)', r:0},
+  2:{l:'เฝ้าระวัง',    c:'var(--st-watch)',  r:1},
+  3:{l:'เตรียมรับมือ', c:'var(--st-warn)',   r:2},
+  4:{l:'อพยพ',        c:'var(--st-danger)', r:3},
+  5:{l:'ต้องอพยพ',    c:'var(--st-danger)', r:3}
+};
+/* เกณฑ์ "เฝ้าระวัง" ของ ปภ. (mediumLevelThreshold) มีเฉพาะในรายละเอียดรายสถานี
+   โหลดเฉพาะสถานีที่แสดงอยู่ (ไม่เกิน 3) แล้ววาดใหม่ · ใช้เป็นเส้นเหลืองบนมาตรวัด */
+const ddpmThr = {};
+function ddpmNeedThr(codes){
+  const miss = codes.filter(c=>!(c in ddpmThr));
+  if(!miss.length) return;
+  miss.forEach(c=>{ ddpmThr[c] = null; });   // กันยิงซ้ำระหว่างรอ
+  Promise.allSettled(miss.map(c=>fetch(`${DDPM_PROXY}/stations/${encodeURIComponent(c)}`).then(r=>r.json())
+    .then(j=>{ ddpmThr[c] = num(j?.waterThreshold?.mediumLevelThreshold); })))
+    .then(()=>{ if(miss.some(c=>ddpmThr[c]!=null)) renderWaterta(); });
 }
-async function loadDdpmNwt02(){
-  if(nwt02) return;
+async function loadDdpm(){
   try{
-    const j = await fetch(DDPM_NWT02).then(r=>r.json());
-    const a = j?.features?.[0]?.attributes;
-    if(!a){ nwt02 = null; return; }
-    const ss = ddpmWtaStatus(a.water_level_status);
-    nwt02 = { cur: num(a.current_water_level), bank: num(a.river_bank_level),
-              statusText: ss.l, color: ss.c, updated: a.updated_at };
-  }catch(e){ nwt02 = null; }
+    const j = await fetch(`${DDPM_PROXY}/stations?provCode=${PROV_CODE[prov]}&limit=100`).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+    ddpmAll = (j?.data||[]).filter(d=>d.isActive!==0 && !d.deletedAt).map(d=>{
+      const cur = num(d.currentWaterLevel), bank = num(d.riverBankLevel);
+      const lv = cur==null || d.status===0 ? null : DDPM_LV[d.waterLevelStatus];
+      return {code:d.code, name:(d.name||'').trim(), amphoe:d.amphoeName||'', prov:d.provName||prov, river:d.basin && d.basin!=='-' ? d.basin : '',
+        lat:num(d.latitude), lng:num(d.longitude), cur, bank, unit:'ม.', src:'ddpm',
+        // ไม่มีพื้นท้องน้ำ · ใช้แค่วาดมาตรวัด (ระดับ ปภ. ส่วนใหญ่วัดจากศูนย์ของไม้วัด จึงไม่ต่ำกว่า 0)
+        ground: cur!=null && bank!=null ? Math.max(0, Math.min(bank, cur) - 3) : null,
+        st: lv ? {l:lv.l, c:lv.c} : {l:'รอข้อมูล', c:'var(--ink-3)'},
+        rank: cur!=null && bank!=null && cur >= bank ? 3 : (lv ? lv.r : 0)};
+    });
+  }catch(e){ ddpmAll = []; }
+  const n = ddpmAll.find(d=>d.code==='NWT02');
+  if(n) ddpmNeedThr(['NWT02']);
+  nwt02 = n && n.cur!=null ? {cur:n.cur, bank:n.bank, statusText:n.st.l, color:n.st.c} : null;
 }
 
 /* ---------- แสดงผล ---------- */
@@ -536,13 +558,21 @@ function wtaStatus(s, cur){
 function wtaGauge(s, cur){
   const W=142,H=170,padT=14,padB=16,left=26,right=54;
   const hasWarn = s.warn!=null;
-  const top = hasWarn ? s.bank+(s.bank-s.warn)*1.4 : s.bank+(s.bank-s.ground)*0.12;
   const lo=s.ground;
+  /* ที่ว่างเหนือตลิ่ง: เดิม 1.4 เท่าของช่วงเฝ้าระวัง–ตลิ่ง ซึ่งพอดีกับสถานีหลัก
+     แต่สถานี ปภ. บางแห่งเกณฑ์เฝ้าระวังต่ำกว่าตลิ่งมาก จึงจำกัดไม่เกิน 30% ของความสูงตลิ่ง */
+  const top = hasWarn ? s.bank+Math.max((s.bank-lo)*0.12, Math.min((s.bank-s.warn)*1.4, (s.bank-lo)*0.3)) : s.bank+(s.bank-lo)*0.12;
   const y=v=>padT+(H-padT-padB)*(1-(Math.max(lo,Math.min(top,v))-lo)/(top-lo));
   const bx=left, bw=W-left-right, bBot=H-padB;
   const bankY=y(s.bank), warnY=hasWarn?y(s.warn):null, curY=cur!=null?y(cur):null;
   const water = cur!=null ? `<rect x="${bx}" y="${curY}" width="${bw}" height="${(bBot-curY).toFixed(1)}" fill="var(--signal)" opacity="0.5"/>` : '';
-  const curLine = cur!=null ? `<line x1="${bx}" y1="${curY}" x2="${bx+bw}" y2="${curY}" stroke="var(--signal)" stroke-width="1.5"/><text x="${bx+bw+3}" y="${curY+3}" font-size="8.5" fill="var(--signal)">${cur.toFixed(2)}</text>` : '';
+  /* ป้ายตัวเลขข้างมาตร: ถ้าค่าใกล้กันจนทับ ดันตัวล่างลงทีละ 9 หน่วย */
+  const labels = [[bankY, `ตลิ่ง ${s.bank.toFixed(2)}`, 'var(--st-danger)']];
+  if(hasWarn) labels.push([warnY, `เฝ้าระวัง ${s.warn.toFixed(2)}`, 'var(--st-watch)']);
+  if(cur!=null) labels.push([curY, cur.toFixed(2), 'var(--signal)']);
+  labels.sort((p,q)=>p[0]-q[0]).forEach((l,i,arr)=>{ if(i && l[0]-arr[i-1][0] < 9) l[0] = arr[i-1][0] + 9; });
+  const labelSvg = labels.map(([ly,t,c])=>`<text x="${bx+bw+3}" y="${(ly+3).toFixed(1)}" font-size="8.5" fill="${c}">${t}</text>`).join('');
+  const curLine = cur!=null ? `<line x1="${bx}" y1="${curY}" x2="${bx+bw}" y2="${curY}" stroke="var(--signal)" stroke-width="1.5"/>` : '';
   const sideBar = hasWarn
     ? `<rect x="${bx-6}" y="${y(top)}" width="5" height="${(bankY-y(top)).toFixed(1)}" fill="var(--st-danger)"/>
     <rect x="${bx-6}" y="${bankY}" width="5" height="${(warnY-bankY).toFixed(1)}" fill="var(--st-watch)"/>
@@ -550,17 +580,16 @@ function wtaGauge(s, cur){
     : `<rect x="${bx-6}" y="${y(top)}" width="5" height="${(bankY-y(top)).toFixed(1)}" fill="var(--st-danger)"/>
     <rect x="${bx-6}" y="${bankY}" width="5" height="${(bBot-bankY).toFixed(1)}" fill="var(--st-normal)"/>`;
   const warnLine = hasWarn
-    ? `<line x1="${bx}" y1="${warnY}" x2="${bx+bw}" y2="${warnY}" stroke="var(--st-watch)" stroke-width="1.5" stroke-dasharray="3 2"/>
-    <text x="${bx+bw+3}" y="${warnY+3}" font-size="8.5" fill="var(--st-watch)">เฝ้าระวัง ${s.warn.toFixed(2)}</text>`
+    ? `<line x1="${bx}" y1="${warnY}" x2="${bx+bw}" y2="${warnY}" stroke="var(--st-watch)" stroke-width="1.5" stroke-dasharray="3 2"/>`
     : '';
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:150px;display:block;margin:2px auto">
     <rect x="${bx}" y="${padT}" width="${bw}" height="${bBot-padT}" rx="5" fill="var(--card-2)" stroke="var(--line)"/>
     ${sideBar}
     ${water}
     <line x1="${bx}" y1="${bankY}" x2="${bx+bw}" y2="${bankY}" stroke="var(--st-danger)" stroke-width="1.5"/>
-    <text x="${bx+bw+3}" y="${bankY+3}" font-size="8.5" fill="var(--st-danger)">ตลิ่ง ${s.bank.toFixed(2)}</text>
     ${warnLine}
     ${curLine}
+    ${labelSvg}
   </svg>`;
 }
 /* สถานีหลัก 3 สถานีเดิม (ค่าตั้งต้นของการ์ด) */
@@ -583,7 +612,8 @@ function wtaMain(){
    ใช้เกณฑ์ชุดเดียวกับการ์ด "มาตรวัดน้ำต้องระวังเป็นพิเศษ" (FC.stationLevel)
    เสมอกันจึงดูสถานีหลักของหน่วยงาน (is_key_station) แล้วตาม % ความจุลำน้ำ
    สถานีที่ไม่มีตลิ่งวาดมาตรวัดไม่ได้ จึงไว้ท้ายสุด
-   นราธิวาสมีสถานีเปิดแค่ ~10 แห่งใน 5 อำเภอ อำเภอที่มีไม่ถึง 3 จึงเติมด้วยสถานีใกล้ที่สุด
+   รวมสถานี สสน./ชป. (thaiwater) กับสถานี ปภ. (NWT01–NWT10) · สถานี ปภ. จัดอันดับจากระดับเตือนของ ปภ. เอง
+   อำเภอที่มีไม่ถึง 3 จึงเติมด้วยสถานีใกล้ที่สุด
    (ไม่เกิน WTA_NEAR_KM) ติดป้าย "ใกล้เคียง" ไว้ให้เห็นชัด · ส่วนใหญ่อยู่ลำน้ำเดียวกัน
    เช่น ตากใบ → X.119/X.119A แม่น้ำโก-ลก · เมืองนราธิวาส → X.73 แม่น้ำบางนรา */
 const WTA_NEAR_KM = 35;
@@ -591,18 +621,14 @@ const wtaKm = (a,b,c,d) => { const R=Math.PI/180, x=Math.sin((c-a)*R/2)**2 + Mat
 function wtaNorm(s){
   const def = WTA.find(w=>w.code===String(s.code).trim()) || {};
   return {code:String(s.code||'').trim(), name:s.name, amphoe:s.amphoe.replace(/^อำเภอ/,''), prov:s.prov, river:s.river,
-    bank:s.bank, ground:s.ground, warn:def.warn ?? s.crit ?? null, cur:s.msl, prev:s.prev, pct:s.pct, key:s.key, unit:'ม.(รทก.)'};
+    bank:s.bank, ground:s.ground, warn:def.warn ?? s.crit ?? null, cur:s.msl, prev:s.prev, pct:s.pct, key:s.key, unit:'ม.(รทก.)',
+    lat:s.lat, lng:s.lng};
 }
+const WTA_SAME_KM = 1;    // สถานีต่างหน่วยงานที่ห่างกันไม่ถึงนี้ถือว่าวัดจุดเดียวกัน
 function wtaPick(a){
-  const own = wlAll.filter(s=>s.prov===prov && s.amphoe.includes(a));
-  const list = own.map(wtaNorm);
-  // NWT02 ของ ปภ. ไม่อยู่ในข้อมูล สสน. แต่เป็นสถานีหลักของ อ.รือเสาะ
-  const n = WTA.find(w=>w.src==='ddpm');
-  if(n && n.amphoe===a && nwt02 && nwt02.cur!=null){
-    const bank = nwt02.bank ?? n.bank;
-    list.push({...n, bank, cur:nwt02.cur, pct:(nwt02.cur-n.ground)/(bank-n.ground)*100, unit:'ม.', key:true,
-      st:{c:nwt02.color, l:nwt02.statusText}, rank:{'ล้นตลิ่ง':3,'น้ำมาก':2,'เฝ้าระวัง':1}[nwt02.statusText]||0});
-  }
+  const ownWl = wlAll.filter(s=>s.prov===prov && s.amphoe.includes(a));
+  const ownDd = ddpmAll.filter(s=>s.amphoe===a);
+  const list = ownWl.map(wtaNorm).concat(ownDd.map(s=>({...s})));
   const rankOf = s => {
     if(s.rank!=null) return s.rank;
     const lv = FC.stationLevel({msl:s.cur, bank:s.bank, pct:s.pct, ground:s.ground});
@@ -614,21 +640,27 @@ function wtaPick(a){
   const prep = l => l.forEach(s=>{ s.r = rankOf(s); s.ok = (s.cur!=null) + (s.bank!=null); s.rising = s.cur!=null && s.prev!=null && s.cur-s.prev >= 0.03; });
   prep(list);
   list.sort((x,y)=> (y.ok===2)-(x.ok===2) || y.r-x.r || (!!y.key)-(!!x.key) || (y.pct??-1)-(x.pct??-1) || y.ok-x.ok);
-  const top = list.slice(0,3);
+  /* เลือกทีละสถานีตามอันดับ แต่ข้ามตัวที่อยู่ติดกับตัวที่เลือกแล้ว (ต่างหน่วยงานวัดจุดเดียวกัน)
+     ให้ 3 ช่องครอบคลุมหลายจุด · ถ้าไม่พอค่อยเอาตัวที่ข้ามกลับมา */
+  const close = (x,y) => x.lat!=null && y.lat!=null && wtaKm(x.lat, x.lng, y.lat, y.lng) < WTA_SAME_KM;
+  const top = [];
+  list.forEach(s=>{ if(top.length<3 && !top.some(t=>close(t,s))) top.push(s); });
+  list.forEach(s=>{ if(top.length<3 && !top.includes(s)) top.push(s); });
   const nOwn = top.length;
   const c = ampsOf(prov).find(x=>x[1]===a);
   if(top.length < 3 && c){
-    const near = wlAll.filter(s=>!own.includes(s) && s.lat!=null && s.lng!=null)
-      .map(s=>({...wtaNorm(s), near:true, dist:wtaKm(c[2], c[3], s.lat, s.lng)}))
-      .filter(s=>s.dist <= WTA_NEAR_KM && s.cur!=null && s.bank!=null)
-      .sort((x,y)=>x.dist-y.dist)
-      .slice(0, 3-top.length);
-    prep(near);
-    top.push(...near);
+    const pool = wlAll.filter(s=>!ownWl.includes(s)).map(wtaNorm)
+      .concat(ddpmAll.filter(s=>!ownDd.includes(s)).map(s=>({...s})));
+    const near = pool.filter(s=>s.lat!=null && s.lng!=null && s.cur!=null && s.bank!=null)
+      .map(s=>({...s, near:true, dist:wtaKm(c[2], c[3], s.lat, s.lng)}))
+      .filter(s=>s.dist <= WTA_NEAR_KM)
+      .sort((x,y)=>x.dist-y.dist);
+    near.forEach(s=>{ if(top.length<3 && !top.some(t=>close(t,s))) top.push(s); });
+    prep(top.filter(s=>s.near));
   }
   return {total:list.length, nOwn, top:top.map(s=>{
     // ไม่มีเส้นเฝ้าระวังจากหน่วยงาน → ใช้ 85% ของตลิ่ง (FC.CRIT.PCT_HIGH) ถ้ารู้พื้นท้องน้ำ
-    if(s.warn==null && s.bank!=null && s.ground!=null && s.bank > s.ground)
+    if(s.src!=='ddpm' && s.warn==null && s.bank!=null && s.ground!=null && s.bank > s.ground)
       s.warn = s.ground + (s.bank-s.ground)*FC.CRIT.PCT_HIGH/100;
     if(!s.st) s.st = s.r===3 ? {c:'var(--st-danger)', l:'ล้นตลิ่ง'}
                    : s.r===2 ? {c:'var(--st-watch)', l:'เฝ้าระวัง'}
@@ -643,7 +675,9 @@ function wtaCol(s){
   const sub = [s.amphoe ? 'อ.'+esc(s.amphoe) : '', s.prov && s.prov!==prov ? 'จ.'+esc(s.prov) : '', esc(s.river||'')].filter(Boolean).join(' · ');
   return `<div class="wtaCol">
     ${s.near ? `<div class="wtaNear">สถานีใกล้เคียง · ห่าง ${Math.round(s.dist)} กม.</div>` : ''}
-    <div class="nm">${s.code?esc(s.code)+' · ':''}${esc(s.name)}</div>
+    <div class="nm">${s.src==='ddpm'
+      ? `<a href="https://cctv.disaster.go.th/stations/${encodeURIComponent(s.code)}" target="_blank" rel="noopener" style="color:inherit">${esc(s.code)} · ${esc(s.name)} ↗</a>`
+      : `${s.code?esc(s.code)+' · ':''}${esc(s.name)}`}</div>
     <div class="sub">${sub}</div>
     ${g || '<div class="sub" style="padding:24px 0">ไม่มีข้อมูลตลิ่งของสถานีนี้</div>'}
     <div class="val" style="color:${s.st.c}">${cur!=null?cur.toFixed(2):'…'} <span style="font-size:11px;color:var(--ink-3);font-weight:400">${s.unit}</span></div>
@@ -677,10 +711,13 @@ function renderWaterta(){
     cols = p.top;
     const nNear = cols.length - p.nOwn;
     if(where) where.textContent = `อ.${wtaAmp} · ` + (p.total ? `${p.nOwn} จาก ${p.total} สถานีในอำเภอ` : 'ไม่มีสถานีในอำเภอ') + (nNear ? ` + ${nNear} ใกล้เคียง` : '');
-    if(!wlAll.length) msg = 'โหลดข้อมูลสถานีไม่สำเร็จ';
-    else if(!cols.length) msg = `อ.${esc(wtaAmp)} ไม่มีสถานีวัดระดับน้ำในข้อมูลเปิด (สสน.) ทั้งในอำเภอและในระยะ ${WTA_NEAR_KM} กม.`;
+    if(!wlAll.length && !ddpmAll.length) msg = 'โหลดข้อมูลสถานีไม่สำเร็จ';
+    else if(!cols.length) msg = `อ.${esc(wtaAmp)} ไม่มีสถานีวัดระดับน้ำ (สสน./ชป./ปภ.) ทั้งในอำเภอและในระยะ ${WTA_NEAR_KM} กม.`;
   }
   if(hint){ hint.hidden = cols.length < 2; hint.textContent = `ปัดไปทางซ้ายเพื่อดูสถานีถัดไป (${cols.length} สถานี)`; }
+  ddpmNeedThr(cols.filter(s=>s.src==='ddpm').map(s=>s.code));
+  // เกณฑ์บางสถานีสูงกว่าตลิ่งของ ปภ. เอง (เช่น NWT07) → ข้อมูลขัดกัน ไม่วาดเส้น
+  cols = cols.map(s=> s.src==='ddpm' && s.warn==null && ddpmThr[s.code]!=null && (s.bank==null || ddpmThr[s.code] < s.bank) ? {...s, warn:ddpmThr[s.code]} : s);
   row.innerHTML = msg ? `<div class="wtaEmpty">${msg}</div>` : cols.map(wtaCol).join('');
 }
 function renderAll(){
