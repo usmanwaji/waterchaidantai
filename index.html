@@ -939,7 +939,7 @@ function loadRadarImg(){
    ดึงตรงจาก satda.tmd.go.th ได้เลยเพราะ <img> ไม่ต้องใช้ CORS
    แต่ละเฟรมมี bounds ของตัวเอง (บางเฟรมขอบล่างไม่เท่ากัน) จึงวางทีละเฟรมตาม bounds ที่ให้มา */
 const NC_BASE = 'https://satda.tmd.go.th/wp-content/uploads/data/dashboard/radar_map/leaflet_layers/';
-const NC_VIEW = [[5.55, 101.2], [6.75, 102.15]];   // กรอบ จ.นราธิวาส
+const NC_VIEW = [[5.62, 101.35], [6.58, 102.1]];   // กรอบ จ.นราธิวาส (ชิดขอบจังหวัด)
 const NC_STEP_MS = 800, NC_HOLD_MS = 1600;           // ความเร็วภาพเคลื่อนไหว · ค้างเฟรมสุดท้ายนานขึ้น
 let ncMap, ncFrames = [], ncIdx = 0, ncNow = 0, ncTimer = null, ncPlaying = true, ncGen = '';
 const ncUtc = s => new Date(s.replace(/Z?$/, 'Z'));
@@ -983,7 +983,8 @@ async function loadNowcast(){
   }
   if(!ncMap){
     mapEl.innerHTML = '';
-    ncMap = L.map(mapEl, {zoomControl:true, scrollWheelZoom:false}).fitBounds(NC_VIEW);
+    /* zoomSnap เป็นเศษส่วน: ถ้าปัดเป็นเลขเต็ม fitBounds จะปัดลงจนเห็นพื้นที่กว้างเกือบสองเท่า นราธิวาสเล็กไปครึ่งกรอบ */
+    ncMap = L.map(mapEl, {zoomControl:true, scrollWheelZoom:false, zoomSnap:0.1, zoomDelta:0.5}).fitBounds(NC_VIEW, {padding:[4,4]});
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:14, attribution:'&copy; OpenStreetMap · ฝน: กรมอุตุฯ'}).addTo(ncMap);
     fetch('js/onwr-nara-districts.geojson').then(r=>r.json()).then(g=>{
       L.geoJSON(g, {interactive:false, style:{color:'#1f2a44', weight:1.2, opacity:.7, fill:false}}).addTo(ncMap);
