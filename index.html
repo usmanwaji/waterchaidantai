@@ -48,7 +48,11 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 @media(max-width:768px){
   #content{grid-template-columns:1fr;padding:10px 8px 24px}
   /* มือถือ: ยกการ์ดเรดาร์ขึ้นบนสุดของหน้า (จอใหญ่คงลำดับเดิมใน HTML) */
-  #radarCard{order:-1}
+  /* มือถือ: เรียงการ์ดกรมอุตุฯ บนสุด — เรดาร์ (ตอนนี้) → คาดการณ์ (ล่วงหน้า) → ข้อมูลทางการ (เมื่อวาน) */
+  #radarCard{order:-3}
+  #drCard{order:-2}
+  #tmdCard{order:-1}
+  .t-desk{display:none}
   header h1 small{display:none}
   #updated{display:none}
   .card{padding:13px}
@@ -133,7 +137,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
 #drTable{overflow-x:auto}
 .drLegend .lg{display:flex;align-items:center;gap:5px}
 .drLegend .sw{width:12px;height:12px;border-radius:3px;flex:0 0 12px}
-@media(min-width:769px){#fcFold>summary{display:none}}
+@media(min-width:769px){#fcFold>summary{display:none}.t-mob{display:none}}
 @media(max-width:768px){#drMap{height:280px}}
 
 /* การ์ดข้อมูลทางการกรมอุตุฯ */
@@ -219,7 +223,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
        ทั้งคู่เป็นข้อมูลกรมอุตุฯ เหมือนกัน (ร้อยแก้ว/คำเตือน คู่กับตัวเลขรายอำเภอ)
        จอแคบกว่า 768px #content เหลือคอลัมน์เดียวอยู่แล้ว จึงวางซ้อนกันเองอัตโนมัติ -->
   <div class="card" id="tmdCard">
-    <h2>ข้อมูลทางการ กรมอุตุนิยมวิทยา <span class="where" id="tmdUpdated"></span></h2>
+    <h2><span class="t-desk">ข้อมูลทางการ กรมอุตุนิยมวิทยา</span><span class="t-mob">เมื่อวานฝนตกแค่ไหน ? (กรมอุตุฯ)</span> <span class="where" id="tmdUpdated"></span></h2>
     <!-- ข้อมูลทางการทั้งการ์ดแสดงเสมอ ไม่มีปุ่มพับซ่อน -->
     <div id="tmdWarn"></div>
     <div class="fold-body">
@@ -241,7 +245,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
   </div>
 
   <div class="card" id="drCard">
-    <h2>คาดการณ์ปริมาณฝนรายอำเภอ 3 วัน (กรมอุตุนิยมวิทยา) <span class="where">13 อำเภอ จ.นราธิวาส</span></h2>
+    <h2><span class="t-desk">คาดการณ์ปริมาณฝนรายอำเภอ 3 วัน (กรมอุตุนิยมวิทยา)</span><span class="t-mob">คาดการณ์ปริมาณฝนล่วงหน้า (กรมอุตุฯ)</span> <span class="where">13 อำเภอ จ.นราธิวาส</span></h2>
     <div id="drDays"><span class="spin"></span></div>
     <div id="drMap"><div style="padding:14px;font-size:12.5px;color:var(--muted)"><span class="spin"></span> กำลังโหลดฝนคาดการณ์รายอำเภอ…</div></div>
     <div class="drLegend" id="drLegend"></div>
@@ -254,7 +258,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
     </details>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
-    <div class="note">ตัวเลขบนแผนที่/ตาราง = ฝนสะสมคาดการณ์ (มม./วัน) จากแบบจำลอง NWP กรมอุตุฯ · เกณฑ์: ≥35 ปานกลาง · ≥65 เสี่ยง · ≥125 เสี่ยงสูง · &gt;250 วิกฤต · อันดับเรียงจากฝนรวมตลอด 3 วัน ส่วนป้ายระดับมาจากวันที่ฝนหนักที่สุด · แตะพื้นที่/หมุดบนแผนที่หรือแถวในตารางเพื่อดูฝนคาดการณ์รายวันของอำเภอนั้น · ที่มา: <a href="https://hpc.tmd.go.th/riskmap-district" target="_blank" rel="noopener">แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุนิยมวิทยา ↗</a></div>
+    <div class="note">ตัวเลขบนแผนที่/ตาราง = ฝนสะสมคาดการณ์ (มม./วัน) จากแบบจำลอง NWP กรมอุตุฯ · เกณฑ์: ≥35 ปานกลาง · ≥65 เสี่ยง · ≥125 เสี่ยงสูง · &gt;250 วิกฤต · อันดับเรียงจากฝนรวมตลอดช่วงที่แสดง (3 วัน · มือถือ 5 วัน) ส่วนป้ายระดับมาจากวันที่ฝนหนักที่สุด · แตะพื้นที่/หมุดบนแผนที่หรือแถวในตารางเพื่อดูฝนคาดการณ์รายวันของอำเภอนั้น · ที่มา: <a href="https://hpc.tmd.go.th/riskmap-district" target="_blank" rel="noopener">แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุนิยมวิทยา ↗</a></div>
     </details>
   </div>
 
@@ -292,7 +296,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
   </div>
 
   <div class="card" id="radarCard">
-    <h2>เรดาร์ฝนนราธิวาส (กรมอุตุฯ) <span class="where" id="radarUpdated"></span></h2>
+    <h2><span class="t-desk">เรดาร์ฝนนราธิวาส (กรมอุตุฯ)</span><span class="t-mob">ตอนนี้ฝนกตกที่ไหน ? (เรดาห์ กรมอุตุฯ)</span> <span class="where" id="radarUpdated"></span></h2>
     <div class="fold-body">
     <div class="radarWrap">
       <div class="radarImgBox" id="radarImgBox">
@@ -800,7 +804,8 @@ function loadRadarImg(){
    ฝนพยากรณ์ Open-Meteo ที่ใช้ในการ์ด "อำเภอที่ต้องเฝ้าระวัง" ด้านบน
    รหัสอำเภอจากกรมอุตุฯ กับ pcode ของ geojson (สทลากจาก OpenGISData) คนละชุดกัน จึงจับคู่
    แต่ละอำเภอด้วยจุดศูนย์กลางที่ใกล้กันที่สุดแทน (13 อำเภอ ไม่มีจุดไหนใกล้เคียงจนสับสน) */
-const DR_MAX_DAYS = 3;          // แสดงแค่ 3 วันข้างหน้า ต้นทางส่งมามากกว่านั้นก็ตัดทิ้ง
+// จอใหญ่แสดง 3 วันข้างหน้า มือถือ 5 วัน ต้นทางส่งมามากกว่านั้นก็ตัดทิ้ง
+const DR_MAX_DAYS = matchMedia('(max-width:768px)').matches ? 5 : 3;
 const DR_TOP_N = 3;             // จำนวนอำเภอในอันดับฝนรวมมากที่สุด
 let distRain, distDistrictGeo, distRainDayIdx = 0, drMap, drLayer, drLabels = [], drFitted = false;
 /* ต้นทางอาจส่งมาน้อยกว่า 5 วัน จึงยึดตามจำนวนที่ได้จริง ไม่ให้ขึ้นช่องว่าง */
