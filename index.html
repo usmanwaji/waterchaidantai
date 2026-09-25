@@ -146,6 +146,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
 #drTable{overflow-x:auto}
 .drLegend .lg{display:flex;align-items:center;gap:5px}
 .drLegend .sw{width:12px;height:12px;border-radius:3px;flex:0 0 12px}
+@media(min-width:769px){#fcFold>summary{display:none}}
 @media(max-width:768px){#drMap{height:280px}}
 
 /* การ์ดข้อมูลทางการกรมอุตุฯ */
@@ -210,12 +211,17 @@ footer a{color:var(--orange-warm);text-decoration:none}
        ปริมาณฝนรายวันไม่ได้อยู่ในนี้ ดูที่การ์ดฝนรายอำเภอและแถบสรุปด้านบนแทน -->
   <div class="card full" id="fcCard">
     <h2>พยากรณ์อากาศ 24 ชั่วโมง และ 7 วัน <span class="where" id="whereHour"></span></h2>
+    <details class="fold" id="fcFold" open>
+    <summary>ดูพยากรณ์อากาศ</summary>
     <div id="ampChips"></div>
     <div id="nowBox"><span class="spin"></span> กำลังโหลด…</div>
     <div class="fcLabel">รายชั่วโมง · 24 ชม.ข้างหน้า</div>
     <div id="hourRow"></div>
     <div class="fcLabel">รายวัน · 7 วันข้างหน้า</div>
     <div id="dayRow"><span class="spin"></span></div>
+    </details>
+    <!-- มือถือ: พับการ์ดไว้ก่อนตอนเปิดหน้า แตะหัวข้อเพื่อกาง · จอใหญ่กางไว้เสมอและไม่แสดงปุ่มพับ -->
+    <script>if(matchMedia('(max-width:768px)').matches) document.getElementById('fcFold').open = false;</script>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
     <div class="note">แหล่งข้อมูล: แบบจำลอง Open-Meteo (ผสาน GFS/ECMWF) ณ จุดศูนย์กลางอำเภอที่เลือก · เวลาไทย · แถวรายวันแสดงอุณหภูมิสูง/ต่ำ และโอกาสเกิดฝน · ปริมาณฝนคาดการณ์ (มม.) ดูที่การ์ด <b>คาดการณ์ปริมาณฝนรายอำเภอ</b> และแถบสรุปด้านบน</div>
