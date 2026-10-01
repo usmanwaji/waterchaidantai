@@ -321,7 +321,7 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     <div class="dir-avg" id="dirAvg">กำลังคำนวณ…</div>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
-    <div class="note">นับเฉพาะสถานีของ สสน./กรมชลประทาน (thaiwater) ที่ส่งค่าล่าสุดและค่าก่อนหน้า · ขึ้น/ลด = เปลี่ยนตั้งแต่ 1 ซม. ขึ้นไปจากค่าครั้งก่อน (ปกติห่างกันราว 15 นาทีถึง 1 ชม.) · น้อยกว่านั้นนับเป็นทรงตัว · ภาพแม่น้ำด้านบนใช้ค่ากลาง (มัธยฐาน) ของ % ระดับน้ำเทียบตลิ่งจากสถานีชุดเดียวกัน</div>
+    <div class="note">ใช้สถานีชุดเดียวกับ <a href="map.html">หน้าแผนที่</a> ที่ส่งค่าในรอบ 6 ชม.: สสน./ชป. (thaiwater เทียบกับค่าครั้งก่อน ขึ้น/ลดตั้งแต่ 1 ซม.) · ปภ. (cctv.disaster.go.th เทียบค่ารายชั่วโมงล่าสุดกับชั่วโมงก่อน) · โทรมาตร ชป. (telerid เทียบกับค่าราว 1 ชม.ก่อน) สองแหล่งหลังนับขึ้น/ลดตั้งแต่ 2 ซม. เพราะค่ารายชั่วโมงแกว่งตามคลื่นลม · น้อยกว่าเกณฑ์นับเป็นทรงตัว · ภาพแม่น้ำด้านบนใช้สถานีที่ใกล้คุณที่สุด (หรือใกล้ศูนย์กลางอำเภอที่เลือก)</div>
     </details>
   </div>
 
@@ -546,6 +546,32 @@ async function loadAll(){
   await Promise.allSettled([loadMeteo(prov), loadWater(), loadSoil(), loadDdpm(), loadRid()]);
   renderAll();
   document.getElementById('updated').textContent = 'อัปเดต ' + new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+  loadTrends().then(rerenderHero);   // ค่าย้อนหลัง ปภ./ชป. สำหรับทิศทางน้ำ · ไม่ขวางการแสดงผลรอบแรก
+}
+/* ---------- ค่าก่อนหน้าของ ปภ. และโทรมาตร ชป. (ทิศทางน้ำ) ----------
+   ใช้แหล่งเดียวกับหน้าแผนที่ · ปภ.: กราฟรายชั่วโมงของ cctv.disaster.go.th (ผ่าน ddpm-proxy)
+   · ชป.: ไฟล์ {CODE}.detail.json ที่ telerid-scraper ส่งขึ้นสาขา cam (ทุก 15 นาที)
+   เทียบค่าล่าสุดกับค่าราว 1 ชม.ก่อน (thaiwater มีค่าก่อนหน้ามาให้แล้วใน waterlevel_msl_previous) */
+const RID_CAM = 'https://raw.githubusercontent.com/usmanwaji/waterchaidantai/cam';
+async function loadTrends(){
+  const fresh = s => s.cur!=null && s.dt && (Date.now() - s.dt) <= HERO_FRESH_H*3600e3;
+  const tm = ms => { const c = new AbortController(); setTimeout(()=>c.abort(), ms); return c.signal; };
+  await Promise.allSettled([
+    ...ddpmAll.filter(fresh).map(s => fetch(`${DDPM_PROXY}/water-level/graph?stationCode=${encodeURIComponent(s.code)}&type=hour&isSimulatorMode=false`, {signal:tm(15000)})
+      .then(r=>r.json()).then(j=>{
+        const pts = ((j?.data ?? j)?.datasets?.[0]?.data || []).map(p=>num(p?.y)).filter(v=>v!=null);
+        if(pts.length >= 2){ s.prev = pts[pts.length-2]; s.trendCur = pts[pts.length-1]; }
+      })),
+    ...ridAll.filter(fresh).map(s => fetch(`${RID_CAM}/${encodeURIComponent(s.code)}.detail.json`, {cache:'no-cache', signal:tm(15000)})
+      .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(j=>{
+        const t = j?.wl?.t || [], v = j?.wl?.v || [];
+        const ok = t.map((x,i)=>[x, num(v[i])]).filter(([x,y])=>x && y!=null && y > -9);
+        if(ok.length < 2) return;
+        const [tl, vl] = ok[ok.length-1];
+        const back = ok.filter(([x])=>x <= tl - 3600).pop() || ok[0];
+        if(back[0] < tl){ s.prev = back[1]; s.trendCur = vl; }
+      }))
+  ]);
 }
 async function loadMeteo(p){
   if(meteoCache[p]) return meteoCache[p];
@@ -1038,20 +1064,20 @@ function heroPool(){
   wlAll.forEach(s=>{
     if(s.msl==null || s.lat==null || s.lng==null) return;
     const L = FC.stationLevel(s);
-    out.push({name:s.name, code:s.code, src:'สสน./ชป.', lat:s.lat, lng:s.lng, cur:s.msl, prev:s.prev, bank:s.bank,
+    out.push({name:s.name, code:s.code, src:'สสน./ชป.', lat:s.lat, lng:s.lng, cur:s.msl, prev:s.prev, thr:0.01, bank:s.bank,
       pct:s.pct, dt:s.dt, prov:s.prov, amphoe:s.amphoe, river:s.river,
       lvl: L==='over' ? 'over' : L==='high' ? 'high' : 'normal', stText:null});
   });
   ddpmAll.forEach(s=>{
     if(s.cur==null || s.lat==null || s.lng==null) return;
     const lvl = s.bank!=null && s.cur>=s.bank ? 'over' : s.lvNum>=3 ? 'high' : s.lvNum===2 ? 'watch' : 'normal';
-    out.push({name:s.name, code:s.code, src:'ปภ.', lat:s.lat, lng:s.lng, cur:s.cur, prev:null, bank:s.bank,
+    out.push({name:s.name, code:s.code, src:'ปภ.', lat:s.lat, lng:s.lng, cur:s.cur, prev:s.prev??null, trendCur:s.trendCur, thr:0.02, bank:s.bank,
       pct:null, dt:s.dt, prov:s.prov, amphoe:s.amphoe, river:s.river, lvl, stText:s.st.l});
   });
   ridAll.forEach(s=>{
     if(s.cur==null || s.lat==null || s.lng==null) return;
     const lvl = s.rank===3 ? 'over' : s.rank===2 ? 'high' : 'normal';
-    out.push({name:s.name, code:s.code, src:'ชป. โทรมาตร', lat:s.lat, lng:s.lng, cur:s.cur, prev:null, bank:s.bank, warn:s.warn,
+    out.push({name:s.name, code:s.code, src:'ชป. โทรมาตร', lat:s.lat, lng:s.lng, cur:s.cur, prev:s.prev??null, trendCur:s.trendCur, thr:0.02, bank:s.bank, warn:s.warn,
       pct:null, dt:s.dt, prov:s.prov, amphoe:s.amphoe, river:'', lvl, stText:s.st.l});
   });
   const now = Date.now();
@@ -1082,9 +1108,11 @@ function renderHero(met, sel){
   let area = pool.filter(s=>s.prov===prov);
   if(amp) area = area.filter(s=>(s.amphoe||'').includes(amp));
   const over = area.filter(s=>s.lvl==='over'), high = area.filter(s=>s.lvl==='high'), watch = area.filter(s=>s.lvl==='watch');
-  const withPrev = wlAll.filter(s=>s.prov===prov && (!amp || s.amphoe.includes(amp)) && s.msl!=null && s.prev!=null);
-  const dd = s => s.msl - s.prev;
-  const rise = withPrev.filter(s=>dd(s) >= 0.01), fall = withPrev.filter(s=>dd(s) <= -0.01);
+  /* ทิศทางน้ำจากทุกแหล่งบนหน้าแผนที่ · ปภ./ชป. เทียบกับค่ากราฟของตัวเอง (trendCur) ไม่ใช่ค่าปัจจุบัน
+     เพราะสองค่านั้นอาจมาจากคนละรอบอัปเดต · เกณฑ์ ปภ./ชป. 2 ซม. (ค่ารายชั่วโมงแกว่งตามคลื่นลม) */
+  const withPrev = area.filter(s=>s.prev!=null);
+  const dd = s => (s.trendCur ?? s.cur) - s.prev;
+  const rise = withPrev.filter(s=>dd(s) >= s.thr), fall = withPrev.filter(s=>dd(s) <= -s.thr);
   const flat = withPrev.length - rise.length - fall.length;
 
   const placeName = amp ? 'อ.'+amp : prov;
@@ -1094,12 +1122,12 @@ function renderHero(met, sel){
   const word = document.getElementById('heroWord'), sub = document.getElementById('heroSub');
   let W;
   if(useNear){
-    const s = nearest, d = s.prev!=null ? s.cur - s.prev : null;
+    const s = nearest, d = s.prev!=null ? (s.trendCur ?? s.cur) - s.prev : null;
     W = s.lvl==='over' ? {t:'น้ำล้นตลิ่ง', k:'danger'}
       : s.lvl==='high' ? {t:'น้ำใกล้ตลิ่ง', k:'warn'}
       : s.lvl==='watch' ? {t:'น้ำถึงระดับเฝ้าระวัง', k:'watch'}
-      : d!=null && d >= 0.01 ? {t:'น้ำกำลังขึ้น', k:'watch'}
-      : d!=null && d <= -0.01 ? {t:'น้ำกำลังลด', k:'normal'}
+      : d!=null && d >= s.thr ? {t:'น้ำกำลังขึ้น', k:'watch'}
+      : d!=null && d <= -s.thr ? {t:'น้ำกำลังลด', k:'normal'}
       : {t:'น้ำยังปกติ', k:'normal'};
   } else if(!area.length) W = {t:'ยังอ่านข้อมูลน้ำไม่ได้', k:'na'};
   else if(over.length) W = {t:'มีจุดน้ำล้นตลิ่ง', k:'danger'};
@@ -1187,9 +1215,11 @@ function renderHero(met, sel){
   bar[0].style.flexGrow = rise.length; bar[1].style.flexGrow = fall.length; bar[2].style.flexGrow = Math.max(flat,0);
   [rise.length, fall.length, flat].forEach((v,i)=>{ bar[i].style.display = v>0 ? '' : 'none'; });
   const avg = withPrev.length ? withPrev.reduce((a,s)=>a+dd(s),0)/withPrev.length : null;
-  document.getElementById('dirWhere').textContent = `${placeName} · เทียบกับค่าที่วัดได้ครั้งก่อน`;
-  document.getElementById('dirAvg').innerHTML = avg==null ? 'ยังไม่มีค่าก่อนหน้าให้เทียบ (ข้อมูล สสน. ยังโหลดไม่ได้)'
-    : `เฉลี่ยทุกสถานี <b>${avg>=0?'+':''}${avg.toFixed(2)} ม.</b> จาก ${withPrev.length} สถานี`;
+  document.getElementById('dirWhere').textContent = `${placeName} · เทียบกับค่าราว 1 ชม.ก่อน`;
+  const bySrc = ['สสน./ชป.','ปภ.','ชป. โทรมาตร'].map(k=>[k, withPrev.filter(s=>s.src===k).length]).filter(([,n])=>n).map(([k,n])=>`${k} ${n}`).join(' · ');
+  document.getElementById('dirAvg').innerHTML = avg==null
+    ? (area.length ? 'กำลังโหลดค่าย้อนหลังของสถานี…' : 'ยังอ่านข้อมูลสถานีไม่ได้')
+    : `เฉลี่ยทุกสถานี <b>${avg>=0?'+':''}${avg.toFixed(2)} ม.</b> จาก ${withPrev.length} สถานี (${bySrc})`;
 }
 document.getElementById('heroShare').addEventListener('click', async ()=>{
   const data = {title: document.title, text: document.getElementById('heroH').textContent.trim() + ' · naraflood.com', url: location.href.split('#')[0]};
