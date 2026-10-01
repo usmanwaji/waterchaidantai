@@ -34,29 +34,29 @@
      การ์ดยกขึ้นมาเป็นขาวกว่าพื้น แล้วให้เงานุ่มทำหน้าที่แยกชั้นแทนเส้นขอบหนา */
   /* v9 "สายน้ำ": พื้นเทาฟ้าอมหมอกแบบท้องฟ้าหลังฝน แทนเทาม่วงเดิม
      การ์ดเป็นขาวอมฟ้า ยกด้วยเงานุ่มและ "ขอบสองชั้น" (วงแหวนโปร่งรอบการ์ด) */
-  --paper:#ebf1f4;        /* พื้นหน้า */
-  --paper-2:#dfe8ed;      /* พื้นยุบ ใช้กับแถบเครื่องมือ */
-  --card:#fafcfd;         /* การ์ดยกขึ้น ขาวแต่ยังมีอุณหภูมิ */
-  --card-2:#f0f5f7;       /* การ์ดซ้อนในการ์ด */
-  --glass:rgba(250,252,253,.74);       /* หัวเว็บและแถบล่างแบบกระจกฝ้า */
+  --paper:#eef0f6;        /* พื้นหน้า (v9.5: เทาอมคราม) */
+  --paper-2:#e2e6f0;      /* พื้นยุบ ใช้กับแถบเครื่องมือ */
+  --card:#fcfcff;         /* การ์ดยกขึ้น ขาวแต่ยังมีอุณหภูมิ */
+  --card-2:#f2f4fa;       /* การ์ดซ้อนในการ์ด */
+  --glass:rgba(252,252,255,.78);       /* หัวเว็บและแถบล่างแบบกระจกฝ้า */
   --glass-line:rgba(255,255,255,.75);
   --bezel:rgba(16,58,82,.055);         /* วงแหวนนอกของการ์ด (ขอบชั้นนอก) */
-  --sky:#d6e8f0;                       /* แสงฟ้าจาง ๆ ด้านบนของหน้า */
+  --sky:#dde3f3;                       /* แสงฟ้าจาง ๆ ด้านบนของหน้า */
 
   /* ---------- เส้น 3 ระดับ เพื่อให้ขอบสื่อลำดับชั้นได้ ไม่ใช่แค่มีขอบ ----------
      ค่าถูกเลือกให้ห่างจากค่าพื้นผิวทุกตัวพอที่จะมองเห็นจริง
      เส้นผมที่สว่างใกล้พื้นภายใน 2 ขั้นความสว่างจะมองไม่เห็นบนจอกลางแดด */
-  --line:#d9e3e9;
-  --line-mid:#b5c5cf;
-  --line-strong:#7b919f;
+  --line:#dde1ec;
+  --line-mid:#bcc3d6;
+  --line-strong:#7d86a0;
 
   /* ---------- หมึก: กรมท่าเกือบดำ ไม่ใช่ดำล้วน ---------- */
-  --ink:#132a38;
-  --ink-2:#3d5565;
+  --ink:#171d33;
+  --ink-2:#424a66;
   /* วัดจากพิกเซลที่เรนเดอร์จริงแล้วต้องได้อย่างน้อย 4.5:1 บนการ์ด
      ค่าที่อ่อนกว่านี้ (#727a96) วัดได้ 4.18:1 ซึ่งตกเกณฑ์
      ตัวนี้คือสีของ .note และป้ายใต้ตัวเลข ซึ่งเป็นข้อความที่คนอ่านกลางแดดจริง */
-  --ink-3:#5a7080;
+  --ink-3:#5f6783;
 
   /* ---------- signal: สีทำงานของเว็บ น้ำเงินกรมท่าจากตราสัญลักษณ์ ปภ. ----------
      สีมาจากของที่หน่วยงานเป็นเจ้าของอยู่แล้ว ไม่ใช่สีที่เลือกให้ตามใจ
@@ -70,11 +70,11 @@
   /* v9: สีทำงานเปลี่ยนจากกรมท่าเป็น "น้ำเงินสายน้ำ" อมเขียวหัวเป็ด
      เข้ากับพื้นฟ้าหมอก และยังห่างจากเขียว/เหลือง/ส้ม/แดงของสถานการณ์พอ
      กรมท่าของตรา ปภ. ยังอยู่ ย้ายไปเป็น --ddpm ใช้กับเครื่องหมายบนหัวเว็บ */
-  --signal:#12698a;
-  --signal-hover:#0d5672;
-  --signal-deep:#083a4e;
-  --signal-wash:#e0eef3;
-  --signal-ink:#f7fbfc;
+  --signal:#2c4fb4;
+  --signal-hover:#223f93;
+  --signal-deep:#16285e;
+  --signal-wash:#e5eafa;
+  --signal-ink:#fbfcff;
   --ddpm:#1c3282;
 
   /* ---------- เหลืองของตรา ปภ. ----------
@@ -98,18 +98,18 @@
   /* ---------- ยกระดับ: เงานุ่มกระจายกว้างแบบภาพอ้างอิง ----------
      การ์ดในภาพแทบไม่มีเส้นขอบ ใช้เงาบาง ๆ ที่ฟุ้งกว้างแยกชั้นแทน
      วงแหวน 1px ยังอยู่เพื่อให้ขอบไม่หายไปเลยบนจอกลางแดด */
-  --lift-1:0 1px 1px rgba(16,58,82,.04),0 12px 30px -18px rgba(16,58,82,.30);
-  --lift-2:0 1px 2px rgba(16,58,82,.05),0 18px 40px -20px rgba(16,58,82,.38);
-  --lift-3:0 24px 60px -18px rgba(16,58,82,.42);
+  --lift-1:0 1px 2px rgba(28,40,90,.05),0 10px 26px -16px rgba(28,40,90,.28);
+  --lift-2:0 2px 4px rgba(28,40,90,.06),0 16px 36px -18px rgba(28,40,90,.36);
+  --lift-3:0 24px 60px -18px rgba(28,40,90,.42);
   --inset-hi:inset 0 1px 0 rgba(255,255,255,.95);
 
   /* ---------- รัศมีตามบทบาท ไม่ใช่ตามขนาด ----------
      ถามว่า "นี่คือ control หรือ sheet" ตอบได้ทันที
      ถามว่า "นี่คือ md หรือ lg" ต้องเดา
      มนขึ้นกว่าเดิมตามภาพอ้างอิงที่การ์ดมนราว 16px และปุ่มมนราว 12px */
-  --r-control:14px;
-  --r-media:22px;
-  --r-sheet:28px;
+  --r-control:12px;
+  --r-media:18px;
+  --r-sheet:24px;
   --r-commit:999px;
 
   /* ---------- บันได z มีชื่อ ห้าม z-index ดิบในคอมโพเนนต์ ----------
@@ -240,6 +240,7 @@ header{
   -webkit-backdrop-filter:blur(18px) saturate(1.5);
   border:1px solid var(--glass-line);
   border-radius:var(--r-sheet);
+  border-bottom:2px solid var(--brand-yellow);
   box-shadow:var(--lift-1),var(--inset-hi);
   color:var(--ink);
   min-height:56px;
@@ -270,14 +271,14 @@ header>h1:has(small){padding-top:0;padding-bottom:0}
 .navtab a:hover{color:var(--ink);background:rgba(255,255,255,.85)}
 /* แท็บที่เลือกอยู่ยกขึ้นเป็นเม็ดขาวมีเงา เหมือนปุ่มสวิตช์ที่ถูกกด
    ไม่ใช้สีเต็มใบ เพราะบนแถบโปร่ง สีทึบก้อนเดียวจะแย่งสายตาจากเนื้อหา */
-.navtab a.on{background:var(--card);color:var(--signal-deep);font-weight:700;
-  box-shadow:0 1px 2px rgba(16,58,82,.10),0 4px 10px -6px rgba(16,58,82,.35)}
-.navtab a.on:hover{background:var(--card);color:var(--signal-deep)}
+.navtab a.on{background:var(--ddpm);color:#fff;font-weight:700;
+  box-shadow:inset 0 -3px 0 var(--brand-yellow)}
+.navtab a.on:hover{background:var(--ddpm);color:#fff}
 
 #btnRefresh{
   background:var(--signal);color:var(--signal-ink);
-  border-radius:var(--r-commit);font-weight:600;padding-left:16px;padding-right:16px;
-  box-shadow:0 6px 14px -8px rgba(18,105,138,.8);
+  border-radius:var(--r-control);font-weight:600;padding-left:16px;padding-right:16px;
+  box-shadow:0 6px 14px -8px rgba(44,79,180,.8);
   transition:background .15s var(--ease),transform .15s var(--ease);
 }
 #btnRefresh:hover{background:var(--signal-hover);color:var(--signal-ink)}
@@ -301,12 +302,12 @@ header .auth-out:hover{color:var(--signal)}
 #selbar{background:transparent;border-bottom:none}
 .chip{
   background:var(--card);color:var(--ink);
-  border:1px solid var(--line-mid);border-radius:var(--r-commit);
+  border:1px solid var(--line-mid);border-radius:var(--r-control);
   font-weight:500;transition:background .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease),box-shadow .15s var(--ease);
 }
 .chip:hover{border-color:var(--signal);color:var(--signal)}
 .chip.on{background:var(--signal);border-color:var(--signal);color:var(--signal-ink);font-weight:600;
-  box-shadow:0 6px 14px -8px rgba(18,105,138,.75)}
+  box-shadow:0 6px 14px -8px rgba(44,79,180,.7)}
 /* ป้ายชื่อจังหวัดเป็นข้อความนิ่ง กดไม่ได้ ไม่ใช่ปุ่ม จึงต้องเงียบ */
 .provlbl{
   background:var(--paper-2);color:var(--ink-2);
@@ -324,7 +325,8 @@ header .auth-out:hover{color:var(--signal)}
   background:var(--card);
   border:1px solid var(--glass-line);
   border-radius:var(--r-media);
-  box-shadow:0 0 0 5px var(--bezel),0 0 0 6px rgba(16,58,82,.05),var(--lift-1),var(--inset-hi);
+  border:1px solid var(--line);
+  box-shadow:var(--lift-1),var(--inset-hi);
 }
 .card h2{color:var(--ink);font-weight:700}
 .card h2 .where{color:var(--ink-3);font-weight:400}
@@ -334,10 +336,10 @@ footer a{color:var(--signal)}
 
 /* v9: ปุ่มสลับช่วงเวลา (หน้าคาดการณ์) และชิปเรดาร์ ให้เป็นเม็ดยาเหมือนชิปอื่นทั้งเว็บ
    ปุ่มที่ไม่ได้เลือกเดิมเป็นก้อนสีเข้มทึบ ซึ่งหนักกว่าปุ่มที่เลือกอยู่เสียอีก */
-.hbtn,.rchip{background:var(--card);color:var(--ink-2);border:1px solid var(--line-mid);border-radius:var(--r-commit)}
+.hbtn,.rchip{background:var(--card);color:var(--ink-2);border:1px solid var(--line-mid);border-radius:var(--r-control)}
 .hbtn:hover,.rchip:hover{border-color:var(--signal);color:var(--signal)}
 .hbtn.on,.rchip.on{background:var(--signal);border-color:var(--signal);color:var(--signal-ink);
-  box-shadow:0 6px 14px -8px rgba(18,105,138,.75)}
+  box-shadow:0 6px 14px -8px rgba(44,79,180,.7)}
 #ncPlay{border-radius:50%;border:1px solid var(--line-mid);background:var(--card);color:var(--signal)}
 #ncSlider{accent-color:var(--signal)}
 .btn{border-radius:var(--r-commit)}
@@ -891,8 +893,10 @@ body.has-install-fab .leaflet-bottom.leaflet-left{
 }
 .hero-word{
   color:var(--hw,var(--signal));white-space:nowrap;
-  text-decoration:underline wavy;text-decoration-color:color-mix(in srgb,var(--hw,var(--signal)) 70%,transparent);
-  text-decoration-thickness:2px;text-underline-offset:9px;text-decoration-skip-ink:none;
+  /* v9.5: แถบไฮไลต์สีของระดับใต้ครึ่งล่างของคำ แทนเส้นใต้หยัก */
+  background:linear-gradient(transparent 58%,color-mix(in srgb,var(--hw,var(--signal)) 22%,transparent) 58%);
+  padding:0 .12em;border-radius:4px;
+  -webkit-box-decoration-break:clone;box-decoration-break:clone;
 }
 .hero-word[data-lv="normal"]{--hw:var(--st-normal)}
 .hero-word[data-lv="watch"] {--hw:var(--st-watch)}
@@ -906,17 +910,16 @@ body.has-install-fab .leaflet-bottom.leaflet-left{
 .hero-cta{display:flex;align-items:center;gap:var(--s2) var(--s5);flex-wrap:wrap;margin:var(--s5) 0 var(--s4)}
 .cta-main{
   display:inline-flex;align-items:center;gap:var(--s4);
-  padding:8px 8px 8px 22px;border-radius:var(--r-commit);
-  background:linear-gradient(180deg,#1879a0,var(--signal));color:var(--signal-ink);
+  padding:0 18px 0 20px;min-height:48px;border-radius:var(--r-control);
+  background:linear-gradient(180deg,#3a5fc6,var(--signal));color:var(--signal-ink);
   font-size:16px;font-weight:700;text-decoration:none;
-  box-shadow:0 12px 24px -12px rgba(18,105,138,.85),inset 0 1px 0 rgba(255,255,255,.25);
+  box-shadow:0 12px 24px -12px rgba(44,79,180,.85),inset 0 1px 0 rgba(255,255,255,.25);
   transition:transform .2s var(--ease),box-shadow .2s var(--ease);
 }
 .cta-main:hover{color:var(--signal-ink);transform:translateY(-1px)}
 .cta-main:active{transform:scale(.97)}
-.cta-main i{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);
-  transition:transform .25s var(--ease)}
-.cta-main:hover i{transform:translate(2px,2px)}
+.cta-main i{display:grid;place-items:center;transition:transform .25s var(--ease)}
+.cta-main:hover i{transform:translateX(3px)}
 .cta-main svg,.cta-link svg,.hchip svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .cta-link{
   display:inline-flex;align-items:center;gap:6px;min-height:40px;
@@ -935,7 +938,7 @@ body.has-install-fab .leaflet-bottom.leaflet-left{
 .hrow-c::-webkit-scrollbar{display:none}
 .hchip{
   flex:none;display:inline-flex;align-items:center;gap:7px;
-  padding:6px 14px 6px 11px;border-radius:var(--r-commit);
+  padding:6px 14px 6px 11px;border-radius:var(--r-control);
   background:var(--card);border:1px solid var(--line);
   box-shadow:0 1px 2px rgba(16,58,82,.05);
   font-size:13.5px;font-weight:500;color:var(--ink);text-decoration:none;white-space:nowrap;
@@ -954,20 +957,20 @@ a.hchip:active{transform:scale(.97)}
 /* ---------- ภาพแม่น้ำ ----------
    สีทั้งหมดเป็นตัวแปร ภาพจึงเปลี่ยนเป็นกลางคืนได้ด้วยคลาสเดียว */
 .hero-art{
-  --sky-1:#e6f0f4;--sky-2:#c9e1ec;--orb:#fff4d6;--orb-glow:rgba(255,231,166,.55);
-  --far:#bad1dc;--mid:#9fbccb;--town:#88a9b9;--town-2:#7c9eaf;--roof:#b3897a;--win:#dcebf1;
-  --wall:#a4bcc8;--wall-2:#8ea9b6;--coping:#c6d6dd;--tree:#6f97a8;
-  --water-1:#3f97bb;--water-2:#1c5e7f;--wave:#66b0cd;--crest:rgba(255,255,255,.6);
+  --sky-1:#eef0f8;--sky-2:#d3dcf2;--orb:#fff4d6;--orb-glow:rgba(255,231,166,.55);
+  --far:#c3cde6;--mid:#a9b9d6;--town:#8f9fc2;--town-2:#8394b9;--roof:#c08a6e;--win:#e6ebf7;
+  --wall:#9cb98a;--wall-2:#7e9f6e;--coping:#b9cfa4;--tree:#5f8a6a;--mud:#c9b48f;
+  --water-1:#4a7fd0;--water-2:#24448f;--wave:#7ea4e0;--crest:rgba(255,255,255,.6);
   --star-op:0;
   position:relative;margin-top:var(--s2);line-height:0;
-  border-radius:var(--r-sheet);overflow:hidden;
-  box-shadow:0 0 0 5px var(--bezel),var(--lift-1);
+  border-radius:var(--r-media);overflow:hidden;
+  border:1px solid var(--line);box-shadow:var(--lift-1);
   background:var(--sky-2);
 }
 .hero-art.night{
   --sky-1:#203d55;--sky-2:#3a6079;--orb:#f3f1e4;--orb-glow:rgba(243,241,228,.25);
   --far:#355a72;--mid:#2d5068;--town:#25465c;--town-2:#203f53;--roof:#4a4a55;--win:#ffd98a;
-  --wall:#3a5a6d;--wall-2:#2e4c5e;--coping:#4b6b7d;--tree:#24475b;
+  --wall:#2f4d3f;--wall-2:#243e33;--coping:#3c5d4b;--tree:#22413a;--mud:#4a4338;
   --water-1:#24688a;--water-2:#0f3a52;--wave:#33799b;--crest:rgba(255,255,255,.35);
   --star-op:.85;
 }
@@ -979,7 +982,7 @@ a.hchip:active{transform:scale(.97)}
 @keyframes waveX{to{transform:translateX(-200px)}}
 @keyframes bob{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(3px) rotate(1.2deg)}}
 .hero-gauge{
-  position:absolute;left:var(--s4);top:16px;
+  position:absolute;right:var(--s4);top:16px;
   line-height:1.2;text-align:center;pointer-events:none;
   padding:6px 14px 8px;border-radius:18px;
   background:var(--glass);border:1px solid var(--glass-line);
@@ -994,7 +997,7 @@ a.hchip:active{transform:scale(.97)}
   .hero{padding-top:var(--s4)}
   .hero-art{margin:var(--s2) calc(-1 * var(--s4)) 0;border-radius:0;box-shadow:none}
   .hero-art svg{height:190px}
-  .hero-gauge{top:12px;left:12px;padding:4px 12px 6px;border-radius:14px}
+  .hero-gauge{top:12px;left:12px;right:auto;padding:4px 12px 6px;border-radius:12px}
   .hero-gauge b{font-size:24px}
   .hero-gauge span{font-size:10.5px}
   .hero-cta{gap:var(--s2) var(--s4)}
@@ -1010,26 +1013,34 @@ a.hchip:active{transform:scale(.97)}
   .hero-sub{font-size:17px}
   .hrow-k{width:92px;font-size:13px}
   .hero-art svg{height:260px}
-  .hero-gauge{top:24px;left:var(--s5)}
+  .hero-gauge{top:24px;right:var(--s5)}
   .hero-gauge b{font-size:36px}
 }
 @media(prefers-reduced-motion:reduce){
   .hero-art .w-move,.hero-art .boat,.live-dot::after{animation:none}
 }
 
-/* ---------- การ์ดทิศทางน้ำ ----------
-   ตัวเลขใหญ่สามตัว แล้วแถบสัดส่วนใต้ตัวเลข ตาเห็นสัดส่วนก่อนอ่านเลข */
-.dir-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3);margin-top:var(--s3)}
-.dir-nums b{display:block;font-size:40px;line-height:1.05;font-weight:700;font-variant-numeric:tabular-nums}
+/* ---------- การ์ดแนวโน้มระดับน้ำ (v9.5) ----------
+   แถบสัดส่วนหนามีตัวเลขในแถบ ตามด้วยตัวเลขแบบตัวกลาง และสถานีที่เปลี่ยนมากที่สุด */
+.dir-bar{display:flex;gap:3px;height:28px;margin:var(--s3) 0 var(--s3)}
+.dir-bar i{display:flex;align-items:center;justify-content:center;height:100%;min-width:30px;border-radius:8px;
+  font-style:normal;font-size:12.5px;font-weight:700;color:#fff;transition:flex-grow .8s var(--ease-out)}
+.dir-bar .r{background:var(--st-warn)}
+.dir-bar .f{background:var(--st-normal)}
+.dir-bar .s{background:var(--line-mid);color:var(--ink)}
+.dir-nums{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s5)}
+.dir-nums>div{display:flex;align-items:baseline;gap:6px}
+.dir-nums b{font-size:26px;line-height:1.1;font-weight:700;font-variant-numeric:tabular-nums}
 .dir-nums span{font-size:14px;color:var(--ink-2)}
 .dir-rise b{color:var(--st-warn)}
 .dir-fall b{color:var(--st-normal)}
 .dir-flat b{color:var(--ink)}
-.dir-bar{display:flex;gap:4px;height:8px;margin:var(--s4) 0 var(--s3)}
-.dir-bar i{display:block;height:100%;border-radius:var(--r-commit);min-width:8px;transition:flex-grow .8s var(--ease-out)}
-.dir-bar .r{background:var(--st-warn)}
-.dir-bar .f{background:var(--st-normal)}
-.dir-bar .s{background:var(--line-mid)}
-.dir-avg{font-size:14px;color:var(--ink-2)}
+.dir-avg{font-size:14px;color:var(--ink-2);margin-top:var(--s2)}
 .dir-avg b{color:var(--ink)}
-@media(min-width:769px){.dir-nums b{font-size:48px}}
+.dir-top{list-style:none;margin:var(--s3) 0 0;padding:0;display:grid;gap:4px}
+.dir-top:empty{display:none}
+.dir-top li{display:flex;align-items:center;gap:var(--s2);font-size:13px;padding:7px var(--s3);border-radius:var(--r-control);background:var(--card-2)}
+.dir-top li b{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dir-top li span{flex:none;color:var(--ink-3);font-size:12px}
+.dir-top li em{flex:none;font-style:normal;font-weight:700;font-variant-numeric:tabular-nums}
+.dir-top li em.up{color:var(--st-warn)} .dir-top li em.dn{color:var(--st-normal)}
