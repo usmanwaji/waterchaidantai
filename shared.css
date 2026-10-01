@@ -32,25 +32,31 @@
   /* ---------- พื้นผิว: สว่างอมน้ำเงินจาง ไม่มีขาวล้วน ----------
      ไล่ตามแดชบอร์ดอ้างอิง พื้นแอปสว่างเกือบขาวแต่มีสีแบรนด์เจือ
      การ์ดยกขึ้นมาเป็นขาวกว่าพื้น แล้วให้เงานุ่มทำหน้าที่แยกชั้นแทนเส้นขอบหนา */
-  --paper:#f2f4fa;        /* พื้นหน้า */
-  --paper-2:#e8ecf6;      /* พื้นยุบ ใช้กับแถบเครื่องมือ */
-  --card:#fdfdff;         /* การ์ดยกขึ้น ขาวแต่ยังมีอุณหภูมิ */
-  --card-2:#f3f5fc;       /* การ์ดซ้อนในการ์ด */
+  /* v9 "สายน้ำ": พื้นเทาฟ้าอมหมอกแบบท้องฟ้าหลังฝน แทนเทาม่วงเดิม
+     การ์ดเป็นขาวอมฟ้า ยกด้วยเงานุ่มและ "ขอบสองชั้น" (วงแหวนโปร่งรอบการ์ด) */
+  --paper:#ebf1f4;        /* พื้นหน้า */
+  --paper-2:#dfe8ed;      /* พื้นยุบ ใช้กับแถบเครื่องมือ */
+  --card:#fafcfd;         /* การ์ดยกขึ้น ขาวแต่ยังมีอุณหภูมิ */
+  --card-2:#f0f5f7;       /* การ์ดซ้อนในการ์ด */
+  --glass:rgba(250,252,253,.74);       /* หัวเว็บและแถบล่างแบบกระจกฝ้า */
+  --glass-line:rgba(255,255,255,.75);
+  --bezel:rgba(16,58,82,.055);         /* วงแหวนนอกของการ์ด (ขอบชั้นนอก) */
+  --sky:#d6e8f0;                       /* แสงฟ้าจาง ๆ ด้านบนของหน้า */
 
   /* ---------- เส้น 3 ระดับ เพื่อให้ขอบสื่อลำดับชั้นได้ ไม่ใช่แค่มีขอบ ----------
      ค่าถูกเลือกให้ห่างจากค่าพื้นผิวทุกตัวพอที่จะมองเห็นจริง
      เส้นผมที่สว่างใกล้พื้นภายใน 2 ขั้นความสว่างจะมองไม่เห็นบนจอกลางแดด */
-  --line:#dfe4f0;
-  --line-mid:#bcc4da;
-  --line-strong:#8189a6;
+  --line:#d9e3e9;
+  --line-mid:#b5c5cf;
+  --line-strong:#7b919f;
 
   /* ---------- หมึก: กรมท่าเกือบดำ ไม่ใช่ดำล้วน ---------- */
-  --ink:#1a1f33;
-  --ink-2:#454d68;
+  --ink:#132a38;
+  --ink-2:#3d5565;
   /* วัดจากพิกเซลที่เรนเดอร์จริงแล้วต้องได้อย่างน้อย 4.5:1 บนการ์ด
      ค่าที่อ่อนกว่านี้ (#727a96) วัดได้ 4.18:1 ซึ่งตกเกณฑ์
      ตัวนี้คือสีของ .note และป้ายใต้ตัวเลข ซึ่งเป็นข้อความที่คนอ่านกลางแดดจริง */
-  --ink-3:#666e8c;
+  --ink-3:#5a7080;
 
   /* ---------- signal: สีทำงานของเว็บ น้ำเงินกรมท่าจากตราสัญลักษณ์ ปภ. ----------
      สีมาจากของที่หน่วยงานเป็นเจ้าของอยู่แล้ว ไม่ใช่สีที่เลือกให้ตามใจ
@@ -61,11 +67,15 @@
      ถ้าเอาไปแปะบนเมนู ตาคนจะชินกับส้มบนของที่ไม่มีความหมาย
      แล้ววันที่มีอำเภอเสี่ยงระดับส้มจริง สีจะหมดแรงเตือน
      น้ำเงินจึงเป็นสีหลักเดี่ยว และส้มถูกคืนให้ระบบเตือนภัยใช้อย่างเดียว */
-  --signal:#1c3282;
-  --signal-hover:#142663;
-  --signal-deep:#0e1a45;
-  --signal-wash:#e7ebf7;
-  --signal-ink:#f8faff;
+  /* v9: สีทำงานเปลี่ยนจากกรมท่าเป็น "น้ำเงินสายน้ำ" อมเขียวหัวเป็ด
+     เข้ากับพื้นฟ้าหมอก และยังห่างจากเขียว/เหลือง/ส้ม/แดงของสถานการณ์พอ
+     กรมท่าของตรา ปภ. ยังอยู่ ย้ายไปเป็น --ddpm ใช้กับเครื่องหมายบนหัวเว็บ */
+  --signal:#12698a;
+  --signal-hover:#0d5672;
+  --signal-deep:#083a4e;
+  --signal-wash:#e0eef3;
+  --signal-ink:#f7fbfc;
+  --ddpm:#1c3282;
 
   /* ---------- เหลืองของตรา ปภ. ----------
      กฎเหล็ก: เหลืองสดนี้ใช้ได้เฉพาะเป็นของประดับ chrome และเฉพาะเมื่อวาง
@@ -88,17 +98,18 @@
   /* ---------- ยกระดับ: เงานุ่มกระจายกว้างแบบภาพอ้างอิง ----------
      การ์ดในภาพแทบไม่มีเส้นขอบ ใช้เงาบาง ๆ ที่ฟุ้งกว้างแยกชั้นแทน
      วงแหวน 1px ยังอยู่เพื่อให้ขอบไม่หายไปเลยบนจอกลางแดด */
-  --lift-1:0 0 0 1px rgba(26,31,51,.045),0 2px 6px rgba(28,50,130,.07);
-  --lift-2:0 0 0 1px rgba(26,31,51,.035),0 8px 22px rgba(28,50,130,.11);
-  --lift-3:0 16px 40px rgba(28,50,130,.20);
+  --lift-1:0 1px 1px rgba(16,58,82,.04),0 12px 30px -18px rgba(16,58,82,.30);
+  --lift-2:0 1px 2px rgba(16,58,82,.05),0 18px 40px -20px rgba(16,58,82,.38);
+  --lift-3:0 24px 60px -18px rgba(16,58,82,.42);
+  --inset-hi:inset 0 1px 0 rgba(255,255,255,.95);
 
   /* ---------- รัศมีตามบทบาท ไม่ใช่ตามขนาด ----------
      ถามว่า "นี่คือ control หรือ sheet" ตอบได้ทันที
      ถามว่า "นี่คือ md หรือ lg" ต้องเดา
      มนขึ้นกว่าเดิมตามภาพอ้างอิงที่การ์ดมนราว 16px และปุ่มมนราว 12px */
-  --r-control:12px;
-  --r-media:16px;
-  --r-sheet:24px;
+  --r-control:14px;
+  --r-media:22px;
+  --r-sheet:28px;
   --r-commit:999px;
 
   /* ---------- บันได z มีชื่อ ห้าม z-index ดิบในคอมโพเนนต์ ----------
@@ -115,7 +126,8 @@
      ทุกกล่องที่เลื่อนได้ ทุกของที่ปักหมุด และการคำนวณ safe area
      ต้องอ้างตัวเลขชุดเดียวกัน ไม่งั้นจะมีอยู่หน้าเดียวที่เนื้อหาโดนแถบล่างบัง
      แล้วไม่มีใครหาสาเหตุเจอ */
-  --tabbar-h:58px;
+  --tabbar-h:60px;
+  --dock-gap:10px;   /* แถบล่างลอยห่างขอบจอ (มือถือ) */
   /* ปุ่มติดตั้งแอปลอยเหนือแถบล่าง ของมุมล่างซ้ายอื่น (คำอธิบายสีของแผนที่)
      ต้องหลบด้วยตัวเลขเดียวกันนี้ ไม่ใช่ตัวเลขที่กะเอาแยกกันคนละที่ */
   --install-fab-h:44px;
@@ -133,6 +145,7 @@
 
   /* ---------- เส้นโค้งเดียวทั้งเว็บ ---------- */
   --ease:cubic-bezier(.23,1,.32,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
 
   /* =======================================================================
      แม็ปชื่อ token เดิมมาที่ระบบใหม่
@@ -161,7 +174,7 @@
   /* หัวเว็บเป็นน้ำเงินกรมท่าของตรา ปภ. คาดด้วยเส้นเหลืองของตราด้านล่าง
      คู่สีน้ำเงินบนเหลืองคือตัวตราเอง และการวางเหลืองไว้บนน้ำเงินทำให้
      เหลืองอยู่ในที่ที่อ่านออกชัดโดยไม่ไปปนกับความหมาย "เฝ้าระวัง" */
-  --shell:rgba(20,34,86,.93);
+  --shell:var(--glass);
 
   --success:var(--st-normal);
   --warning:var(--st-watch);
@@ -190,9 +203,14 @@
 /* =========================================================================
    2. ฐาน
    ========================================================================= */
+/* v9: พื้นหน้ามีแสงฟ้าจาง ๆ ไล่จากด้านบน เหมือนท้องฟ้าหลังฝน
+   ใช้ fixed attachment เพื่อไม่ให้แสงเลื่อนตามเนื้อหายาว ๆ */
 body{
   font-family:var(--ui);
-  background:var(--paper);
+  background:
+    radial-gradient(1100px 520px at 50% -260px,var(--sky),transparent 70%),
+    var(--paper);
+  background-attachment:fixed;
   color:var(--ink);
   /* ตัวเลขต้องตรงคอลัมน์ ระดับน้ำ ปริมาณฝน เวลา เปอร์เซ็นต์ ทั้งเว็บคือตัวเลข
      ตัวเลขที่ไม่ตรงหลักคือข้อบกพร่องที่คนรู้สึกได้แต่เรียกชื่อไม่ถูก */
@@ -211,80 +229,118 @@ a:hover{color:var(--signal-hover)}
 
 /* =========================================================================
    3. Chrome: หัวเว็บ แถบเมนู แถบเลือกพื้นที่
+   v9: หัวเว็บเป็น "แคปซูลกระจกฝ้า" ลอยห่างขอบจอ แทนแถบทึบเต็มความกว้าง
+   เนื้อหาเลื่อนลอดใต้แล้วเห็นจาง ๆ ผ่านกระจก หน้าจึงดูโปร่ง ไม่หนักหัว
    ========================================================================= */
-/* หัวเว็บน้ำเงินกรมท่า คาดเส้นเหลืองของตรา ปภ. ด้านล่าง
-   เส้นเหลืองคือจุดเดียวที่สีแบรนด์ปรากฏเต็มความสด และมันอยู่บนน้ำเงิน
-   จึงอ่านออกชัดและไม่มีทางถูกเข้าใจผิดว่าเป็นระดับเฝ้าระวัง */
 header{
-  background:var(--shell);
-  backdrop-filter:blur(16px) saturate(1.3);
-  -webkit-backdrop-filter:blur(16px) saturate(1.3);
-  border-bottom:3px solid var(--brand-yellow);
-  color:var(--signal-ink);
+  top:var(--s2);
+  margin:var(--s2) var(--s2) 0;
+  background:var(--glass);
+  backdrop-filter:blur(18px) saturate(1.5);
+  -webkit-backdrop-filter:blur(18px) saturate(1.5);
+  border:1px solid var(--glass-line);
+  border-radius:var(--r-sheet);
+  box-shadow:var(--lift-1),var(--inset-hi);
+  color:var(--ink);
+  min-height:56px;
 }
-header h1{font-weight:600;letter-spacing:0;color:var(--signal-ink)}
-header h1 small{color:rgba(248,250,255,.78)}
-#updated{color:rgba(248,250,255,.80)}
+/* เครื่องหมายเว็บหน้าชื่อหน้า: สี่เหลี่ยมมนกรมท่าของตรา ปภ. มีคลื่นเหลืองข้างใน
+   เป็นที่เดียวที่กรมท่ากับเหลืองของตราปรากฏคู่กัน และเหลืองอยู่บนกรมท่าเสมอ
+   จึงไม่มีทางถูกอ่านเป็นสีเตือนภัย "เฝ้าระวัง" */
+header>h1::before{
+  content:"";position:absolute;left:0;top:50%;margin-top:-17px;width:34px;height:34px;border-radius:11px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Cpath d='M7 15.5c2.2-2 4.4-2 6.6 0s4.4 2 6.6 0 4.4-2 6.6 0' fill='none' stroke='%23ffd400' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M7 21.5c2.2-2 4.4-2 6.6 0s4.4 2 6.6 0 4.4-2 6.6 0' fill='none' stroke='%23ffffff' stroke-opacity='.75' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='24.5' cy='9.5' r='2.4' fill='%23ffd400'/%3E%3C/svg%3E") center/100% no-repeat,
+    linear-gradient(160deg,#2a4aa8,var(--ddpm));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 10px -4px rgba(28,50,130,.55);
+}
+header>h1{position:relative;padding-left:46px;min-height:34px;display:block;padding-top:5px;padding-bottom:3px;
+  font-weight:700;letter-spacing:0;color:var(--ink)}
+header>h1 small{color:var(--ink-3);font-weight:400}
+header>h1:has(small){padding-top:0;padding-bottom:0}
+#updated{color:var(--ink-3)}
 
 .navtab{
-  background:rgba(248,250,255,.10);
-  border:1px solid rgba(248,250,255,.16);
-  border-radius:var(--r-control);
+  background:rgba(16,58,82,.045);
+  border:1px solid transparent;
+  border-radius:var(--r-commit);
+  padding:4px;
 }
-.navtab a{color:rgba(248,250,255,.82);border-radius:var(--r-control);font-weight:500}
-.navtab a:hover{color:var(--signal-ink);background:rgba(248,250,255,.16)}
-/* แท็บที่เลือกอยู่บนหัวเว็บใช้พื้นเหลืองหมึกน้ำเงิน ซึ่งคือตรา ปภ. กลับด้าน
-   และเป็นคู่สีที่คอนทราสต์สูงที่สุดที่แบรนด์นี้มี */
-.navtab a.on{background:var(--brand-yellow);color:var(--signal-deep);font-weight:700}
-.navtab a.on:hover{background:var(--brand-yellow-dim);color:var(--signal-deep)}
+.navtab a{color:var(--ink-2);border-radius:var(--r-commit);font-weight:500}
+.navtab a:hover{color:var(--ink);background:rgba(255,255,255,.85)}
+/* แท็บที่เลือกอยู่ยกขึ้นเป็นเม็ดขาวมีเงา เหมือนปุ่มสวิตช์ที่ถูกกด
+   ไม่ใช้สีเต็มใบ เพราะบนแถบโปร่ง สีทึบก้อนเดียวจะแย่งสายตาจากเนื้อหา */
+.navtab a.on{background:var(--card);color:var(--signal-deep);font-weight:700;
+  box-shadow:0 1px 2px rgba(16,58,82,.10),0 4px 10px -6px rgba(16,58,82,.35)}
+.navtab a.on:hover{background:var(--card);color:var(--signal-deep)}
 
-/* ปุ่มที่อยู่บนหัวเว็บต้องไม่ใช้สีน้ำเงินเป็นพื้น เพราะหัวเว็บเองก็น้ำเงิน
-   ปุ่มจะจมหายไปทั้งใบ กลับด้านเป็นพื้นสว่างหมึกน้ำเงินแทน
-   ไม่ใช้เหลืองเพราะปุ่มสีเหลืองบนเว็บเตือนภัยอ่านได้ว่าเป็นปุ่มคำเตือน */
 #btnRefresh{
-  background:var(--signal-ink);color:var(--signal-deep);
-  border-radius:var(--r-control);font-weight:600;
-  transition:background .15s var(--ease),color .15s var(--ease);
+  background:var(--signal);color:var(--signal-ink);
+  border-radius:var(--r-commit);font-weight:600;padding-left:16px;padding-right:16px;
+  box-shadow:0 6px 14px -8px rgba(18,105,138,.8);
+  transition:background .15s var(--ease),transform .15s var(--ease);
 }
-#btnRefresh:hover{background:var(--brand-yellow);color:var(--signal-deep)}
+#btnRefresh:hover{background:var(--signal-hover);color:var(--signal-ink)}
+#btnRefresh:active{transform:scale(.96)}
 header .langbtn{
-  background:rgba(248,250,255,.12);color:rgba(248,250,255,.85);
-  border:1px solid rgba(248,250,255,.20);border-radius:var(--r-control);
+  background:transparent;color:var(--ink-2);opacity:1;
+  border:1px solid var(--line-mid);border-radius:var(--r-commit);
 }
-header .langbtn.active{background:var(--brand-yellow);color:var(--signal-deep);border-color:var(--brand-yellow);font-weight:700}
+header .langbtn.active{background:var(--signal);color:var(--signal-ink);border-color:var(--signal);font-weight:700}
+header #btnHelp{background:var(--card);color:var(--signal);border:1px solid var(--line-mid);border-radius:var(--r-commit)}
+header #btnHelp:hover{background:var(--signal-wash)}
+header #authBox{color:var(--ink-2)}
+header #authBox button{background:var(--signal);border-radius:var(--r-commit)}
+header #authBox .pill{background:var(--signal-wash)!important;color:var(--signal)}
+/* ปุ่มเข้าสู่ระบบที่ js/auth-ui.js ใส่ให้ เดิมออกแบบไว้บนพื้นมืด (ตัวหนังสือขาว) */
+header .auth-btn{border-radius:var(--r-commit);box-shadow:0 0 0 1px var(--line-mid)}
+header .auth-chip{background:var(--signal-wash);border-color:transparent;color:var(--signal-deep)}
+header .auth-out{color:var(--ink-3)}
+header .auth-out:hover{color:var(--signal)}
 
-#selbar{background:var(--card);border-bottom:1px solid var(--line)}
+#selbar{background:transparent;border-bottom:none}
 .chip{
   background:var(--card);color:var(--ink);
-  border:1px solid var(--line-mid);border-radius:var(--r-control);
-  font-weight:500;transition:background .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease);
+  border:1px solid var(--line-mid);border-radius:var(--r-commit);
+  font-weight:500;transition:background .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease),box-shadow .15s var(--ease);
 }
 .chip:hover{border-color:var(--signal);color:var(--signal)}
-.chip.on{background:var(--signal);border-color:var(--signal);color:var(--signal-ink);font-weight:600}
-/* ป้ายชื่อจังหวัดเป็นข้อความนิ่ง กดไม่ได้ ไม่ใช่ปุ่ม
-   เดิมมันถูกทาสีแบรนด์เต็มใบ ซึ่งในไวยากรณ์สีของระบบนี้แปลว่า
-   "นี่คือปุ่มหลักของหน้า" การย้อมของที่กดไม่ได้ด้วยสีของปุ่ม
-   ทำให้สีนั้นเชื่อถือไม่ได้ทั้งระบบ ป้ายจึงต้องเงียบ */
+.chip.on{background:var(--signal);border-color:var(--signal);color:var(--signal-ink);font-weight:600;
+  box-shadow:0 6px 14px -8px rgba(18,105,138,.75)}
+/* ป้ายชื่อจังหวัดเป็นข้อความนิ่ง กดไม่ได้ ไม่ใช่ปุ่ม จึงต้องเงียบ */
 .provlbl{
   background:var(--paper-2);color:var(--ink-2);
-  border:1px solid var(--line);border-radius:var(--r-control);
+  border:1px solid var(--line);border-radius:var(--r-commit);
   font-weight:600;
 }
 #ampSel{border:1px solid var(--line-mid);border-radius:var(--r-control);background:var(--card);color:var(--ink)}
 
 /* =========================================================================
    4. การ์ดและเนื้อหา
+   v9: "ขอบสองชั้น" แกนในขาว + วงแหวนโปร่งรอบนอก ทำด้วยเงาล้วน
+   จึงไม่ต้องแก้ markup ของหน้าไหน และไม่กินพื้นที่จริงในเลย์เอาต์
    ========================================================================= */
 .card{
   background:var(--card);
-  border:1px solid var(--line);
+  border:1px solid var(--glass-line);
   border-radius:var(--r-media);
-  box-shadow:var(--lift-1);
+  box-shadow:0 0 0 5px var(--bezel),0 0 0 6px rgba(16,58,82,.05),var(--lift-1),var(--inset-hi);
 }
-.card h2{color:var(--ink);font-weight:600}
+.card h2{color:var(--ink);font-weight:700}
 .card h2 .where{color:var(--ink-3);font-weight:400}
 .note{color:var(--ink-3)}
-footer{background:var(--paper-2);border-top:1px solid var(--line);color:var(--ink-3)}
+footer{background:transparent;border-top:1px solid var(--line);color:var(--ink-3)}
+footer a{color:var(--signal)}
+
+/* v9: ปุ่มสลับช่วงเวลา (หน้าคาดการณ์) และชิปเรดาร์ ให้เป็นเม็ดยาเหมือนชิปอื่นทั้งเว็บ
+   ปุ่มที่ไม่ได้เลือกเดิมเป็นก้อนสีเข้มทึบ ซึ่งหนักกว่าปุ่มที่เลือกอยู่เสียอีก */
+.hbtn,.rchip{background:var(--card);color:var(--ink-2);border:1px solid var(--line-mid);border-radius:var(--r-commit)}
+.hbtn:hover,.rchip:hover{border-color:var(--signal);color:var(--signal)}
+.hbtn.on,.rchip.on{background:var(--signal);border-color:var(--signal);color:var(--signal-ink);
+  box-shadow:0 6px 14px -8px rgba(18,105,138,.75)}
+#ncPlay{border-radius:50%;border:1px solid var(--line-mid);background:var(--card);color:var(--signal)}
+#ncSlider{accent-color:var(--signal)}
+.btn{border-radius:var(--r-commit)}
 
 /* =========================================================================
    5. ไวยากรณ์สถานการณ์ ใช้กับระดับภัยเท่านั้น
@@ -424,40 +480,43 @@ footer{background:var(--paper-2);border-top:1px solid var(--line);color:var(--in
    ของเดิมเป็นแถบเมนู 12 อันเลื่อนแนวนอนด้านบนที่โดนตัด และไม่เหมือนกันสักหน้า
    (index 12 อัน, map 9, eoc 8, people 4) ตรงนี้คือ 5 อันเท่ากันทุกหน้า
    ========================================================================= */
+/* v9: แถบล่างเป็น "ท่าเรือลอย" กระจกฝ้ามนทั้งใบ ห่างขอบจอ --dock-gap
+   แท็บที่เลือกอยู่มีเม็ดสีจางรองใต้ไอคอน + สีน้ำเงิน + ตัวหนา
+   สีจึงไม่ใช่สัญญาณเดียว คนตาบอดสียังอ่านออก */
 .tabbar{
-  position:fixed;inset:auto 0 0 0;z-index:var(--z-bar);
-  height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
-  padding-bottom:env(safe-area-inset-bottom);
-  display:grid;grid-auto-flow:column;grid-auto-columns:1fr;
-  background:var(--card);
-  border-top:1px solid var(--line);
-  box-shadow:0 -1px 12px rgba(27,39,51,.08);
+  position:fixed;z-index:var(--z-bar);
+  left:var(--dock-gap);right:var(--dock-gap);
+  bottom:calc(var(--dock-gap) + env(safe-area-inset-bottom));
+  height:var(--tabbar-h);
+  padding:0 4px;
+  display:grid;grid-auto-flow:column;grid-auto-columns:1fr;align-items:center;
+  background:var(--glass);
+  backdrop-filter:blur(18px) saturate(1.5);
+  -webkit-backdrop-filter:blur(18px) saturate(1.5);
+  border:1px solid var(--glass-line);
+  border-radius:var(--r-sheet);
+  box-shadow:var(--lift-2),var(--inset-hi);
 }
 .tabbar a,.tabbar button{
-  display:grid;place-items:center;gap:2px;
+  display:grid;place-items:center;gap:1px;
   min-height:48px;padding:var(--s1) 2px;
   font-family:inherit;font-size:11px;font-weight:500;line-height:1.3;
   color:var(--ink-3);text-decoration:none;
   background:none;border:none;cursor:pointer;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
-  transition:color .15s var(--ease);
 }
 .tabbar svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;
-  stroke-linecap:round;stroke-linejoin:round;display:block}
-/* แท็บที่เลือกอยู่บอกด้วยสามอย่างพร้อมกัน: สีน้ำเงิน น้ำหนักตัวอักษร
-   และขีดคาดด้านบน สีจึงไม่ใช่สัญญาณเดียว คนตาบอดสียังอ่านออก
-   ขีดเป็นสีแบรนด์เหลืองบนน้ำเงิน ตรงกับเส้นคาดใต้หัวเว็บ */
-.tabbar a[aria-current="page"]{color:var(--signal);font-weight:600;position:relative}
-.tabbar a[aria-current="page"]::before{
-  content:"";position:absolute;inset:0 22% auto 22%;height:3px;
-  background:var(--signal);border-radius:0 0 var(--r-commit) var(--r-commit);
-}
+  stroke-linecap:round;stroke-linejoin:round;display:block;
+  box-sizing:content-box;padding:2px 12px;border-radius:var(--r-commit);
+  transition:background .2s var(--ease)}
+.tabbar a[aria-current="page"]{color:var(--signal-deep);font-weight:700;position:relative}
+.tabbar a[aria-current="page"] svg{background:var(--signal-wash);color:var(--signal)}
 .tabbar a:active,.tabbar button:active{transform:scale(.94)}
 .tabbar a,.tabbar button{transition:color .15s var(--ease),transform .06s var(--ease)}
 
 /* ทุกหน้าต้องเว้นที่ให้แถบล่าง ไม่งั้นแถวสุดท้ายกดไม่ถึง */
-body{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom))}
+body{padding-bottom:calc(var(--tabbar-h) + var(--dock-gap) * 2 + env(safe-area-inset-bottom))}
 
 /* บนมือถือ แถบล่างทำหน้าที่นำทางแทนแล้ว แถบเมนู 12 อันด้านบนจึงเป็นของซ้ำ
    ที่กินพื้นที่เหนือ fold ไปเปล่า ๆ และของเดิมก็โดนตัดขอบขวาอยู่ดี
@@ -479,6 +538,14 @@ body{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom))}
      เวลาอัปเดตต้องไม่ถูกซ่อน เพราะบนเว็บเตือนภัย ความสดของข้อมูลคือข้อมูล */
   header #updated{order:9;flex:1 0 100%;margin-left:0;text-align:right}
 }
+/* v9: จอคอมให้หัวเว็บอยู่บรรทัดเดียวเสมอ แคปซูลสองบรรทัดดูเหมือนของพัง
+   แถบเมนูยอมหดและเลื่อนแนวนอนแทน (js/ui.js ใส่ขอบจางบอกว่ายังมีต่อ) */
+@media(min-width:769px){
+  header{flex-wrap:nowrap}
+  header>h1{flex:none;white-space:nowrap}
+  header .navtab{flex:0 1 auto;min-width:0;overflow-x:auto}
+  header #updated,header #btnRefresh,header #authUi,header #authBox,header #langSw,header #btnHelp{flex:none;white-space:nowrap}
+}
 /* จอคอมไม่ต้องมีแถบล่าง เมนูบนอ่านได้สบายอยู่แล้ว */
 @media(min-width:769px){
   .tabbar{display:none}
@@ -489,7 +556,7 @@ body{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom))}
    กับแถบมาตราส่วนไว้ชิดขอบล่าง ซึ่งตอนนี้เป็นที่ของแถบแท็บ
    ยกขึ้นมาให้พ้น ไม่งั้นคำอธิบายสีของระดับน้ำจะถูกบังไปครึ่งหนึ่ง */
 @media(max-width:768px){
-  .leaflet-bottom{margin-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom))}
+  .leaflet-bottom{margin-bottom:calc(var(--tabbar-h) + var(--dock-gap) + env(safe-area-inset-bottom))}
 }
 /* คำอธิบายสัญลักษณ์กับแถบเครดิตของ Leaflet อยู่ในมุมล่างเหมือนกัน
    วัดแล้วบรรทัดสุดท้ายของคำอธิบายถูกแถบเครดิตทับอยู่ 10px
@@ -501,17 +568,19 @@ body{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom))}
    กฎคือ 3 ถึง 5 อัน ไม่เกินนั้น ถ้าต้องการที่ 6 แปลว่าสองอันควรอยู่ในอันที่สาม */
 .sheet-scrim{
   position:fixed;inset:0;z-index:var(--z-scrim);
-  background:rgba(16,32,41,.55);
+  background:rgba(10,36,50,.42);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
   opacity:0;pointer-events:none;transition:opacity .22s var(--ease);
 }
 .sheet-scrim.show{opacity:1;pointer-events:auto}
 .sheet{
-  position:fixed;inset:auto 0 0 0;z-index:var(--z-sheet);
+  position:fixed;inset:auto var(--dock-gap) var(--dock-gap) var(--dock-gap);z-index:var(--z-sheet);
   background:var(--card);
-  border-radius:var(--r-sheet) var(--r-sheet) 0 0;
+  border:1px solid var(--glass-line);
+  border-radius:var(--r-sheet);
   box-shadow:var(--lift-3);
   padding:var(--s3) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom));
-  transform:translateY(100%);transition:transform .28s var(--ease);
+  transform:translateY(calc(100% + 24px));transition:transform .32s var(--ease-out);
   max-height:80vh;overflow-y:auto;
 }
 .sheet.show{transform:translateY(0)}
@@ -521,7 +590,7 @@ body{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom))}
 .sheet-grid a{
   display:grid;place-items:center;gap:var(--s1);
   padding:var(--s3) var(--s1);min-height:76px;
-  border:1px solid var(--line);border-radius:var(--r-control);
+  border:1px solid var(--line);border-radius:18px;
   background:var(--card-2);color:var(--ink);
   font-size:12px;font-weight:500;line-height:1.35;text-align:center;text-decoration:none;
 }
@@ -662,7 +731,7 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
   left:max(var(--s3),env(safe-area-inset-left));
   /* เหนือแถบแท็บ ไม่ใช่ทับ — ปุ่มที่คร่อมแถบล่างทำให้กดแท็บซ้ายสุดพลาด */
   bottom:calc(var(--tabbar-h) + var(--s3));
-  bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--s3));
+  bottom:calc(var(--tabbar-h) + var(--dock-gap) + env(safe-area-inset-bottom) + var(--s3));
   opacity:0;transform:translateY(10px);pointer-events:none;
   transition:opacity .22s var(--ease),transform .22s var(--ease);
 }
@@ -713,7 +782,7 @@ body.has-install-fab .leaflet-bottom.leaflet-left{
 }
 @media(max-width:768px){
   body.has-install-fab .leaflet-bottom.leaflet-left{
-    margin-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--install-fab-h) + var(--s5));
+    margin-bottom:calc(var(--tabbar-h) + var(--dock-gap) + env(safe-area-inset-bottom) + var(--install-fab-h) + var(--s5));
   }
 }
 
@@ -723,7 +792,8 @@ body.has-install-fab .leaflet-bottom.leaflet-left{
    แต่แผ่นนี้ต้องใช้ได้ทุกความกว้าง เบราว์เซอร์ที่ติดตั้งมือก็มีบนจอคอม */
 .install-scrim{
   position:fixed;inset:0;z-index:var(--z-scrim);
-  background:rgba(16,32,41,.55);
+  background:rgba(10,36,50,.42);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
   opacity:0;pointer-events:none;transition:opacity .22s var(--ease);
 }
 .install-scrim.show{opacity:1;pointer-events:auto}
@@ -734,7 +804,7 @@ body.has-install-fab .leaflet-bottom.leaflet-left{
   border-radius:var(--r-sheet) var(--r-sheet) 0 0;
   box-shadow:var(--lift-3);
   padding:var(--s3) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom));
-  transform:translateY(100%);transition:transform .28s var(--ease);
+  transform:translateY(calc(100% + 24px));transition:transform .32s var(--ease-out);
   max-height:85vh;overflow-y:auto;
 }
 .install-sheet.show{transform:translateY(0)}
@@ -773,7 +843,7 @@ body.has-install-fab .leaflet-bottom.leaflet-left{
   left:var(--s3);right:var(--s3);bottom:calc(var(--tabbar-h) + var(--s3));
   left:max(var(--s3),env(safe-area-inset-left));
   right:max(var(--s3),env(safe-area-inset-right));
-  bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--s3));
+  bottom:calc(var(--tabbar-h) + var(--dock-gap) + env(safe-area-inset-bottom) + var(--s3));
   max-width:420px;
   background:var(--ink);color:var(--signal-ink);
   font-size:13px;font-weight:500;line-height:var(--lh-thai);
@@ -790,3 +860,176 @@ body.has-install-fab .leaflet-bottom.leaflet-left{
 @media print{
   .install-dock,.install-sheet,.install-scrim,.install-toast{display:none!important}
 }
+
+/* =========================================================================
+   10. ฮีโร่หน้าแรก "ตอบก่อน" (v9)
+   ประโยคเดียวที่ตอบว่าน้ำตอนนี้เป็นยังไง ตามด้วยตัวเลขที่มาของประโยคนั้น
+   แล้วจึงเป็นทางลัดไปส่วนที่ลึกกว่า ภาพแม่น้ำด้านล่างไม่ใช่ของประดับล้วน:
+   ระดับน้ำในภาพคือค่ากลาง % ของตลิ่งจากสถานีจริงในพื้นที่ที่เลือก
+   ========================================================================= */
+.hero{position:relative;padding:var(--s5) 0 0}
+.hero-in{max-width:1100px;margin:0 auto;padding:0 var(--s4)}
+.hero-live{
+  display:inline-flex;align-items:center;gap:var(--s2);
+  padding:6px 14px 6px 12px;border-radius:var(--r-commit);
+  background:var(--glass);border:1px solid var(--glass-line);
+  box-shadow:var(--lift-1),var(--inset-hi);
+  font-size:13px;color:var(--ink-2);
+}
+.hero-live b{color:var(--ink);font-weight:600}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--st-normal);flex:none;position:relative}
+.live-dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--st-normal);
+  opacity:0;animation:livePulse 2.2s var(--ease-out) infinite}
+.hero-live[data-stale] .live-dot{background:var(--line-strong)}
+.hero-live[data-stale] .live-dot::after{display:none}
+@keyframes livePulse{0%{opacity:.7;transform:scale(.6)}100%{opacity:0;transform:scale(1.6)}}
+
+.hero-h{
+  margin:var(--s4) 0 var(--s2);
+  font-size:30px;line-height:1.3;font-weight:700;color:var(--strong,var(--ink));
+  text-wrap:balance;
+}
+.hero-word{
+  color:var(--hw,var(--signal));white-space:nowrap;
+  text-decoration:underline wavy;text-decoration-color:color-mix(in srgb,var(--hw,var(--signal)) 70%,transparent);
+  text-decoration-thickness:2px;text-underline-offset:9px;text-decoration-skip-ink:none;
+}
+.hero-word[data-lv="normal"]{--hw:var(--st-normal)}
+.hero-word[data-lv="watch"] {--hw:var(--st-watch)}
+.hero-word[data-lv="warn"]  {--hw:var(--st-warn)}
+.hero-word[data-lv="danger"]{--hw:var(--st-danger)}
+.hero-word[data-lv="na"]    {--hw:var(--ink-3)}
+.hero-sub{font-size:15.5px;line-height:1.7;color:var(--ink-2);max-width:62ch;margin:0}
+.hero-sub b{color:var(--ink);font-weight:600}
+
+/* ปุ่มหลักหนึ่งปุ่ม ที่เหลือเป็นลิงก์เงียบ ลำดับความสำคัญต้องเห็นได้จากรูปทรง */
+.hero-cta{display:flex;align-items:center;gap:var(--s2) var(--s5);flex-wrap:wrap;margin:var(--s5) 0 var(--s4)}
+.cta-main{
+  display:inline-flex;align-items:center;gap:var(--s4);
+  padding:8px 8px 8px 22px;border-radius:var(--r-commit);
+  background:linear-gradient(180deg,#1879a0,var(--signal));color:var(--signal-ink);
+  font-size:16px;font-weight:700;text-decoration:none;
+  box-shadow:0 12px 24px -12px rgba(18,105,138,.85),inset 0 1px 0 rgba(255,255,255,.25);
+  transition:transform .2s var(--ease),box-shadow .2s var(--ease);
+}
+.cta-main:hover{color:var(--signal-ink);transform:translateY(-1px)}
+.cta-main:active{transform:scale(.97)}
+.cta-main i{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);
+  transition:transform .25s var(--ease)}
+.cta-main:hover i{transform:translate(2px,2px)}
+.cta-main svg,.cta-link svg,.hchip svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.cta-link{
+  display:inline-flex;align-items:center;gap:6px;min-height:40px;
+  background:none;border:none;padding:0;cursor:pointer;font-family:inherit;
+  font-size:15px;font-weight:600;color:var(--ink);text-decoration:none;
+  border-bottom:1.5px solid var(--line-mid);border-radius:0;
+}
+.cta-link:hover{color:var(--signal);border-bottom-color:var(--signal)}
+
+/* แถวทางลัด: ป้ายเล็กหน้าแถว + ชิปเลื่อนแนวนอน บอกที่มาของประโยคบนสุด */
+.hero-rows{display:grid;gap:var(--s2);margin-bottom:var(--s4)}
+.hrow{display:flex;align-items:center;gap:var(--s2);min-width:0}
+.hrow-k{flex:none;width:76px;font-size:12.5px;color:var(--ink-3);line-height:1.3}
+.hrow-c{display:flex;gap:var(--s2);overflow-x:auto;scrollbar-width:none;padding:3px 2px;min-width:0;
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent)}
+.hrow-c::-webkit-scrollbar{display:none}
+.hchip{
+  flex:none;display:inline-flex;align-items:center;gap:7px;
+  padding:6px 14px 6px 11px;border-radius:var(--r-commit);
+  background:var(--card);border:1px solid var(--line);
+  box-shadow:0 1px 2px rgba(16,58,82,.05);
+  font-size:13.5px;font-weight:500;color:var(--ink);text-decoration:none;white-space:nowrap;
+  transition:border-color .15s var(--ease),transform .15s var(--ease);
+}
+a.hchip:hover{border-color:var(--signal);color:var(--signal)}
+a.hchip:active{transform:scale(.97)}
+.hchip b{font-weight:700}
+.hchip[data-lv="normal"]{color:var(--st-normal);background:var(--st-normal-wash);border-color:transparent}
+.hchip[data-lv="watch"] {color:var(--st-watch); background:var(--st-watch-wash); border-color:transparent}
+.hchip[data-lv="warn"]  {color:var(--st-warn);  background:var(--st-warn-wash);  border-color:transparent}
+.hchip[data-lv="danger"]{color:var(--st-danger);background:var(--st-danger-wash);border-color:transparent}
+.hchip.skel{width:150px;height:34px;background:linear-gradient(90deg,var(--card-2),var(--card),var(--card-2));background-size:200% 100%;animation:skel 1.4s linear infinite}
+@keyframes skel{to{background-position:-200% 0}}
+
+/* ---------- ภาพแม่น้ำ ----------
+   สีทั้งหมดเป็นตัวแปร ภาพจึงเปลี่ยนเป็นกลางคืนได้ด้วยคลาสเดียว */
+.hero-art{
+  --sky-1:#e6f0f4;--sky-2:#c9e1ec;--orb:#fff4d6;--orb-glow:rgba(255,231,166,.55);
+  --far:#bad1dc;--mid:#9fbccb;--town:#88a9b9;--town-2:#7c9eaf;--roof:#b3897a;--win:#dcebf1;
+  --wall:#a4bcc8;--wall-2:#8ea9b6;--coping:#c6d6dd;--tree:#6f97a8;
+  --water-1:#3f97bb;--water-2:#1c5e7f;--wave:#66b0cd;--crest:rgba(255,255,255,.6);
+  --star-op:0;
+  position:relative;margin-top:var(--s2);line-height:0;
+  border-radius:var(--r-sheet);overflow:hidden;
+  box-shadow:0 0 0 5px var(--bezel),var(--lift-1);
+  background:var(--sky-2);
+}
+.hero-art.night{
+  --sky-1:#203d55;--sky-2:#3a6079;--orb:#f3f1e4;--orb-glow:rgba(243,241,228,.25);
+  --far:#355a72;--mid:#2d5068;--town:#25465c;--town-2:#203f53;--roof:#4a4a55;--win:#ffd98a;
+  --wall:#3a5a6d;--wall-2:#2e4c5e;--coping:#4b6b7d;--tree:#24475b;
+  --water-1:#24688a;--water-2:#0f3a52;--wave:#33799b;--crest:rgba(255,255,255,.35);
+  --star-op:.85;
+}
+.hero-art svg{display:block;width:100%;height:220px}
+.hero-art .w-move{animation:waveX 9s linear infinite}
+.hero-art .w-move.slow{animation-duration:15s;animation-direction:reverse}
+.hero-art #hWater{transition:transform 1.6s var(--ease-out)}
+.hero-art .boat{animation:bob 4.5s ease-in-out infinite;transform-origin:420px 0;transform-box:view-box}
+@keyframes waveX{to{transform:translateX(-200px)}}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(3px) rotate(1.2deg)}}
+.hero-gauge{
+  position:absolute;left:var(--s4);top:16px;
+  line-height:1.2;text-align:center;pointer-events:none;
+  padding:6px 14px 8px;border-radius:18px;
+  background:var(--glass);border:1px solid var(--glass-line);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  box-shadow:var(--lift-1);
+}
+.hero-gauge b{display:block;font-size:30px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.hero-gauge span{font-size:11.5px;color:var(--ink-2)}
+.hero-art.night .hero-gauge{background:rgba(250,252,253,.85)}
+
+@media(max-width:768px){
+  .hero{padding-top:var(--s4)}
+  .hero-art{margin:var(--s2) calc(-1 * var(--s4)) 0;border-radius:0;box-shadow:none}
+  .hero-art svg{height:190px}
+  .hero-gauge{top:12px;left:12px;padding:4px 12px 6px;border-radius:14px}
+  .hero-gauge b{font-size:24px}
+  .hero-gauge span{font-size:10.5px}
+  .hero-cta{gap:var(--s2) var(--s4)}
+  .cta-main{font-size:15px;gap:var(--s3);padding-left:18px}
+  .cta-link{font-size:14.5px}
+  /* จอแคบ ปุ่มแชร์เหลือแต่ไอคอน สามปุ่มจะได้อยู่แถวเดียว */
+  #heroShare span{display:none}
+  #heroShare{border-bottom:none;width:40px;justify-content:center}
+}
+@media(min-width:769px){
+  .hero{padding-top:var(--s6)}
+  .hero-h{font-size:44px;margin-top:var(--s5)}
+  .hero-sub{font-size:17px}
+  .hrow-k{width:92px;font-size:13px}
+  .hero-art svg{height:260px}
+  .hero-gauge{top:24px;left:var(--s5)}
+  .hero-gauge b{font-size:36px}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero-art .w-move,.hero-art .boat,.live-dot::after{animation:none}
+}
+
+/* ---------- การ์ดทิศทางน้ำ ----------
+   ตัวเลขใหญ่สามตัว แล้วแถบสัดส่วนใต้ตัวเลข ตาเห็นสัดส่วนก่อนอ่านเลข */
+.dir-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3);margin-top:var(--s3)}
+.dir-nums b{display:block;font-size:40px;line-height:1.05;font-weight:700;font-variant-numeric:tabular-nums}
+.dir-nums span{font-size:14px;color:var(--ink-2)}
+.dir-rise b{color:var(--st-warn)}
+.dir-fall b{color:var(--st-normal)}
+.dir-flat b{color:var(--ink)}
+.dir-bar{display:flex;gap:4px;height:8px;margin:var(--s4) 0 var(--s3)}
+.dir-bar i{display:block;height:100%;border-radius:var(--r-commit);min-width:8px;transition:flex-grow .8s var(--ease-out)}
+.dir-bar .r{background:var(--st-warn)}
+.dir-bar .f{background:var(--st-normal)}
+.dir-bar .s{background:var(--line-mid)}
+.dir-avg{font-size:14px;color:var(--ink-2)}
+.dir-avg b{color:var(--ink)}
+@media(min-width:769px){.dir-nums b{font-size:48px}}

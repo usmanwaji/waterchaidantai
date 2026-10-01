@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#142256">
+<meta name="theme-color" content="#ebf1f4">
 <title>ภาพรวมอากาศ & สถานการณ์น้ำ จังหวัดนราธิวาส · naraflood</title>
 <meta name="description" content="หน้าแรก: พยากรณ์อากาศ 24 ชม. รายวัน 7 วัน ปริมาณฝน มาตรวัดน้ำและอำเภอที่ต้องเฝ้าระวัง จังหวัดนราธิวาส เลือกดูรายอำเภอได้">
 <meta property="og:title" content="ภาพรวมอากาศ & สถานการณ์น้ำ จังหวัดนราธิวาส · naraflood.com">
@@ -22,7 +22,8 @@ body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:v
 header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.12)}
 header h1{font-size:17px;font-weight:700;line-height:1.2}
 header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
-.pageBanner{width:100%;background:var(--shell);text-align:center;line-height:0}
+/* v9: ภาพแบนเนอร์ถูกแทนด้วยฮีโร่ "ตอบก่อน" ที่มีภาพแม่น้ำบอกระดับน้ำจริง จึงซ่อนไว้ (ไฟล์ยังอยู่) */
+.pageBanner{display:none;width:100%;background:var(--shell);text-align:center;line-height:0}
 .pageBanner img{width:100%;max-width:1100px;height:auto;display:inline-block}
 .navtab{display:flex;gap:4px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:3px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
 .navtab a{color:rgba(255,255,255,.72);text-decoration:none;font-size:12px;font-weight:600;padding:5px 11px;border-radius:6px;white-space:nowrap;transition:background .15s,color .15s}
@@ -37,16 +38,17 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 .chip:hover{border-color:var(--orange);color:var(--orange)}
 .chip.on{background:var(--orange);border-color:var(--orange);color:#fff}
 
-#content{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:12px 14px 30px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
+#content{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:22px 16px 30px;display:grid;grid-template-columns:1fr 1fr;gap:22px;align-content:start}
 /* กล่องในกริดต้องยอมหดได้ ไม่งั้นเนื้อหากว้าง ๆ (แถวเลื่อนแนวนอน/ภาพ) จะดันคอลัมน์
    จนทั้งหน้าเลื่อนซ้าย-ขวาได้บนมือถือ · grid item ค่าเริ่มต้นคือ min-width:auto */
 #content>*{min-width:0}
-.card{background:var(--elevated);border:1px solid var(--outline);border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.10),0 1px 2px rgba(0,0,0,.06)}
+.card{background:var(--elevated);border:1px solid var(--outline);border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.10),0 1px 2px rgba(0,0,0,.06)}
 .card.full{grid-column:1 / -1}
 .card h2{font-size:14.5px;color:var(--navy-d);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
 .card h2 .where{font-size:11px;color:var(--muted);font-weight:400}
 @media(max-width:768px){
-  #content{grid-template-columns:1fr;padding:10px 8px 24px}
+  #content{grid-template-columns:1fr;padding:18px 14px 24px;gap:18px}
+  #dirCard{order:-5}
   /* มือถือ: ยกการ์ดเรดาร์ขึ้นบนสุดของหน้า (จอใหญ่คงลำดับเดิมใน HTML) */
   /* มือถือ: เรียงการ์ดกรมอุตุฯ บนสุด — เรดาร์ (ตอนนี้) → ฝนระยะสั้น → คาดการณ์ (ล่วงหน้า) → ข้อมูลทางการ (เมื่อวาน) */
   #radarCard{order:-4}
@@ -54,13 +56,13 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
   #drCard{order:-2}
   #tmdCard{order:-1}
   /* มือถือ: ภาพเรดาร์กว้างเต็มจอ · ดึงออกนอกขอบการ์ด (13px + ขอบ 1px) และขอบหน้า (8px) */
-  #radarCard .radarImgBox{margin:0 -22px;max-width:none}
+  #radarCard .radarImgBox{margin:0 -31px;max-width:none}
   #radarImg{width:100%;max-width:none!important;border-radius:0!important;border-left:0!important;border-right:0!important}
   #radarFreeze{border-radius:0!important;border-left:0!important;border-right:0!important}
   .t-desk{display:none}
   header h1 small{display:none}
   #updated{display:none}
-  .card{padding:13px}
+  .card{padding:16px}
 }
 
 /* ตอนนี้ */
@@ -178,7 +180,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .tmdObsRow .hv{width:44px;text-align:right;color:var(--ink-3)}
 
 </style>
-<link rel="stylesheet" href="shared.css?v=8">
+<link rel="stylesheet" href="shared.css?v=9">
 </head>
 <body>
 
@@ -204,20 +206,117 @@ footer a{color:var(--orange-warm);text-decoration:none}
   <button id="btnRefresh" onclick="loadAll()">รีเฟรช</button>
 </header>
 
+<!-- ฮีโร่ "ตอบก่อน" (v9): ประโยคเดียวบอกว่าน้ำตอนนี้เป็นยังไง แล้วตามด้วยที่มา
+     ทุกค่าคำนวณจาก wlAll และพยากรณ์ที่หน้านี้โหลดอยู่แล้ว (ดู renderHero) -->
+<section class="hero" id="hero" aria-labelledby="heroH">
+  <div class="hero-in">
+    <div class="hero-live" id="heroLive" data-stale><span class="live-dot"></span><span id="heroLiveTxt">กำลังอ่านข้อมูลสด…</span></div>
+    <h2 class="hero-h" id="heroH" aria-live="polite"><span style="white-space:nowrap"><span id="heroPlace">นราธิวาส</span>ตอนนี้</span> <span class="hero-word" id="heroWord" data-lv="na">กำลังตรวจสอบ</span></h2>
+    <p class="hero-sub" id="heroSub">กำลังรวบรวมระดับน้ำจากสถานีวัดน้ำของ สสน. กรมชลประทาน และ ปภ.</p>
+    <div class="hero-cta">
+      <a class="cta-main" href="map.html"><span>เปิดแผนที่ระดับน้ำ</span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 7l10 10"/><path d="M17 8v9H8"/></svg></i></a>
+      <a class="cta-link" href="check.html"><svg viewBox="0 0 24 24"><path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>เช็คพื้นที่ฉัน</a>
+      <button class="cta-link" type="button" id="heroShare" aria-label="แชร์สถานการณ์นี้"><svg viewBox="0 0 24 24"><circle cx="18" cy="5.5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="18.5" r="2.6"/><path d="M8.3 10.8l7.4-4M8.3 13.2l7.4 4"/></svg><span>แชร์</span></button>
+    </div>
+    <div class="hero-rows" id="heroRows">
+      <div class="hrow"><span class="hrow-k">สถานีน้ำ</span><div class="hrow-c"><span class="hchip skel"></span><span class="hchip skel"></span></div></div>
+      <div class="hrow"><span class="hrow-k">ฝน 7 วัน</span><div class="hrow-c"><span class="hchip skel"></span></div></div>
+    </div>
+    <div class="hero-art" id="heroArt" aria-hidden="true">
+      <svg id="heroSvg" viewBox="0 0 1200 260" preserveAspectRatio="xMidYMax slice" focusable="false">
+  <defs>
+    <linearGradient id="hSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--sky-1)"/><stop offset="1" stop-color="var(--sky-2)"/></linearGradient>
+    <radialGradient id="hOrb"><stop offset="0" stop-color="var(--orb-glow)"/><stop offset="1" stop-color="var(--orb-glow)" stop-opacity="0"/></radialGradient>
+    <linearGradient id="hWall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--wall)"/><stop offset="1" stop-color="var(--wall-2)"/></linearGradient>
+    <linearGradient id="hWat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--water-1)"/><stop offset="1" stop-color="var(--water-2)"/></linearGradient>
+  </defs>
+  <rect width="1200" height="260" fill="url(#hSky)"/>
+  <g style="opacity:var(--star-op)" fill="#fff"><circle cx="140" cy="34" r="1.4"/><circle cx="260" cy="58" r="1"/><circle cx="380" cy="26" r="1.2"/><circle cx="520" cy="48" r="1"/><circle cx="700" cy="22" r="1.3"/><circle cx="820" cy="54" r="1"/><circle cx="1060" cy="30" r="1.4"/><circle cx="1140" cy="62" r="1"/><circle cx="460" cy="78" r="0.9"/><circle cx="980" cy="84" r="1"/></g>
+  <circle cx="905" cy="62" r="80" fill="url(#hOrb)"/>
+  <circle cx="905" cy="62" r="22" fill="var(--orb)"/>
+  <!-- เทือกเขาบูโด -->
+  <path d="M0 132 C70 112 130 96 210 104 S330 84 420 98 S540 120 610 100 S740 66 850 88 S1010 112 1090 96 S1170 100 1200 104 L1200 160 L0 160Z" fill="var(--far)"/>
+  <path d="M0 146 C90 128 170 134 250 138 S410 120 510 134 S690 146 790 128 S990 140 1200 126 L1200 162 L0 162Z" fill="var(--mid)"/>
+  <!-- เมืองริมแม่น้ำ: บ้านใต้ถุนสูง ต้นมะพร้าว มัสยิด -->
+  <g fill="var(--town)">
+    <rect x="226" y="122" width="44" height="22" rx="2"/><path d="M220 124 L248 106 L276 124Z" fill="var(--roof)"/>
+    <rect x="282" y="128" width="36" height="18" rx="2"/><path d="M277 130 L300 115 L323 130Z" fill="var(--roof)"/>
+    <rect x="336" y="118" width="52" height="28" rx="2" fill="var(--town-2)"/><path d="M330 120 L362 100 L394 120Z" fill="var(--roof)"/>
+    <rect x="404" y="126" width="40" height="20" rx="2"/><path d="M398 128 L424 112 L450 128Z" fill="var(--roof)"/>
+    <!-- มัสยิด -->
+    <rect x="566" y="92" width="9" height="56" rx="1.5" fill="var(--town-2)"/><path d="M564 93 L570.5 76 L577 93Z" fill="var(--town-2)"/>
+    <rect x="665" y="92" width="9" height="56" rx="1.5" fill="var(--town-2)"/><path d="M663 93 L669.5 76 L676 93Z" fill="var(--town-2)"/>
+    <rect x="584" y="114" width="72" height="34" rx="2"/>
+    <path d="M592 114 C592 92 614 90 620 74 C626 90 648 92 648 114Z"/>
+    <rect x="618.6" y="64" width="2.8" height="11" rx="1"/>
+    <path d="M578 120 C578 110 588 108 590 102 C592 108 602 110 602 120Z" fill="var(--town-2)"/>
+    <path d="M638 120 C638 110 648 108 650 102 C652 108 662 110 662 120Z" fill="var(--town-2)"/>
+    <rect x="603" y="126" width="9" height="14" rx="4.5" fill="var(--win)" opacity=".7"/><rect x="616" y="126" width="9" height="14" rx="4.5" fill="var(--win)" opacity=".7"/><rect x="629" y="126" width="9" height="14" rx="4.5" fill="var(--win)" opacity=".7"/>
+    <rect x="716" y="124" width="46" height="22" rx="2"/><path d="M710 126 L739 108 L768 126Z" fill="var(--roof)"/>
+    <rect x="780" y="120" width="40" height="26" rx="2" fill="var(--town-2)"/><path d="M774 122 L800 104 L826 122Z" fill="var(--roof)"/>
+    <rect x="842" y="128" width="50" height="18" rx="2"/><path d="M836 130 L867 114 L898 130Z" fill="var(--roof)"/>
+    <rect x="924" y="124" width="38" height="22" rx="2"/><path d="M918 126 L943 110 L968 126Z" fill="var(--roof)"/>
+    <g fill="var(--win)" opacity=".75"><rect x="240" y="129" width="6" height="7"/><rect x="350" y="127" width="7" height="8"/><rect x="368" y="127" width="7" height="8"/><rect x="730" y="131" width="6" height="7"/><rect x="792" y="129" width="6" height="8"/><rect x="858" y="133" width="7" height="6"/></g>
+  </g>
+  <g fill="none" stroke="var(--tree)" stroke-width="3" stroke-linecap="round">
+    <path d="M168 148 C170 128 166 112 160 98"/><path d="M482 148 C480 126 486 110 494 96"/><path d="M1000 148 C1002 128 996 112 990 100"/><path d="M1090 148 C1088 130 1094 116 1100 104"/>
+  </g>
+  <g fill="var(--tree)">
+    <path d="M160 98 c-14 -2 -24 6 -28 14 c8 -6 18 -8 28 -6Z M160 98 c12 -6 24 -2 30 6 c-10 -4 -20 -4 -30 0Z M160 98 c-4 -12 2 -20 10 -24 c-4 8 -6 16 -6 24Z M160 98 c-10 4 -14 14 -12 24 c2 -10 6 -16 12 -20Z"/>
+    <path d="M494 96 c-14 -2 -24 6 -28 14 c8 -6 18 -8 28 -6Z M494 96 c12 -6 24 -2 30 6 c-10 -4 -20 -4 -30 0Z M494 96 c-4 -12 2 -20 10 -24 c-4 8 -6 16 -6 24Z M494 96 c10 4 14 14 12 24 c-2 -10 -6 -16 -12 -20Z"/>
+    <path d="M990 100 c-14 -2 -24 6 -28 14 c8 -6 18 -8 28 -6Z M990 100 c12 -6 24 -2 30 6 c-10 -4 -20 -4 -30 0Z M990 100 c-4 -12 2 -20 10 -24 c-4 8 -6 16 -6 24Z"/>
+    <path d="M1100 104 c-14 -2 -24 6 -28 14 c8 -6 18 -8 28 -6Z M1100 104 c12 -6 24 -2 30 6 c-10 -4 -20 -4 -30 0Z M1100 104 c4 -12 -2 -20 -10 -24 c4 8 6 16 6 24Z"/>
+  </g>
+  <!-- ตลิ่งคอนกรีต: ขอบบนสุด = ระดับตลิ่ง (100%) -->
+  <rect x="0" y="146" width="1200" height="7" fill="var(--coping)"/>
+  <rect x="0" y="153" width="1200" height="107" fill="url(#hWall)"/>
+  <g stroke="rgba(30,60,80,.12)" stroke-width="1"><path d="M0 178H1200M0 206H1200M0 234H1200"/><path d="M100 153V260M260 153V260M420 153V260M580 153V260M740 153V260M900 153V260M1060 153V260"/></g>
+  <!-- เส้นเกณฑ์ -->
+  <line x1="0" x2="1200" y1="150" y2="150" stroke="var(--st-danger)" stroke-width="1.2" stroke-dasharray="7 6" opacity=".65"/>
+  <line x1="0" x2="1200" y1="165.8" y2="165.8" stroke="var(--st-watch)" stroke-width="1.2" stroke-dasharray="7 6" opacity=".7"/>
+  <!-- น้ำ: JS เลื่อนทั้งกลุ่มขึ้นลงตาม % ของตลิ่ง (0% = y255 · 100% = y150) -->
+  <g id="hWater" transform="translate(0,191)">
+    <g class="w-move slow"><path d="M0 8 Q25.0 4 50.0 8 T100 8 T150 8 T200 8 T250 8 T300 8 T350 8 T400 8 T450 8 T500 8 T550 8 T600 8 T650 8 T700 8 T750 8 T800 8 T850 8 T900 8 T950 8 T1000 8 T1050 8 T1100 8 T1150 8 T1200 8 T1250 8 T1300 8 T1350 8 T1400 8 T1450 8 T1500 8 T1550 8 T1600 8 L1600 140 L0 140Z" fill="var(--wave)" opacity=".55"/></g>
+    <g class="boat">
+      <path d="M358 -2 C372 9 468 9 482 -2 L492 -22 C486 -14 480 -9 470 -8 L370 -8 C360 -9 354 -14 348 -22Z" fill="#b8402f"/>
+      <path d="M362 -4 C380 4 460 4 478 -4" fill="none" stroke="#f2c230" stroke-width="3"/>
+      <path d="M367 -8 L473 -8" stroke="#2f7d5b" stroke-width="2.5"/>
+      <path d="M348 -22 c-4 -6 -2 -12 4 -12" fill="none" stroke="#f2c230" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M492 -22 c4 -6 2 -12 -4 -12" fill="none" stroke="#f2c230" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M420 -8 V-38" stroke="#25495b" stroke-width="2"/><path d="M421 -38 L440 -33 L421 -28Z" fill="#2f6fb0"/>
+    </g>
+    <g class="w-move"><path d="M0 0 Q50.0 -6 100.0 0 T200 0 T300 0 T400 0 T500 0 T600 0 T700 0 T800 0 T900 0 T1000 0 T1100 0 T1200 0 T1300 0 T1400 0 T1500 0 T1600 0 L1600 140 L0 140Z" fill="url(#hWat)"/><path d="M0 0 Q50.0 -6 100.0 0 T200 0 T300 0 T400 0 T500 0 T600 0 T700 0 T800 0 T900 0 T1000 0 T1100 0 T1200 0 T1300 0 T1400 0 T1500 0 T1600 0" fill="none" stroke="var(--crest)" stroke-width="1.6"/></g>
+  </g>
+  <!-- ไม้วัดระดับน้ำ -->
+  <g transform="translate(760,0)">
+    <rect x="-7" y="122" width="14" height="138" rx="2" fill="#f4f7f8" stroke="rgba(30,60,80,.25)"/>
+    <g stroke="var(--st-danger)" stroke-width="2"><path d="M-7 150h9M-7 160h5M-7 170h9M-7 180h5M-7 190h9M-7 200h5M-7 210h9M-7 220h5M-7 230h9M-7 240h5M-7 250h9"/></g>
+    <g font-size="14" font-weight="600" fill="var(--ink)" style="paint-order:stroke;stroke:rgba(250,252,253,.85);stroke-width:4px">
+      <text x="14" y="140">ตลิ่ง</text>
+      <text x="14" y="170" fill="var(--st-watch)">เฝ้าระวัง</text>
+    </g>
+  </g>
+</svg>
+      <div class="hero-gauge"><b id="heroPct">–</b><span>ค่ากลางระดับน้ำ · % ของตลิ่ง</span></div>
+    </div>
+  </div>
+</section>
+
 <div id="content">
-  <!-- แถบคำตอบ: อยู่บนสุดเพราะเป็นสิ่งเดียวที่คนส่วนใหญ่เปิดเว็บนี้มาดู
-       ทุกค่าอ่านมาจากที่หน้านี้คำนวณอยู่แล้ว ไม่ได้คิดเลขชุดใหม่
-       ตัวเลขบนหน้าจึงตรงกันเสมอ ไม่มีทางขัดกันเอง -->
-  <div class="card full strip" id="statusStrip" role="status" aria-live="polite">
-    <div>
-      <div class="strip-lv" id="stripLv">กำลังอ่านข้อมูล</div>
-      <div class="strip-sub" id="stripSub">ประเมินจากฝนพยากรณ์ 7 วัน ดินอิ่มน้ำ และสถานีน้ำที่เข้าเกณฑ์เฝ้าระวัง</div>
+  <!-- ทิศทางของน้ำ (v9): ใช้สถานีชุดเดียวกับฮีโร่ เทียบค่าล่าสุดกับค่าก่อนหน้าของแต่ละสถานี -->
+  <div class="card full" id="dirCard">
+    <h2>ทิศทางของน้ำ <span class="where" id="dirWhere">เทียบกับค่าที่วัดได้ครั้งก่อน</span></h2>
+    <div class="dir-nums">
+      <div class="dir-rise"><b id="dirRise">–</b><span>กำลังขึ้น</span></div>
+      <div class="dir-fall"><b id="dirFall">–</b><span>กำลังลด</span></div>
+      <div class="dir-flat"><b id="dirFlat">–</b><span>ทรงตัว</span></div>
     </div>
-    <div class="strip-nums">
-      <div><b id="stripRain">…</b><span>ฝน 7 วัน (มม.)</span></div>
-      <div><b id="stripSoil">…</b><span>ดินอิ่มน้ำ (มม.)</span></div>
-      <div><b id="stripSt">…</b><span>สถานีเฝ้าระวัง</span></div>
-    </div>
+    <div class="dir-bar" id="dirBar" aria-hidden="true"><i class="r" style="flex-grow:1"></i><i class="f" style="flex-grow:1"></i><i class="s" style="flex-grow:1"></i></div>
+    <div class="dir-avg" id="dirAvg">กำลังคำนวณ…</div>
+    <details class="fold fold-note">
+    <summary>คำอธิบาย</summary>
+    <div class="note">นับเฉพาะสถานีของ สสน./กรมชลประทาน (thaiwater) ที่ส่งค่าล่าสุดและค่าก่อนหน้า · ขึ้น/ลด = เปลี่ยนตั้งแต่ 1 ซม. ขึ้นไปจากค่าครั้งก่อน (ปกติห่างกันราว 15 นาทีถึง 1 ชม.) · น้อยกว่านั้นนับเป็นทรงตัว · ภาพแม่น้ำด้านบนใช้ค่ากลาง (มัธยฐาน) ของ % ระดับน้ำเทียบตลิ่งจากสถานีชุดเดียวกัน</div>
+    </details>
   </div>
 
   <!-- พยากรณ์ฝนรายชั่วโมง 24 ชม. (Open-Meteo ณ จุดศูนย์กลางอำเภอที่เลือก) · แถวเลื่อนแนวนอน
@@ -770,6 +869,7 @@ function renderAll(){
     const el = document.getElementById(id);
     if(el) el.textContent = id==='whereSt' ? (amp?`อ.${amp} จ.${prov}`:`จ.${prov}`) : (id==='whereAmp'?`จ.${prov}`:whereTxt);
   });
+  try{ renderHero(met, sel); }catch(e){ console.error('hero', e); }
   renderAmpChips(); renderHour(met); renderRain7(met, sel); renderStations(); renderAmphoes(list); renderRadarBar(); renderWaterta();
 }
 function renderHour(met){
@@ -876,6 +976,118 @@ function renderStations(){
       <span class="badge" style="background:${c}">${t}</span></a>`;
   }).join('');
 }
+/* ---------- ฮีโร่ "ตอบก่อน" + การ์ดทิศทางน้ำ (v9) ----------
+   ไม่ดึงข้อมูลใหม่ ใช้ wlAll (thaiwater) กับพยากรณ์ Open-Meteo ที่หน้านี้โหลดอยู่แล้ว
+   เกณฑ์ระดับสถานีใช้ FC.stationLevel ชุดเดียวกับการ์ด "มาตรวัดน้ำต้องระวัง"
+   ตัวเลขในประโยคบนสุดจึงตรงกับการ์ดด้านล่างเสมอ */
+const HICON = {
+  wave:'<svg viewBox="0 0 24 24"><path d="M3 9c2.2-2 4.4-2 6.6 0s4.4 2 6.6 0 4.4-2 4.8 0"/><path d="M3 15c2.2-2 4.4-2 6.6 0s4.4 2 6.6 0 4.4-2 4.8 0"/></svg>',
+  up:'<svg viewBox="0 0 24 24"><path d="M4 16l6-6 4 4 6-6"/><path d="M15 8h5v5"/></svg>',
+  down:'<svg viewBox="0 0 24 24"><path d="M4 8l6 6 4-4 6 6"/><path d="M15 16h5v-5"/></svg>',
+  cloud:'<svg viewBox="0 0 24 24"><path d="M7.2 18.5h9.4a3.8 3.8 0 0 0 .5-7.6 5.4 5.4 0 0 0-10.3-1.2 3.9 3.9 0 0 0 .4 8.8z"/></svg>',
+  radar:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12l6-6"/></svg>',
+  soil:'<svg viewBox="0 0 24 24"><path d="M12 3.5s5.5 6.2 5.5 10a5.5 5.5 0 0 1-11 0c0-3.8 5.5-10 5.5-10z"/></svg>',
+  ok:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8 12.3l2.7 2.7L16 9.6"/></svg>'
+};
+function heroRainLv(sum){
+  return sum>=200 ? {k:'danger', n:'ฝนมากผิดปกติ', act:'เตรียมพร้อมรับสถานการณ์'}
+       : sum>=150 ? {k:'warn',   n:'ฝนมาก',        act:'ยกระดับการเฝ้าระวังพื้นที่ลุ่ม'}
+       : sum>=80  ? {k:'watch',  n:'ฝนปานกลาง',    act:'ติดตามสถานการณ์'}
+       :            {k:'normal', n:'ฝนน้อย',       act:'สถานการณ์ฝนปกติ'};
+}
+function renderHero(met, sel){
+  const place = amp ? 'อ.'+amp : prov;
+  document.getElementById('heroPlace').textContent = place;
+  let list = wlAll.filter(s=>s.prov===prov);
+  if(amp) list = list.filter(s=>s.amphoe.includes(amp));
+  const live = list.filter(s=>s.msl!=null);
+  const over = live.filter(s=>FC.stationLevel(s)==='over');
+  const high = live.filter(s=>FC.stationLevel(s)==='high');
+  const withPrev = live.filter(s=>s.prev!=null);
+  const d = s => s.msl - s.prev;
+  const rise = withPrev.filter(s=>d(s) >= 0.01), fall = withPrev.filter(s=>d(s) <= -0.01);
+  const flat = withPrev.length - rise.length - fall.length;
+  const pcts = live.map(s=>s.pct).filter(v=>v!=null && isFinite(v)).sort((a,b)=>a-b);
+  const med = pcts.length ? (pcts.length%2 ? pcts[(pcts.length-1)/2] : (pcts[pcts.length/2-1]+pcts[pcts.length/2])/2) : null;
+
+  // ---- ประโยคบนสุด: ระดับสถานีมาก่อนทิศทาง เพราะล้นตลิ่งสำคัญกว่าแนวโน้ม ----
+  const word = document.getElementById('heroWord'), sub = document.getElementById('heroSub');
+  let W;
+  if(!live.length) W = {t: wlAll.length ? 'ไม่มีสถานีส่งค่า' : 'ยังอ่านข้อมูลน้ำไม่ได้', k:'na'};
+  else if(over.length) W = {t:'มีจุดน้ำล้นตลิ่ง', k:'danger'};
+  else if(high.length) W = {t:'น้ำใกล้ตลิ่ง', k:'warn'};
+  else if(rise.length > fall.length && rise.length >= 2) W = {t:'น้ำกำลังขึ้น', k:'watch'};
+  else if(fall.length > rise.length) W = {t:'น้ำกำลังลด', k:'normal'};
+  else W = {t:'น้ำทรงตัว', k:'normal'};
+  word.textContent = W.t; word.dataset.lv = W.k;
+
+  const sum = met?.daily ? met.daily.precipitation_sum.reduce((a,b)=>a+(b||0),0) : null;
+  const R = sum!=null ? heroRainLv(sum) : null;
+  let s1;
+  if(!live.length) s1 = wlAll.length ? `ไม่มีสถานีวัดน้ำที่ส่งค่าใน${place}ขณะนี้` : 'เชื่อมต่อข้อมูลระดับน้ำ (thaiwater) ไม่ได้ขณะนี้ ลองกดรีเฟรชอีกครั้ง';
+  else if(over.length || high.length)
+    s1 = `<b>${over.length}</b> สถานีล้นตลิ่ง และอีก <b>${high.length}</b> สถานีใกล้ตลิ่ง (85% ขึ้นไป) จากทั้งหมด ${live.length} สถานีที่ส่งค่า`;
+  else s1 = `ทุกสถานีต่ำกว่าเกณฑ์เฝ้าระวัง · ขึ้น ${rise.length} ลด ${fall.length} จากทั้งหมด ${live.length} สถานีที่ส่งค่า`;
+  const s2 = R ? ` · ฝนพยากรณ์ 7 วัน <b>${fmt1(sum)} มม.</b> (${R.n})` : '';
+  sub.innerHTML = s1 + s2;
+
+  // ---- เวลาข้อมูล: ค่าที่ใหม่ที่สุด ถ้าเก่ากว่า 3 ชม. บอกตรง ๆ ว่าไม่สด ----
+  const lt = live.reduce((m,s)=> s.dt && (!m || s.dt>m) ? s.dt : m, null);
+  const liveEl = document.getElementById('heroLive');
+  const stale = !lt || (Date.now()-lt) > 3*3600e3;
+  if(stale) liveEl.setAttribute('data-stale',''); else liveEl.removeAttribute('data-stale');
+  document.getElementById('heroLiveTxt').innerHTML = lt
+    ? `${stale?'ข้อมูลล่าสุด':'ข้อมูลสด'} · <b>${lt.toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} น.</b>`
+    : 'ยังไม่มีเวลาข้อมูล';
+
+  // ---- แถวทางลัด ----
+  const chip = (href, icon, html, lv) => `<a class="hchip" href="${href}"${lv?` data-lv="${lv}"`:''}>${HICON[icon]||''}<span>${html}</span></a>`;
+  const top = [...over, ...high].sort((a,b)=>(b.pct??0)-(a.pct??0)).slice(0,4);
+  let stChips = '';
+  if(!live.length) stChips = chip('map.html','wave','เปิดแผนที่ระดับน้ำ');
+  else{
+    if(over.length) stChips += chip('map.html','wave',`ล้นตลิ่ง <b>${over.length}</b> สถานี`,'danger');
+    if(high.length) stChips += chip('map.html','wave',`ใกล้ตลิ่ง <b>${high.length}</b> สถานี`,'warn');
+    if(!over.length && !high.length) stChips += chip('map.html','ok','ไม่มีสถานีเข้าเกณฑ์เฝ้าระวัง','normal');
+    stChips += chip('#dirCard','up',`กำลังขึ้น <b>${rise.length}</b>`);
+    stChips += chip('#dirCard','down',`กำลังลด <b>${fall.length}</b>`);
+  }
+  const watchChips = top.map(s=>chip('map.html','wave',`${esc(s.name)} <b>${Math.round(s.pct)}%</b>`, FC.stationLevel(s)==='over'?'danger':'warn')).join('');
+  const soil = soilByAmp[prov]?.[(amp||sel?.[1])] ?? null;
+  let rainChips = R ? chip('#fcCard','cloud',`<b>${fmt1(sum)}</b> มม. · ${R.n}`, R.k==='normal'?'':R.k) : '';
+  if(soil!=null) rainChips += chip('#tmdCard','soil',`ดินอิ่มน้ำ <b>${fmt1(soil)}</b> มม.`);
+  rainChips += chip('#radarCard','radar','เรดาร์และฝนระยะสั้น');
+  document.getElementById('heroRows').innerHTML =
+    `<div class="hrow"><span class="hrow-k">สถานีน้ำ</span><div class="hrow-c">${stChips}</div></div>` +
+    (watchChips ? `<div class="hrow"><span class="hrow-k">จับตา</span><div class="hrow-c">${watchChips}</div></div>` : '') +
+    `<div class="hrow"><span class="hrow-k">ฝน 7 วัน</span><div class="hrow-c">${rainChips}</div></div>`;
+
+  // ---- ภาพแม่น้ำ: 0% = ก้นคลอง (y255) · 100% = ขอบตลิ่ง (y150) · ล้นได้ถึง 115% ----
+  const p = med==null ? 45 : Math.max(0, Math.min(115, med));
+  document.getElementById('hWater').setAttribute('transform', `translate(0,${(255 - p*1.05).toFixed(1)})`);
+  document.getElementById('heroPct').textContent = med==null ? '–' : Math.round(med)+'%';
+  const hr = new Date().getHours();
+  document.getElementById('heroArt').classList.toggle('night', hr>=19 || hr<6);
+
+  // ---- การ์ดทิศทางน้ำ ----
+  document.getElementById('dirRise').textContent = withPrev.length ? rise.length : '–';
+  document.getElementById('dirFall').textContent = withPrev.length ? fall.length : '–';
+  document.getElementById('dirFlat').textContent = withPrev.length ? flat : '–';
+  const bar = document.getElementById('dirBar').children;
+  bar[0].style.flexGrow = rise.length; bar[1].style.flexGrow = fall.length; bar[2].style.flexGrow = Math.max(flat,0);
+  [rise.length, fall.length, flat].forEach((v,i)=>{ bar[i].style.display = v>0 ? '' : 'none'; });
+  const avg = withPrev.length ? withPrev.reduce((a,s)=>a+d(s),0)/withPrev.length : null;
+  document.getElementById('dirWhere').textContent = `${place} · เทียบกับค่าที่วัดได้ครั้งก่อน`;
+  document.getElementById('dirAvg').innerHTML = avg==null ? 'ไม่มีค่าก่อนหน้าให้เทียบ'
+    : `เฉลี่ยทุกสถานี <b>${avg>=0?'+':''}${avg.toFixed(2)} ม.</b> จาก ${withPrev.length} สถานี`;
+}
+document.getElementById('heroShare').addEventListener('click', async ()=>{
+  const data = {title: document.title, text: document.getElementById('heroH').textContent.trim() + ' · naraflood.com', url: location.href.split('#')[0]};
+  try{
+    if(navigator.share) await navigator.share(data);
+    else { await navigator.clipboard.writeText(data.text + ' ' + data.url); const b=document.getElementById('heroShare'); const o=b.innerHTML; b.textContent='คัดลอกลิงก์แล้ว'; setTimeout(()=>b.innerHTML=o,1800); }
+  }catch(e){}
+});
 function renderAmphoes(list){
   const el = document.getElementById('ampList');
   const mets = meteoCache[prov];
