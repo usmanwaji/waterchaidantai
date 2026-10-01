@@ -179,6 +179,12 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .tmdObsRow .tv{width:86px;text-align:right;color:var(--ink-2)}
 .tmdObsRow .hv{width:44px;text-align:right;color:var(--ink-3)}
 
+/* ฮีโร่: ชื่อสถานีอ้างอิงในกล่องระดับน้ำ + ปุ่มขอตำแหน่ง (ปุ่มรูปชิป) */
+.hero-gauge small{display:block;margin-top:1px;font-size:11px;color:var(--ink-3);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:768px){.hero-gauge small{font-size:10px;max-width:150px}}
+button.hchip{font-family:inherit;cursor:pointer}
+button.hchip:hover{border-color:var(--signal);color:var(--signal)}
+
 </style>
 <link rel="stylesheet" href="shared.css?v=9">
 </head>
@@ -297,7 +303,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
     </g>
   </g>
 </svg>
-      <div class="hero-gauge"><b id="heroPct">–</b><span>ค่ากลางระดับน้ำ · % ของตลิ่ง</span></div>
+      <div class="hero-gauge"><b id="heroPct">–</b><span id="heroGaugeK">ระดับน้ำเทียบตลิ่ง</span><small id="heroGaugeSt">กำลังหาสถานีใกล้คุณ…</small></div>
     </div>
   </div>
 </section>
@@ -649,6 +655,9 @@ async function loadDdpm(){
       const lv = cur==null || d.status===0 ? null : DDPM_LV[d.waterLevelStatus];
       return {code:d.code, name:(d.name||'').trim(), amphoe:d.amphoeName||'', prov:d.provName||prov, river:d.basin && d.basin!=='-' ? d.basin : '',
         lat:num(d.latitude), lng:num(d.longitude), cur, bank, unit:'ม.', src:'ddpm',
+        // updatedAt ของ ปภ. เป็นเวลาไทยไม่มีโซน ("2026-10-01T14:45:01") · ถ้ามีโซนมาแล้วใช้ตามนั้น
+        dt: d.updatedAt ? new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(d.updatedAt) ? d.updatedAt : String(d.updatedAt)+'+07:00') : null,
+        lvNum: lv ? d.waterLevelStatus : 0,
         // ไม่มีพื้นท้องน้ำ · ใช้แค่วาดมาตรวัด (ระดับ ปภ. ส่วนใหญ่วัดจากศูนย์ของไม้วัด จึงไม่ต่ำกว่า 0)
         ground: cur!=null && bank!=null ? Math.max(0, Math.min(bank, cur) - 3) : null,
         st: lv ? {l:lv.l, c:lv.c} : {l:'รอข้อมูล', c:'var(--ink-3)'},
@@ -869,6 +878,7 @@ function renderAll(){
     const el = document.getElementById(id);
     if(el) el.textContent = id==='whereSt' ? (amp?`อ.${amp} จ.${prov}`:`จ.${prov}`) : (id==='whereAmp'?`จ.${prov}`:whereTxt);
   });
+  heroReady = true;
   try{ renderHero(met, sel); }catch(e){ console.error('hero', e); }
   renderAmpChips(); renderHour(met); renderRain7(met, sel); renderStations(); renderAmphoes(list); renderRadarBar(); renderWaterta();
 }
@@ -987,7 +997,8 @@ const HICON = {
   cloud:'<svg viewBox="0 0 24 24"><path d="M7.2 18.5h9.4a3.8 3.8 0 0 0 .5-7.6 5.4 5.4 0 0 0-10.3-1.2 3.9 3.9 0 0 0 .4 8.8z"/></svg>',
   radar:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12l6-6"/></svg>',
   soil:'<svg viewBox="0 0 24 24"><path d="M12 3.5s5.5 6.2 5.5 10a5.5 5.5 0 0 1-11 0c0-3.8 5.5-10 5.5-10z"/></svg>',
-  ok:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8 12.3l2.7 2.7L16 9.6"/></svg>'
+  ok:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8 12.3l2.7 2.7L16 9.6"/></svg>',
+  pin:'<svg viewBox="0 0 24 24"><path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>'
 };
 function heroRainLv(sum){
   return sum>=200 ? {k:'danger', n:'ฝนมากผิดปกติ', act:'เตรียมพร้อมรับสถานการณ์'}
@@ -995,90 +1006,189 @@ function heroRainLv(sum){
        : sum>=80  ? {k:'watch',  n:'ฝนปานกลาง',    act:'ติดตามสถานการณ์'}
        :            {k:'normal', n:'ฝนน้อย',       act:'สถานการณ์ฝนปกติ'};
 }
-function renderHero(met, sel){
-  const place = amp ? 'อ.'+amp : prov;
-  document.getElementById('heroPlace').textContent = place;
-  let list = wlAll.filter(s=>s.prov===prov);
-  if(amp) list = list.filter(s=>s.amphoe.includes(amp));
-  const live = list.filter(s=>s.msl!=null);
-  const over = live.filter(s=>FC.stationLevel(s)==='over');
-  const high = live.filter(s=>FC.stationLevel(s)==='high');
-  const withPrev = live.filter(s=>s.prev!=null);
-  const d = s => s.msl - s.prev;
-  const rise = withPrev.filter(s=>d(s) >= 0.01), fall = withPrev.filter(s=>d(s) <= -0.01);
-  const flat = withPrev.length - rise.length - fall.length;
-  const pcts = live.map(s=>s.pct).filter(v=>v!=null && isFinite(v)).sort((a,b)=>a-b);
-  const med = pcts.length ? (pcts.length%2 ? pcts[(pcts.length-1)/2] : (pcts[pcts.length/2-1]+pcts[pcts.length/2])/2) : null;
+/* ---------- ตำแหน่งผู้ใช้ → สถานีวัดน้ำที่ใกล้ที่สุด ----------
+   ใช้สถานีชุดเดียวกับหน้าแผนที่ (map.html): สสน./ชป. (thaiwater) · ปภ. (cctv.disaster.go.th)
+   · โทรมาตร ชป. (telerid) ข้อมูลแหล่งไหนล่มก็ยังเหลือแหล่งอื่นให้ตอบได้
+   ขอตำแหน่งอัตโนมัติเมื่อเปิดหน้า ถ้าผู้ใช้ไม่อนุญาต ใช้จุดศูนย์กลางอำเภอที่เลือกแทน */
+let userLoc = null;           // {lat,lng,acc}
+let locState = 'idle';
+let heroReady = false;       // รอข้อมูลรอบแรกก่อน ไม่งั้นจะขึ้น "อ่านข้อมูลไม่ได้" ระหว่างโหลด        // idle | asking | ok | denied | unsupported
+const HERO_FRESH_H = 6;       // ค่าที่เก่ากว่านี้ไม่ใช้เป็น "ตอนนี้"
+const HERO_NEAR_KM = 60;      // ห่างสถานีใกล้สุดเกินนี้ ถือว่าอยู่นอกพื้นที่
+function askLocation(){
+  if(!('geolocation' in navigator)){ locState='unsupported'; return; }
+  locState = 'asking'; rerenderHero();
+  navigator.geolocation.getCurrentPosition(
+    p => { userLoc = {lat:p.coords.latitude, lng:p.coords.longitude, acc:p.coords.accuracy}; locState='ok'; rerenderHero(); },
+    () => { locState = 'denied'; rerenderHero(); },
+    {enableHighAccuracy:false, timeout:12000, maximumAge:10*60*1000});
+}
+function rerenderHero(){
+  if(!heroReady) return;
+  try{
+    const list = ampsOf(prov), sel = amp ? list.find(a=>a[1]===amp) : mainAmp(prov);
+    renderHero((meteoCache[prov]||[])[list.indexOf(sel)], sel);
+  }catch(e){ console.error('hero', e); }
+}
+const kmBetween = (a,b,c,d) => { const R=6371, r=Math.PI/180, x=Math.sin((c-a)*r/2)**2 + Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2; return 2*R*Math.asin(Math.sqrt(x)); };
+const fmtKm = k => k<1 ? Math.round(k*1000)+' ม.' : (k<10 ? k.toFixed(1) : Math.round(k))+' กม.';
+/* รวมสถานีทุกแหล่งเป็นรูปเดียวกัน · lvl: over | high | watch | normal */
+function heroPool(){
+  const out = [];
+  wlAll.forEach(s=>{
+    if(s.msl==null || s.lat==null || s.lng==null) return;
+    const L = FC.stationLevel(s);
+    out.push({name:s.name, code:s.code, src:'สสน./ชป.', lat:s.lat, lng:s.lng, cur:s.msl, prev:s.prev, bank:s.bank,
+      pct:s.pct, dt:s.dt, prov:s.prov, amphoe:s.amphoe, river:s.river,
+      lvl: L==='over' ? 'over' : L==='high' ? 'high' : 'normal', stText:null});
+  });
+  ddpmAll.forEach(s=>{
+    if(s.cur==null || s.lat==null || s.lng==null) return;
+    const lvl = s.bank!=null && s.cur>=s.bank ? 'over' : s.lvNum>=3 ? 'high' : s.lvNum===2 ? 'watch' : 'normal';
+    out.push({name:s.name, code:s.code, src:'ปภ.', lat:s.lat, lng:s.lng, cur:s.cur, prev:null, bank:s.bank,
+      pct:null, dt:s.dt, prov:s.prov, amphoe:s.amphoe, river:s.river, lvl, stText:s.st.l});
+  });
+  ridAll.forEach(s=>{
+    if(s.cur==null || s.lat==null || s.lng==null) return;
+    const lvl = s.rank===3 ? 'over' : s.rank===2 ? 'high' : 'normal';
+    out.push({name:s.name, code:s.code, src:'ชป. โทรมาตร', lat:s.lat, lng:s.lng, cur:s.cur, prev:null, bank:s.bank, warn:s.warn,
+      pct:null, dt:s.dt, prov:s.prov, amphoe:s.amphoe, river:'', lvl, stText:s.st.l});
+  });
+  const now = Date.now();
+  return out.filter(s => s.dt && !isNaN(s.dt) && (now - s.dt) <= HERO_FRESH_H*3600e3);
+}
+/* ระยะจากตลิ่ง (ม.) เป็นตัวเลขกลางที่ทุกแหล่งมีเหมือนกัน (ม.รทก. หรือศูนย์ไม้วัดก็ลบกันได้)
+   ภาพแม่น้ำใช้ % ของ สสน. ถ้ามี ไม่มีจึงแปลงระยะจากตลิ่งเป็นความสูงในภาพ */
+const fbOf = s => s.bank!=null ? s.bank - s.cur : null;
+function artPct(s){
+  if(s.pct!=null && isFinite(s.pct)) return s.pct;
+  const fb = fbOf(s); if(fb==null) return 45;
+  return fb >= 0 ? 100*3/(fb+3) : 100 + Math.min(15, -fb*15);
+}
+const fbText = s => { const fb = fbOf(s); if(fb==null) return 'ไม่มีข้อมูลตลิ่ง'; return fb>=0 ? `ต่ำกว่าตลิ่ง ${fb.toFixed(2)} ม.` : `สูงกว่าตลิ่ง ${(-fb).toFixed(2)} ม.`; };
+const LVL_K = {over:'danger', high:'warn', watch:'watch', normal:'normal'};
 
-  // ---- ประโยคบนสุด: ระดับสถานีมาก่อนทิศทาง เพราะล้นตลิ่งสำคัญกว่าแนวโน้ม ----
+function renderHero(met, sel){
+  const pool = heroPool();
+  const ref = (userLoc && locState==='ok') ? {lat:userLoc.lat, lng:userLoc.lng, me:true}
+            : {lat:sel?.[2], lng:sel?.[3], me:false, name:sel?.[1]};
+  pool.forEach(s => { s.km = ref.lat!=null ? kmBetween(ref.lat, ref.lng, s.lat, s.lng) : null; });
+  const near = pool.filter(s=>s.km!=null && s.bank!=null).sort((a,b)=>a.km-b.km);
+  const nearest = near[0] || null;
+  const outside = ref.me && (!nearest || nearest.km > HERO_NEAR_KM);
+  const useNear = ref.me && nearest && !outside;
+
+  // ---- สรุปทั้งพื้นที่ (จังหวัด/อำเภอที่เลือก) จากทุกแหล่ง ----
+  let area = pool.filter(s=>s.prov===prov);
+  if(amp) area = area.filter(s=>(s.amphoe||'').includes(amp));
+  const over = area.filter(s=>s.lvl==='over'), high = area.filter(s=>s.lvl==='high'), watch = area.filter(s=>s.lvl==='watch');
+  const withPrev = wlAll.filter(s=>s.prov===prov && (!amp || s.amphoe.includes(amp)) && s.msl!=null && s.prev!=null);
+  const dd = s => s.msl - s.prev;
+  const rise = withPrev.filter(s=>dd(s) >= 0.01), fall = withPrev.filter(s=>dd(s) <= -0.01);
+  const flat = withPrev.length - rise.length - fall.length;
+
+  const placeName = amp ? 'อ.'+amp : prov;
+  document.getElementById('heroPlace').textContent = useNear ? 'ใกล้คุณ' : placeName;
+
+  // ---- ประโยคบนสุด ----
   const word = document.getElementById('heroWord'), sub = document.getElementById('heroSub');
   let W;
-  if(!live.length) W = {t: wlAll.length ? 'ไม่มีสถานีส่งค่า' : 'ยังอ่านข้อมูลน้ำไม่ได้', k:'na'};
+  if(useNear){
+    const s = nearest, d = s.prev!=null ? s.cur - s.prev : null;
+    W = s.lvl==='over' ? {t:'น้ำล้นตลิ่ง', k:'danger'}
+      : s.lvl==='high' ? {t:'น้ำใกล้ตลิ่ง', k:'warn'}
+      : s.lvl==='watch' ? {t:'น้ำถึงระดับเฝ้าระวัง', k:'watch'}
+      : d!=null && d >= 0.01 ? {t:'น้ำกำลังขึ้น', k:'watch'}
+      : d!=null && d <= -0.01 ? {t:'น้ำกำลังลด', k:'normal'}
+      : {t:'น้ำยังปกติ', k:'normal'};
+  } else if(!area.length) W = {t:'ยังอ่านข้อมูลน้ำไม่ได้', k:'na'};
   else if(over.length) W = {t:'มีจุดน้ำล้นตลิ่ง', k:'danger'};
   else if(high.length) W = {t:'น้ำใกล้ตลิ่ง', k:'warn'};
+  else if(watch.length) W = {t:'น้ำถึงระดับเฝ้าระวัง', k:'watch'};
   else if(rise.length > fall.length && rise.length >= 2) W = {t:'น้ำกำลังขึ้น', k:'watch'};
   else if(fall.length > rise.length) W = {t:'น้ำกำลังลด', k:'normal'};
-  else W = {t:'น้ำทรงตัว', k:'normal'};
+  else W = {t:'น้ำยังปกติ', k:'normal'};
   word.textContent = W.t; word.dataset.lv = W.k;
 
   const sum = met?.daily ? met.daily.precipitation_sum.reduce((a,b)=>a+(b||0),0) : null;
   const R = sum!=null ? heroRainLv(sum) : null;
   let s1;
-  if(!live.length) s1 = wlAll.length ? `ไม่มีสถานีวัดน้ำที่ส่งค่าใน${place}ขณะนี้` : 'เชื่อมต่อข้อมูลระดับน้ำ (thaiwater) ไม่ได้ขณะนี้ ลองกดรีเฟรชอีกครั้ง';
-  else if(over.length || high.length)
-    s1 = `<b>${over.length}</b> สถานีล้นตลิ่ง และอีก <b>${high.length}</b> สถานีใกล้ตลิ่ง (85% ขึ้นไป) จากทั้งหมด ${live.length} สถานีที่ส่งค่า`;
-  else s1 = `ทุกสถานีต่ำกว่าเกณฑ์เฝ้าระวัง · ขึ้น ${rise.length} ลด ${fall.length} จากทั้งหมด ${live.length} สถานีที่ส่งค่า`;
-  const s2 = R ? ` · ฝนพยากรณ์ 7 วัน <b>${fmt1(sum)} มม.</b> (${R.n})` : '';
-  sub.innerHTML = s1 + s2;
+  if(useNear){
+    const s = nearest;
+    s1 = `สถานีที่ใกล้คุณที่สุด <b>${esc(s.name)}</b> (${s.src}) ห่าง ${fmtKm(s.km)} · ระดับน้ำ<b>${fbText(s)}</b>` +
+         (s.stText ? ` · ${esc(s.stText)}` : '');
+  } else if(!area.length){
+    s1 = 'เชื่อมต่อสถานีวัดน้ำไม่ได้ขณะนี้ (สสน. · ปภ. · ชป.) ลองกดรีเฟรชอีกครั้ง';
+  } else {
+    const hot = over.length + high.length + watch.length;
+    const parts = [[over,'ล้นตลิ่ง'],[high,'ใกล้ตลิ่ง'],[watch,'ถึงระดับเฝ้าระวัง']].filter(([a])=>a.length).map(([a,t])=>`<b>${a.length}</b> สถานี${t}`);
+    s1 = hot ? `${parts.join(' · ')} จาก ${area.length} สถานีที่ส่งค่าใน ${HERO_FRESH_H} ชม.`
+             : `ทุกสถานีต่ำกว่าเกณฑ์เฝ้าระวัง จาก ${area.length} สถานีที่ส่งค่าใน ${HERO_FRESH_H} ชม. (สสน. · ปภ. · ชป.)`;
+    if(outside) s1 += ` · ตำแหน่งของคุณอยู่นอกพื้นที่ (สถานีใกล้สุดห่าง ${nearest?fmtKm(nearest.km):'เกิน '+HERO_NEAR_KM+' กม.'})`;
+  }
+  sub.innerHTML = s1 + (R ? ` · ฝนพยากรณ์ 7 วัน <b>${fmt1(sum)} มม.</b> (${R.n})` : '');
 
-  // ---- เวลาข้อมูล: ค่าที่ใหม่ที่สุด ถ้าเก่ากว่า 3 ชม. บอกตรง ๆ ว่าไม่สด ----
-  const lt = live.reduce((m,s)=> s.dt && (!m || s.dt>m) ? s.dt : m, null);
+  // ---- เวลาข้อมูล ----
+  const tSrc = useNear ? [nearest] : area;
+  const lt = tSrc.reduce((m,s)=> s.dt && (!m || s.dt>m) ? s.dt : m, null);
   const liveEl = document.getElementById('heroLive');
   const stale = !lt || (Date.now()-lt) > 3*3600e3;
   if(stale) liveEl.setAttribute('data-stale',''); else liveEl.removeAttribute('data-stale');
   document.getElementById('heroLiveTxt').innerHTML = lt
     ? `${stale?'ข้อมูลล่าสุด':'ข้อมูลสด'} · <b>${lt.toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} น.</b>`
-    : 'ยังไม่มีเวลาข้อมูล';
+    : (locState==='asking' ? 'กำลังหาตำแหน่งของคุณ…' : 'ยังไม่มีเวลาข้อมูล');
 
   // ---- แถวทางลัด ----
   const chip = (href, icon, html, lv) => `<a class="hchip" href="${href}"${lv?` data-lv="${lv}"`:''}>${HICON[icon]||''}<span>${html}</span></a>`;
-  const top = [...over, ...high].sort((a,b)=>(b.pct??0)-(a.pct??0)).slice(0,4);
+  const nearChips = near.slice(0,3).map(s => chip('map.html','wave',
+    `${esc(s.name)} <b>${fmtKm(s.km)}</b> · ${fbText(s)}`, s.lvl==='normal' ? '' : LVL_K[s.lvl])).join('');
+  const locChip = locState==='ok' ? ''
+    : `<button type="button" class="hchip" id="heroLocBtn">${HICON.pin}<span>${locState==='asking' ? 'กำลังหาตำแหน่ง…' : locState==='denied' ? 'อนุญาตตำแหน่งเพื่อดูสถานีใกล้คุณ' : 'ใช้ตำแหน่งของฉัน'}</span></button>`;
   let stChips = '';
-  if(!live.length) stChips = chip('map.html','wave','เปิดแผนที่ระดับน้ำ');
+  if(!area.length) stChips = chip('map.html','wave','เปิดแผนที่ระดับน้ำ');
   else{
-    if(over.length) stChips += chip('map.html','wave',`ล้นตลิ่ง <b>${over.length}</b> สถานี`,'danger');
-    if(high.length) stChips += chip('map.html','wave',`ใกล้ตลิ่ง <b>${high.length}</b> สถานี`,'warn');
-    if(!over.length && !high.length) stChips += chip('map.html','ok','ไม่มีสถานีเข้าเกณฑ์เฝ้าระวัง','normal');
-    stChips += chip('#dirCard','up',`กำลังขึ้น <b>${rise.length}</b>`);
-    stChips += chip('#dirCard','down',`กำลังลด <b>${fall.length}</b>`);
+    if(over.length) stChips += chip('map.html','wave',`ล้นตลิ่ง <b>${over.length}</b>`,'danger');
+    if(high.length) stChips += chip('map.html','wave',`ใกล้ตลิ่ง <b>${high.length}</b>`,'warn');
+    if(watch.length) stChips += chip('map.html','wave',`เฝ้าระวัง <b>${watch.length}</b>`,'watch');
+    if(!over.length && !high.length && !watch.length) stChips += chip('map.html','ok',`${placeName} ไม่มีสถานีเข้าเกณฑ์`,'normal');
+    if(withPrev.length){
+      stChips += chip('#dirCard','up',`กำลังขึ้น <b>${rise.length}</b>`);
+      stChips += chip('#dirCard','down',`กำลังลด <b>${fall.length}</b>`);
+    }
   }
-  const watchChips = top.map(s=>chip('map.html','wave',`${esc(s.name)} <b>${Math.round(s.pct)}%</b>`, FC.stationLevel(s)==='over'?'danger':'warn')).join('');
   const soil = soilByAmp[prov]?.[(amp||sel?.[1])] ?? null;
   let rainChips = R ? chip('#fcCard','cloud',`<b>${fmt1(sum)}</b> มม. · ${R.n}`, R.k==='normal'?'':R.k) : '';
   if(soil!=null) rainChips += chip('#tmdCard','soil',`ดินอิ่มน้ำ <b>${fmt1(soil)}</b> มม.`);
   rainChips += chip('#radarCard','radar','เรดาร์และฝนระยะสั้น');
+  const nearLbl = useNear ? 'ใกล้คุณ' : 'สถานีใกล้';
   document.getElementById('heroRows').innerHTML =
-    `<div class="hrow"><span class="hrow-k">สถานีน้ำ</span><div class="hrow-c">${stChips}</div></div>` +
-    (watchChips ? `<div class="hrow"><span class="hrow-k">จับตา</span><div class="hrow-c">${watchChips}</div></div>` : '') +
+    ((nearChips || locChip) ? `<div class="hrow"><span class="hrow-k">${nearLbl}</span><div class="hrow-c">${locChip}${nearChips}</div></div>` : '') +
+    `<div class="hrow"><span class="hrow-k">${esc(placeName)}</span><div class="hrow-c">${stChips}</div></div>` +
     `<div class="hrow"><span class="hrow-k">ฝน 7 วัน</span><div class="hrow-c">${rainChips}</div></div>`;
+  const lb = document.getElementById('heroLocBtn');
+  if(lb) lb.onclick = askLocation;
 
-  // ---- ภาพแม่น้ำ: 0% = ก้นคลอง (y255) · 100% = ขอบตลิ่ง (y150) · ล้นได้ถึง 115% ----
-  const p = med==null ? 45 : Math.max(0, Math.min(115, med));
+  // ---- ภาพแม่น้ำ: สถานีอ้างอิง = ใกล้ผู้ใช้ที่สุด หรือใกล้ศูนย์กลางอำเภอที่เลือก ----
+  const rs = nearest && !outside ? nearest : null;
+  const p = rs ? Math.max(0, Math.min(115, artPct(rs))) : 45;
   document.getElementById('hWater').setAttribute('transform', `translate(0,${(255 - p*1.05).toFixed(1)})`);
-  document.getElementById('heroPct').textContent = med==null ? '–' : Math.round(med)+'%';
+  const fb = rs ? fbOf(rs) : null;
+  document.getElementById('heroPct').textContent = fb==null ? '–' : (fb>=0 ? fb.toFixed(2) : '+'+(-fb).toFixed(2)) + ' ม.';
+  document.getElementById('heroGaugeK').textContent = fb==null ? 'ระดับน้ำเทียบตลิ่ง' : (fb>=0 ? 'ต่ำกว่าตลิ่ง' : 'สูงกว่าตลิ่ง');
+  document.getElementById('heroGaugeSt').textContent = rs ? `${rs.name} · ${fmtKm(rs.km)}` : (locState==='asking' ? 'กำลังหาสถานีใกล้คุณ…' : 'ไม่มีสถานีที่ส่งค่าใกล้ ๆ');
   const hr = new Date().getHours();
   document.getElementById('heroArt').classList.toggle('night', hr>=19 || hr<6);
 
-  // ---- การ์ดทิศทางน้ำ ----
+  // ---- การ์ดทิศทางน้ำ (มีเฉพาะ สสน. ที่ส่งค่าก่อนหน้ามาด้วย) ----
   document.getElementById('dirRise').textContent = withPrev.length ? rise.length : '–';
   document.getElementById('dirFall').textContent = withPrev.length ? fall.length : '–';
   document.getElementById('dirFlat').textContent = withPrev.length ? flat : '–';
   const bar = document.getElementById('dirBar').children;
   bar[0].style.flexGrow = rise.length; bar[1].style.flexGrow = fall.length; bar[2].style.flexGrow = Math.max(flat,0);
   [rise.length, fall.length, flat].forEach((v,i)=>{ bar[i].style.display = v>0 ? '' : 'none'; });
-  const avg = withPrev.length ? withPrev.reduce((a,s)=>a+d(s),0)/withPrev.length : null;
-  document.getElementById('dirWhere').textContent = `${place} · เทียบกับค่าที่วัดได้ครั้งก่อน`;
-  document.getElementById('dirAvg').innerHTML = avg==null ? 'ไม่มีค่าก่อนหน้าให้เทียบ'
+  const avg = withPrev.length ? withPrev.reduce((a,s)=>a+dd(s),0)/withPrev.length : null;
+  document.getElementById('dirWhere').textContent = `${placeName} · เทียบกับค่าที่วัดได้ครั้งก่อน`;
+  document.getElementById('dirAvg').innerHTML = avg==null ? 'ยังไม่มีค่าก่อนหน้าให้เทียบ (ข้อมูล สสน. ยังโหลดไม่ได้)'
     : `เฉลี่ยทุกสถานี <b>${avg>=0?'+':''}${avg.toFixed(2)} ม.</b> จาก ${withPrev.length} สถานี`;
 }
 document.getElementById('heroShare').addEventListener('click', async ()=>{
@@ -1516,6 +1626,7 @@ renderRadarBar();
 loadRadarImg();
 loadNowcast();
 loadAll();
+askLocation();   // ขอตำแหน่งอัตโนมัติ · ไม่อนุญาตก็ใช้ศูนย์กลางอำเภอแทน
 loadTmd();
 loadDistRain();
 setInterval(loadTmd, 60*60*1000);
