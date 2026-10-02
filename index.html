@@ -1051,11 +1051,37 @@ let locState = 'idle';
 let heroReady = false;       // รอข้อมูลรอบแรกก่อน ไม่งั้นจะขึ้น "อ่านข้อมูลไม่ได้" ระหว่างโหลด        // idle | asking | ok | denied | unsupported
 const HERO_FRESH_H = 6;       // ค่าที่เก่ากว่านี้ไม่ใช้เป็น "ตอนนี้"
 const HERO_NEAR_KM = 60;      // ห่างสถานีใกล้สุดเกินนี้ ถือว่าอยู่นอกพื้นที่
+/* คอมตั้งโต๊ะส่วนใหญ่ไม่มี GPS เบราว์เซอร์จึงเดาตำแหน่งจาก IP ซึ่งอาจคลาดเป็นร้อยกิโลเมตร
+   · ความแม่นยำแย่กว่า LOC_MAX_ACC ไม่ใช้ (locState = 'coarse')
+   · ผู้ใช้ตั้งพิกัดเองได้ (วางจาก Google Maps) เก็บใน localStorage ใช้แทนตำแหน่งเบราว์เซอร์ */
+const LOC_MAX_ACC = 5000;     // ม.
+const LOC_KEY = 'nf_myloc';
+let locManual = false, locAcc = null;
+function loadManualLoc(){
+  try{ const v = JSON.parse(localStorage.getItem(LOC_KEY)||'null');
+    if(v && isFinite(v.lat) && isFinite(v.lng)){ userLoc = {lat:+v.lat, lng:+v.lng}; locState='ok'; locManual=true; return true; } }catch(e){}
+  return false;
+}
+function setManualLoc(){
+  const cur = locManual && userLoc ? `${userLoc.lat}, ${userLoc.lng}` : '';
+  const t = window.prompt('วางพิกัดของคุณ (ละติจูด, ลองจิจูด) เช่น 6.4253, 101.7927\nคัดลอกได้จาก Google Maps (แตะค้างที่ตำแหน่ง)\nเว้นว่างแล้วกด OK เพื่อกลับไปใช้ตำแหน่งจากเบราว์เซอร์', cur);
+  if(t===null) return;
+  const m = String(t).match(/(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)/);
+  if(!m){ try{ localStorage.removeItem(LOC_KEY); }catch(e){} locManual=false; userLoc=null; askLocation(); return; }
+  const lat = +m[1], lng = +m[2];
+  if(!(lat>=-90 && lat<=90 && lng>=-180 && lng<=180)){ alert('พิกัดไม่ถูกต้อง'); return; }
+  try{ localStorage.setItem(LOC_KEY, JSON.stringify({lat,lng})); }catch(e){}
+  userLoc = {lat,lng}; locState='ok'; locManual=true; rerenderHero();
+}
 function askLocation(){
+  if(locManual) return;
   if(!('geolocation' in navigator)){ locState='unsupported'; return; }
   locState = 'asking'; rerenderHero();
   navigator.geolocation.getCurrentPosition(
-    p => { userLoc = {lat:p.coords.latitude, lng:p.coords.longitude, acc:p.coords.accuracy}; locState='ok'; rerenderHero(); },
+    p => { locAcc = p.coords.accuracy;
+      if(locAcc!=null && locAcc > LOC_MAX_ACC){ userLoc = null; locState='coarse'; }
+      else { userLoc = {lat:p.coords.latitude, lng:p.coords.longitude, acc:locAcc}; locState='ok'; }
+      rerenderHero(); },
     () => { locState = 'denied'; rerenderHero(); },
     {enableHighAccuracy:false, timeout:12000, maximumAge:10*60*1000});
 }
@@ -1199,8 +1225,12 @@ function renderHero(met, sel){
   const nearChips = nearAll.slice(0,3).map(s => chip('map.html','wave',
     `${esc(s.name)} <b>${fmtKm(s.km)}</b> · ${s.nodata ? 'ไม่มีค่าล่าสุด' : fbText(s)}`,
     s.nodata ? 'na' : s.lvl==='normal' ? '' : LVL_K[s.lvl])).join('');
-  const locChip = locState==='ok' ? ''
-    : `<button type="button" class="hchip" id="heroLocBtn">${HICON.pin}<span>${locState==='asking' ? 'กำลังหาตำแหน่ง…' : locState==='denied' ? 'อนุญาตตำแหน่งเพื่อดูสถานีใกล้คุณ' : 'ใช้ตำแหน่งของฉัน'}</span></button>`;
+  const locChip = locState==='ok'
+    ? `<button type="button" class="hchip" id="heroSetLoc">${HICON.pin}<span>${locManual ? 'พิกัดที่ตั้งเอง · เปลี่ยน' : 'ตำแหน่งไม่ตรง? ตั้งพิกัดเอง'}</span></button>`
+    : locState==='coarse'
+    ? `<button type="button" class="hchip" id="heroSetLoc" data-lv="watch">${HICON.pin}<span>ตำแหน่งจากเบราว์เซอร์ไม่แม่นยำ (±${fmtKm(locAcc/1000)}) · ตั้งพิกัดเอง</span></button>`
+    : `<button type="button" class="hchip" id="heroLocBtn">${HICON.pin}<span>${locState==='asking' ? 'กำลังหาตำแหน่ง…' : locState==='denied' ? 'อนุญาตตำแหน่งเพื่อดูสถานีใกล้คุณ' : 'ใช้ตำแหน่งของฉัน'}</span></button>` +
+      (locState==='asking' ? '' : `<button type="button" class="hchip" id="heroSetLoc">${HICON.pin}<span>ตั้งพิกัดเอง</span></button>`);
   let stChips = '';
   if(!area.length) stChips = chip('map.html','wave','เปิดแผนที่ระดับน้ำ');
   else{
@@ -1224,6 +1254,8 @@ function renderHero(met, sel){
     `<div class="hrow"><span class="hrow-k">ฝน 7 วัน</span><div class="hrow-c">${rainChips}</div></div>`;
   const lb = document.getElementById('heroLocBtn');
   if(lb) lb.onclick = askLocation;
+  const ml = document.getElementById('heroSetLoc');
+  if(ml) ml.onclick = setManualLoc;
 
   // ---- ภาพแม่น้ำ: สถานีอ้างอิง = ใกล้ผู้ใช้ที่สุด หรือใกล้ศูนย์กลางอำเภอที่เลือก ----
   const rs = nearest && !outside ? nearest : null;
@@ -1688,7 +1720,7 @@ renderRadarBar();
 loadRadarImg();
 loadNowcast();
 loadAll();
-askLocation();   // ขอตำแหน่งอัตโนมัติ · ไม่อนุญาตก็ใช้ศูนย์กลางอำเภอแทน
+if(!loadManualLoc()) askLocation();   // พิกัดที่ผู้ใช้ตั้งเองมาก่อน · ไม่มีจึงขอตำแหน่งอัตโนมัติ · ไม่อนุญาตก็ใช้ศูนย์กลางอำเภอแทน
 loadTmd();
 loadDistRain();
 setInterval(loadTmd, 60*60*1000);
