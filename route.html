@@ -242,7 +242,6 @@ window.initMap = function() {
   });
 
   gInfoWindow = new google.maps.InfoWindow();
-  if (window.OMSRivers) window.OMSRivers.drawGoogle(gMap);
   gDirectionsService = new google.maps.DirectionsService();
 
   gMap.addListener('click', (e) => {
@@ -893,7 +892,6 @@ watchAuthState({
   onAdmin:     (p) => { renderAuthHeader('approved', p); renderReportSection('approved', p); }
 });
 </script>
-<script src="js/rivers.js"></script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/tabbar.js?v=2" defer></script>
