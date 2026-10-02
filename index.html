@@ -1066,25 +1066,32 @@ function rerenderHero(){
 }
 const kmBetween = (a,b,c,d) => { const R=6371, r=Math.PI/180, x=Math.sin((c-a)*r/2)**2 + Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2; return 2*R*Math.asin(Math.sqrt(x)); };
 const fmtKm = k => k<1 ? Math.round(k*1000)+' ม.' : (k<10 ? k.toFixed(1) : Math.round(k))+' กม.';
-/* รวมสถานีทุกแหล่งเป็นรูปเดียวกัน · lvl: over | high | watch | normal */
+/* รวมสถานีทุกแหล่งเป็นรูปเดียวกัน · lvl: over | high | watch | normal
+   ประโยคบนสุดใช้เกณฑ์เดียวกับ "สถานีเฝ้าระวัง" ในหน้าคาดการณ์ (forecast.html) ให้สองหน้าตอบตรงกัน:
+   · over  = ระดับน้ำถึงตลิ่ง (ทุกแหล่ง)
+   · watch = สสน./ชป. ≥85% ของตลิ่งและน้ำไม่ลด (🟡 ในหน้าคาดการณ์)
+   · high  = ปภ. ประกาศระดับ "เตรียมรับมือ" ขึ้นไป
+   ป้าย "เฝ้าระวัง" ของ ปภ. (ระดับ 2) และเส้นเตือนของโทรมาตร ชป. ตั้งไว้ต่ำกว่าตลิ่งมาก
+   จึงไม่นับเป็นสถานการณ์ของทั้งจังหวัด (ยังแสดงป้ายของหน่วยงานในชิปสถานีใกล้และการ์ดมาตรวัดน้ำ) */
 function heroPool(){
   const out = [];
   wlAll.forEach(s=>{
     if(s.msl==null || s.lat==null || s.lng==null) return;
     const L = FC.stationLevel(s);
+    const falling = s.prev!=null && s.msl - s.prev <= FC.CRIT.FALL_MIN;
     out.push({name:s.name, code:s.code, src:'สสน./ชป.', lat:s.lat, lng:s.lng, cur:s.msl, prev:s.prev, thr:0.01, bank:s.bank,
       pct:s.pct, dt:s.dt, prov:s.prov, amphoe:s.amphoe, river:s.river,
-      lvl: L==='over' ? 'over' : L==='high' ? 'high' : 'normal', stText:null});
+      lvl: L==='over' ? 'over' : (L==='high' && !falling) ? 'watch' : 'normal', stText:null});
   });
   ddpmAll.forEach(s=>{
     if(s.cur==null || s.lat==null || s.lng==null) return;
-    const lvl = s.bank!=null && s.cur>=s.bank ? 'over' : s.lvNum>=3 ? 'high' : s.lvNum===2 ? 'watch' : 'normal';
+    const lvl = s.bank!=null && s.cur>=s.bank ? 'over' : s.lvNum>=3 ? 'high' : 'normal';
     out.push({name:s.name, code:s.code, src:'ปภ.', lat:s.lat, lng:s.lng, cur:s.cur, prev:s.prev??null, trendCur:s.trendCur, thr:0.02, bank:s.bank,
       pct:null, dt:s.dt, prov:s.prov, amphoe:s.amphoe, river:s.river, lvl, stText:s.st.l});
   });
   ridAll.forEach(s=>{
     if(s.cur==null || s.lat==null || s.lng==null) return;
-    const lvl = s.rank===3 ? 'over' : s.rank===2 ? 'high' : 'normal';
+    const lvl = s.rank===3 ? 'over' : 'normal';
     out.push({name:s.name, code:s.code, src:'ชป. โทรมาตร', lat:s.lat, lng:s.lng, cur:s.cur, prev:s.prev??null, trendCur:s.trendCur, thr:0.02, bank:s.bank, warn:s.warn,
       pct:null, dt:s.dt, prov:s.prov, amphoe:s.amphoe, river:'', lvl, stText:s.st.l});
   });
