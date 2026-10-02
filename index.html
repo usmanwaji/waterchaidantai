@@ -596,7 +596,8 @@ async function loadMeteo(p){
 }
 async function loadWater(){
   // ดึงใหม่ทุกรอบ (ปุ่มรีเฟรช/ทุก 30 นาที) · ประกอบใส่ตัวแปรชั่วคราวก่อน การ์ดจะได้ไม่ว่างระหว่างโหลด
-  const res = await Promise.allSettled(Object.values(PROV_CODE).map(c =>
+  // ดึงเฉพาะนราธิวาส (96) เหมือนหน้าแผนที่ · เดิมดึงทั้ง 5 จังหวัดทุกรอบ ทำให้ thaiwater ตอบ 429 (เรียกถี่เกิน)
+  const res = await Promise.allSettled([PROV_CODE['นราธิวาส']].map(c =>
     fetch(`${API}/public/waterlevel?province_code=${c}`).then(r=>r.json())));
   const next = [];
   res.forEach(r=>{
