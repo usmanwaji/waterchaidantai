@@ -1190,8 +1190,12 @@ function renderHero(met, sel){
   // ---- แถวทางลัด ----
   const chip = (href, icon, html, lv) => `<a class="hchip" href="${href}"${lv?` data-lv="${lv}"`:''}>${HICON[icon]||''}<span>${html}</span></a>`;
   /* ชิปสถานีใกล้: ทุกสถานีบนหน้าแผนที่ (สสน./ชป. · ปภ. · โทรมาตร ชป. ทั้งหมด) · ไม่มีค่าล่าสุดแสดงสีเทา */
-  const nearAll = heroPool(true).filter(s => ref.lat!=null)
-    .map(s => (s.km = kmBetween(ref.lat, ref.lng, s.lat, s.lng), s)).sort((a,b)=>a.km-b.km);
+  /* ถ้าผู้ใช้อยู่นอกพื้นที่ (สถานีใกล้สุดเกิน HERO_NEAR_KM) วัดระยะจากศูนย์กลางอำเภอที่เลือกแทนตำแหน่งผู้ใช้
+     เรียงสถานีที่มีค่าล่าสุดก่อน แล้วตามระยะ สถานีที่ไม่มีค่าล่าสุดอยู่ท้าย */
+  const cRef = outside && sel?.[2]!=null ? {lat:sel[2], lng:sel[3]} : ref;
+  const nearAll = heroPool(true).filter(s => cRef.lat!=null)
+    .map(s => (s.km = kmBetween(cRef.lat, cRef.lng, s.lat, s.lng), s))
+    .sort((a,b)=> (a.nodata-b.nodata) || (a.km-b.km));
   const nearChips = nearAll.slice(0,3).map(s => chip('map.html','wave',
     `${esc(s.name)} <b>${fmtKm(s.km)}</b> · ${s.nodata ? 'ไม่มีค่าล่าสุด' : fbText(s)}`,
     s.nodata ? 'na' : s.lvl==='normal' ? '' : LVL_K[s.lvl])).join('');
