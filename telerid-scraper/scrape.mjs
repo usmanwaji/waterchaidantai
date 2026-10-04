@@ -234,7 +234,7 @@ async function watch() {
   logFile = LOGFILE;
   const rotate = async () => { try { if ((await fs.stat(LOGFILE)).size > 2e6) await fs.rename(LOGFILE, LOGFILE + '.old'); } catch {} };
   await rotate();
-  if (!process.env.GH_TOKEN) { log('❌ ยังไม่ได้ตั้งค่า GH_TOKEN — ดู README ข้อ 2-3 (setx GH_TOKEN "...")'); process.exit(2); }
+  if (!process.env.GH_TOKEN) { log('[error] ❌ ยังไม่ได้ตั้งค่า GH_TOKEN — ดู README ข้อ 2-3 (setx GH_TOKEN "...")'); process.exit(2); }
   log(`โหมดสด เริ่มทำงาน · ดึงทุก ${WATCH_MS / 60000} นาที · pid ${process.pid}`);
 
   const mem = { cam: {}, detail: {} };
@@ -248,16 +248,16 @@ async function watch() {
       const r = await scrapeOnce(app.page, mem);
       if (!r.withData) throw new Error(`ไม่ได้ข้อมูลสักสถานี (stations=${r.total}) — ไม่ส่งขึ้น กันทับข้อมูลดี`);
       dirty = dirty || r.detailChanged;
-      if (r.sig === lastSig && !dirty) log(`ไม่มีค่าใหม่ (มีข้อมูล ${r.withData}/${r.total})`);
+      if (r.sig === lastSig && !dirty) log(`[no change] ไม่มีค่าใหม่ (มีข้อมูล ${r.withData}/${r.total})`);
       else {
         const p = await publish({ quiet: true });
         lastSig = r.sig; dirty = false;
-        log(`ส่งขึ้นแล้ว · มีข้อมูล ${r.withData}/${r.total} ภาพ ${r.okImg} · ไฟล์เปลี่ยน ${p.uploaded}/${p.files}`);
+        log(`[sent] ส่งขึ้นแล้ว · มีข้อมูล ${r.withData}/${r.total} ภาพ ${r.okImg} · ไฟล์เปลี่ยน ${p.uploaded}/${p.files}`);
       }
       fails = 0;
     } catch (e) {
       fails++;
-      log('ผิดพลาด:', String(e && e.message || e).slice(0, 300));
+      log('[error] ผิดพลาด:', String(e && e.message || e).slice(0, 300));
       if (app) { await app.browser.close().catch(() => {}); app = null; }   // เปิดใหม่รอบหน้า (session/WAF หมดอายุ)
     }
     // พลาดติดกันหลายรอบ → เว้นระยะนานขึ้น (สูงสุด 15 นาที) ไม่ยิง telerid ถี่ตอนระบบเขาล่ม
