@@ -36,7 +36,11 @@
     people: '<circle cx="9" cy="8.2" r="3.2"/><path d="M3.4 19.4c0-3.1 2.5-5.2 5.6-5.2s5.6 2.1 5.6 5.2"/><path d="M16.4 5.4a3 3 0 0 1 0 5.7"/><path d="M17.6 14.6c2 .6 3.4 2.3 3.4 4.8"/>',
     tools:  '<path d="M14.4 6.6a3.9 3.9 0 0 1 5.2 5.1l-8.3 8.3a2 2 0 0 1-2.8-2.8z"/><path d="M4.6 4.6l3.6 3.6"/><path d="M3.4 9.4h5"/>',
     layers: '<path d="M12 3.4 3 8l9 4.6L21 8z"/><path d="M3 12.6 12 17.2l9-4.6"/><path d="M3 17.2 12 21.8l9-4.6"/>',
-    chart:  '<path d="M3.6 20.4h16.8"/><rect x="5.2" y="12.4" width="3.4" height="6"/><rect x="10.3" y="8.2" width="3.4" height="10.2"/><rect x="15.4" y="4.4" width="3.4" height="14"/>'
+    chart:  '<path d="M3.6 20.4h16.8"/><rect x="5.2" y="12.4" width="3.4" height="6"/><rect x="10.3" y="8.2" width="3.4" height="10.2"/><rect x="15.4" y="4.4" width="3.4" height="14"/>',
+    /* จอในห้อง War Room ที่มีเส้นชีพจรสถานการณ์ */
+    monitor:'<rect x="3" y="4" width="18" height="12.6" rx="1.8"/><path d="M8.4 20.4h7.2"/><path d="M12 16.6v3.8"/><path d="M6.4 11.4h2.8l1.5-2.9 2.3 5.2 1.6-2.3h3"/>',
+    /* บัตรประจำตัวเจ้าหน้าที่ */
+    badge:  '<rect x="4.4" y="3.4" width="15.2" height="17.4" rx="2.2"/><path d="M9.6 3.4v2.2h4.8V3.4"/><circle cx="12" cy="10.6" r="2.6"/><path d="M7.9 17.4c.6-2 2.2-3.1 4.1-3.1s3.5 1.1 4.1 3.1"/>'
   };
 
   /* แถบล่าง: ห้าปลายทางที่คนใช้จริงตอนน้ำกำลังมา
@@ -62,8 +66,14 @@
       { href: 'resources.html', label: 'ทรัพยากร',   icon: 'truck'  },
       { href: 'alert.html',     label: 'แจ้งเตือน',   icon: 'bell'   }
     ]},
-    { head: 'สำหรับเจ้าหน้าที่', items: [
-      { href: 'eoc.html',       label: 'ศูนย์บัญชาการ', icon: 'grid'   },
+    /* ผู้ใช้หลักของเว็บคือผู้บริหารส่วนราชการ จ.นราธิวาส สองปุ่มแรกจึงเป็นงานของผู้บริหาร
+       แยกงานผู้ดูแลระบบออกเป็นอีกกลุ่ม ให้แต่ละกลุ่มยังอยู่ในกรอบ 3-5 อัน */
+    { head: 'ผู้บริหารและเจ้าหน้าที่', items: [
+      { href: 'warroom.html',   label: 'War Room เทศบาล', icon: 'monitor' },
+      { href: 'staff.html',     label: 'เจ้าหน้าที่',     icon: 'badge'   },
+      { href: 'eoc.html',       label: 'ศูนย์บัญชาการ',  icon: 'grid'    }
+    ]},
+    { head: 'ผู้ดูแลระบบ', items: [
       { href: 'people.html',    label: 'กลุ่มเปราะบาง', icon: 'people' },
       { href: 'admin.html',     label: 'ผู้ดูแล',      icon: 'tools'  },
       /* หน้าสถิติเปิดได้เฉพาะแอดมิน คนอื่นกดเข้าไปจะเจอหน้าให้ล็อกอินแทน

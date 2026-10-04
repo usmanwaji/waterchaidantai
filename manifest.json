@@ -17,6 +17,7 @@
   "shortcuts": [
     { "name": "เช็คพื้นที่ฉัน", "url": "check.html" },
     { "name": "ระดับน้ำ (แผนที่)", "url": "map.html" },
-    { "name": "ศูนย์พักพิง", "url": "shelter.html" }
+    { "name": "ศูนย์พักพิง", "url": "shelter.html" },
+    { "name": "War Room เทศบาล", "url": "warroom.html" }
   ]
 }

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#eef0f6">
+<meta name="robots" content="noindex, nofollow">
+<title>เจ้าหน้าที่ · จังหวัดนราธิวาส | naraflood</title>
+<meta name="description" content="หน้าสำหรับเจ้าหน้าที่ภาครัฐ จังหวัดนราธิวาส: ลงเวลาปฏิบัติงาน ส่งรายงานสถานการณ์ภาคสนาม รับข้อสั่งการจากผู้บริหาร และทำเนียบผู้ประสานงาน ส่งเข้า War Room เทศบาลทันที">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧑‍💼</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ชิ้นส่วนร่วม (ปุ่ม ป้ายระดับ การ์ดข้อสั่งการ/รายงาน ฟอร์ม) อยู่ใน ops.css ที่นี่มีแต่เลย์เอาต์ของหน้าเจ้าหน้าที่
+   หน้านี้ออกแบบให้ใช้มือเดียวบนมือถือกลางพื้นที่น้ำท่วมเป็นหลัก: ปุ่มใหญ่ ฟอร์มสั้น ช่องตัวเลขเปิดแป้นตัวเลข */
+#content{flex:1;max-width:1040px;width:100%;margin:0 auto;padding:18px 16px 28px;display:grid;gap:16px;align-content:start}
+#content>*{min-width:0}
+.st-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.st-grid>*{min-width:0}
+
+/* ---------- ประตูเข้า (ยังไม่ล็อกอิน / รออนุมัติ) ---------- */
+.gate h2{font-size:19px;margin-bottom:8px}
+.gate p{font-size:14.5px;color:var(--ink-2);line-height:1.7;max-width:64ch}
+.steps{margin:12px 0 14px 1.3em;display:grid;gap:4px;font-size:14px;color:var(--ink)}
+.steps li::marker{color:var(--signal);font-weight:700}
+.gate .wbtn{min-height:44px;font-size:15px}
+
+/* ---------- ทักทาย + ทางลัด ---------- */
+.hello{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.hello .who b{display:block;font-size:19px;line-height:1.3}
+.hello .who span{font-size:13px;color:var(--ink-3)}
+.jump{display:flex;gap:6px;flex-wrap:wrap}
+.jump a{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border:1px solid var(--line-mid);border-radius:var(--r-commit);
+  background:var(--card);color:var(--ink);font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
+.jump a:hover{border-color:var(--signal);color:var(--signal)}
+.jump a b{background:var(--ink);color:#fff;border-radius:99px;padding:0 7px;font-size:11.5px;line-height:18px}
+
+/* ---------- สถานะปฏิบัติงาน ---------- */
+.dpill{display:inline-flex;align-items:center;gap:7px;padding:3px 12px;border-radius:var(--r-commit);font-size:12.5px;font-weight:700;background:var(--card-2);color:var(--ink-3)}
+.dpill::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.dpill[data-on="1"]{background:var(--signal-wash);color:var(--signal-deep)}
+.dpill[data-on="1"]::before{animation:pulse 1.8s var(--ease-out) infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,currentColor 55%,transparent)}100%{box-shadow:0 0 0 8px transparent}}
+#dutyInfo{margin-bottom:10px;font-size:13.5px;color:var(--ink-2)}
+#dutyInfo b{color:var(--ink)}
+.chk{display:flex!important;grid-template-columns:none!important;align-items:flex-start;gap:8px;font-size:13px!important;font-weight:500!important;color:var(--ink-2)!important;line-height:1.5}
+.chk input{width:18px!important;min-height:18px!important;height:18px;margin-top:2px;flex:none}
+.form .go .wbtn{min-height:44px;font-size:14.5px;padding:0 18px}
+
+/* ---------- ชิปเลือก (radio/checkbox) ---------- */
+.form fieldset{border:none;display:grid;gap:6px;min-width:0}
+.form legend{font-size:12px;color:var(--ink-3);font-weight:600;margin-bottom:6px;padding:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.form .chips label{display:inline-flex;position:relative;font-size:13px;color:var(--ink);font-weight:500}
+.chips input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.chips span{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:6px 12px;border:1px solid var(--line-mid);border-radius:var(--r-control);
+  background:var(--card);cursor:pointer;line-height:1.3;user-select:none}
+.chips input:checked+span{background:var(--signal);border-color:var(--signal);color:var(--signal-ink);font-weight:600}
+.chips input:focus-visible+span{outline:2px solid var(--signal);outline-offset:2px}
+/* ระดับสถานการณ์ใช้สีสถานการณ์ เพราะคือระดับภัยจริงที่ War Room นำไปจัดลำดับ */
+.sev span::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+.sev span[data-lv="normal"]{--c:var(--st-normal)}.sev span[data-lv="watch"]{--c:var(--st-watch)}
+.sev span[data-lv="warn"]{--c:var(--st-warn)}.sev span[data-lv="danger"]{--c:var(--st-danger)}
+.sev input:checked+span{background:var(--c);border-color:var(--c);color:#fff}
+.sev input:checked+span::before{background:#fff}
+#rSevHint{font-size:12px;color:var(--ink-2)}
+.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.locbox{display:grid;gap:4px;font-size:12px;color:var(--ink-3);font-weight:600}
+.locbox .lr{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.locbox .note{font-weight:400}
+.pdpa{background:var(--card);border:1px dashed var(--line-mid);border-radius:10px;padding:8px 10px}
+.msg{font-size:13.5px;font-weight:600;line-height:1.5}
+.msg[data-k="ok"]{color:var(--signal-deep)}
+.msg[data-k="err"]{color:var(--st-danger)}
+
+/* ---------- ทำเนียบ ---------- */
+.dirbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.dirbar input[type=search],.dirbar select{min-height:38px;padding:6px 10px;border:1px solid var(--line-mid);border-radius:10px;font-family:inherit;font-size:14px;background:var(--card);color:var(--ink)}
+.dirbar input[type=search]{flex:1 1 220px;min-width:0}
+.duty-on{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:var(--signal-deep);background:var(--signal-wash);border-radius:99px;padding:0 8px;margin-left:6px;vertical-align:1px}
+.sitem .unitchip{margin-top:3px}
+
+@media(max-width:860px){
+  .st-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:768px){
+  #content{padding:14px 12px 22px;gap:14px}
+  .row3{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .row3 label{font-size:11.5px}
+  .hello .who b{font-size:17px}
+}
+</style>
+<link rel="stylesheet" href="ops.css?v=1">
+<link rel="stylesheet" href="shared.css?v=10">
+</head>
+<body>
+<header>
+  <h1>เจ้าหน้าที่<small>ลงเวลาปฏิบัติงาน · รายงานภาคสนาม · ข้อสั่งการ · ทำเนียบผู้ประสานงาน</small></h1>
+  <nav class="navtab" aria-label="เมนูหลัก">
+    <a href="index.html">หน้าแรก</a>
+    <a href="map.html">ระดับน้ำ</a>
+    <a href="shelter.html">ศูนย์พักพิง</a>
+    <a href="eoc.html">ศูนย์บัญชาการ</a>
+    <a href="warroom.html">War Room เทศบาล</a>
+    <a href="staff.html" class="on">เจ้าหน้าที่</a>
+  </nav>
+</header>
+
+<div id="content">
+  <div id="gate"><div class="card"><div class="empty"><span class="spin"></span> กำลังตรวจสอบบัญชี…</div></div></div>
+
+  <div id="portal" class="hide" style="display:grid;gap:16px">
+    <section class="card hello" aria-label="ทางลัด">
+      <div class="who"><b id="helloName">สวัสดี</b><span id="helloSub"></span></div>
+      <nav class="jump" aria-label="ไปยังส่วน">
+        <a href="#report">รายงานสถานการณ์</a>
+        <a href="#orders">ข้อสั่งการ <b id="jumpOrd" class="hide">0</b></a>
+        <a href="#directory">ทำเนียบ</a>
+        <a href="warroom.html">เปิด War Room</a>
+      </nav>
+    </section>
+
+    <div id="schemaNote" class="hide"></div>
+
+    <div class="st-grid">
+      <div style="display:grid;gap:16px;min-width:0">
+        <section class="card" id="duty" aria-labelledby="dutyH">
+          <h2 id="dutyH">สถานะปฏิบัติงาน <span class="dpill" id="dutyPill" data-on="0">ไม่ได้ปฏิบัติงาน</span></h2>
+          <div id="dutyInfo">ลงเวลาเมื่อเริ่มปฏิบัติงาน ผู้บริหารจะเห็นกำลังพลรายพื้นที่ใน War Room ทันที</div>
+          <form class="form" id="dutyForm" autocomplete="off">
+            <div class="row">
+              <label>พื้นที่ปฏิบัติงาน<select id="dUnitSel"></select></label>
+              <label>ภารกิจ/จุดประจำการ<input id="dNote" maxlength="200" placeholder="เช่น ประจำศูนย์ปฏิบัติการเทศบาล"></label>
+            </div>
+            <label class="chk"><input type="checkbox" id="dShare"> แชร์ตำแหน่งปัจจุบันให้ War Room (เห็นเฉพาะเจ้าหน้าที่ที่ได้รับอนุมัติ · ลบให้อัตโนมัติเมื่อจบการปฏิบัติงาน)</label>
+            <div class="go">
+              <button type="button" class="wbtn ghost hide" id="dLoc">อัปเดตตำแหน่ง</button>
+              <button type="button" class="wbtn ghost hide" id="dSave">บันทึกพื้นที่/ภารกิจ</button>
+              <button type="submit" class="wbtn" id="dBtn">เริ่มปฏิบัติงาน</button>
+            </div>
+            <div class="msg" id="dMsg" role="status" aria-live="polite"></div>
+          </form>
+        </section>
+
+        <section class="card" id="report" aria-labelledby="repH">
+          <h2 id="repH">รายงานสถานการณ์ภาคสนาม <span class="where">ส่งถึง War Room เทศบาลทันที</span></h2>
+          <form class="form" id="repForm" autocomplete="off" novalidate>
+            <div class="row">
+              <label>พื้นที่ *<select id="rUnit" required></select></label>
+              <label>จุด/ชุมชน/ถนน<input id="rPlace" maxlength="200" placeholder="เช่น ชุมชนบือเร็งใน, ถนนเจริญเขต"></label>
+            </div>
+            <fieldset><legend>ประเภทเหตุการณ์ *</legend><div class="chips" id="rKind"></div></fieldset>
+            <fieldset><legend>ระดับสถานการณ์ *</legend><div class="chips sev" id="rSev"></div><div id="rSevHint"></div></fieldset>
+            <div class="row3">
+              <label>ระดับน้ำ (ซม.)<input id="rWater" type="number" inputmode="numeric" min="0" max="1000" step="1"></label>
+              <label>ครัวเรือนได้รับผลกระทบ<input id="rHh" type="number" inputmode="numeric" min="0" step="1"></label>
+              <label>ผู้ได้รับผลกระทบ (คน)<input id="rPpl" type="number" inputmode="numeric" min="0" step="1"></label>
+            </div>
+            <fieldset><legend>ความต้องการจากพื้นที่</legend><div class="chips" id="rNeeds"></div></fieldset>
+            <label>รายละเอียด<textarea id="rDetail" maxlength="2000" placeholder="สิ่งที่เห็น สิ่งที่ดำเนินการไปแล้ว และสิ่งที่ต้องการให้ช่วย"></textarea></label>
+            <div class="row">
+              <label>รูปถ่าย (ถ้ามี)<input id="rPhoto" type="file" accept="image/*"></label>
+              <div class="locbox">พิกัดจุดเกิดเหตุ
+                <div class="lr"><button type="button" class="wbtn ghost sm" id="rLocBtn">ใช้ตำแหน่งปัจจุบัน</button><span class="note" id="rLocTxt">ยังไม่ระบุ</span></div>
+              </div>
+            </div>
+            <div class="note pdpa">ไม่ต้องใส่ชื่อหรือเลขบัตรประชาชนของผู้ประสบภัย ระบุจำนวนและความต้องการก็เพียงพอ · หลีกเลี่ยงภาพที่เห็นใบหน้าชัดเจน (ข้อมูลส่วนบุคคลตาม PDPA)</div>
+            <div class="go"><button type="submit" class="wbtn" id="rSubmit">ส่งรายงาน</button></div>
+            <div class="msg" id="rMsg" role="status" aria-live="polite"></div>
+          </form>
+        </section>
+      </div>
+
+      <div style="display:grid;gap:16px;min-width:0">
+        <section class="card" id="orders" aria-labelledby="ordH">
+          <h2 id="ordH">ข้อสั่งการ
+            <span class="seg" id="ordSeg" role="group" aria-label="ตัวกรองข้อสั่งการ">
+              <button type="button" data-f="mine" aria-pressed="true">พื้นที่ของฉัน</button>
+              <button type="button" data-f="all" aria-pressed="false">ทุกพื้นที่</button>
+            </span>
+          </h2>
+          <div id="ordList" class="dlist"><div class="empty"><span class="spin"></span></div></div>
+        </section>
+
+        <section class="card" id="mine" aria-labelledby="mineH">
+          <h2 id="mineH">รายงานของฉัน <span class="where">7 วันล่าสุด</span></h2>
+          <div id="mineList" class="rlist"><div class="empty"><span class="spin"></span></div></div>
+        </section>
+      </div>
+    </div>
+
+    <section class="card" id="directory" aria-labelledby="dirH">
+      <h2 id="dirH">ทำเนียบเจ้าหน้าที่ <span class="where" id="dirCount"></span></h2>
+      <div class="dirbar">
+        <input type="search" id="qName" placeholder="ค้นหาชื่อ หน่วยงาน หรือตำแหน่ง" aria-label="ค้นหาเจ้าหน้าที่">
+        <select id="qUnit" aria-label="กรองตามพื้นที่"></select>
+        <label class="chk" style="margin:0"><input type="checkbox" id="qDuty"> เฉพาะผู้ปฏิบัติงานอยู่</label>
+      </div>
+      <div id="dirList"><div class="empty"><span class="spin"></span></div></div>
+    </section>
+  </div>
+
+  <section class="card hide" id="me" aria-labelledby="meH">
+    <h2 id="meH">ข้อมูลของฉัน <span class="where">ใช้ในทำเนียบและรายงาน · เห็นเฉพาะเจ้าหน้าที่ที่ได้รับอนุมัติ</span></h2>
+    <form class="form" id="meForm" autocomplete="on">
+      <div class="row">
+        <label>ชื่อ-สกุล *<input id="mName" required maxlength="120" autocomplete="name"></label>
+        <label>ตำแหน่ง<input id="mPos" maxlength="120" placeholder="เช่น ปลัดอำเภอ, หัวหน้าฝ่ายป้องกันฯ"></label>
+      </div>
+      <div class="row">
+        <label>หน่วยงาน/สังกัด<input id="mAgency" maxlength="160" placeholder="เช่น เทศบาลเมืองสุไหงโก-ลก" autocomplete="organization"></label>
+        <label>พื้นที่รับผิดชอบ<select id="mUnit"></select></label>
+      </div>
+      <div class="row">
+        <label>เบอร์โทร<input id="mPhone" type="tel" maxlength="40" inputmode="tel" autocomplete="tel"></label>
+        <label>LINE ID<input id="mLine" maxlength="60"></label>
+      </div>
+      <div class="go"><button type="submit" class="wbtn" id="mSave">บันทึกข้อมูล</button></div>
+      <div class="msg" id="mMsg" role="status" aria-live="polite"></div>
+    </form>
+  </section>
+</div>
+
+<footer>
+  <span>ข้อมูลเจ้าหน้าที่และรายงานภาคสนามเปิดให้เฉพาะสมาชิกที่ได้รับอนุมัติ · ใช้เพื่อการประสานงานเมื่อเกิดภัยเท่านั้น</span>
+  <span style="margin-left:auto"><a href="privacy.html">ความเป็นส่วนตัว</a> · <a href="warroom.html">War Room เทศบาล</a></span>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js?v=3"></script>
+<script src="js/auth-ui.js"></script>
+<script src="js/views.js?v=3" defer></script>
+<script src="js/nara-units.js?v=1"></script>
+<script src="js/staff.js?v=1"></script>
+<script src="js/pwa.js" defer></script>
+<script src="js/ui.js" defer></script>
+<script src="js/tabbar.js?v=3" defer></script>
+<script src="js/install.js?v=2" defer></script>
+</body>
+</html>

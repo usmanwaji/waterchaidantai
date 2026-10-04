@@ -5,18 +5,19 @@
  *   • ข้อมูล API (GET) → network-first แล้วเก็บชุดล่าสุดไว้ ใช้ตอนออฟไลน์ ("last good data")
  * เพิ่มเลขเวอร์ชันเมื่อแก้ไฟล์เพื่อบังคับอัปเดตแคช
  */
-const VERSION = 'oms-v45';
+const VERSION = 'oms-v46';
 const SHELL = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 
 const SHELL_ASSETS = [
   'index.html','map.html','map.js?v=15','forecast.html','history.html','repeat.html',
   'sim.html','shelter.html','route.html','resources.html','admin.html',
-  'check.html','alert.html','eoc.html','people.html','stats.html',
+  'check.html','alert.html','eoc.html','people.html','stats.html','warroom.html','staff.html',
   'js/criteria.js?v=2','js/supabase-client.js?v=3','js/auth-ui.js','js/shelters_nwt.js','js/ddpm_risk_data.js','js/rivers.js','js/pwa.js','js/ui.js','js/views.js?v=3',
   // ต้องใส่ ?v= ให้ตรงกับที่หน้าเว็บเรียกจริง เพราะแคชอ้างอิง URL เต็มรวม query string
-  'js/tabbar.js?v=2','js/visits-widget.js?v=2','js/install.js?v=2',
-  'shared.css?v=10',
+  'js/tabbar.js?v=3','js/visits-widget.js?v=2','js/install.js?v=2',
+  'js/nara-units.js?v=1','js/warroom.js?v=1','js/staff.js?v=1',
+  'shared.css?v=10','ops.css?v=1',
   'manifest.json','icon.svg','icon-512.png','icon-512-maskable.png'
 ];
 
