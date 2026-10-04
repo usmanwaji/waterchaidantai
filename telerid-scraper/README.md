@@ -52,7 +52,18 @@
 - **ถ้า telerid ล่ม/ดึงไม่ได้:** จะไม่ส่งข้อมูลว่างขึ้นไปทับ และเว้นระยะยิงนานขึ้นเอง (สูงสุด 15 นาที)
 - **เปลี่ยนรอบ:** `setx WATCH_MIN 3` (นาที, ค่าเริ่มต้น 2)
 
-### ให้รันเองตลอด (Task Scheduler)
+### ตั้งค่าทีเดียวจบ (ง่ายสุด) — `setup-live`
+
+เปิดโฟลเดอร์ `telerid-scraper` → คลิกช่อง address bar ของ Explorer → พิมพ์ `powershell` กด Enter → วางบรรทัดนี้แล้วกด Enter
+```
+irm https://raw.githubusercontent.com/usmanwaji/waterchaidantai/main/telerid-scraper/setup-live.ps1 | iex
+```
+(หรือดับเบิลคลิก `setup-live.bat` ถ้ามีไฟล์นี้ในโฟลเดอร์แล้ว) สคริปต์จะทำให้ครบ:
+โหลดไฟล์ล่าสุด → เช็ก/ติดตั้ง Node.js → ติดตั้ง Chromium → เช็กและบันทึก GH_TOKEN →
+ปิดงานเดิม (`run-hidden.vbs`/`run-auto.bat`) → สร้างงาน `telerid live` (ตอนล็อกอิน + ทุก 15 นาที) →
+เริ่มโหมดสดทันทีและรอผลรอบแรก → ถามว่าจะตั้งไม่ให้คอม Sleep ไหม · รันซ้ำได้ทุกเมื่อ (อัปเดตโค้ด + รีสตาร์ทให้)
+
+### ให้รันเองตลอด (Task Scheduler) — ถ้าอยากตั้งเอง
 
 1. เปิด **Task Scheduler** → **Create Basic Task…** ตั้งชื่อ `telerid live`
 2. Trigger: **When I log on**
