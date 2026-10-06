@@ -1282,15 +1282,21 @@ function openDdpm(){
 }
 
 /* ---------- 6.5) สถานีโทรมาตร กรมชลประทาน (telerid.rid.go.th) ----------
-   ภาพ+ระดับน้ำมาจาก scraper (Playwright + GitHub Action) ที่ publish ไว้สาขา cam
-   ดูวิธีตั้งค่าใน telerid-scraper/README.md · เปลี่ยน repo/สาขาได้ที่ TELERID_CAM */
+   ภาพ+ระดับน้ำมาจาก scraper (Playwright บนคอมในไทย) ที่ publish ไว้สาขา cam
+   ดูวิธีตั้งค่าใน telerid-scraper/README.md · เปลี่ยน repo/สาขาได้ที่ TELERID_CAM
+   raw.githubusercontent แคชไฟล์ 5 นาที → ต่อท้าย ?t=นาทีปัจจุบัน ให้ได้ไฟล์ล่าสุด (คนที่เปิดในนาทีเดียวกันยังใช้แคชร่วมกัน) */
 const TELERID_CAM = 'https://raw.githubusercontent.com/usmanwaji/waterchaidantai/cam';
-async function loadTelerid(){
-  gTele.clearLayers();
+const teleUrl = f => `${TELERID_CAM}/${f}?t=${Math.floor(Date.now()/60000)}`;
+let teleUpdated = null, teleSeq = 0;
+async function loadTelerid(pre){
+  const seq = ++teleSeq;   // รอบโหลดซ้อนกัน (รีเฟรช 10 นาที + เช็กทุก 2 นาที) ให้รอบล่าสุดวาดอย่างเดียว
   // 1) ใช้ภาพ+ข้อมูลที่ scraper ดึงมา (สาขา cam) ก่อน
   try{
-    const j = await fetchJSON(`${TELERID_CAM}/stations.json`, 15000);
+    const j = pre || await fetchJSON(teleUrl('stations.json'), 15000);
+    if(seq !== teleSeq) return;
     const rows = Array.isArray(j?.stations) ? j.stations : [];
+    teleUpdated = j?.updated || null;
+    gTele.clearLayers();
     let n = 0;
     rows.forEach(d => {
       const lat = num(d.lat), lon = num(d.lon);
@@ -1299,7 +1305,9 @@ async function loadTelerid(){
       n++;
       const mk = L.marker([lat,lon], {icon: mkIcon('mk-tele', 'var(--signal)', 18, '▲', false), zIndexOffset:80})
         .bindPopup(()=>{
-          const upd = j.updated ? new Date(j.updated).toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}) : '';
+          // เวลาที่สถานีวัดค่า/ถ่ายภาพจริง (dt) · ไม่มีจึงใช้เวลาที่ scraper ส่งขึ้น
+          const at = d.dt || j.updated;
+          const upd = at ? new Date(at).toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}) : '';
           const img = d.hasImage
             ? `<img src="${TELERID_CAM}/${esc(d.code)}.jpg?v=${encodeURIComponent(j.updated||'')}" alt="กล้อง ${esc(d.code)}" style="width:100%;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;background:var(--card-2);margin:6px 0" onclick="window.open(this.src,'_blank')">`
             : '';
@@ -1333,7 +1341,9 @@ async function loadTelerid(){
   // 2) fallback: station_list สด (ลิงก์อย่างเดียว)
   try{
     const g = await fetchJSON('https://telerid.rid.go.th/restapi/main/station_list/', 20000);
+    if(seq !== teleSeq) return;
     const rows = Array.isArray(g?.results) ? g.results : (Array.isArray(g) ? g : []);
+    gTele.clearLayers();
     rows.forEach(d => {
       if(!PROV_SET.has(String(d.province_name||'').trim())) return;
       const co = d.geom?.coordinates;
@@ -1349,12 +1359,24 @@ async function loadTelerid(){
     });
   }catch(e){ /* ถูกบล็อก CORS · ใช้ลิงก์โทรมาตรในหมุดสถานี ชป. แทน */ }
 }
+/* โทรมาตร ชป. เช็กถี่กว่าชั้นอื่น: ดู stations.json ทุก 2 นาที วาดใหม่เฉพาะเมื่อ scraper ส่งค่าใหม่ขึ้นมา
+   (scraper โหมดสด ดึงทุก 2 นาที · สถานีวัดค่าทุก 15 นาที) · ข้ามถ้าซ่อนแท็บ/ปิดชั้น/กำลังเปิด popup สถานีอยู่ */
+async function pollTelerid(){
+  if(document.hidden || !map.hasLayer(gTele) || gTele.getLayers().some(m=>m.isPopupOpen())) return;
+  try{
+    const j = await fetchJSON(teleUrl('stations.json'), 15000);
+    if(j?.updated && j.updated !== teleUpdated) await loadTelerid(j);
+  }catch(e){}
+}
+setInterval(pollTelerid, 2*60*1000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollTelerid(); });
+gTele.on('add', pollTelerid);   // เปิดชั้นกลับมา → เช็กค่าใหม่ทันที
 
 /* ---------- 6.6) รายละเอียดสถานีโทรมาตร: กราฟระดับน้ำ + น้ำฝน + ภาพตัดลำน้ำ ----------
    ดึงไฟล์ {code}.detail.json (จาก scraper) ตอนเปิด popup แล้ววาดเป็น SVG ในตัว */
 async function renderTeleDetail(el, code){
   try{
-    const det = await fetchJSON(`${TELERID_CAM}/${encodeURIComponent(code)}.detail.json`, 15000);
+    const det = await fetchJSON(teleUrl(`${encodeURIComponent(code)}.detail.json`), 15000);
     const html = teleDetailHTML(det);
     el.style.color=''; el.innerHTML = html || '';
   }catch(e){ el.innerHTML=''; }

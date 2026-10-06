@@ -549,12 +549,16 @@ async function loadTmd(){
 }
 
 /* ---------- โหลดข้อมูล ---------- */
+let loadingAll = false;
 async function loadAll(){
-  document.getElementById('updated').innerHTML = '<span class="spin"></span>';
-  meteoCache = {};   // บังคับพยากรณ์ใหม่
-  await Promise.allSettled([loadMeteo(prov), loadWater(), loadSoil(), loadDdpm(), loadRid()]);
-  renderAll();
-  document.getElementById('updated').textContent = 'อัปเดต ' + new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+  loadingAll = true;
+  try{
+    document.getElementById('updated').innerHTML = '<span class="spin"></span>';
+    meteoCache = {};   // บังคับพยากรณ์ใหม่
+    await Promise.allSettled([loadMeteo(prov), loadWater(), loadSoil(), loadDdpm(), loadRid()]);
+    renderAll();
+    document.getElementById('updated').textContent = 'อัปเดต ' + new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+  } finally { loadingAll = false; }
   loadTrends().then(rerenderHero);   // ค่าย้อนหลัง ปภ./ชป. สำหรับทิศทางน้ำ · ไม่ขวางการแสดงผลรอบแรก
 }
 /* ---------- ค่าก่อนหน้าของ ปภ. และโทรมาตร ชป. (ทิศทางน้ำ) ----------
@@ -562,24 +566,28 @@ async function loadAll(){
    · ชป.: ไฟล์ {CODE}.detail.json ที่ telerid-scraper ส่งขึ้นสาขา cam (ทุก 15 นาที)
    เทียบค่าล่าสุดกับค่าราว 1 ชม.ก่อน (thaiwater มีค่าก่อนหน้ามาให้แล้วใน waterlevel_msl_previous) */
 const RID_CAM = 'https://raw.githubusercontent.com/usmanwaji/waterchaidantai/cam';
+// raw.githubusercontent แคชไฟล์ 5 นาที → ต่อท้าย ?t=นาทีปัจจุบัน ให้ได้ไฟล์ล่าสุด (คนที่เปิดในนาทีเดียวกันยังใช้แคชร่วมกัน)
+const ridUrl = f => `${RID_CAM}/${f}?t=${Math.floor(Date.now()/60000)}`;
+const trendFresh = s => s.cur!=null && s.dt && (Date.now() - s.dt) <= HERO_FRESH_H*3600e3;
+const trendSig = ms => { const c = new AbortController(); setTimeout(()=>c.abort(), ms); return c.signal; };
+const ridTrends = () => ridAll.filter(trendFresh).map(s => fetch(ridUrl(`${encodeURIComponent(s.code)}.detail.json`), {signal:trendSig(15000)})
+  .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(j=>{
+    const t = j?.wl?.t || [], v = j?.wl?.v || [];
+    const ok = t.map((x,i)=>[x, num(v[i])]).filter(([x,y])=>x && y!=null && y > -9);
+    if(ok.length < 2) return;
+    const [tl, vl] = ok[ok.length-1];
+    const back = ok.filter(([x])=>x <= tl - 3600).pop() || ok[0];
+    if(back[0] < tl){ s.prev = back[1]; s.trendCur = vl; }
+  }));
 async function loadTrends(){
-  const fresh = s => s.cur!=null && s.dt && (Date.now() - s.dt) <= HERO_FRESH_H*3600e3;
-  const tm = ms => { const c = new AbortController(); setTimeout(()=>c.abort(), ms); return c.signal; };
+  const fresh = trendFresh, tm = trendSig;
   await Promise.allSettled([
     ...ddpmAll.filter(fresh).map(s => fetch(`${DDPM_PROXY}/water-level/graph?stationCode=${encodeURIComponent(s.code)}&type=hour&isSimulatorMode=false`, {signal:tm(15000)})
       .then(r=>r.json()).then(j=>{
         const pts = ((j?.data ?? j)?.datasets?.[0]?.data || []).map(p=>num(p?.y)).filter(v=>v!=null);
         if(pts.length >= 2){ s.prev = pts[pts.length-2]; s.trendCur = pts[pts.length-1]; }
       })),
-    ...ridAll.filter(fresh).map(s => fetch(`${RID_CAM}/${encodeURIComponent(s.code)}.detail.json`, {cache:'no-cache', signal:tm(15000)})
-      .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(j=>{
-        const t = j?.wl?.t || [], v = j?.wl?.v || [];
-        const ok = t.map((x,i)=>[x, num(v[i])]).filter(([x,y])=>x && y!=null && y > -9);
-        if(ok.length < 2) return;
-        const [tl, vl] = ok[ok.length-1];
-        const back = ok.filter(([x])=>x <= tl - 3600).pop() || ok[0];
-        if(back[0] < tl){ s.prev = back[1]; s.trendCur = vl; }
-      }))
+    ...ridTrends()
   ]);
 }
 async function loadMeteo(p){
@@ -654,11 +662,13 @@ const DDPM_LV = {
    ความสดขึ้นกับรอบที่รันสคริปต์ จึงเก็บเวลาอ่านค่า (dt) ไว้เช็กข้อมูลเก่า
    ชื่ออำเภอในไฟล์ไม่สม่ำเสมอ ("ตากใบ", "อ.ตากใบ", "เมือง") จึงปรับให้ตรงกับรายชื่ออำเภอก่อน
    ค่า -9.99 คือเซนเซอร์ไม่ส่งค่า ไม่ใช่ระดับน้ำจริง */
-const RID_URL = 'https://raw.githubusercontent.com/usmanwaji/waterchaidantai/cam/stations.json';
+let ridUpdated = null;
 const wtaAmpName = a => { const x = String(a||'').replace(/^อำเภอ|^อ\./,'').trim(); return x==='เมือง' ? 'เมือง'+prov : x; };
-async function loadRid(){
+const fetchRid = () => fetch(ridUrl('stations.json')).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+async function loadRid(pre){
   try{
-    const j = await fetch(RID_URL, {cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+    const j = pre || await fetchRid();
+    ridUpdated = j?.updated || null;
     ridAll = (j?.stations||[]).filter(d=>d.province===prov).map(d=>{
       let cur = num(d.level); if(cur!=null && cur <= -9) cur = null;
       const bank = num(d.critical) ?? num(d.bank), warn = num(d.warning);
@@ -671,6 +681,20 @@ async function loadRid(){
           : r===2 ? {l:'เฝ้าระวัง', c:'var(--st-watch)'} : {l:'ปกติ', c:'var(--st-normal)'}};
     });
   }catch(e){ ridAll = []; }
+}
+/* โทรมาตร ชป. เช็กถี่กว่าส่วนอื่น (เหมือนหน้าแผนที่): ดู stations.json ทุก 2 นาที
+   ถ้า scraper ส่งค่าใหม่ขึ้นมา → โหลดใหม่ + ทิศทางน้ำ แล้ววาดเฉพาะส่วนที่ใช้ข้อมูล ชป. (hero + มาตรวัดน้ำ)
+   ข้ามถ้าซ่อนแท็บ หรือกำลังโหลดทั้งหน้าอยู่ */
+async function pollRid(){
+  if(document.hidden || loadingAll || !heroReady) return;
+  try{
+    const j = await fetchRid();
+    if(!j?.updated || j.updated === ridUpdated || loadingAll) return;
+    await loadRid(j);
+    await Promise.allSettled(ridTrends());
+    if(loadingAll) return;   // loadAll วาดให้เองแล้ว
+    renderWaterta(); rerenderHero();
+  }catch(e){}
 }
 /* เกณฑ์ "เฝ้าระวัง" ของ ปภ. (mediumLevelThreshold) มีเฉพาะในรายละเอียดรายสถานี
    โหลดเฉพาะสถานีที่แสดงอยู่ (ไม่เกิน 3) แล้ววาดใหม่ · ใช้เป็นเส้นเหลืองบนมาตรวัด */
@@ -1725,6 +1749,8 @@ loadTmd();
 loadDistRain();
 setInterval(loadTmd, 60*60*1000);
 setInterval(loadAll, 30*60*1000);
+setInterval(pollRid, 2*60*1000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollRid(); });
 setInterval(loadRadarImg, 10*60*1000);
 setInterval(loadNowcast, 5*60*1000);
 setInterval(loadDistRain, 60*60*1000);
