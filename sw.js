@@ -16,7 +16,7 @@ const SHELL_ASSETS = [
   'js/criteria.js?v=2','js/supabase-client.js?v=3','js/auth-ui.js','js/shelters_nwt.js','js/ddpm_risk_data.js','js/rivers.js','js/pwa.js','js/ui.js','js/views.js?v=3',
   // ต้องใส่ ?v= ให้ตรงกับที่หน้าเว็บเรียกจริง เพราะแคชอ้างอิง URL เต็มรวม query string
   'js/tabbar.js?v=2','js/visits-widget.js?v=2','js/install.js?v=2',
-  'shared.css?v=12',
+  'shared.css?v=13',
   'manifest.json','icon.svg','icon-512.png','icon-512-maskable.png'
 ];
 

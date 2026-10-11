@@ -68,7 +68,6 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
   body>header>h1{flex:1 0 auto}
   body>header #authUi{flex:0 1 auto;min-width:0}
   body>header .auth-chip{min-width:28px;max-width:84px;padding:4px 9px}
-  body>header .auth-out .auth-txt{display:none}
   .card{padding:16px}
 }
 
@@ -194,13 +193,13 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
 .hchip[data-lv="na"]{color:var(--ink-3)}
 
 </style>
-<link rel="stylesheet" href="shared.css?v=12">
+<link rel="stylesheet" href="shared.css?v=13">
 </head>
 <body>
 
 <div class="pageBanner"><img src="header.jpg?v=3" alt="Dashboard อุทกภัย จังหวัดนราธิวาส" width="1600" height="397" fetchpriority="high" decoding="async"></div>
 
-<header>
+<header class="oneline">
   <h1><span class="t-desk">ภาพรวมอากาศ & สถานการณ์น้ำ</span><span class="t-mob">ฟ้าฝน & แม่น้ำ</span></h1>
   <nav class="navtab" aria-label="เมนูหลัก">
     <a href="index.html" class="on">หน้าแรก</a>
