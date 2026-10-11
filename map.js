@@ -1189,7 +1189,7 @@ function ddpmMarker(row){
   // row: {code,name,lat,lon,prov, wl?, status?, cam?, tel?, updated?}
   const S = ddpmStatusInfo(row.status);
   const live = row.status !== undefined;
-  const m = L.marker([row.lat,row.lon], {icon: mkIcon('mk-ddpm', live ? S.color : 'var(--st-danger)', 20, '📹', S.blink), zIndexOffset:120})
+  const m = L.marker([row.lat,row.lon], {icon: mkIcon('mk-ddpm', live ? S.color : 'var(--ink-3)', 20, '📹', live && S.blink), zIndexOffset:120})
     .bindPopup(()=>{
       const S2 = ddpmStatusInfo(row.status);
       return `
@@ -1414,7 +1414,10 @@ async function loadTelerid(pre){
       if(lat==null || lon==null) return;
       if(PROV_SET.size && !PROV_SET.has(String(d.province||'').trim())) return;
       n++;
-      const mk = L.marker([lat,lon], {icon: mkIcon('mk-tele', 'var(--signal)', 18, '▲', false), zIndexOffset:80})
+      // ไม่มีค่าระดับน้ำที่ใช้ได้ (ไม่ส่งค่า / -9.99 / ค่าเก่าเกิน 6 ชม.) → หมุดสีเทา จนกว่าสถานีจะส่งค่าใหม่
+      const okLv = d.level!=null && d.level > -9;
+      const dead = !okLv || (d.levelDt && (Date.now() - new Date(d.levelDt)) > 6*3600e3);
+      const mk = L.marker([lat,lon], {icon: mkIcon('mk-tele', dead ? 'var(--ink-3)' : 'var(--signal)', 18, '▲', false), zIndexOffset:dead ? 40 : 80})
         .bindPopup(()=>{
           // เวลาที่สถานีวัดค่า/ถ่ายภาพจริง (dt) · ไม่มีจึงใช้เวลาที่ scraper ส่งขึ้น
           const at = d.levelDt || d.dt || j.updated;
@@ -1470,7 +1473,8 @@ async function loadTelerid(pre){
       const co = d.geom?.coordinates;
       const lon = num(co?.[0]), lat = num(co?.[1]);
       if(lat==null || lon==null) return;
-      L.marker([lat,lon], {icon: mkIcon('mk-tele', 'var(--signal)', 18, '▲', false), zIndexOffset:80})
+      // station_list ไม่มีค่าระดับน้ำเลย → สีเทา
+      L.marker([lat,lon], {icon: mkIcon('mk-tele', 'var(--ink-3)', 18, '▲', false), zIndexOffset:40})
         .bindPopup(()=>`
           <div class="pp-title">▲ ${esc(d.name||d.code||'')} ${d.code&&d.name?`(${esc(d.code)})`:''}</div>
           <div class="pp-sub">${esc(d.basin_name||'')} · ${esc(d.amphur_name||'')} · ${tProv(String(d.province_name||'').trim())} · ${t('teleSrc')}</div>
