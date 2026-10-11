@@ -281,7 +281,7 @@ async function fetchJSON(url, timeout=25000){
 /* ================= แผนที่ ================= */
 const map = L.map('map', {zoomControl:false}).setView([6.20, 101.75], 10);
 L.control.zoom({position:'topright'}).addTo(map);
-L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
+L.control.scale({imperial:false, position:'bottomleft'}).addTo(map);
 map.createPane('bnd'); map.getPane('bnd').style.zIndex = 350;   // ขอบจังหวัดอยู่ใต้ marker
 const baseOSM = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom:18, attribution:'© OpenStreetMap | สสน./สทนช./ชป./HII'
@@ -833,8 +833,6 @@ function buildLegend(){
       <h4>${t('legWL')}</h4>
       ${['overflow','high'].map(k=>`<div class="lg"><span class="sw" style="background:${WL_CLASSES[k].color}"></span>${wlLabel(k)}</div>`).join('')}
       <h4>${t('legRain')}</h4>
-      <div class="lg"><span class="sw sq" style="background:#4ade80"></span>${t('legR1')}</div>
-      <div class="lg"><span class="sw sq" style="background:var(--signal)"></span>${t('legR2')}</div>
       <div class="lg"><span class="sw sq" style="background:#f97316"></span>${t('legR3')}</div>
       <div class="lg"><span class="sw sq" style="background:#dc2626"></span>${t('legR4')}</div>
       ${onwrLegendHTML()}
