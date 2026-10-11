@@ -676,7 +676,8 @@ async function loadRid(pre){
       return {code:d.code, name:(d.name||'').trim(), amphoe:wtaAmpName(d.amphur), prov:d.province, river:'',
         lat:num(d.lat), lng:num(d.lon), cur, bank, warn: warn!=null && bank!=null && warn < bank ? warn : null,
         ground: cur!=null && bank!=null ? Math.max(0, Math.min(bank, cur) - 3) : null,
-        unit:'ม.', src:'rid', dt: cur!=null && d.dt ? new Date(d.dt) : null, rank:r,
+        // levelDt (เวลาวัดระดับน้ำ) จาก scraper รุ่นใหม่ · dt เดิมอาจเป็นเวลาภาพกล้องที่ค้าง
+        unit:'ม.', src:'rid', dt: cur!=null && (d.levelDt || d.dt) ? new Date(d.levelDt || d.dt) : null, rank:r,
         st: cur==null ? {l:'รอข้อมูล', c:'var(--ink-3)'} : r===3 ? {l:'ล้นตลิ่ง', c:'var(--st-danger)'}
           : r===2 ? {l:'เฝ้าระวัง', c:'var(--st-watch)'} : {l:'ปกติ', c:'var(--st-normal)'}};
     });
