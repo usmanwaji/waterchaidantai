@@ -38,6 +38,7 @@ const WATCH = process.argv.includes('--watch');
 const WATCH_MS = Math.max(1, Number(process.env.WATCH_MIN) || 2) * 60000;
 const BROWSER_MAX_AGE = 6 * 3600e3;   // โหมดสด: ปิด-เปิด Chromium ใหม่ทุก 6 ชม. กันหน่วยความจำบวม
 const LOCK = 'telerid-live.lock';
+const LOCK_STALE_MS = 30 * 60000;   // ตัวที่รันอยู่แตะไฟล์ lock ทุกรอบ · เก่ากว่านี้ = ตายไปแล้ว (เลข pid อาจถูกโปรแกรมอื่นใช้ซ้ำหลัง sleep/รีสตาร์ท)
 const LOGFILE = 'telerid-live.log';
 
 let logFile = null;   // โหมดสดเขียน log ลงไฟล์ด้วย (หน้าต่างถูกซ่อน)
@@ -225,7 +226,8 @@ async function watch() {
   // กันรันซ้อน: Task Scheduler เรียก run-live-hidden.vbs ซ้ำได้เรื่อย ๆ ตัวที่ 2 จะออกทันที
   try {
     const pid = Number(await fs.readFile(LOCK, 'utf8'));
-    if (pid && pid !== process.pid && alive(pid)) { console.log('[telerid] โหมดสดรันอยู่แล้ว (pid', pid + ') — ออก'); return; }
+    const fresh = Date.now() - (await fs.stat(LOCK)).mtimeMs < LOCK_STALE_MS;
+    if (fresh && pid && pid !== process.pid && alive(pid)) { console.log('[telerid] โหมดสดรันอยู่แล้ว (pid', pid + ') — ออก'); return; }
   } catch {}
   await fs.writeFile(LOCK, String(process.pid));
   process.on('exit', () => { try { unlinkSync(LOCK); } catch {} });
@@ -242,6 +244,8 @@ async function watch() {
   for (;;) {
     const t0 = Date.now();
     await rotate();
+    // แตะ lock ทุกรอบ (ถ้าไฟล์หายไป เช่น โฟลเดอร์ถูกล้าง ก็เขียนใหม่)
+    try { const now = new Date(); await fs.utimes(LOCK, now, now); } catch { await fs.writeFile(LOCK, String(process.pid)).catch(() => {}); }
     try {
       if (app && t0 - app.opened > BROWSER_MAX_AGE) { await app.browser.close().catch(() => {}); app = null; }
       if (!app) app = await openApp();

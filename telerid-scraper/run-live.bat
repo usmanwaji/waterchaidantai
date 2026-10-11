@@ -1,30 +1,31 @@
 @echo off
-rem run-live.bat — โหมดสด: เปิดค้างไว้ ดึง telerid ทุก 2 นาที ส่งขึ้น GitHub (สาขา cam) เฉพาะตอนค่าเปลี่ยน
-rem หน้าแผนที่จะเห็นค่าใหม่ภายในไม่กี่นาทีหลังสถานีส่งค่า (สถานีส่งทุก 15 นาที)
-rem ปิดหน้าต่างนี้ = หยุด · ดู log ที่ telerid-live.log · เปลี่ยนรอบได้ด้วย setx WATCH_MIN 3
-rem ถ้ามีตัวหนึ่งรันอยู่แล้ว ตัวที่เปิดซ้ำจะปิดตัวเองทันที (ตั้ง Task Scheduler ให้เรียกซ้ำได้ไม่ซ้อนกัน)
-chcp 65001 >nul
+rem run-live.bat - live mode: checks telerid every 2 minutes, uploads to GitHub (branch cam) only when values change.
+rem Close this window to stop. Log: telerid-live.log - startup errors: telerid-live-error.log
+rem Safe to start again: if live mode is already running, the new copy exits at once.
+rem The "telerid live" task (setup-live.ps1) starts it every 15 minutes, so a crash or reboot recovers by itself.
+rem This file is ASCII only on purpose (works in any folder name / Windows language).
 cd /d "%~dp0"
+set "ERRLOG=%~dp0telerid-live-error.log"
 
-if not exist node_modules (
-  echo ติดตั้งครั้งแรก... รอสัก 2-3 นาที นะครับ
-  call npm install || goto :err
-  call npx playwright install chromium || goto :err
+rem node.exe path saved by setup-live.ps1 (scheduled tasks may not see a freshly updated PATH)
+set "NODE=node"
+if exist "%~dp0node-path.txt" set /p NODE=<"%~dp0node-path.txt"
+
+if not exist "%~dp0node_modules\playwright" (
+  echo %date% %time% node_modules missing - installing>> "%ERRLOG%"
+  call npm install --no-audit --no-fund >> "%ERRLOG%" 2>&1 || goto :err
+  call npx playwright install chromium >> "%ERRLOG%" 2>&1 || goto :err
 )
 
-echo โหมดสดทำงานอยู่ - ปิดหน้าต่างนี้เพื่อหยุด (log: telerid-live.log)
-:loop
-node scrape.mjs --watch
-rem 0 = มีตัวอื่นรันอยู่แล้ว/สั่งหยุด · 2 = ตั้งค่าไม่ครบ (GH_TOKEN) · 1 = ล่ม → รอ 1 นาทีแล้วเริ่มใหม่
-if errorlevel 2 goto :err
-if errorlevel 1 (
-  ping -n 61 127.0.0.1 >nul
-  goto :loop
-)
-goto :eof
+echo Live mode is running - close this window to stop (log: telerid-live.log)
+"%NODE%" scrape.mjs --watch 2>> "%ERRLOG%"
+rem 0 = another copy is already running / stopped normally; 1 = crashed; 2 = GH_TOKEN missing
+if errorlevel 1 goto :err
+exit /b 0
 
 :err
+echo %date% %time% run-live.bat stopped with error %errorlevel% (node: %NODE%)>> "%ERRLOG%"
 echo.
-echo !!! มีข้อผิดพลาด - อ่านข้อความด้านบน หรือเปิดไฟล์ telerid-live.log !!!
+echo !!! Live mode stopped with an error - see telerid-live-error.log and telerid-live.log !!!
 if /i not "%~1"=="hidden" pause
 exit /b 1

@@ -1,7 +1,10 @@
 # setup-live.ps1 - one-time setup of RID telemetry (telerid) live mode on the Thai-IP Windows PC
 #
+# Live mode is installed in its own folder: %LOCALAPPDATA%\telerid-live
+# (plain ASCII path, outside any Git/OneDrive-synced project folder, so nothing wipes its files).
+#
 # Does everything in one go:
-#   1. downloads the latest scraper files from GitHub (main branch) into this folder
+#   1. stops old live copies, downloads the latest scraper files from GitHub (main branch)
 #   2. checks Node.js (offers to install it with winget)
 #   3. installs packages + Chromium
 #   4. checks / saves the GitHub token (GH_TOKEN)
@@ -9,9 +12,9 @@
 #      "telerid live" task (at log on + every 15 minutes, never runs twice)
 #   6. starts live mode now and waits for the first upload
 #
-# Run it (either way):
-#   - double-click setup-live.bat in the telerid-scraper folder, or
-#   - open the telerid-scraper folder, type "powershell" in the Explorer address bar, then paste:
+# Run it (from any folder):
+#   - double-click setup-live.bat, or
+#   - open PowerShell and paste:
 #       irm https://raw.githubusercontent.com/usmanwaji/waterchaidantai/main/telerid-scraper/setup-live.ps1 | iex
 #
 # Safe to run again any time (updates the files and restarts live mode with the new code).
@@ -23,8 +26,8 @@ function Invoke-TeleridSetup {
   $Branch = 'main'
   if ($env:TELERID_SETUP_BRANCH) { $Branch = $env:TELERID_SETUP_BRANCH }
   $TaskName = 'telerid live'
-  $here = (Get-Location).Path
-  if ($PSScriptRoot) { $here = $PSScriptRoot }
+  $here = Join-Path $env:LOCALAPPDATA 'telerid-live'
+  New-Item -ItemType Directory -Force -Path $here | Out-Null
   Set-Location $here
 
   function Step($n, $t) { Write-Host ''; Write-Host "[$n/6] $t" -ForegroundColor Cyan }
@@ -33,14 +36,15 @@ function Invoke-TeleridSetup {
   function Yes($q) { return ((Read-Host "   $q (y/n)") -match '^\s*[yY]') }
 
   Write-Host '=== RID telemetry (telerid) live mode setup ===' -ForegroundColor Cyan
-  Write-Host "Folder: $here"
-  if (-not (Test-Path (Join-Path $here 'scrape.mjs'))) {
-    Warn 'scrape.mjs is not in this folder (expected: the telerid-scraper folder).'
-    if (-not (Yes 'Install the scraper into THIS folder?')) { Warn 'Cancelled. Open the telerid-scraper folder and run again.'; return }
-  }
+  Write-Host "Live mode folder: $here"
 
-  # ---- 1) latest files ----
-  Step 1 'Download the latest scraper files from GitHub'
+  # ---- 1) stop old copies + latest files ----
+  Step 1 'Stop old live copies, download the latest scraper files'
+  $running = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+      $_.CommandLine -and ($_.CommandLine -match 'scrape\.mjs"?\s+--watch' -or $_.CommandLine -match '\brun-live\.bat') })
+  foreach ($p in $running) { Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue }
+  if ($running.Count) { Ok "Stopped $($running.Count) old live process(es)" }
+  Remove-Item (Join-Path $here 'telerid-live.lock') -Force -ErrorAction SilentlyContinue
   [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
   $files = @('scrape.mjs', 'publish-github.mjs', 'package.json', 'run-live.bat', 'run-live-hidden.vbs', 'README.md', '.gitignore')
   $tmp = Join-Path ([IO.Path]::GetTempPath()) ('telerid-setup-' + [Guid]::NewGuid().ToString('N'))
@@ -67,7 +71,10 @@ function Invoke-TeleridSetup {
       throw 'Node.js not found. Install the LTS version from https://nodejs.org, then run this setup again.'
     }
   }
-  Ok ('Node.js ' + (node -v))
+  $nodeExe = (Get-Command node).Source
+  # scheduled tasks may not see a freshly changed PATH -> run-live.bat uses this exact path
+  [IO.File]::WriteAllText((Join-Path $here 'node-path.txt'), $nodeExe)
+  Ok ('Node.js ' + (& $nodeExe -v) + "  ($nodeExe)")
 
   # ---- 3) packages ----
   Step 3 'Install packages + Chromium (first time takes 2-3 minutes)'
@@ -111,8 +118,9 @@ function Invoke-TeleridSetup {
   $action = New-ScheduledTaskAction -Execute 'wscript.exe' -Argument "`"$vbs`"" -WorkingDirectory $here
   $every15 = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 15)
   $logon = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
+  # no time limit: Windows must never stop live mode after N minutes
   $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable `
-    -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
+    -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Seconds 0)
   $desc = 'naraflood.com: RID telemetry live scraper (telerid-scraper/run-live-hidden.vbs). Re-launch is safe: exits at once if already running.'
   try {
     Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger @($every15, $logon) -Settings $settings -Description $desc -Force | Out-Null
@@ -125,13 +133,8 @@ function Invoke-TeleridSetup {
 
   # ---- 6) start now ----
   Step 6 'Start live mode now'
-  $lock = Join-Path $here 'telerid-live.lock'
-  if (Test-Path $lock) {
-    $procId = 0; [int]::TryParse((Get-Content $lock -Raw).Trim(), [ref]$procId) | Out-Null
-    $p = Get-Process -Id $procId -ErrorAction SilentlyContinue
-    if ($p -and $p.ProcessName -eq 'node') { Stop-Process -Id $procId -Force; Ok 'Stopped the running copy so the new code is used' }
-  }
   $log = Join-Path $here 'telerid-live.log'
+  $errLog = Join-Path $here 'telerid-live-error.log'
   $seen = 0
   if (Test-Path $log) { $seen = @(Get-Content $log -Encoding UTF8).Count }
   Start-ScheduledTask -TaskName $TaskName
@@ -145,11 +148,14 @@ function Invoke-TeleridSetup {
   }
 
   if (-not $line) {
-    Warn 'No result yet. Open telerid-live.log in this folder in a few minutes.'
+    Warn 'No result yet. Check telerid-live.log and telerid-live-error.log in a few minutes:'
+    Write-Host "   $here"
+    if (Test-Path $errLog) { Get-Content $errLog -Encoding UTF8 -Tail 15 | ForEach-Object { Write-Host "   $_" } }
   } elseif ($line -match '\[error\]') {
     Warn 'Live mode started but the first round failed:'
     Write-Host "   $line"
-    Warn 'It retries by itself. If this keeps happening, send telerid-live.log and telerid-cam\_discovery.json.'
+    Warn "It retries by itself. If this keeps happening, send telerid-live.log from $here"
+    if (Test-Path $errLog) { Get-Content $errLog -Encoding UTF8 -Tail 15 | ForEach-Object { Write-Host "   $_" } }
   } else {
     Ok 'Live mode is running and uploading to GitHub:'
     Write-Host "   $line"
@@ -165,7 +171,9 @@ function Invoke-TeleridSetup {
   Write-Host ''
   Write-Host '=== Done ===' -ForegroundColor Green
   Write-Host '   Map: https://naraflood.com/map.html  (layer: RID telemetry) - new readings appear within ~2-5 minutes'
-  Write-Host '   Log: telerid-live.log in this folder (one line every 2 minutes)'
+  Write-Host "   Folder: $here"
+  Write-Host '   Log: telerid-live.log (one line every 2 minutes) - startup errors: telerid-live-error.log'
+  Write-Host '   Old telerid-scraper folders (e.g. inside your project) are no longer used by live mode.'
   Write-Host "   Stop: Task Scheduler > '$TaskName' > Disable, then end node.exe in Task Manager"
 }
 
