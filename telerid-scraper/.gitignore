@@ -5,3 +5,5 @@ telerid-auto.log
 telerid-live.log
 telerid-live.log.old
 telerid-live.lock
+telerid-live-error.log
+node-path.txt

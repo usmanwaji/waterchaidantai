@@ -54,7 +54,7 @@
 
 ### ตั้งค่าทีเดียวจบ (ง่ายสุด) — `setup-live`
 
-เปิดโฟลเดอร์ `telerid-scraper` → คลิกช่อง address bar ของ Explorer → พิมพ์ `powershell` กด Enter → วางบรรทัดนี้แล้วกด Enter
+เปิด PowerShell (จากเมนู Start หรือโฟลเดอร์ไหนก็ได้) → วางบรรทัดนี้แล้วกด Enter
 ```
 irm https://raw.githubusercontent.com/usmanwaji/waterchaidantai/main/telerid-scraper/setup-live.ps1 | iex
 ```
@@ -62,6 +62,10 @@ irm https://raw.githubusercontent.com/usmanwaji/waterchaidantai/main/telerid-scr
 โหลดไฟล์ล่าสุด → เช็ก/ติดตั้ง Node.js → ติดตั้ง Chromium → เช็กและบันทึก GH_TOKEN →
 ปิดงานเดิม (`run-hidden.vbs`/`run-auto.bat`) → สร้างงาน `telerid live` (ตอนล็อกอิน + ทุก 15 นาที) →
 เริ่มโหมดสดทันทีและรอผลรอบแรก → ถามว่าจะตั้งไม่ให้คอม Sleep ไหม · รันซ้ำได้ทุกเมื่อ (อัปเดตโค้ด + รีสตาร์ทให้)
+
+> โหมดสดติดตั้งแยกไว้ที่ `%LOCALAPPDATA%\telerid-live` (เช่น `C:\Users\ชื่อผู้ใช้\AppData\Local\telerid-live`)
+> ไม่ใช้โฟลเดอร์โปรเจกต์ (ที่ซิงก์กับ Git/มีชื่อภาษาไทย ซึ่งอาจลบไฟล์ของมันทิ้ง) · log อยู่ในโฟลเดอร์นั้น:
+> `telerid-live.log` (ทุกรอบ) และ `telerid-live-error.log` (ถ้าเปิดไม่ขึ้น)
 
 ### ให้รันเองตลอด (Task Scheduler) — ถ้าอยากตั้งเอง
 
