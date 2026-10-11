@@ -8,13 +8,13 @@
 (function () {
   'use strict';
   // v2: ดึงเส้นของ "แม่น้ำทั้งสาย" (relation) ด้วย · เปลี่ยน key ให้ทุกเครื่องโหลดใหม่ (แคช v1 ขาดบางช่วง เช่น บางนรา)
-  // v3: เพิ่มคลองตันหยงมัส · เปลี่ยน key ให้ทุกเครื่องโหลดใหม่
-  const KEY = 'oms_rivers_v3';
-  const OLD_KEYS = ['oms_rivers_v1', 'oms_rivers_v2'];
+  // v4: คลองตันหยงมัสทุกแบบสะกด (ตันหยงมัส/ต้นหยงมัส/ตันหยงมาส/…) + คลองยะกัง (ช่วงท้ายก่อนลงบางนรา) · เปลี่ยน key ให้โหลดใหม่
+  const KEY = 'oms_rivers_v4';
+  const OLD_KEYS = ['oms_rivers_v1', 'oms_rivers_v2', 'oms_rivers_v3'];
   const OVERPASS = 'https://overpass-api.de/api/interpreter';
   const BB = '(5.6,99.55,7.9,102.15)';
-  const TH = 'สายบุรี|ปัตตานี|โกลก|โก-ลก|บางนรา|อู่ตะเภา|ละงู|ปะเหลียน|เทพา|นาทวี|บางลาง|ตากใบ|ตันหยงมัส|ต้นหยงมัส';
-  const EN = 'Sai ?Buri|Pattani|Kolok|Golok|Bang ?Nara|U-?Taphao|La-?ngu|Pa ?Lian|Thepha|Na ?Thawi|Bang ?Lang|Tak ?Bai|Tan ?Yong ?Mas|Tanyongmat';
+  const TH = 'สายบุรี|ปัตตานี|โกลก|โก-ลก|บางนรา|อู่ตะเภา|ละงู|ปะเหลียน|เทพา|นาทวี|บางลาง|ตากใบ|หยงม|ยะกัง';
+  const EN = 'Sai ?Buri|Pattani|Kolok|Golok|Bang ?Nara|U-?Taphao|La-?ngu|Pa ?Lian|Thepha|Na ?Thawi|Bang ?Lang|Tak ?Bai|Tan ?Yong ?Ma[st]|Tanyongma[st]|Ya ?Kang';
   // ใน OSM แม่น้ำสายยาวมักเป็น relation ที่มีชื่อ แต่ทางน้ำย่อย (way) แต่ละช่วงไม่มีชื่อ → ต้องดึงสมาชิกของ relation ด้วย
   // และบางช่วงมีแต่ชื่อ name:th / name:en
   const Q = '[out:json][timeout:120];(' +
