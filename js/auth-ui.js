@@ -21,7 +21,7 @@
     '.auth-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:99px;padding:4px 11px;font-size:12px;font-weight:600;white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}' +
     '.auth-out{background:none;border:none;color:rgba(255,255,255,.65);font-family:inherit;font-size:11.5px;cursor:pointer;text-decoration:underline;white-space:nowrap;padding:2px}' +
     '.auth-out:hover{color:#fff}' +
-    '@media(max-width:760px){.auth-btn .auth-txt{display:none}.auth-btn{padding:7px 9px}.auth-chip{max-width:84px;padding:4px 9px}.auth-out .auth-txt{display:none}}';
+    '@media(max-width:760px){.auth-btn .auth-txt{display:none}.auth-btn{padding:7px 9px}.auth-chip{max-width:110px}}';
   document.head.appendChild(st);
 
   var wrap = document.createElement('div');
