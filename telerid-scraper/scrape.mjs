@@ -190,6 +190,8 @@ async function scrapeOnce(page, mem = { cam: {}, detail: {} }) {
         warning: res.warning ?? null,
         critical: res.critical ?? null,
         hasImage, hasDetail, cams: res.cams ?? 0, imgStatus: res.imgStatus ?? null,
+        // levelDt = เวลาวัดระดับน้ำจริง (กล้องเสียค้างเวลาเก่าได้ เช่น BNR.01 ภาพค้างตั้งแต่ ก.พ. แต่ระดับน้ำยังส่งปกติ)
+        levelDt: res.levelUnix ? new Date(res.levelUnix * 1000).toISOString() : null,
         dt: res.camUnix ? new Date(res.camUnix * 1000).toISOString()
           : res.levelUnix ? new Date(res.levelUnix * 1000).toISOString() : null,
       });

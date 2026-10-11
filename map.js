@@ -1306,23 +1306,33 @@ async function loadTelerid(pre){
       const mk = L.marker([lat,lon], {icon: mkIcon('mk-tele', 'var(--signal)', 18, '▲', false), zIndexOffset:80})
         .bindPopup(()=>{
           // เวลาที่สถานีวัดค่า/ถ่ายภาพจริง (dt) · ไม่มีจึงใช้เวลาที่ scraper ส่งขึ้น
-          const at = d.dt || j.updated;
+          const at = d.levelDt || d.dt || j.updated;
           const upd = at ? new Date(at).toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}) : '';
           const img = d.hasImage
             ? `<img src="${TELERID_CAM}/${esc(d.code)}.jpg?v=${encodeURIComponent(j.updated||'')}" alt="กล้อง ${esc(d.code)}" style="width:100%;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;background:var(--card-2);margin:6px 0" onclick="window.open(this.src,'_blank')">`
             : '';
           const crit = d.critical ?? d.bank;
+          // ค่า -9.99 = เซนเซอร์ไม่ส่งค่า · ค่าที่วัดเกิน 6 ชม. ไม่ใช่ "ตอนนี้" (เกณฑ์เดียวกับหน้าแรก)
+          const bad = d.level!=null && d.level <= -9;
+          const lv = d.level!=null && !bad ? d.level : null;
+          // levelDt = เวลาวัดระดับน้ำ (scraper รุ่นใหม่) · ไม่มีก็ไม่ตัดสินว่าเก่า เพราะ dt อาจเป็นเวลาภาพกล้องที่ค้าง
+          const old = lv!=null && d.levelDt && (Date.now() - new Date(d.levelDt)) > 6*3600e3;
+          const noLv = lv==null
+            ? `<div style="font-size:11.5px;color:var(--st-watch);background:var(--card-2);border-radius:6px;padding:5px 8px;margin:4px 0">${bad
+                ? 'เซนเซอร์ระดับน้ำไม่ส่งค่า (-9.99) · ยังไม่มีค่าที่ใช้ได้'
+                : 'สถานีนี้ไม่ส่งค่าระดับน้ำเข้าระบบโทรมาตร ชป. ขณะนี้'}</div>` : '';
           return `
           <div class="pp-title">▲ ${esc(d.name||d.code||'')} (${esc(d.code)})</div>
           <div class="pp-sub">${esc(d.basin||'')} · ${esc(d.amphur||'')} · ${tProv(String(d.province||'').trim())} · ${t('teleSrc')}</div>
           ${img}
+          ${noLv}
           <dl class="pp-grid">
-            ${d.level!=null?`<dt>${t('ddpmWL')}</dt><dd><b>${fmt(d.level)}</b> ม.</dd>`:''}
+            ${lv!=null?`<dt>${t('ddpmWL')}</dt><dd><b style="${old?'color:var(--ink-3)':''}">${fmt(lv)}</b> ม.${old?' <span style="font-size:10.5px;color:var(--st-watch)">(ค่าเก่า)</span>':''}</dd>`:''}
             ${d.warning!=null?`<dt style="color:var(--st-watch)">ระดับเฝ้าระวัง</dt><dd>${fmt(d.warning)} ม.</dd>`:''}
             ${crit!=null?`<dt style="color:var(--st-danger)">ระดับวิกฤต</dt><dd>${fmt(crit)} ม.</dd>`:''}
           </dl>
           ${d.hasDetail?`<div class="tele-detail" data-code="${esc(d.code)}" style="font-size:11px;color:var(--ink-3);margin:4px 0">กำลังโหลดกราฟ…</div>`:''}
-          <div style="font-size:10px;color:var(--ink-3)">${img?'ภาพล่าสุด ':'อัปเดต '}${esc(upd)}</div>
+          <div style="font-size:10px;color:var(--ink-3)">${d.levelDt ? 'ค่าวัดล่าสุด ' : d.dt ? (img?'ภาพล่าสุด ':'ค่าวัดล่าสุด ') : 'ตรวจล่าสุด '}${esc(upd)}</div>
           <a class="pp-link" href="https://telerid.rid.go.th/#/" target="_blank">${t('teleView')}</a>`;
         }, {maxWidth:320})
         .addTo(gTele);
@@ -1391,7 +1401,7 @@ function teleDetailHTML(det){
 function teleWLChart(det){
   const W=284,H=96,pl=36,pr=8,pt=8,pb=8;
   const v=det.wl.v, n=v.length;
-  const pts=v.map((y,i)=>({i,y})).filter(p=>p.y!=null);
+  const pts=v.map((y,i)=>({i,y})).filter(p=>p.y!=null && p.y>-9);   // -9.99 = เซนเซอร์ไม่ส่งค่า
   if(pts.length<2) return '';
   const warn=det.warning, crit=det.critical;
   const ys=pts.map(p=>p.y);
@@ -1434,7 +1444,7 @@ function teleCrossSection(det){
   const W=284,H=118,pl=32,pr=8,pt=10,pb=14;
   const dist=cs.distance, high=cs.high;
   const xmin=Math.min(...dist), xmax=Math.max(...dist);
-  const level=det.level, warn=cs.warning??det.warning, crit=cs.critical??det.critical;
+  const level=det.level!=null && det.level>-9 ? det.level : null, warn=cs.warning??det.warning, crit=cs.critical??det.critical;
   const ys=high.slice(); [level,warn,crit].forEach(y=>{if(y!=null)ys.push(y);});
   let ymin=Math.min(...ys), ymax=Math.max(...ys);
   const pad=(ymax-ymin)*0.1||0.3; ymin-=pad; ymax+=pad;
