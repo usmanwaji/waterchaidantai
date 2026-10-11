@@ -1211,8 +1211,14 @@ function ddpmMarker(row){
   m.on('popupopen', ()=>loadDdpmSnapshot(row));
   m.addTo(gDdpm);
 }
-/* ดึงภาพ snapshot ล่าสุดของกล้อง ปภ. ผ่าน DDPM_PROXY (Cloudflare Worker แก้ CORS)
-   GET <proxy>/stations/{code} → histories[0].snapshotPath ; ภาพอยู่ที่ <proxy>/<snapshotPath> */
+/* ภาพกล้อง ปภ. ในหน้าต่าง popup
+   ข้อมูลสถานี: GET <proxy>/stations/{code} (ผ่าน DDPM_PROXY แก้ CORS)
+   ภาพ: ตั้งแต่ ต.ค. 2569 ปภ. เลิกเก็บไฟล์ snapshot (histories[0].snapshotPath = "no_image") กล้องเป็น go2rtc
+   เว็บ ปภ. เองดึงภาพสดจาก /api/webrtc/public-frame.jpeg?src=<ชื่อกล้อง เช่น NWT02-01> → ใช้แบบเดียวกัน
+   (โหลดใน <img> ตรง ๆ ได้ ไม่ติด CORS) · ถ้าสถานีไม่มีรายชื่อกล้องแต่ยังมีไฟล์ snapshot ใช้ไฟล์นั้นแทน
+   histories[].timeStamp ของ ปภ. เป็นเวลา UTC ที่ไม่มีโซน (ต่างจาก updatedAt ซึ่งเป็นเวลาไทย) */
+const DDPM_LIVE_FRAME = 'https://cctv.disaster.go.th/api/webrtc/public-frame.jpeg?src=';
+const ddpmUtc = s => s ? new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(s) ? s : String(s)+'Z') : null;
 async function loadDdpmSnapshot(row){
   const el = document.getElementById('snap-'+row.code);
   if(!el) return;
@@ -1225,35 +1231,32 @@ async function loadDdpmSnapshot(row){
     const h0 = (d.histories||d.history||[])[0];
     const bank = (d.riverBankLevel!=null ? d.riverBankLevel : d.dpmRiverBankLevel);
     const cur  = (d.currentWaterLevel!=null ? d.currentWaterLevel : (h0 && h0.level));
-    if(!h0 || !h0.snapshotPath){ el.innerHTML = '<div style="font-size:11px;color:var(--ink-3)">ยังไม่มีภาพล่าสุดจากกล้องนี้</div>'; return; }
-    const sp1 = String(h0.snapshotPath).replace(/^\/+/,'');
-    const sib = p => p.replace(/_(\d{1,2})(\.[a-z]+)$/i, (m,n,e)=>'_'+((n.replace(/^0/,'')==='1')?'02':'01')+e);
-    const sp2 = sib(sp1);
-    const is01 = /_0?1\.[a-z]+$/i.test(sp1);
-    const nCam = Array.isArray(d.cameras) ? d.cameras.length : 1;
-    const twoCam = nCam>=2 && sp2!==sp1;
-    // กล้องเดียว → ใช้ภาพตามที่ ปภ. ให้มาตรง ๆ (เดิมเดาชื่อไฟล์ _01 ซึ่งอาจไม่มีจริง)
-    const path1 = !twoCam || is01 ? sp1 : sp2;   // กล้อง 1 (_01)
-    const path2 = path1===sp1 ? sp2 : sp1;       // อีกไฟล์ · ใช้เป็นภาพสำรองเมื่อภาพแรกโหลดไม่ขึ้น
-    const url1 = base+'/'+path1, url2 = base+'/'+path2;
-    const tstr = h0.timeStamp ? new Date(h0.timeStamp).toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}) : '';
-    const off = h0.isOnline===false;
-    const oldPic = h0.timeStamp && (Date.now() - new Date(h0.timeStamp)) > 3600e3;
-    const info = 'ภาพล่าสุด '+esc(tstr)+(oldPic ? ' <b style="color:var(--st-watch)">(ภาพเก่า)</b>' : '')
-      + (cur!=null  ? ' · ระดับน้ำ '+fmt(cur)+' ม.'  : '')
+    const cams = (Array.isArray(d.cameras) ? d.cameras : []).filter(c=>c && c.name && !c.deletedAt)
+      .sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+    const snap = h0 && h0.snapshotPath && h0.snapshotPath!=='no_image' ? String(h0.snapshotPath).replace(/^\/+/,'') : '';
+    const t = Date.now();
+    const urls = cams.length ? cams.map(c => DDPM_LIVE_FRAME+encodeURIComponent(c.name)+'&t='+t)   // ภาพสดรายกล้อง
+               : snap ? [base+'/'+snap] : [];
+    if(!urls.length){ el.innerHTML = '<div style="font-size:11px;color:var(--ink-3)">สถานีนี้ไม่มีกล้องที่เปิดให้ดูภาพ</div>'; return; }
+    const fmtT = dt => dt ? dt.toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}) : '';
+    const lvAt = ddpmUtc(h0 && h0.timeStamp);
+    const oldLv = lvAt && (Date.now() - lvAt) > 3600e3;
+    const off = h0 && (h0.isOnline===false || h0.isOnline===0);
+    const info = (cams.length ? 'ภาพสด '+esc(fmtT(new Date(t))) : 'ภาพล่าสุด '+esc(fmtT(lvAt)))
+      + (cur!=null  ? ' · ระดับน้ำ '+fmt(cur)+' ม.'+(lvAt && cams.length ? ' (วัด '+esc(lvAt.toLocaleTimeString(locale(),{hour:'2-digit',minute:'2-digit'}))+')' : '') : '')
+      + (oldLv ? ' <b style="color:var(--st-watch)">(ค่าเก่า)</b>' : '')
       + (bank!=null ? ' · ตลิ่ง '+fmt(bank)+' ม.' : '')
       + (off ? ' · ⚠️ กล้องออฟไลน์' : '');
-    const st = 'width:100%;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;background:var(--card-2)';
-    const tabs = twoCam
-      ? '<div class="ddpm-tabs"><button type="button" class="ddpm-tab on" onclick="ddpmCam(this,\''+esc(url1)+'\')">กล้อง 1</button>'
-        + '<button type="button" class="ddpm-tab" onclick="ddpmCam(this,\''+esc(url2)+'\')">กล้อง 2</button></div>'
+    const st = 'width:100%;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;background:var(--card-2);min-height:60px';
+    const tabs = urls.length>=2
+      ? '<div class="ddpm-tabs">'+urls.map((u,i)=>'<button type="button" class="ddpm-tab'+(i?'':' on')+'" onclick="ddpmCam(this,\''+esc(u)+'\')">กล้อง '+(i+1)+'</button>').join('')+'</div>'
       : '';
     el.innerHTML = '<div class="ddpm-cams">'+tabs
-      + '<img class="ddpm-img" src="'+esc(url1)+'" data-alt="'+(url2!==url1?esc(url2):'')+'" data-code="'+esc(row.code)+'" alt="ภาพกล้อง '+esc(row.code)+'" style="'+st+'" onerror="ddpmImgErr(this)" onclick="window.open(this.src,\'_blank\')">'
+      + '<img class="ddpm-img" src="'+esc(urls[0])+'" data-alt="'+(urls[1]?esc(urls[1]):'')+'" data-code="'+esc(row.code)+'" alt="ภาพกล้อง '+esc(row.code)+'" style="'+st+'" onerror="ddpmImgErr(this)" onclick="window.open(this.src,\'_blank\')">'
       + '<div style="font-size:10.5px;color:var(--ink-3);margin-top:3px">'+info+'</div></div>';
   }catch(e){ el.innerHTML = '<div style="font-size:11px;color:var(--st-danger)">โหลดภาพไม่สำเร็จ · ตรวจสอบว่าตั้งค่า DDPM_PROXY ถูกต้อง</div>'; }
 }
-/* ภาพโหลดไม่ขึ้น (ปภ. ลบไฟล์ภาพเก่า / กล้องไม่ส่งภาพ) → ลองอีกกล้องก่อน แล้วจึงแจ้งพร้อมลิงก์ดูที่เว็บ ปภ. */
+/* ภาพโหลดไม่ขึ้น (กล้องไม่ส่งภาพ / ไฟล์ไม่มีแล้ว) → ลองอีกกล้องก่อน แล้วจึงแจ้งพร้อมลิงก์ดูที่เว็บ ปภ. */
 function ddpmImgErr(img){
   const alt = img.dataset.alt;
   if(alt && !img.dataset.triedAlt){ img.dataset.triedAlt = '1'; img.src = alt; return; }
@@ -1261,7 +1264,7 @@ function ddpmImgErr(img){
   const box = document.createElement('div');
   box.className = 'ddpm-img';
   box.style.cssText = 'font-size:11.5px;color:var(--st-watch);background:var(--card-2);border-radius:8px;padding:8px 10px';
-  box.innerHTML = 'ภาพจากกล้องนี้ยังไม่พร้อมใช้งานขณะนี้ (ระบบ ปภ. ไม่มีไฟล์ภาพล่าสุด)'
+  box.innerHTML = 'ภาพจากกล้องนี้ยังไม่พร้อมใช้งานขณะนี้ (กล้องไม่ส่งภาพ)'
     + (code ? ' · <a href="https://cctv.disaster.go.th/stations/'+encodeURIComponent(code)+'" target="_blank" rel="noopener">ดูที่ cctv.disaster.go.th ↗</a>' : '');
   img.replaceWith(box);
 }
