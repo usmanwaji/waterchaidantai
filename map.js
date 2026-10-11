@@ -826,7 +826,7 @@ function mkIcon(cls, color, size, text, blink){
 let legendCtl = null;
 function buildLegend(){
   if(legendCtl) map.removeControl(legendCtl);
-  legendCtl = L.control({position:'bottomleft'});
+  legendCtl = L.control({position:'bottomright'});
   legendCtl.onAdd = () => {
     const d = L.DomUtil.create('div','legend');
     d.innerHTML = `
