@@ -532,7 +532,7 @@ body{padding-bottom:calc(var(--tabbar-h) + var(--dock-gap) * 2 + env(safe-area-i
      แล้วปุ่มเข้าสู่ระบบตกลงไปอยู่บรรทัดของตัวเองทั้งบรรทัด
      ให้ชื่อหน้าหดได้และตัดท้ายแทนที่จะดันของอื่นตก */
   header{gap:var(--s2)}
-  header h1{flex:1 1 auto;min-width:0;font-size:15.5px;
+  header h1{flex:1 1 0;min-width:0;font-size:15.5px;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* หน้าที่แสดงเวลาอัปเดตด้วย (คาดการณ์ ย้อนหลัง แผนที่) มีของบนหัวเว็บ
      มากกว่าหน้าแรกหนึ่งชิ้น ปุ่มท้ายแถวจึงตกไปครองบรรทัดของตัวเองทั้งบรรทัด
