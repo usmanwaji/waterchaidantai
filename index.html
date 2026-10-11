@@ -62,6 +62,12 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
   .t-desk{display:none}
   header h1 small{display:none}
   #updated{display:none}
+  /* ชื่อหน้าบนมือถือสั้นแล้ว ("ฟ้าฝน & แม่น้ำ") ให้ชื่ออยู่ครบ แล้วให้ป้ายชื่อผู้ใช้เป็นฝ่ายหดแทน
+     หน้านี้ซ่อนเวลาอัปเดตบนมือถือ หัวเว็บจึงไม่ต้องขึ้นบรรทัดใหม่ */
+  body>header{flex-wrap:nowrap}
+  body>header>h1{flex:1 0 auto}
+  body>header #authUi{flex:0 1 auto;min-width:0}
+  body>header .auth-chip{min-width:28px}
   .card{padding:16px}
 }
 
@@ -194,7 +200,7 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
 <div class="pageBanner"><img src="header.jpg?v=3" alt="Dashboard อุทกภัย จังหวัดนราธิวาส" width="1600" height="397" fetchpriority="high" decoding="async"></div>
 
 <header>
-  <h1>ภาพรวมอากาศ & สถานการณ์น้ำ</h1>
+  <h1><span class="t-desk">ภาพรวมอากาศ & สถานการณ์น้ำ</span><span class="t-mob">ฟ้าฝน & แม่น้ำ</span></h1>
   <nav class="navtab" aria-label="เมนูหลัก">
     <a href="index.html" class="on">หน้าแรก</a>
     <a href="map.html">ระดับน้ำ</a>
