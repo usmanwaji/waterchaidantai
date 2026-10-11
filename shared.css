@@ -528,17 +528,29 @@ body{padding-bottom:calc(var(--tabbar-h) + var(--dock-gap) * 2 + env(safe-area-i
   .navtab{display:none}
   .pageBanner{display:none}
 
-  /* หัวเว็บเดิมสูง 99px เพราะชื่อหน้ากับปุ่มรวมกันกว้างเกินจอไป 3px
-     แล้วปุ่มเข้าสู่ระบบตกลงไปอยู่บรรทัดของตัวเองทั้งบรรทัด
-     ให้ชื่อหน้าหดได้และตัดท้ายแทนที่จะดันของอื่นตก */
-  header{gap:var(--s2)}
-  header h1{flex:1 1 0;min-width:0;font-size:15.5px;
+  /* หัวเว็บบนมือถือไม่เกินสองบรรทัด (หน้าแรกบังคับบรรทัดเดียวเองใน index.html)
+     บรรทัดบน: ชื่อหน้า + ปุ่มรีเฟรช · ชื่อหน้าหดและตัดท้ายได้ ปุ่มจึงไม่ตกบรรทัด
+     หน้าที่มีแค่ปุ่มเข้าสู่ระบบเพิ่ม ปล่อยให้ปุ่มขึ้นบรรทัดล่างเองเมื่อไม่พอ
+     หน้าแรก (header.oneline) จัดบรรทัดเดียวเองใน index.html */
+  header{gap:var(--s2);row-gap:6px}
+  header>h1{order:1;flex:1 1 auto;min-width:0;font-size:15.5px;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  /* หน้าที่แสดงเวลาอัปเดตด้วย (คาดการณ์ ย้อนหลัง แผนที่) มีของบนหัวเว็บ
-     มากกว่าหน้าแรกหนึ่งชิ้น ปุ่มท้ายแถวจึงตกไปครองบรรทัดของตัวเองทั้งบรรทัด
-     ให้เวลาอัปเดตลงไปอยู่บรรทัดล่างเต็มความกว้างแทน ปุ่มทุกตัวจะได้อยู่แถวเดียวกัน
-     เวลาอัปเดตต้องไม่ถูกซ่อน เพราะบนเว็บเตือนภัย ความสดของข้อมูลคือข้อมูล */
-  header #updated{order:9;flex:1 0 100%;margin-left:0;text-align:right}
+  header>#btnRefresh{order:2}
+  header>*{order:4}
+  header #authBox{order:5}
+  header #authUi{order:6}
+  header .auth-out .auth-txt{display:none}
+  /* หน้าที่มีของบนหัวเว็บมากกว่านั้น (ภาษา วิธีใช้ เวลาอัปเดต กล่องล็อกอินของหน้าเอง)
+     header::after บังคับขึ้นบรรทัดล่าง ให้ของที่เหลือรวมอยู่บรรทัดเดียว
+     ป้ายชื่อผู้ใช้เป็นฝ่ายหดให้พอดี ส่วนเวลาอัปเดตต้องไม่ถูกซ่อนหรือตัด
+     เพราะบนเว็บเตือนภัย ความสดของข้อมูลคือข้อมูล */
+  header:not(.oneline):has(>#updated,>#langSw,>#btnHelp,>#authBox)>h1{flex-basis:0}
+  header:not(.oneline):has(>#updated,>#langSw,>#btnHelp,>#authBox)::after{content:"";order:3;flex:0 0 100%;height:0;margin-top:-6px}
+  header:not(.oneline):has(>#updated,>#langSw,>#btnHelp,>#authBox) #authUi{flex:1 1 0;min-width:0}
+  header .auth-chip{min-width:28px;flex:0 1 auto}
+  /* หน้าที่มีกล่องล็อกอินของตัวเอง (admin) ไม่ต้องมีป้ายซ้ำ */
+  header #authBox:not(:empty)~#authUi{display:none}
+  header #updated{order:7;flex:none;margin-left:auto;text-align:right;white-space:nowrap}
 }
 /* v9: จอคอมให้หัวเว็บอยู่บรรทัดเดียวเสมอ แคปซูลสองบรรทัดดูเหมือนของพัง
    แถบเมนูยอมหดและเลื่อนแนวนอนแทน (js/ui.js ใส่ขอบจางบอกว่ายังมีต่อ) */
