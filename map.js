@@ -1208,52 +1208,146 @@ function ddpmMarker(row){
       </dl>
       <a class="pp-link" href="https://cctv.disaster.go.th/stations/${esc(row.code)}" target="_blank" rel="noopener">ผลวิเคราะห์</a>`;
     }, {maxWidth:300});
-  m.on('popupopen', ()=>loadDdpmSnapshot(row));
+  m.on('popupopen', ev=>loadDdpmSnapshot(row, ev.popup));
   m.addTo(gDdpm);
 }
-/* ดึงภาพ snapshot ล่าสุดของกล้อง ปภ. ผ่าน DDPM_PROXY (Cloudflare Worker แก้ CORS)
-   GET <proxy>/stations/{code} → histories[0].snapshotPath ; ภาพอยู่ที่ <proxy>/<snapshotPath> */
-async function loadDdpmSnapshot(row){
+/* ภาพกล้อง ปภ. ในหน้าต่าง popup
+   ข้อมูลสถานี: GET <proxy>/stations/{code} (ผ่าน DDPM_PROXY แก้ CORS)
+   ภาพ: ตั้งแต่ ต.ค. 2569 ปภ. เลิกเก็บไฟล์ snapshot (histories[0].snapshotPath = "no_image") กล้องเป็น go2rtc
+   เว็บ ปภ. เองดึงภาพสดจาก /api/webrtc/public-frame.jpeg?src=<ชื่อกล้อง เช่น NWT02-01> → ใช้แบบเดียวกัน
+   (โหลดใน <img> ตรง ๆ ได้ ไม่ติด CORS) · ถ้าสถานีไม่มีรายชื่อกล้องแต่ยังมีไฟล์ snapshot ใช้ไฟล์นั้นแทน
+   histories[].timeStamp ของ ปภ. เป็นเวลา UTC ที่ไม่มีโซน (ต่างจาก updatedAt ซึ่งเป็นเวลาไทย) */
+const DDPM_LIVE_FRAME = 'https://cctv.disaster.go.th/api/webrtc/public-frame.jpeg?src=';
+const ddpmUtc = s => s ? new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(s) ? s : String(s)+'Z') : null;
+async function loadDdpmSnapshot(row, popup){
   const el = document.getElementById('snap-'+row.code);
   if(!el) return;
   if(!DDPM_PROXY){ el.innerHTML=''; return; }
   const base = DDPM_PROXY.replace(/\/+$/,'');
   el.innerHTML = '<div style="font-size:11px;color:var(--ink-3)">กำลังโหลดภาพกล้อง…</div>';
+  // กราฟระดับน้ำรายชั่วโมง 24 ชม. (endpoint เดียวกับที่หน้าแรกใช้ดูทิศทางน้ำ) · โหลดพร้อมข้อมูลสถานี
+  const graphP = fetch(base+'/water-level/graph?stationCode='+encodeURIComponent(row.code)+'&type=hour&isSimulatorMode=false', {cache:'no-store'})
+    .then(r=>r.ok ? r.json() : null).catch(()=>null);
   try{
     const j = await fetch(base+'/stations/'+encodeURIComponent(row.code), {cache:'no-store'}).then(r=>r.json());
     const d = j.data||j;
+    const graph = ddpmWLChart(await graphP, d);
     const h0 = (d.histories||d.history||[])[0];
     const bank = (d.riverBankLevel!=null ? d.riverBankLevel : d.dpmRiverBankLevel);
     const cur  = (d.currentWaterLevel!=null ? d.currentWaterLevel : (h0 && h0.level));
-    if(!h0 || !h0.snapshotPath){ el.innerHTML = '<div style="font-size:11px;color:var(--ink-3)">ยังไม่มีภาพล่าสุดจากกล้องนี้</div>'; return; }
-    const sp1 = String(h0.snapshotPath).replace(/^\/+/,'');
-    const sib = p => p.replace(/_(\d{1,2})(\.[a-z]+)$/i, (m,n,e)=>'_'+((n.replace(/^0/,'')==='1')?'02':'01')+e);
-    const sp2 = sib(sp1);
-    const is01 = /_0?1\.[a-z]+$/i.test(sp1);
-    const nCam = Array.isArray(d.cameras) ? d.cameras.length : 1;
-    const twoCam = nCam>=2 && sp2!==sp1;
-    // กล้องเดียว → ใช้ภาพตามที่ ปภ. ให้มาตรง ๆ (เดิมเดาชื่อไฟล์ _01 ซึ่งอาจไม่มีจริง)
-    const path1 = !twoCam || is01 ? sp1 : sp2;   // กล้อง 1 (_01)
-    const path2 = path1===sp1 ? sp2 : sp1;       // อีกไฟล์ · ใช้เป็นภาพสำรองเมื่อภาพแรกโหลดไม่ขึ้น
-    const url1 = base+'/'+path1, url2 = base+'/'+path2;
-    const tstr = h0.timeStamp ? new Date(h0.timeStamp).toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}) : '';
-    const off = h0.isOnline===false;
-    const oldPic = h0.timeStamp && (Date.now() - new Date(h0.timeStamp)) > 3600e3;
-    const info = 'ภาพล่าสุด '+esc(tstr)+(oldPic ? ' <b style="color:var(--st-watch)">(ภาพเก่า)</b>' : '')
-      + (cur!=null  ? ' · ระดับน้ำ '+fmt(cur)+' ม.'  : '')
+    const cams = (Array.isArray(d.cameras) ? d.cameras : []).filter(c=>c && c.name && !c.deletedAt)
+      .sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+    const snap = h0 && h0.snapshotPath && h0.snapshotPath!=='no_image' ? String(h0.snapshotPath).replace(/^\/+/,'') : '';
+    const t = Date.now();
+    const urls = cams.length ? cams.map(c => DDPM_LIVE_FRAME+encodeURIComponent(c.name)+'&t='+t)   // ภาพสดรายกล้อง
+               : snap ? [base+'/'+snap] : [];
+    if(!urls.length){ el.innerHTML = '<div style="font-size:11px;color:var(--ink-3)">สถานีนี้ไม่มีกล้องที่เปิดให้ดูภาพ</div>'+graph; ddpmPopupFit(popup); return; }
+    const fmtT = dt => dt ? dt.toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}) : '';
+    const lvAt = ddpmUtc(h0 && h0.timeStamp);
+    const oldLv = lvAt && (Date.now() - lvAt) > 3600e3;
+    const off = h0 && (h0.isOnline===false || h0.isOnline===0);
+    const info = (cams.length ? 'ภาพสด '+esc(fmtT(new Date(t))) : 'ภาพล่าสุด '+esc(fmtT(lvAt)))
+      + (cur!=null  ? ' · ระดับน้ำ '+fmt(cur)+' ม.'+(lvAt && cams.length ? ' (วัด '+esc(lvAt.toLocaleTimeString(locale(),{hour:'2-digit',minute:'2-digit'}))+')' : '') : '')
+      + (oldLv ? ' <b style="color:var(--st-watch)">(ค่าเก่า)</b>' : '')
       + (bank!=null ? ' · ตลิ่ง '+fmt(bank)+' ม.' : '')
       + (off ? ' · ⚠️ กล้องออฟไลน์' : '');
-    const st = 'width:100%;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;background:var(--card-2)';
-    const tabs = twoCam
-      ? '<div class="ddpm-tabs"><button type="button" class="ddpm-tab on" onclick="ddpmCam(this,\''+esc(url1)+'\')">กล้อง 1</button>'
-        + '<button type="button" class="ddpm-tab" onclick="ddpmCam(this,\''+esc(url2)+'\')">กล้อง 2</button></div>'
+    // จองพื้นที่ภาพ 16:9 ไว้ก่อน (ภาพกล้อง 1280×720) popup จะได้ไม่กระโดดตอนภาพโหลดเสร็จ
+    const st = 'width:100%;aspect-ratio:16/9;object-fit:contain;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;background:var(--card-2)';
+    const tabs = urls.length>=2
+      ? '<div class="ddpm-tabs">'+urls.map((u,i)=>'<button type="button" class="ddpm-tab'+(i?'':' on')+'" onclick="ddpmCam(this,\''+esc(u)+'\')">กล้อง '+(i+1)+'</button>').join('')+'</div>'
       : '';
     el.innerHTML = '<div class="ddpm-cams">'+tabs
-      + '<img class="ddpm-img" src="'+esc(url1)+'" data-alt="'+(url2!==url1?esc(url2):'')+'" data-code="'+esc(row.code)+'" alt="ภาพกล้อง '+esc(row.code)+'" style="'+st+'" onerror="ddpmImgErr(this)" onclick="window.open(this.src,\'_blank\')">'
-      + '<div style="font-size:10.5px;color:var(--ink-3);margin-top:3px">'+info+'</div></div>';
+      + '<img class="ddpm-img" src="'+esc(urls[0])+'" data-alt="'+(urls[1]?esc(urls[1]):'')+'" data-code="'+esc(row.code)+'" alt="ภาพกล้อง '+esc(row.code)+'" style="'+st+'" onerror="ddpmImgErr(this)" onclick="window.open(this.src,\'_blank\')">'
+      + '<div style="font-size:10.5px;color:var(--ink-3);margin-top:3px">'+info+'</div></div>'
+      + graph;
+    ddpmPopupFit(popup);
   }catch(e){ el.innerHTML = '<div style="font-size:11px;color:var(--st-danger)">โหลดภาพไม่สำเร็จ · ตรวจสอบว่าตั้งค่า DDPM_PROXY ถูกต้อง</div>'; }
 }
-/* ภาพโหลดไม่ขึ้น (ปภ. ลบไฟล์ภาพเก่า / กล้องไม่ส่งภาพ) → ลองอีกกล้องก่อน แล้วจึงแจ้งพร้อมลิงก์ดูที่เว็บ ปภ. */
+/* popup สูงขึ้นหลังใส่ภาพ+กราฟ → ถ้าล้นขอบบนแผนที่ เลื่อนแผนที่ลงให้เห็นทั้งหมด
+   (ห้ามใช้ popup.update(): จะเรียกฟังก์ชันเนื้อหาใหม่ ทำให้ภาพ/กราฟที่เพิ่งใส่หายไป) */
+function ddpmPopupFit(popup){
+  // รอ autoPan ของ Leaflet (0.25 วิ) ให้จบก่อน ไม่งั้นแอนิเมชันของมันจะดึงแผนที่กลับไปตำแหน่งเดิม
+  setTimeout(()=>{
+    const pe = popup?.getElement?.(); if(!pe || !popup.isOpen()) return;
+    const over = (map.getContainer().getBoundingClientRect().top + 10) - pe.getBoundingClientRect().top;
+    if(over > 0) map.panBy([0, -over]);
+  }, 350);
+}
+/* กราฟระดับน้ำ 24 ชม. (รายชั่วโมง) ของสถานี ปภ. · แถบสีตามเกณฑ์ของสถานีแบบเดียวกับเว็บ ปภ. (โหมดสาธารณะ):
+   เขียว = ต่ำกว่าเกณฑ์เตรียมพร้อม (high) · เหลือง = high ถึงวิกฤต (critical) · แดง = ตั้งแต่วิกฤต · เส้นประ = ระดับตลิ่ง
+   ชี้/แตะบนกราฟเพื่อดูค่ารายชั่วโมง · มีตารางค่ารายชั่วโมงให้กางดู */
+function ddpmWLChart(g, d){
+  const gd = g?.data ?? g;
+  const labels = (gd?.labels||[]).map(x=>String(x).replace(/[\u200b\s]+/g,''));
+  const raw = gd?.datasets?.[0]?.data || [];
+  const n = raw.length;
+  const pts = raw.map((p,i)=>({i, y:num(p && typeof p==='object' ? p.y : p), t:labels[i]||''})).filter(p=>p.y!=null);
+  if(n<2 || pts.length<2) return '';
+  const th = d?.waterThreshold || {};
+  const high = num(th.highLevelThreshold), crit = num(th.criticalLevelThreshold);
+  const bank = num(d?.riverBankLevel ?? d?.dpmRiverBankLevel);
+  const ys = pts.map(p=>p.y);
+  let lo = Math.min(...ys), hi = Math.max(...ys);
+  if(bank!=null && bank>0) hi = Math.max(hi, bank);
+  if(crit!=null && crit>0) hi = Math.max(hi, crit);
+  const pad = Math.max((hi-lo)*0.08, 0.15); lo -= pad; hi += pad;
+  const W=284, H=124, pl=34, pr=8, pt=10, pb=16;
+  const X = i => pl + (W-pl-pr)*(i/(n-1));
+  const Y = y => pt + (H-pt-pb)*(1-(y-lo)/(hi-lo));
+  const band = (a,b,c) => { const top=Math.min(b,hi), bot=Math.max(a,lo); return top>bot ? `<rect x="${pl}" y="${Y(top).toFixed(1)}" width="${W-pl-pr}" height="${(Y(bot)-Y(top)).toFixed(1)}" fill="${c}"/>` : ''; };
+  const zones = high>0 && crit>high
+    ? band(lo,high,'var(--st-normal-wash)') + band(high,crit,'var(--st-watch-wash)') + band(crit,hi,'var(--st-danger-wash)') : '';
+  const bankLine = bank!=null && bank>0 && bank<=hi
+    ? `<line x1="${pl}" y1="${Y(bank).toFixed(1)}" x2="${W-pr}" y2="${Y(bank).toFixed(1)}" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="5 4"/>`
+      + `<text x="${W-pr-2}" y="${(Y(bank)-3).toFixed(1)}" font-size="9" font-weight="600" fill="var(--ink)" text-anchor="end" stroke="var(--card)" stroke-width="3" paint-order="stroke">ตลิ่ง ${bank.toFixed(2)} ม.</text>` : '';
+  const line = pts.map((p,k)=>`${k?'L':'M'}${X(p.i).toFixed(1)},${Y(p.y).toFixed(1)}`).join('');
+  const last = pts[pts.length-1], first = pts[0];
+  const yt = v => `<text x="${pl-4}" y="${(Y(v)+3).toFixed(1)}" font-size="9" fill="var(--ink-3)" text-anchor="end">${v.toFixed(1)}</text>`;
+  const xt = (i,anchor) => labels[i] ? `<text x="${X(i).toFixed(1)}" y="${H-3}" font-size="9" fill="var(--ink-3)" text-anchor="${anchor}">${esc(labels[i])}</text>` : '';
+  const hov = JSON.stringify(pts.map(p=>[+X(p.i).toFixed(1), +Y(p.y).toFixed(1), p.t, p.y.toFixed(2)]));
+  const ch = last.y - first.y;
+  const chTxt = Math.abs(ch) < 0.005 ? 'ทรงตัวใน 24 ชม.' : (ch>0?'▲ ขึ้น ':'▼ ลด ')+Math.abs(ch).toFixed(2)+' ม. ใน 24 ชม.';
+  const sw = c => `<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${c};border:1px solid var(--line-mid);vertical-align:-1px;margin-right:3px"></span>`;
+  const key = high>0 && crit>high
+    ? `<div style="font-size:10px;color:var(--ink-3);margin-top:3px;line-height:1.6">${sw('var(--st-normal-wash)')}ปกติ–เฝ้าระวัง &lt;${high.toFixed(2)} &nbsp;${sw('var(--st-watch-wash)')}เตรียมพร้อม–อพยพ &nbsp;${sw('var(--st-danger-wash)')}ต้องอพยพ ≥${crit.toFixed(2)}</div>` : '';
+  const rows = pts.slice().reverse().map(p=>`<tr><td style="padding:1px 8px 1px 0">${esc(p.t)}</td><td style="text-align:right">${p.y.toFixed(2)}</td></tr>`).join('');
+  return `<div style="font-size:11px;color:var(--ink-2);margin:8px 0 2px">ระดับน้ำ 24 ชม. <b>${last.y.toFixed(2)} ม.</b> · ${chTxt}</div>
+  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="กราฟระดับน้ำรายชั่วโมง 24 ชั่วโมง ล่าสุด ${last.y.toFixed(2)} เมตร" data-p="${esc(hov)}"
+       onpointermove="ddpmChartHover(event,this)" onpointerdown="ddpmChartHover(event,this)" onpointerleave="ddpmChartLeave(this)"
+       style="width:100%;display:block;background:var(--card);border:1px solid var(--line);border-radius:6px;touch-action:pan-y">
+    ${zones}${bankLine}
+    <path d="${line}" fill="none" stroke="var(--signal)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${X(last.i).toFixed(1)}" cy="${Y(last.y).toFixed(1)}" r="4" fill="var(--signal)" stroke="var(--card)" stroke-width="2"/>
+    ${yt(hi-pad)}${yt(lo+pad)}${xt(0,'start')}${xt(Math.floor((n-1)/2),'middle')}${xt(n-1,'end')}
+    <g class="hv" style="display:none;pointer-events:none">
+      <line y1="${pt}" y2="${H-pb}" stroke="var(--ink-3)" stroke-width="1"/>
+      <circle r="4" fill="var(--card)" stroke="var(--signal)" stroke-width="2"/>
+      <text y="${pt+9}" font-size="10" font-weight="600" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke"></text>
+    </g>
+  </svg>${key}
+  <details style="font-size:10.5px;color:var(--ink-2);margin-top:2px"><summary style="cursor:pointer;color:var(--ink-3)">ตารางค่ารายชั่วโมง (ม.)</summary>
+    <div style="max-height:120px;overflow:auto"><table style="border-collapse:collapse;font-variant-numeric:tabular-nums">${rows}</table></div></details>`;
+}
+/* ชี้/แตะบนกราฟ ปภ. → เส้นแนวตั้ง + จุด + ป้ายเวลา·ค่า ของชั่วโมงที่ใกล้ที่สุด */
+function ddpmChartHover(ev, svg){
+  let p; try{ p = JSON.parse(svg.dataset.p||'[]'); }catch(e){ return; }
+  if(!p.length || !svg.getScreenCTM) return;
+  const sp = svg.createSVGPoint(); sp.x = ev.clientX; sp.y = ev.clientY;
+  const x = sp.matrixTransform(svg.getScreenCTM().inverse()).x;
+  let b = p[0]; for(const q of p) if(Math.abs(q[0]-x) < Math.abs(b[0]-x)) b = q;
+  const g = svg.querySelector('.hv'); if(!g) return;
+  g.style.display = '';
+  const ln = g.querySelector('line'); ln.setAttribute('x1', b[0]); ln.setAttribute('x2', b[0]);
+  const c = g.querySelector('circle'); c.setAttribute('cx', b[0]); c.setAttribute('cy', b[1]);
+  const t = g.querySelector('text'); t.textContent = `${b[2]} น.  ${b[3]} ม.`;
+  const vbW = svg.viewBox.baseVal.width;
+  const left = b[0] > vbW/2;
+  // ป้ายอยู่เหนือจุดที่ชี้ (ไม่ไปทับเส้นตลิ่ง/ป้ายตลิ่งที่ขอบบน) · จุดอยู่สูงมากจึงย้ายไปใต้จุด
+  const ly = b[1] - 9 < 20 ? b[1] + 16 : b[1] - 9;
+  t.setAttribute('x', left ? b[0]-6 : b[0]+6); t.setAttribute('y', ly); t.setAttribute('text-anchor', left ? 'end' : 'start');
+}
+function ddpmChartLeave(svg){ const g = svg.querySelector('.hv'); if(g) g.style.display = 'none'; }
+/* ภาพโหลดไม่ขึ้น (กล้องไม่ส่งภาพ / ไฟล์ไม่มีแล้ว) → ลองอีกกล้องก่อน แล้วจึงแจ้งพร้อมลิงก์ดูที่เว็บ ปภ. */
 function ddpmImgErr(img){
   const alt = img.dataset.alt;
   if(alt && !img.dataset.triedAlt){ img.dataset.triedAlt = '1'; img.src = alt; return; }
@@ -1261,7 +1355,7 @@ function ddpmImgErr(img){
   const box = document.createElement('div');
   box.className = 'ddpm-img';
   box.style.cssText = 'font-size:11.5px;color:var(--st-watch);background:var(--card-2);border-radius:8px;padding:8px 10px';
-  box.innerHTML = 'ภาพจากกล้องนี้ยังไม่พร้อมใช้งานขณะนี้ (ระบบ ปภ. ไม่มีไฟล์ภาพล่าสุด)'
+  box.innerHTML = 'ภาพจากกล้องนี้ยังไม่พร้อมใช้งานขณะนี้ (กล้องไม่ส่งภาพ)'
     + (code ? ' · <a href="https://cctv.disaster.go.th/stations/'+encodeURIComponent(code)+'" target="_blank" rel="noopener">ดูที่ cctv.disaster.go.th ↗</a>' : '');
   img.replaceWith(box);
 }
