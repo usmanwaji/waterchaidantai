@@ -831,7 +831,7 @@ function buildLegend(){
     const d = L.DomUtil.create('div','legend');
     d.innerHTML = `
       <h4>${t('legWL')}</h4>
-      ${['overflow','high','normal','low','critlow'].map(k=>`<div class="lg"><span class="sw" style="background:${WL_CLASSES[k].color}"></span>${wlLabel(k)}</div>`).join('')}
+      ${['overflow','high'].map(k=>`<div class="lg"><span class="sw" style="background:${WL_CLASSES[k].color}"></span>${wlLabel(k)}</div>`).join('')}
       <h4>${t('legRain')}</h4>
       <div class="lg"><span class="sw sq" style="background:#4ade80"></span>${t('legR1')}</div>
       <div class="lg"><span class="sw sq" style="background:var(--signal)"></span>${t('legR2')}</div>
