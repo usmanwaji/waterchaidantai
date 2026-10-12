@@ -158,7 +158,9 @@ const AMP_CENTER_NARA={'เมืองนราธิวาส':[6.4297,101.813
   'ยี่งอ':[6.4217,101.7041],'ระแงะ':[6.2238,101.7138],'รือเสาะ':[6.3792,101.5171],'ศรีสาคร':[6.1906,101.5017],
   'แว้ง':[5.8877,101.8733],'สุคิริน':[5.91,101.7221],'สุไหงโก-ลก':[6.073,101.99],'สุไหงปาดี':[6.1298,101.9017],
   'จะแนะ':[6.0404,101.614],'เจาะไอร้อง':[6.2149,101.8411]};
-let SB=null; try{ if(window.supabase && typeof sb!=='undefined') SB=sb; }catch(e){ SB=null; }
+/* ศูนย์พักพิง: ระบบศูนย์พักพิง ปภ. (shelter.disaster.go.th) แหล่งเดียวกับ shelter.html
+   ชั้น ArcGIS สาธารณะของ ปภ. (DDPM_Shelter_UAT) · is_active=1 = ปภ. เปิดศูนย์แล้ว */
+const DDPM_SHELTER_Q='https://gis-portal.disaster.go.th/arcgis/rest/services/DDPM_Shelter/DPMGISADMIN_DDPM_Shelter_UAT/FeatureServer/0/query';
 function haversine(a,b,c,d){ const R=6371,r=x=>x*Math.PI/180; const dLa=r(c-a),dLo=r(d-b);
   const s=Math.sin(dLa/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(s)); }
 
@@ -209,10 +211,17 @@ async function getStation(prov, pos){
   }catch(e){ return null; }
 }
 async function getShelter(prov, pos){
-  if(!SB) return null;
+  const code=PROV_CODE[prov]; if(!code) return null;
   try{
-    const { data } = await SB.from('shelters').select('*').eq('province',prov).eq('status','open');
-    let rows=(data||[]).filter(r=>r.lat!=null);
+    const j=await fetch(DDPM_SHELTER_Q+'?'+new URLSearchParams({
+      where:`province_code='${code}' AND is_active=1 AND deleted_at IS NULL AND lat IS NOT NULL AND lng IS NOT NULL`,
+      outFields:'name,district_name,lat,lng,capacity,current_residents,coordinator_phone',
+      returnGeometry:'false', f:'json'})).then(r=>r.json());
+    if(!Array.isArray(j.features)) return null;
+    // เต็มแล้ว (ยอดผู้พักพิงถึงความจุ) ไม่นับเป็นที่เปิดรับ
+    let rows=j.features.map(({attributes:a})=>({name:a.name, amphoe:a.district_name, lat:a.lat, lon:a.lng,
+      capacity:a.capacity>0?a.capacity:null, occupancy:a.current_residents||0, contact_phone:a.coordinator_phone}))
+      .filter(r=>r.capacity==null || r.occupancy<r.capacity);
     if(!rows.length) return {none:true};
     if(pos){ rows.forEach(r=>r._d=haversine(pos[0],pos[1],r.lat,r.lon)); rows.sort((a,b)=>a._d-b._d); }
     return rows[0];
@@ -235,8 +244,8 @@ function renderStation(s){
 }
 function renderShelter(s, pos){
   const btns=$('shBtns'); btns.innerHTML='';
-  if(!s){ $('shName').textContent='ระบบศูนย์พักพิงไม่พร้อม (ออฟไลน์)'; $('shDs').textContent=''; }
-  else if(s.none){ $('shName').textContent='ยังไม่มีศูนย์ที่เปิดรับในจังหวัดนี้ในระบบ';
+  if(!s){ $('shName').textContent='โหลดข้อมูลศูนย์พักพิง ปภ. ไม่สำเร็จ'; $('shDs').textContent=''; }
+  else if(s.none){ $('shName').textContent='ปภ. ยังไม่เปิดศูนย์พักพิงที่รับคนได้ในจังหวัดนี้';
     $('shDs').innerHTML='ดูรายชื่อศูนย์พักพิงทั้งหมดได้ที่หน้าศูนย์พักพิง';
     btns.innerHTML='<a class="btn" href="shelter.html">ดูศูนย์พักพิงทั้งหมด →</a>'; }
   else{
