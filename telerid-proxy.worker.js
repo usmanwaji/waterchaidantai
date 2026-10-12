@@ -1,0 +1,212 @@
+/*
+  telerid-proxy.worker.js — Cloudflare Worker ดึงโทรมาตร ชป. (telerid.rid.go.th) ของนราธิวาส แทนคอมในไทย
+  ------------------------------------------------------------------
+  ทดสอบแล้ว (telerid-test.worker.js): Worker ที่รันศูนย์ BKK อ่าน REST + WebSocket ของ telerid ได้
+  (telerid อยู่หลัง Cloudflare เหมือนกัน) · คนดูในไทยเรียก Worker → รันที่ BKK → ดึงได้
+  คนดูจากศูนย์อื่นที่ถูกบล็อก → Worker ตอบ 502 → หน้าเว็บใช้ข้อมูลจากคอม (สาขา cam) แทนอัตโนมัติ
+
+  ให้ path แบบเดียวกับสาขา cam ที่ telerid-scraper ส่งขึ้น (หน้าเว็บสลับแหล่งได้ทันที):
+    /stations.json          ระดับน้ำทุกสถานีในนราธิวาส (แคช 2 นาที)
+    /{CODE}.detail.json     กราฟระดับน้ำ/ฝน 48 ชม. + ภาพตัดลำน้ำ (แคช 5 นาที)
+    /{CODE}.jpg             ภาพกล้องล่าสุด (แคช 5 นาที)
+  แคชอยู่ในศูนย์ Cloudflare แต่ละแห่ง → คนดูกี่คนก็ตาม telerid โดนเรียกราว 1 รอบ / 2 นาที เท่ากับตอนใช้คอม
+
+  วิธี deploy: dash.cloudflare.com → Workers & Pages → Create → Create Worker (ไม่ใช่ Import a repository)
+              → ชื่อ telerid-proxy → Deploy → Edit code → วางไฟล์นี้ → Deploy
+              ได้ URL https://telerid-proxy.<บัญชี>.workers.dev (map.js / index.html ตั้งไว้ที่บัญชี newusmanwaji)
+  ทดสอบ: เปิด https://telerid-proxy.<บัญชี>.workers.dev/stations.json จากเน็ตไทย
+  ------------------------------------------------------------------
+*/
+const BASE = 'https://telerid.rid.go.th';
+const PROVINCE = 'นราธิวาส';
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
+const TTL_LIST = 6 * 3600;     // รายชื่อสถานี (แทบไม่เปลี่ยน)
+const TTL_STATIONS = 120;      // ระดับน้ำทุกสถานี
+const TTL_DETAIL = 300;        // กราฟ/ภาพตัด
+const TTL_IMAGE = 300;         // ภาพกล้อง
+const STALE_MAX = 6 * 3600;    // telerid ล่มชั่วคราว → ตอบชุดเก่าได้ไม่เกิน 6 ชม.
+const N_POINTS = 192;          // กราฟ ~48 ชม. (15 นาที/จุด) เท่ากับ scraper
+
+const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, OPTIONS' };
+const json = (obj, status = 200, maxAge = 60) => new Response(JSON.stringify(obj), {
+  status, headers: { ...CORS, 'content-type': 'application/json; charset=utf-8', 'cache-control': `public, max-age=${maxAge}` } });
+const withTimeout = (p, ms, what) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(what + ' timeout')), ms))]);
+const cacheKey = (name) => new Request('https://telerid-proxy.cache/' + encodeURIComponent(name));
+
+/* แคชในศูนย์ Cloudflare: เก็บพร้อมเวลาเก็บ (x-stored) เพื่อเช็กความสดเอง และใช้ชุดเก่าได้ตอน telerid ล่ม */
+async function cached(ctx, name, ttl, build) {
+  const cache = caches.default;
+  const hit = await cache.match(cacheKey(name));
+  const age = hit ? (Date.now() - Number(hit.headers.get('x-stored') || 0)) / 1000 : Infinity;
+  if (hit && age < ttl) return hit;
+  try {
+    const fresh = await build();   // Response
+    if (fresh.ok) {
+      const body = await fresh.arrayBuffer();
+      const headers = new Headers(fresh.headers);
+      headers.set('x-stored', String(Date.now()));
+      headers.set('cache-control', `public, max-age=${STALE_MAX}`);   // ให้แคชเก็บไว้นานพอใช้เป็นชุดสำรอง
+      ctx.waitUntil(cache.put(cacheKey(name), new Response(body, { headers })));
+      const out = new Headers(fresh.headers);
+      return new Response(body, { status: 200, headers: out });
+    }
+    if (hit && age < STALE_MAX) return hit;
+    return fresh;
+  } catch (e) {
+    if (hit && age < STALE_MAX) return hit;
+    throw e;
+  }
+}
+
+/* รายชื่อสถานีของจังหวัด (REST สาธารณะ) */
+async function stationList(ctx) {
+  const r = await cached(ctx, 'list', TTL_LIST, async () => {
+    const res = await withTimeout(fetch(BASE + '/restapi/main/station_list/', { headers: { 'User-Agent': UA, Accept: 'application/json' } }), 20000, 'station_list');
+    if (!res.ok) return new Response('station_list ' + res.status, { status: 502 });
+    const j = await res.json();
+    const rows = (j.results || j || []).filter((s) => String(s.province_name || '').includes(PROVINCE)).map((s) => ({
+      id: s.id, code: s.code, name: s.name, basin: s.basin_name || '', amphur: s.amphur_name || '', province: s.province_name || '',
+      lat: s.geom && s.geom.coordinates ? s.geom.coordinates[1] : null,
+      lon: s.geom && s.geom.coordinates ? s.geom.coordinates[0] : null,
+    }));
+    if (!rows.length) return new Response('no stations', { status: 502 });
+    return new Response(JSON.stringify(rows), { headers: { 'content-type': 'application/json' } });
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+/* ข้อความแรกจาก WebSocket ของสถานี = ข้อมูลเต็ม (ระดับน้ำ, กราฟ, กล้อง, ภาพตัด) */
+async function stationWs(id) {
+  const res = await withTimeout(fetch(BASE + '/ws/station/' + id + '/', { headers: { Upgrade: 'websocket', 'User-Agent': UA, Origin: BASE } }), 15000, 'ws connect');
+  const ws = res.webSocket;
+  if (!ws) throw new Error('no websocket (' + res.status + ')');
+  ws.accept();
+  try {
+    const data = await withTimeout(new Promise((resolve, reject) => {
+      ws.addEventListener('message', (e) => resolve(e.data));
+      ws.addEventListener('error', () => reject(new Error('ws error')));
+      ws.addEventListener('close', () => reject(new Error('ws closed')));
+    }), 15000, 'ws message');
+    return JSON.parse(JSON.parse(data).message);
+  } finally { try { ws.close(); } catch {} }
+}
+
+const iso = (unix) => (unix ? new Date(unix * 1000).toISOString() : null);
+function summarize(s, st) {
+  const v = (st && st.values) || {};
+  const cams = v.cctv ? Object.values(v.cctv) : [];
+  const cam = cams[0] || null;
+  const level = v.water_level && v.water_level.value != null ? v.water_level.value : null;
+  const levelUnix = v.water_level ? v.water_level.unixtime : null;
+  const critical = st ? st.water_level_critical ?? null : null;
+  const wlg = v.water_level_graph ? Object.values(v.water_level_graph)[0] : null;
+  return {
+    code: s.code, name: s.name, basin: s.basin, amphur: s.amphur, province: s.province, lat: s.lat, lon: s.lon,
+    level, bank: critical, warning: st ? st.water_level_warning ?? null : null, critical,
+    hasImage: !!(cam && cam.path), hasDetail: !!((wlg && Array.isArray(wlg.value) && wlg.value.length) || (Array.isArray(st && st.cross_section) && st.cross_section[0])),
+    cams: cams.length, levelDt: iso(levelUnix),
+    dt: cam && cam.unixtime ? iso(cam.unixtime) : iso(levelUnix),
+    _cam: cam ? { path: String(cam.path || ''), unixtime: cam.unixtime || null } : null,
+  };
+}
+function detail(s, st) {
+  const v = st.values || {};
+  const r2 = (x, k) => (x == null ? null : Math.round(x * k) / k);
+  const wlg = v.water_level_graph ? Object.values(v.water_level_graph)[0] : null;
+  const rg = v.rain_graph;
+  const cs = Array.isArray(st.cross_section) ? st.cross_section[0] : null;
+  return {
+    code: s.code, name: s.name,
+    level: v.water_level && v.water_level.value != null ? v.water_level.value : null,
+    levelUnix: v.water_level ? v.water_level.unixtime : null,
+    warning: st.water_level_warning ?? null, critical: st.water_level_critical ?? null,
+    wl: wlg && Array.isArray(wlg.value) && Array.isArray(wlg.time) ? { t: wlg.time.slice(-N_POINTS), v: wlg.value.slice(-N_POINTS).map((x) => r2(x, 100)) } : null,
+    rain: rg && Array.isArray(rg.value) && Array.isArray(rg.time) ? { t: rg.time.slice(-N_POINTS), v: rg.value.slice(-N_POINTS).map((x) => r2(x, 10)) } : null,
+    cross: cs && Array.isArray(cs.distance) && Array.isArray(cs.high)
+      ? { distance: cs.distance, high: cs.high, ground: cs.ground ?? null, warning: cs.warning ?? null, critical: cs.critical ?? null, zerogate: cs.zerogate ?? null } : null,
+    updated: new Date().toISOString(),
+  };
+}
+
+/* ระดับน้ำทุกสถานี (WebSocket พร้อมกัน · ฟรีแพลนจำกัด 50 การเรียกต่อครั้ง: 35 สถานี + รายชื่อ = พอ) */
+async function stationsJson(ctx) {
+  return cached(ctx, 'stations', TTL_STATIONS, async () => {
+    const list = await stationList(ctx);
+    const results = await Promise.allSettled(list.map((s) => stationWs(s.id)));
+    const stations = list.map((s, i) => summarize(s, results[i].status === 'fulfilled' ? results[i].value : null));
+    const ok = stations.filter((x) => x.level != null || x.hasImage).length;
+    if (!ok) return new Response('telerid gave no data', { status: 502 });   // ไม่ทับชุดดีด้วยชุดว่าง
+    const camIndex = {};
+    stations.forEach((x) => { if (x._cam) camIndex[x.code] = x._cam; delete x._cam; });
+    ctx.waitUntil(caches.default.put(cacheKey('cams'), new Response(JSON.stringify(camIndex), {
+      headers: { 'content-type': 'application/json', 'cache-control': `public, max-age=${STALE_MAX}`, 'x-stored': String(Date.now()) } })));
+    const levelDts = stations.map((x) => x.levelDt).filter(Boolean).sort();
+    return new Response(JSON.stringify({
+      // updated = เวลาวัดล่าสุดของสถานีที่ส่งค่า (เปลี่ยนเฉพาะเมื่อมีค่าใหม่ → หน้าเว็บไม่ต้องวาดใหม่ทุก 2 นาที)
+      updated: levelDts.length ? levelDts[levelDts.length - 1] : new Date().toISOString(),
+      fetchedAt: new Date().toISOString(), source: 'telerid-proxy',
+      total: stations.length, withImage: stations.filter((x) => x.hasImage).length,
+      withDetail: stations.filter((x) => x.hasDetail).length, stations,
+    }), { headers: { 'content-type': 'application/json; charset=utf-8' } });
+  });
+}
+
+async function findStation(ctx, code) {
+  const list = await stationList(ctx);
+  return list.find((s) => s.code === code) || null;
+}
+
+async function detailJson(ctx, code) {
+  const s = await findStation(ctx, code);
+  if (!s) return new Response('unknown station', { status: 404 });
+  return cached(ctx, 'detail:' + code, TTL_DETAIL, async () =>
+    new Response(JSON.stringify(detail(s, await stationWs(s.id))), { headers: { 'content-type': 'application/json; charset=utf-8' } }));
+}
+
+async function cameraJpg(ctx, code) {
+  return cached(ctx, 'img:' + code, TTL_IMAGE, async () => {
+    // path ภาพจากรอบ stations ล่าสุด · ไม่มีจึงถาม WebSocket ของสถานีนั้นเอง
+    let cam = null;
+    const idx = await caches.default.match(cacheKey('cams'));
+    if (idx) cam = (await idx.json())[code] || null;
+    if (!cam) {
+      const s = await findStation(ctx, code);
+      if (!s) return new Response('unknown station', { status: 404 });
+      const st = await stationWs(s.id);
+      const cams = st.values && st.values.cctv ? Object.values(st.values.cctv) : [];
+      cam = cams[0] ? { path: String(cams[0].path || '') } : null;
+    }
+    if (!cam || !cam.path) return new Response('no camera', { status: 404 });
+    const res = await withTimeout(fetch(BASE + '/restapi/main/camera/' + cam.path.replace(/^\/+/, ''), { headers: { 'User-Agent': UA } }), 20000, 'camera');
+    const ct = (res.headers.get('content-type') || '').split(';')[0];
+    if (!res.ok || !/image/.test(ct)) return new Response('camera ' + res.status, { status: 502 });
+    return new Response(res.body, { headers: { 'content-type': ct } });
+  });
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
+    if (request.method !== 'GET') return new Response('Method Not Allowed', { status: 405, headers: CORS });
+    const path = decodeURIComponent(new URL(request.url).pathname.replace(/^\/+/, ''));
+    const colo = (request.cf && request.cf.colo) || '';
+    try {
+      let res;
+      if (path === '' ) return json({ ok: true, colo, use: ['/stations.json', '/{CODE}.detail.json', '/{CODE}.jpg'] }, 200, 0);
+      else if (path === 'stations.json') res = await stationsJson(ctx);
+      else if (path.endsWith('.detail.json')) res = await detailJson(ctx, path.slice(0, -'.detail.json'.length));
+      else if (path.endsWith('.jpg')) res = await cameraJpg(ctx, path.slice(0, -'.jpg'.length));
+      else return json({ error: 'not found' }, 404, 0);
+      const headers = new Headers(res.headers);
+      for (const [k, v] of Object.entries(CORS)) headers.set(k, v);
+      headers.set('cache-control', res.ok ? 'public, max-age=60' : 'no-store');
+      headers.set('x-colo', colo);
+      headers.delete('x-stored');
+      return new Response(res.body, { status: res.status, headers });
+    } catch (e) {
+      // ศูนย์นี้ดึง telerid ไม่ได้ (เช่น ถูกบล็อก) → หน้าเว็บจะไปใช้ข้อมูลจากคอม (สาขา cam) แทน
+      return json({ error: String(e && e.message || e), colo }, 502, 0);
+    }
+  },
+};
