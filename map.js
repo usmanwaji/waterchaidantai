@@ -773,7 +773,20 @@ const ZONES = [
 const ZONE_BY_PCODE = new Map(ZONES.flatMap(z => z.pcodes.map(c => [c, z])));
 const zoneName = z => z[lang] || z.th;
 map.createPane('zones'); map.getPane('zones').style.zIndex = 240;   // ใต้เรดาร์ (250) และขอบจังหวัด (350)
-let zoneLayer = null;
+map.createPane('zoneLabels'); map.getPane('zoneLabels').style.zIndex = 640;   // ป้ายชื่ออำเภอ: เหนือหมุด (600) ใต้ tooltip (650) · คลิกทะลุไปถึงหมุดได้
+map.getPane('zoneLabels').style.pointerEvents = 'none';
+let zoneLayer = null, zoneLabels = null;
+const zoneDistName = p => (lang==='th' ? 'อ.' : '') + onwrZoneName(p);
+/* ป้ายชื่ออำเภอวางที่จุดกึ่งกลาง (center_lat/center_lon ในไฟล์ geojson) · สร้างใหม่เมื่อเปลี่ยนภาษา */
+function zoneBuildLabels(){
+  if(zoneLabels){ map.removeLayer(zoneLabels); zoneLabels = null; }
+  const geo = ONWR.geo.district;
+  if(!geo || !zoneLayer) return;
+  zoneLabels = L.layerGroup(geo.features.filter(f => f.properties.center_lat!=null).map(f =>
+    L.marker([f.properties.center_lat, f.properties.center_lon], {pane:'zoneLabels', interactive:false, keyboard:false,
+      icon:L.divIcon({className:'zone-label', html:`<span>${esc(zoneDistName(f.properties))}</span>`, iconSize:null})})
+  )).addTo(map);
+}
 async function zoneBuild(){
   const geo = ONWR.geo.district || (ONWR.geo.district = await fetchJSON(ONWR_GEO.district, 30000));
   if(!onwrOn('lyZone')) return;                              // ผู้ใช้ปิดไปแล้วระหว่างโหลด
@@ -783,14 +796,19 @@ async function zoneBuild(){
       return z ? {color:z.line, weight:2, opacity:.9, fillColor:z.fill, fillOpacity:.35} : ONWR_UNFILLED; },
     onEachFeature: (f,l) => l.bindTooltip(() => {
       const z = ZONE_BY_PCODE.get(f.properties.pcode);
-      return `<b>${esc((lang==='th' ? 'อ.' : '') + onwrZoneName(f.properties))}</b>${z ? `<br>${esc(zoneName(z))}` : ''}`;
+      return `<b>${esc(zoneDistName(f.properties))}</b>${z ? `<br>${esc(zoneName(z))}` : ''}`;
     }, {sticky:true})
   }).addTo(map);
+  zoneBuildLabels();
   buildLegend();
 }
 function zoneSet(on){
   if(on) zoneBuild().catch(()=>{});
-  else{ if(zoneLayer){ map.removeLayer(zoneLayer); zoneLayer=null; } buildLegend(); }
+  else{
+    if(zoneLayer){ map.removeLayer(zoneLayer); zoneLayer=null; }
+    if(zoneLabels){ map.removeLayer(zoneLabels); zoneLabels=null; }
+    buildLegend();
+  }
 }
 function zoneLegendHTML(){
   if(!zoneLayer || !map.hasLayer(zoneLayer)) return '';
@@ -1850,6 +1868,7 @@ function applyLang(){
   document.getElementById('btnHelp').textContent = t('help');
   document.getElementById('hbTitle').textContent = t('helpTitle');
   document.getElementById('hbBody').innerHTML = t('helpBody');
+  zoneBuildLabels();   // ป้ายชื่ออำเภอตามภาษา
   buildLegend();
   renderSidebar();
 }
