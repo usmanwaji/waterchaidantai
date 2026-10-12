@@ -69,7 +69,12 @@ export default {
     } catch (e) {
       return new Response('Upstream fetch failed', { status: 502, headers: cors() });
     }
-    if (!upstream.ok) return new Response(`Upstream ${upstream.status}`, { status: 502, headers: cors() });
+    if (!upstream.ok) {
+      // แนบต้นข้อความจากต้นทางไว้ดูสาเหตุ เช่น 530 ของ Cloudflare มี "error code: 1016" (DNS) / 1033 (tunnel ต้นทางล่ม)
+      let detail = '';
+      try { detail = (await upstream.text()).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200); } catch (e) {}
+      return new Response(`Upstream ${upstream.status}${detail ? ' — ' + detail : ''}`, { status: 502, headers: cors() });
+    }
 
     let body;
     try {
