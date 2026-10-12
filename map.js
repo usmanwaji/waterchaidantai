@@ -16,7 +16,7 @@ th:{
   title:'One Map ระดับน้ำชายแดนใต้', sub:'รวมทุกหน่วยงานในแผนที่เดียว',
   refresh:'รีเฟรช', loading:'กำลังโหลดข้อมูล…', updated:'อัปเดตล่าสุด', partial:'บางแหล่งข้อมูลโหลดไม่สำเร็จ',
   search:'ค้นหาสถานี / แม่น้ำ / อำเภอ…', all:'ทั้งหมด', listEmpty:'ไม่พบสถานีตามเงื่อนไข',
-  lyWL:'ระดับน้ำ', lyRain:'◼ ฝน 24 ชม.', lyDam:'เขื่อน', lySea:'น้ำทะเล', lyCctv:'CCTV', lyTele:'▲ โทรมาตร ชป.', lyRisk:'จุดเสี่ยงฉับพลัน',
+  lyWL:'ระดับน้ำ', lyRain:'◼ ฝน 24 ชม.', lyDam:'เขื่อน', lySea:'น้ำทะเล', lyCctv:'CCTV', lyTele:'▲ โทรมาตร ชป.', lyRisk:'จุดเสี่ยงฉับพลัน', lyZone:'โซนลุ่มน้ำรายอำเภอ',
   teleSrc:'กรมชลประทาน', teleProj:'โครงการชลประทาน', teleView:'เปิดระบบโทรมาตร ชป. ↗',
   extDdpm:'CCTV ปภ. ↗', extTelerid:'▲ โทรมาตร ชป. ↗',
   lyDdpm:'CCTV ปภ.', ddpmSrc:'ระบบเฝ้าระวังภัยพิบัติ ปภ.', ddpmCoord:'พิกัด (ละติจูด, ลองจิจูด)',
@@ -46,6 +46,7 @@ th:{
   onwrSiteType:'ชนิดเรดาร์', onwrSiteRadius:'รัศมีตรวจวัด', onwrSiteSrc:'กรมอุตุนิยมวิทยา ผ่าน สทนช.',
   legOnwrRadar:'เรดาร์ TMD (มม./ชม.)', legOnwrAccum:'ฝนสะสม 3 ชม. ล่วงหน้า (มม.)', legOnwrRain1:'ฝนสถานี 1 ชม. (มม.)', legOnwrRain24:'ฝนสถานี 24 ชม. (มม.)',
   legOnwrSites:'◎ สถานีเรดาร์ · เส้นประ = รัศมี 240 กม.',
+  legZone:'โซนลุ่มน้ำรายอำเภอ',
   gcap:'ระดับน้ำ 3 วันย้อนหลัง (เส้นประแดง = ตลิ่ง)', gload:'กำลังโหลดกราฟ…', gfail:'ไม่สามารถโหลดกราฟได้', gnone:'ไม่มีข้อมูลกราฟ',
   full:'ดูข้อมูลเต็มที่ thaiwater.net ↗', damfull:'ดูข้อมูลเขื่อนทั้งหมด ↗', seafull:'ดูระดับน้ำชายฝั่งเต็ม ↗',
   rain24:'ฝนสะสม 24 ชม.', storage:'ปริมาณน้ำ (ล้าน ม³)', inflow:'น้ำไหลเข้า (ล้าน ม³/วัน)', outflow:'ระบายออก (ล้าน ม³/วัน)', damlv:'ระดับน้ำ (ม.รทก.)', damdate:'วันที่ข้อมูล', pctcap:'% รนก.',
@@ -80,7 +81,7 @@ en:{
   title:'One Map · Southern Border Water Watch', sub:'All agencies, one map',
   refresh:'Refresh', loading:'Loading…', updated:'Last updated', partial:'some sources failed to load',
   search:'Search station / river / district…', all:'All', listEmpty:'No stations match',
-  lyWL:'Water level', lyRain:'◼ Rain 24 h', lyDam:'Dams', lySea:'Sea level', lyCctv:'CCTV', lyTele:'▲ RID telemetry', lyRisk:'Flash-flood risk',
+  lyWL:'Water level', lyRain:'◼ Rain 24 h', lyDam:'Dams', lySea:'Sea level', lyCctv:'CCTV', lyTele:'▲ RID telemetry', lyRisk:'Flash-flood risk', lyZone:'District basin zones',
   teleSrc:'Royal Irrigation Dept', teleProj:'Irrigation project', teleView:'Open RID telemetry ↗',
   extDdpm:'DDPM CCTV ↗', extTelerid:'▲ RID telemetry ↗',
   lyDdpm:'DDPM CCTV', ddpmSrc:'DDPM disaster surveillance system', ddpmCoord:'Coordinates (lat, lon)',
@@ -110,6 +111,7 @@ en:{
   onwrSiteType:'Radar type', onwrSiteRadius:'Range', onwrSiteSrc:'TMD via ONWR',
   legOnwrRadar:'TMD radar (mm/h)', legOnwrAccum:'3 h rain ahead (mm)', legOnwrRain1:'Gauge rain 1 h (mm)', legOnwrRain24:'Gauge rain 24 h (mm)',
   legOnwrSites:'◎ Radar site · dashed ring = 240 km range',
+  legZone:'District basin zones',
   gcap:'Water level, past 3 days (red dash = bank)', gload:'Loading graph…', gfail:'Could not load graph', gnone:'No graph data',
   full:'Full data at thaiwater.net ↗', damfull:'All dam data ↗', seafull:'Full coastal data ↗',
   rain24:'Rain 24 h', storage:'Storage (MCM)', inflow:'Inflow (MCM/day)', outflow:'Released (MCM/day)', damlv:'Level (m MSL)', damdate:'Data date', pctcap:'% capacity',
@@ -144,7 +146,7 @@ ms:{
   title:'One Map · Paras Air Selatan Thai', sub:'Semua agensi, satu peta',
   refresh:'Muat semula', loading:'Memuatkan…', updated:'Kemas kini terakhir', partial:'sebahagian sumber gagal dimuat',
   search:'Cari stesen / sungai / daerah…', all:'Semua', listEmpty:'Tiada stesen sepadan',
-  lyWL:'Paras air', lyRain:'◼ Hujan 24 j', lyDam:'Empangan', lySea:'Paras laut', lyCctv:'CCTV', lyTele:'▲ Telemetri RID', lyRisk:'Risiko banjir kilat',
+  lyWL:'Paras air', lyRain:'◼ Hujan 24 j', lyDam:'Empangan', lySea:'Paras laut', lyCctv:'CCTV', lyTele:'▲ Telemetri RID', lyRisk:'Risiko banjir kilat', lyZone:'Zon lembangan daerah',
   teleSrc:'Jabatan Pengairan', teleProj:'Projek pengairan', teleView:'Buka telemetri RID ↗',
   extDdpm:'CCTV DDPM ↗', extTelerid:'▲ Telemetri RID ↗',
   lyDdpm:'CCTV DDPM', ddpmSrc:'Sistem pemantauan bencana DDPM', ddpmCoord:'Koordinat (lat, lon)',
@@ -174,6 +176,7 @@ ms:{
   onwrSiteType:'Jenis radar', onwrSiteRadius:'Jarak liputan', onwrSiteSrc:'TMD melalui ONWR',
   legOnwrRadar:'Radar TMD (mm/j)', legOnwrAccum:'Hujan 3 jam akan datang (mm)', legOnwrRain1:'Hujan stesen 1 jam (mm)', legOnwrRain24:'Hujan stesen 24 jam (mm)',
   legOnwrSites:'◎ Stesen radar · garis putus = liputan 240 km',
+  legZone:'Zon lembangan daerah',
   gcap:'Paras air 3 hari lepas (garis merah = tebing)', gload:'Memuatkan graf…', gfail:'Graf tidak dapat dimuat', gnone:'Tiada data graf',
   full:'Data penuh di thaiwater.net ↗', damfull:'Semua data empangan ↗', seafull:'Data pantai penuh ↗',
   rain24:'Hujan 24 jam', storage:'Simpanan (juta m³)', inflow:'Aliran masuk (juta m³/hari)', outflow:'Dilepaskan (juta m³/hari)', damlv:'Paras (m MSL)', damdate:'Tarikh data', pctcap:'% kapasiti',
@@ -757,6 +760,49 @@ async function loadOnwrActive(){
   onwrSyncSeg();
 })();
 
+/* ================= โซนลุ่มน้ำรายอำเภอ =================
+ * ระบายสีอำเภอทั้ง 13 อำเภอเป็น 4 กลุ่มตามแผนที่ในเอกสารนำเสนอ นรม.
+ * (ขอบเขตอำเภอใช้ไฟล์เดียวกับชั้นฝนสะสม สทนช. · จับคู่ด้วย pcode)
+ * อำเภอที่คร่อมสองลุ่มน้ำ (จะแนะ · สุคิริน · ตากใบ) จัดเข้ากลุ่มที่กินพื้นที่ส่วนใหญ่ในแผนที่ต้นฉบับ */
+const ZONES = [
+  {th:'ลุ่มน้ำสายบุรี',     en:'Sai Buri basin',     ms:'Lembangan Sai Buri',     fill:'#d6b06e', line:'#c2410c', pcodes:['TH9606','TH9607','TH9612','TH9609']},  // รือเสาะ ศรีสาคร จะแนะ สุคิริน
+  {th:'ลุ่มน้ำบางนรา',      en:'Bang Nara basin',    ms:'Lembangan Bang Nara',    fill:'#2dd4bf', line:'#16a34a', pcodes:['TH9601','TH9604','TH9605','TH9613','TH9602']},  // เมือง ยี่งอ ระแงะ เจาะไอร้อง ตากใบ
+  {th:'ลุ่มน้ำสุไหงโก-ลก',  en:'Su-ngai Kolok basin', ms:'Lembangan Sungai Golok', fill:'#c4b5fd', line:'#db2777', pcodes:['TH9611','TH9610','TH9608']},  // สุไหงปาดี สุไหงโก-ลก แว้ง
+  {th:'พื้นที่ชายฝั่งบาเจาะ', en:'Bacho coastal area', ms:'Kawasan pantai Bacho',   fill:'#f87171', line:'#dc2626', pcodes:['TH9603']}   // บาเจาะ
+];
+const ZONE_BY_PCODE = new Map(ZONES.flatMap(z => z.pcodes.map(c => [c, z])));
+const zoneName = z => z[lang] || z.th;
+map.createPane('zones'); map.getPane('zones').style.zIndex = 240;   // ใต้เรดาร์ (250) และขอบจังหวัด (350)
+let zoneLayer = null;
+async function zoneBuild(){
+  const geo = ONWR.geo.district || (ONWR.geo.district = await fetchJSON(ONWR_GEO.district, 30000));
+  if(!onwrOn('lyZone')) return;                              // ผู้ใช้ปิดไปแล้วระหว่างโหลด
+  if(zoneLayer) map.removeLayer(zoneLayer);
+  zoneLayer = L.geoJSON(geo, {pane:'zones',
+    style: f => { const z = ZONE_BY_PCODE.get(f.properties.pcode);
+      return z ? {color:z.line, weight:2, opacity:.9, fillColor:z.fill, fillOpacity:.35} : ONWR_UNFILLED; },
+    onEachFeature: (f,l) => l.bindTooltip(() => {
+      const z = ZONE_BY_PCODE.get(f.properties.pcode);
+      return `<b>${esc((lang==='th' ? 'อ.' : '') + onwrZoneName(f.properties))}</b>${z ? `<br>${esc(zoneName(z))}` : ''}`;
+    }, {sticky:true})
+  }).addTo(map);
+  buildLegend();
+}
+function zoneSet(on){
+  if(on) zoneBuild().catch(()=>{});
+  else{ if(zoneLayer){ map.removeLayer(zoneLayer); zoneLayer=null; } buildLegend(); }
+}
+function zoneLegendHTML(){
+  if(!zoneLayer || !map.hasLayer(zoneLayer)) return '';
+  return `<h4>${t('legZone')}</h4>` + ZONES.map(z =>
+    `<div class="lg"><span class="sw sq" style="background:${z.fill};border:2px solid ${z.line}"></span>${esc(zoneName(z))}</div>`).join('');
+}
+(function setupZones(){
+  const cb = onwrEl('lyZone'); if(!cb) return;
+  cb.onchange = e => zoneSet(e.target.checked);
+  if(cb.checked) zoneSet(true);
+})();
+
 /* ---------- ปุ่มลัดบนแผนที่ ---------- */
 let wlFilterAbnormal=false, meMarker=null;
 const toolCtl=L.control({position:'topleft'});
@@ -835,6 +881,7 @@ function buildLegend(){
       <h4>${t('legRain')}</h4>
       <div class="lg"><span class="sw sq" style="background:#f97316"></span>${t('legR3')}</div>
       <div class="lg"><span class="sw sq" style="background:#dc2626"></span>${t('legR4')}</div>
+      ${zoneLegendHTML()}
       ${onwrLegendHTML()}
       <h4>${t('legOther')}</h4>`;
     return d;
@@ -1788,7 +1835,7 @@ function applyLang(){
   document.querySelectorAll('.provbtn').forEach(b=>{
     if(b.dataset.prov!=='all') b.textContent = '🏙️ ' + tProv(b.dataset.prov);
   });
-  [['tWL','lyWL'],['tRain','lyRain'],['tDam','lyDam'],['tSea','lySea'],['tCctv','lyCctv'],['tDdpm','lyDdpm'],['tTele','lyTele'],['tRisk','lyRisk'],['tRadar','lyRadar']]
+  [['tWL','lyWL'],['tRain','lyRain'],['tDam','lyDam'],['tSea','lySea'],['tCctv','lyCctv'],['tDdpm','lyDdpm'],['tTele','lyTele'],['tRisk','lyRisk'],['tZone','lyZone'],['tRadar','lyRadar']]
     .forEach(([sp,key])=>{ const el=document.getElementById(sp); if(el) el.textContent = t(key); });
   renderRadarBar();   // ป้ายเวลา/ปุ่มเล่นในแถบเรดาร์เปลี่ยนภาษาด้วย
   onwrApplyLang();
