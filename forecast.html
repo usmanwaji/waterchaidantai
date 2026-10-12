@@ -94,6 +94,28 @@ footer a{color:var(--st-warn);text-decoration:none}
 .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line-mid);border-top-color:var(--orange);border-radius:50%;animation:spin 1s linear infinite;vertical-align:-2px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ปุ่ม + ชั้นข้อมูลความเสี่ยงดินโคลนถล่ม (FFR 36 ชม. กรมทรัพยากรน้ำ) */
+#btnFfr{padding:7px 14px;border:1.5px solid var(--outline-strong);background:#fff;color:var(--navy-d);font-family:inherit;font-size:13px;font-weight:700;border-radius:10px;cursor:pointer}
+#btnFfr:hover{border-color:var(--orange);color:var(--orange)}
+#btnFfr.on{background:#dc2626;border-color:#dc2626;color:#fff}
+.ffr-badge{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;color:#fff;font:700 12px/1 'IBM Plex Sans',sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.ffr-lv{display:inline-block;padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:600;white-space:nowrap}
+.ffr-lv.high{background:#dc2626;color:#fff}
+.ffr-lv.mid{background:#f97316;color:#fff}
+.ffr-lv.low{background:#fde68a;color:#713f12}
+.ffr-amp{display:flex;justify-content:space-between;align-items:center;gap:6px;border:1px solid var(--outline);border-radius:8px;padding:6px 10px;margin-bottom:5px;font-size:12.5px;cursor:pointer}
+.ffr-amp:hover,.ffr-amp.on{background:var(--st-warn-wash)}
+.ffr-filt{display:flex;gap:6px;margin-bottom:8px}
+.ffr-filt select{flex:1;font-family:inherit;font-size:12px;padding:5px 8px;border:1.5px solid var(--outline-strong);border-radius:7px;background:#fff;color:var(--navy-d);font-weight:600}
+.ffr-tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.ffr-tbl th{color:var(--ink-3);font-weight:600;text-align:left;padding:3px 4px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff}
+.ffr-tbl td{padding:3px 4px;border-bottom:1px solid var(--line)}
+.ffr-tbl tbody tr{cursor:pointer}
+.ffr-tbl tbody tr:hover,.ffr-tbl tbody tr.sel{background:var(--st-warn-wash)}
+.ffr-pop{max-height:220px;overflow-y:auto}
+.ffr-pop table{border-collapse:collapse;width:100%;font-size:12px;margin-top:4px}
+.ffr-pop td{padding:2px 4px;border-bottom:1px solid var(--line)}
+
 /* ===== Command Center theme (override) ===== */
 :root{--bg:var(--paper);--ink:var(--ink);--muted:var(--ink-3);--panel:#ffffff;--orange:var(--signal);--orange-d:var(--signal-hover);--orange-warm:var(--st-watch);--navy:var(--ink-2);--navy-d:var(--ink);--peach:var(--line);--outline:var(--line);--outline-strong:var(--line-mid);--elevated:#ffffff;--surface:var(--card-2);--shell:rgba(0,0,0,.72);--c-over:var(--st-danger);--c-risk:var(--signal);--c-watch:var(--st-watch);--c-ok:var(--st-normal);--c-down:var(--signal)}
 header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);border-bottom:1px solid rgba(255,255,255,.12)}
@@ -145,13 +167,24 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
   <button class="hbtn" data-h="48">+48 ชม.</button>
   <button class="hbtn" data-h="72">+72 ชม.</button>
   <button type="button" id="btnDistRain">คาดการณ์ปริมาณฝนรายอำเภอ</button>
+  <button type="button" id="btnFfr" aria-pressed="false">ความเสี่ยงดินโคลนถล่ม</button>
   <span id="conf"></span>
 </div>
 
 <div id="wrap">
   <div id="map"></div>
   <aside id="side">
-    <div class="disc">⚠️ <b>ข้อจำกัดการคาดการณ์:</b> หน้านี้ใช้การประมาณอย่างง่ายจาก <b>แนวโน้มระดับน้ำจริง</b> ของแต่ละสถานี ร่วมกับ <b>ฝนพยากรณ์แบบจำลอง WRF-ROMS (สสน.)</b> · ไม่ใช่แบบจำลองอุทกวิทยาเต็มรูปแบบ ความแม่นยำลดลงตามระยะเวลา โปรดใช้ประกอบกับประกาศของ ปภ./สทนช./กรมอุตุฯ เสมอ</div>
+    <div id="ffrPanel" hidden>
+      <div class="disc">⛰️ <b>คาดการณ์หมู่บ้านเสี่ยงภัยน้ำหลากดินถล่ม 36 ชม.</b> จ.นราธิวาส<br>ช่วงเวลา <b id="ffrPeriod"></b><br>ค่า FFR (Flash Flood Risk) ยิ่งสูงยิ่งเสี่ยง · ตารางต้นทางไม่มีพิกัดหมู่บ้าน แผนที่จึง<b>ระบายสีทั้งตำบล</b>ตามหมู่บ้านที่เสี่ยงที่สุด ตัวเลขบนแผนที่คือจำนวนหมู่บ้านเสี่ยงในตำบลนั้น · <b>แตะตำบล</b>เพื่อดูรายชื่อหมู่บ้าน</div>
+      <div class="ffr-filt">
+        <select id="ffrLevel" aria-label="ระดับความเสี่ยง"><option value="">ทุกระดับ</option><option value="high">เสี่ยงสูง</option><option value="low">เสี่ยงต่ำ</option></select>
+        <select id="ffrAmp" aria-label="อำเภอ"><option value="">ทุกอำเภอ</option></select>
+      </div>
+      <div class="card"><h3>สรุปตามอำเภอ</h3><div id="ffrStats"><span class="spin"></span> กำลังโหลด…</div></div>
+      <div class="card"><h3>รายชื่อหมู่บ้าน (<span id="ffrCount">0</span>)</h3><div id="ffrList" style="max-height:420px;overflow-y:auto"></div><div id="ffrNote" style="font-size:10.5px;color:var(--ink-3);margin-top:4px"></div></div>
+      <div style="font-size:10.5px;color:var(--ink-3);margin-bottom:10px">ที่มา: Mekong River Commission Flash Flood Guidance System (MRCFFGS) · จัดทำโดย กรมทรัพยากรน้ำ กองวิจัย พัฒนาและอุทกวิทยา · กดปุ่มช่วงเวลา (+6 ชม. ฯลฯ) เพื่อกลับไปดูคาดการณ์ระดับน้ำ</div>
+    </div>
+    <div class="disc" id="fcDisc">⚠️ <b>ข้อจำกัดการคาดการณ์:</b> หน้านี้ใช้การประมาณอย่างง่ายจาก <b>แนวโน้มระดับน้ำจริง</b> ของแต่ละสถานี ร่วมกับ <b>ฝนพยากรณ์แบบจำลอง WRF-ROMS (สสน.)</b> · ไม่ใช่แบบจำลองอุทกวิทยาเต็มรูปแบบ ความแม่นยำลดลงตามระยะเวลา โปรดใช้ประกอบกับประกาศของ ปภ./สทนช./กรมอุตุฯ เสมอ</div>
     <div id="panel"></div>
   </aside>
 </div>
@@ -175,6 +208,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
 </footer>
 
 <script src="js/criteria.js?v=2"></script>
+<script src="js/ffr_risk_data.js?v=2"></script>
 <script>
 'use strict';
 const API = 'https://api-v3.thaiwater.net/api/v1/thaiwater30';
@@ -651,6 +685,7 @@ window.fly = fly;
 
 document.querySelectorAll('.hbtn').forEach(b=>{
   b.addEventListener('click', ()=>{
+    ffrToggle(false);
     document.querySelectorAll('.hbtn').forEach(x=>x.classList.remove('on'));
     b.classList.add('on');
     horizon = +b.dataset.h;
@@ -681,8 +716,157 @@ document.getElementById('rdClose').addEventListener('click', rdClose);
 rdModal.addEventListener('click', e=>{ if(e.target === rdModal) rdClose(); });
 document.addEventListener('keydown', e=>{ if(e.key === 'Escape') rdClose(); });
 
+/* ---------- ความเสี่ยงดินโคลนถล่ม: คาดการณ์หมู่บ้านเสี่ยงน้ำหลากดินถล่ม (FFR 36 ชม.) ----------
+   ข้อมูลอยู่ใน js/ffr_risk_data.js · ตารางไม่มีพิกัดหมู่บ้าน → จับคู่ อำเภอ+ตำบล
+   กับขอบเขตตำบลใน js/onwr-nara-subdistricts.geojson แล้วระบายสีทั้งตำบล
+   ระหว่างเปิดชั้นนี้ ซ่อนหมุดสถานีวัดน้ำ/คำอธิบายเดิม เพื่อไม่ให้ทับกัน */
+const FFR_LV = {
+  high: {name:'เสี่ยงสูง',     color:'#dc2626', rank:3},
+  mid:  {name:'เสี่ยงปานกลาง', color:'#f97316', rank:2},
+  low:  {name:'เสี่ยงต่ำ',     color:'#eab308', rank:1}
+};
+const ffrRows = (typeof FFR_RISK !== 'undefined' ? FFR_RISK.rows : [])
+  .map(([ap, tb, ban, ffr, lv], i) => ({i, ap, tb, ban, ffr, lv}));
+const ffrKey = (ap, tb) => ap + '|' + tb;
+const ffrLayer = L.layerGroup(), ffrByKey = {};
+let ffrOn = false, ffrGeo, ffrLegend = null;
+
+function ffrLvTag(lv){ return `<span class="ffr-lv ${esc(lv)}">${(FFR_LV[lv] || FFR_LV.low).name}</span>`; }
+
+async function ffrToggle(on){
+  if (on === ffrOn) return;
+  ffrOn = on;
+  const btn = document.getElementById('btnFfr');
+  btn.classList.toggle('on', on); btn.setAttribute('aria-pressed', on);
+  document.getElementById('ffrPanel').hidden = !on;
+  document.getElementById('fcDisc').hidden = on;
+  document.getElementById('panel').hidden = on;
+  document.getElementById('conf').hidden = on;
+  document.querySelectorAll('.hbtn').forEach(x => x.classList.toggle('on', !on && +x.dataset.h === horizon));
+  if (!on) {
+    map.removeLayer(ffrLayer); map.removeControl(ffrLegend);
+    map.addLayer(gMk); legend.addTo(map);
+    if (location.hash === '#ffr') history.replaceState(null, '', location.pathname + location.search);
+    return;
+  }
+  map.removeLayer(gMk); map.removeControl(legend);
+  if (!ffrLegend) {
+    ffrLegend = L.control({position:'bottomleft'});
+    ffrLegend.onAdd = () => {
+      const d = L.DomUtil.create('div','legend');
+      d.innerHTML = `<b style="font-size:11.5px">ความเสี่ยงดินโคลนถล่ม (FFR)</b>` + ['high','low'].map(k =>
+        `<div class="lg"><span class="sw" style="background:${FFR_LV[k].color};border-radius:3px"></span>${FFR_LV[k].name}</div>`).join('');
+      return d;
+    };
+    document.getElementById('ffrPeriod').textContent = (typeof FFR_RISK !== 'undefined' && FFR_RISK.period) || '-';
+    const ampSel = document.getElementById('ffrAmp');
+    [...new Set(ffrRows.map(r => r.ap))].sort((a,b) => a.localeCompare(b,'th')).forEach(ap =>
+      ampSel.insertAdjacentHTML('beforeend', `<option value="${esc(ap)}">${esc(ap)}</option>`));
+  }
+  ffrLegend.addTo(map); ffrLayer.addTo(map);
+  if (ffrGeo === undefined) {
+    try {
+      const r = await fetch('js/onwr-nara-subdistricts.geojson');
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      ffrGeo = await r.json();
+    } catch (e) {
+      ffrGeo = null;
+      document.getElementById('ffrNote').innerHTML = '<span style="color:var(--st-danger)">โหลดขอบเขตตำบลไม่สำเร็จ · แสดงเฉพาะรายชื่อ</span>';
+    }
+    if (!ffrOn) return;
+  }
+  ffrRender(true);
+}
+
+function ffrFiltered(){
+  const lv = document.getElementById('ffrLevel').value, ap = document.getElementById('ffrAmp').value;
+  return ffrRows.filter(r => (!lv || r.lv === lv) && (!ap || r.ap === ap));
+}
+
+function ffrPopupHtml(ap, tb, rows){
+  return `<b>ต.${esc(tb)} อ.${esc(ap)}</b> · ${rows.length} หมู่บ้าน<div class="ffr-pop"><table>${rows.slice().sort((a,b) => b.ffr - a.ffr).map(r =>
+    `<tr><td>บ.${esc(r.ban)}</td><td style="text-align:right">${r.ffr.toFixed(2)}</td><td>${ffrLvTag(r.lv)}</td></tr>`).join('')}</table></div>`;
+}
+
+function ffrRender(fit){
+  const rows = ffrFiltered(), groups = new Map();
+  rows.forEach(r => { const k = ffrKey(r.ap, r.tb); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); });
+  ffrLayer.clearLayers();
+  Object.keys(ffrByKey).forEach(k => delete ffrByKey[k]);
+  const bounds = L.latLngBounds([]);
+  (ffrGeo?.features || []).forEach(f => {
+    const p = f.properties, k = ffrKey(p.district_th, p.name_th), g = groups.get(k);
+    if (!g) {
+      // ตำบลที่ไม่มีหมู่บ้านในรายการ: เส้นขอบบาง ๆ เป็นบริบท
+      ffrLayer.addLayer(L.geoJSON(f, {style:{color:'#94a3b8', weight:.6, fill:false}, interactive:false}));
+      return;
+    }
+    const rk = r => FFR_LV[r.lv]?.rank || 0;
+    const top = g.reduce((a,b) => rk(b) > rk(a) || (rk(b) === rk(a) && b.ffr > a.ffr) ? b : a);
+    const c = (FFR_LV[top.lv] || FFR_LV.low).color;
+    const poly = L.geoJSON(f, {style:{color:c, weight:1.5, fillColor:c, fillOpacity:.15 + Math.min(top.ffr, 1) * .45}});
+    poly.bindPopup(ffrPopupHtml(p.district_th, p.name_th, g), {maxWidth:280});
+    poly.bindTooltip(`ต.${esc(p.name_th)} · ${g.length} หมู่บ้าน · FFR สูงสุด ${top.ffr.toFixed(2)}`, {sticky:true});
+    const center = [p.center_lat, p.center_lon];
+    const badge = L.marker(center, {icon:L.divIcon({className:'', html:`<div class="ffr-badge" style="background:${c}">${g.length}</div>`, iconSize:[26,26], iconAnchor:[13,13]})});
+    badge.on('click', () => poly.openPopup(center));
+    ffrLayer.addLayer(poly); ffrLayer.addLayer(badge);
+    ffrByKey[k] = {poly, center};
+    bounds.extend(poly.getBounds());
+  });
+  if (fit && bounds.isValid()) map.fitBounds(bounds.pad(0.08));
+  ffrRenderStats(rows);
+  ffrRenderList(rows);
+}
+
+function ffrRenderStats(rows){
+  const el = document.getElementById('ffrStats');
+  if (!rows.length) { el.innerHTML = '<div style="font-size:12px;color:var(--ink-3)">ไม่มีหมู่บ้านตามเงื่อนไขที่เลือก</div>'; return; }
+  const by = new Map();
+  rows.forEach(r => {
+    if (!by.has(r.ap)) by.set(r.ap, {high:0, mid:0, low:0, tb:new Set()});
+    const o = by.get(r.ap); o[r.lv] = (o[r.lv] || 0) + 1; o.tb.add(r.tb);
+  });
+  const n = lv => rows.filter(r => r.lv === lv).length;
+  const curAmp = document.getElementById('ffrAmp').value;
+  el.innerHTML = `<div style="font-size:12px;margin-bottom:6px">${ffrLvTag('high')} <b>${n('high')}</b> หมู่บ้าน &nbsp; ${ffrLvTag('low')} <b>${n('low')}</b> หมู่บ้าน</div>` +
+    [...by.entries()].sort((a,b) => b[1].high - a[1].high || (b[1].high + b[1].low) - (a[1].high + a[1].low)).map(([ap, o]) =>
+      `<div class="ffr-amp${ap === curAmp ? ' on' : ''}" onclick="ffrGoAmp('${esc(ap)}')"><span>อ.${esc(ap)} <small style="color:var(--ink-3)">${o.tb.size} ตำบล</small></span><span>${o.high ? `<span class="badge" style="background:${FFR_LV.high.color}">สูง ${o.high}</span>` : ''} ${o.low ? `<span class="badge" style="background:${FFR_LV.low.color};color:#713f12">ต่ำ ${o.low}</span>` : ''}</span></div>`
+    ).join('') + '<div style="font-size:10.5px;color:var(--ink-3);margin-top:3px">แตะอำเภอเพื่อกรองและซูม</div>';
+}
+
+function ffrRenderList(rows){
+  document.getElementById('ffrCount').textContent = rows.length;
+  const sorted = rows.slice().sort((a,b) => b.ffr - a.ffr || a.i - b.i);
+  document.getElementById('ffrList').innerHTML = sorted.length ? `<table class="ffr-tbl"><thead><tr><th>บ้าน</th><th>ต. / อ.</th><th style="text-align:right">FFR</th><th></th></tr></thead><tbody>${sorted.map(r =>
+    `<tr data-i="${r.i}" onclick="ffrPick(${r.i})"><td>${esc(r.ban)}</td><td>${esc(r.tb)} / ${esc(r.ap)}</td><td style="text-align:right">${r.ffr.toFixed(2)}</td><td>${ffrLvTag(r.lv)}</td></tr>`).join('')}</tbody></table>` : '';
+}
+
+function ffrGoAmp(ap){
+  const sel = document.getElementById('ffrAmp');
+  sel.value = sel.value === ap ? '' : ap;
+  ffrRender(true);
+}
+
+function ffrPick(i){
+  const r = ffrRows[i];
+  document.querySelectorAll('#ffrList tr.sel').forEach(x => x.classList.remove('sel'));
+  document.querySelector(`#ffrList tr[data-i="${i}"]`)?.classList.add('sel');
+  const hit = ffrByKey[ffrKey(r.ap, r.tb)];
+  if (!hit) return;
+  map.flyToBounds(hit.poly.getBounds().pad(0.3), {duration:.6, maxZoom:13});
+  map.once('moveend', () => hit.poly.openPopup(hit.center));
+}
+window.ffrGoAmp = ffrGoAmp; window.ffrPick = ffrPick;
+
+document.getElementById('btnFfr').addEventListener('click', () => ffrToggle(!ffrOn));
+document.getElementById('ffrLevel').addEventListener('change', () => ffrRender(false));
+document.getElementById('ffrAmp').addEventListener('change', () => ffrRender(true));
+
 loadBoundaries();
 loadAll();
+// ลิงก์ตรง: forecast.html#ffr เปิดชั้นความเสี่ยงดินโคลนถล่มทันที
+if (location.hash === '#ffr') ffrToggle(true);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
