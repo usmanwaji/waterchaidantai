@@ -11,6 +11,12 @@
     /{CODE}.jpg             ภาพกล้องล่าสุด (แคช 5 นาที)
   แคชอยู่ในศูนย์ Cloudflare แต่ละแห่ง → คนดูกี่คนก็ตาม telerid โดนเรียกราว 1 รอบ / 2 นาที เท่ากับตอนใช้คอม
 
+  แชร์ข้อมูลข้ามศูนย์ (Workers KV · ผูกชื่อ TELERID_KV ใน Settings → Bindings):
+    ศูนย์ที่ดึง telerid ได้ (BKK) เก็บชุดล่าสุดลง KV: สถานี + กราฟทุกสถานี (key "bundle") + ภาพกล้อง (key "img:CODE")
+    ศูนย์ที่ดึงไม่ได้ (HKG/SIN …) จำไว้ 10 นาทีว่าดึงไม่ได้ แล้วอ่านจาก KV ทันที (ไม่ต้องรอ telerid หมดเวลา)
+    เขียนเฉพาะเมื่อมีค่าใหม่หรือทุก 15 นาที · ภาพละไม่เกิน 1 ครั้ง / 30 นาที → ไม่เกินราว 700 ครั้ง/วัน (ฟรี 1,000)
+    Cron (Settings → Triggers → Cron Triggers: ทุก 5 นาที) ให้ลองดึงเองทุก 5 นาที เผื่อไม่มีใครเปิดเว็บผ่าน BKK
+
   วิธี deploy: dash.cloudflare.com → Workers & Pages → Create → Create Worker (ไม่ใช่ Import a repository)
               → ชื่อ telerid-proxy → Deploy → Edit code → วางไฟล์นี้ → Deploy
               ได้ URL https://telerid-proxy.<บัญชี>.workers.dev (map.js / index.html ตั้งไว้ที่บัญชี newusmanwaji)
@@ -29,6 +35,10 @@ const TTL_DETAIL = 300;        // กราฟ/ภาพตัด
 const TTL_IMAGE = 300;         // ภาพกล้อง
 const STALE_MAX = 6 * 3600;    // telerid ล่มชั่วคราว → ตอบชุดเก่าได้ไม่เกิน 6 ชม.
 const N_POINTS = 192;          // กราฟ ~48 ชม. (15 นาที/จุด) เท่ากับ scraper
+const DOWN_TTL = 600;          // ศูนย์นี้ดึง telerid ไม่ได้ → ใช้ KV ไป 10 นาทีโดยไม่ลองใหม่
+const SHARE_EVERY = 15 * 60e3; // เขียนชุดเดิมซ้ำลง KV ได้ไม่ถี่กว่านี้
+const IMG_EVERY = 30 * 60e3;   // ภาพกล้องต่อสถานี เขียนลง KV ได้ไม่ถี่กว่านี้
+const IMG_MAX = 10;            // ภาพต่อรอบ (35 WebSocket + 10 ภาพ + รายชื่อ < 50 การเรียกของแพ็กเกจฟรี)
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, OPTIONS' };
 const json = (obj, status = 200, maxAge = 60) => new Response(JSON.stringify(obj), {
@@ -62,9 +72,25 @@ async function cached(ctx, name, ttl, build) {
 }
 
 /* รายชื่อสถานีของจังหวัด (REST สาธารณะ) */
+/* ศูนย์นี้ดึง telerid ไม่ได้ (เช่น 522 จากฮ่องกง) → จำไว้ DOWN_TTL วินาที */
+async function isDown() {
+  const h = await caches.default.match(cacheKey('down'));
+  return !!h && (Date.now() - Number(h.headers.get('x-stored') || 0)) / 1000 < DOWN_TTL;
+}
+function markDown(ctx) {
+  ctx.waitUntil(caches.default.put(cacheKey('down'), new Response('1', { headers: { 'cache-control': `public, max-age=${DOWN_TTL}`, 'x-stored': String(Date.now()) } })));
+}
+/* ชุดที่แชร์ไว้ใน KV (ไม่เกิน STALE_MAX) */
+async function sharedBundle(env) {
+  const kv = env && env.TELERID_KV;
+  if (!kv) return null;
+  const b = await kv.get('bundle', { type: 'json', cacheTtl: 60 });
+  return b && Date.now() - b.storedAt < STALE_MAX * 1000 ? b : null;
+}
+
 async function stationList(ctx) {
   const r = await cached(ctx, 'list', TTL_LIST, async () => {
-    const res = await withTimeout(fetch(BASE + '/restapi/main/station_list/', { headers: { 'User-Agent': UA, Accept: 'application/json' } }), 20000, 'station_list');
+    const res = await withTimeout(fetch(BASE + '/restapi/main/station_list/', { headers: { 'User-Agent': UA, Accept: 'application/json' } }), 12000, 'station_list');
     if (!res.ok) return new Response('station_list ' + res.status, { status: 502 });
     const j = await res.json();
     const rows = (j.results || j || []).filter((s) => String(s.province_name || '').includes(PROVINCE)).map((s) => ({
@@ -133,26 +159,68 @@ function detail(s, st) {
 }
 
 /* ระดับน้ำทุกสถานี (WebSocket พร้อมกัน · ฟรีแพลนจำกัด 50 การเรียกต่อครั้ง: 35 สถานี + รายชื่อ = พอ) */
-async function stationsJson(ctx) {
-  return cached(ctx, 'stations', TTL_STATIONS, async () => {
-    const list = await stationList(ctx);
-    const results = await Promise.allSettled(list.map((s) => stationWs(s.id)));
-    const stations = list.map((s, i) => summarize(s, results[i].status === 'fulfilled' ? results[i].value : null));
-    const ok = stations.filter((x) => x.level != null || x.hasImage).length;
-    if (!ok) return new Response('telerid gave no data', { status: 502 });   // ไม่ทับชุดดีด้วยชุดว่าง
-    const camIndex = {};
-    stations.forEach((x) => { if (x._cam) camIndex[x.code] = x._cam; delete x._cam; });
-    ctx.waitUntil(caches.default.put(cacheKey('cams'), new Response(JSON.stringify(camIndex), {
-      headers: { 'content-type': 'application/json', 'cache-control': `public, max-age=${STALE_MAX}`, 'x-stored': String(Date.now()) } })));
-    const levelDts = stations.map((x) => x.levelDt).filter(Boolean).sort();
-    return new Response(JSON.stringify({
-      // updated = เวลาวัดล่าสุดของสถานีที่ส่งค่า (เปลี่ยนเฉพาะเมื่อมีค่าใหม่ → หน้าเว็บไม่ต้องวาดใหม่ทุก 2 นาที)
-      updated: levelDts.length ? levelDts[levelDts.length - 1] : new Date().toISOString(),
-      fetchedAt: new Date().toISOString(), source: 'telerid-proxy',
-      total: stations.length, withImage: stations.filter((x) => x.hasImage).length,
-      withDetail: stations.filter((x) => x.hasDetail).length, stations,
-    }), { headers: { 'content-type': 'application/json; charset=utf-8' } });
-  });
+async function buildStations(ctx, env, colo) {
+  const list = await stationList(ctx);
+  const results = await Promise.allSettled(list.map((s) => stationWs(s.id)));
+  const stations = list.map((s, i) => summarize(s, results[i].status === 'fulfilled' ? results[i].value : null));
+  const ok = stations.filter((x) => x.level != null || x.hasImage).length;
+  if (!ok) return new Response('telerid gave no data', { status: 502 });   // ไม่ทับชุดดีด้วยชุดว่าง
+  const camIndex = {};
+  stations.forEach((x) => { if (x._cam) camIndex[x.code] = x._cam; delete x._cam; });
+  ctx.waitUntil(caches.default.put(cacheKey('cams'), new Response(JSON.stringify(camIndex), {
+    headers: { 'content-type': 'application/json', 'cache-control': `public, max-age=${STALE_MAX}`, 'x-stored': String(Date.now()) } })));
+  const details = {};
+  list.forEach((s, i) => { if (results[i].status === 'fulfilled' && stations[i].hasDetail) details[s.code] = detail(s, results[i].value); });
+  const levelDts = stations.map((x) => x.levelDt).filter(Boolean).sort();
+  const body = {
+    // updated = เวลาวัดล่าสุดของสถานีที่ส่งค่า (เปลี่ยนเฉพาะเมื่อมีค่าใหม่ → หน้าเว็บไม่ต้องวาดใหม่ทุก 2 นาที)
+    updated: levelDts.length ? levelDts[levelDts.length - 1] : new Date().toISOString(),
+    fetchedAt: new Date().toISOString(), source: 'telerid-proxy',
+    total: stations.length, withImage: stations.filter((x) => x.hasImage).length,
+    withDetail: stations.filter((x) => x.hasDetail).length, stations,
+  };
+  ctx.waitUntil(share(env, body, details, camIndex, colo).catch(() => {}));
+  return new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json; charset=utf-8' } });
+}
+
+/* เก็บชุดล่าสุดลง KV ให้ศูนย์อื่นใช้ (เขียนเท่าที่จำเป็น ให้อยู่ในโควตาฟรี) */
+async function share(env, body, details, camIndex, colo) {
+  const kv = env && env.TELERID_KV;
+  if (!kv) return;
+  const now = Date.now();
+  let meta = null;
+  try { const r = await kv.getWithMetadata('bundle', { type: 'stream' }); meta = r.metadata; if (r.value) await r.value.cancel(); } catch {}
+  if (meta && meta.u === body.updated && now - meta.t < SHARE_EVERY) return;   // ไม่มีค่าใหม่ และเพิ่งเขียนไป
+  const img = (meta && meta.img) || {};
+  let n = 0;
+  for (const [code, cam] of Object.entries(camIndex)) {
+    if (!cam.path || n >= IMG_MAX) continue;
+    const prev = img[code];
+    if (prev && (prev[0] === cam.unixtime || now - prev[1] < IMG_EVERY)) continue;
+    n++;
+    try {
+      const res = await withTimeout(fetch(BASE + '/restapi/main/camera/' + cam.path.replace(/^\/+/, ''), { headers: { 'User-Agent': UA } }), 15000, 'camera');
+      const ct = (res.headers.get('content-type') || '').split(';')[0];
+      if (!res.ok || !/image/.test(ct)) continue;
+      await kv.put('img:' + code, await res.arrayBuffer(), { metadata: { ct } });
+      img[code] = [cam.unixtime, now];
+    } catch {}
+  }
+  await kv.put('bundle', JSON.stringify({ storedAt: now, colo: colo || '', stations: body, details }), { metadata: { u: body.updated, t: now, img } });
+}
+
+async function stationsJson(ctx, env, colo) {
+  if (!(await isDown())) {
+    try {
+      const r = await cached(ctx, 'stations', TTL_STATIONS, () => buildStations(ctx, env, colo));
+      if (r.ok) return r;
+    } catch {}
+    markDown(ctx);
+  }
+  const b = await sharedBundle(env);
+  if (!b) throw new Error('telerid not reachable from this location and no shared copy yet');
+  return new Response(JSON.stringify({ ...b.stations, via: 'shared', sharedFrom: b.colo, sharedAt: new Date(b.storedAt).toISOString() }),
+    { headers: { 'content-type': 'application/json; charset=utf-8' } });
 }
 
 async function findStation(ctx, code) {
@@ -160,14 +228,38 @@ async function findStation(ctx, code) {
   return list.find((s) => s.code === code) || null;
 }
 
-async function detailJson(ctx, code) {
-  const s = await findStation(ctx, code);
-  if (!s) return new Response('unknown station', { status: 404 });
-  return cached(ctx, 'detail:' + code, TTL_DETAIL, async () =>
-    new Response(JSON.stringify(detail(s, await stationWs(s.id))), { headers: { 'content-type': 'application/json; charset=utf-8' } }));
+async function detailJson(ctx, env, code) {
+  if (!(await isDown())) {
+    try {
+      const s = await findStation(ctx, code);
+      if (!s) return new Response('unknown station', { status: 404 });
+      const r = await cached(ctx, 'detail:' + code, TTL_DETAIL, async () =>
+        new Response(JSON.stringify(detail(s, await stationWs(s.id))), { headers: { 'content-type': 'application/json; charset=utf-8' } }));
+      if (r.ok) return r;
+    } catch {}
+    markDown(ctx);
+  }
+  const b = await sharedBundle(env);
+  const d = b && b.details && b.details[code];
+  if (!d) return new Response('no detail', { status: 404 });
+  return new Response(JSON.stringify(d), { headers: { 'content-type': 'application/json; charset=utf-8' } });
 }
 
-async function cameraJpg(ctx, code) {
+async function cameraJpg(ctx, env, code) {
+  if (!(await isDown())) {
+    try {
+      const r = await cameraLive(ctx, code);
+      if (r.ok || r.status === 404) return r;   // 404 = สถานีไม่มีกล้อง (ไม่ใช่ดึงไม่ได้)
+    } catch {}
+    markDown(ctx);
+  }
+  const kv = env && env.TELERID_KV;
+  const got = kv ? await kv.getWithMetadata('img:' + code, { type: 'arrayBuffer', cacheTtl: 300 }) : null;
+  if (!got || !got.value) return new Response('no image', { status: 404 });
+  return new Response(got.value, { headers: { 'content-type': (got.metadata && got.metadata.ct) || 'image/jpeg' } });
+}
+
+async function cameraLive(ctx, code) {
   return cached(ctx, 'img:' + code, TTL_IMAGE, async () => {
     // path ภาพจากรอบ stations ล่าสุด · ไม่มีจึงถาม WebSocket ของสถานีนั้นเอง
     let cam = null;
@@ -201,13 +293,21 @@ export default {
         let runsIn = null;
         try { runsIn = ((await (await withTimeout(fetch('https://www.cloudflare.com/cdn-cgi/trace'), 8000, 'trace')).text()).match(/^colo=(\w+)/m) || [])[1] || null; } catch {}
         const probe = await withTimeout(fetch(BASE + '/restapi/main/station_list/', { method: 'HEAD', headers: { 'User-Agent': UA } }), 15000, 'probe').then((r) => r.status, (e) => String(e.message || e));
-        return json({ ok: probe === 200, requestEnteredAt: colo, runsIn, teleridStatus: probe,
+        let shared = 'no KV binding (TELERID_KV)';
+        if (env && env.TELERID_KV) {
+          try {
+            const r = await env.TELERID_KV.getWithMetadata('bundle', { type: 'stream' });
+            if (r.value) await r.value.cancel();
+            shared = r.metadata ? { storedAt: new Date(r.metadata.t).toISOString(), ageMin: Math.round((Date.now() - r.metadata.t) / 60000), newestReading: r.metadata.u, images: Object.keys(r.metadata.img || {}).length } : 'empty (waits for a run that can reach telerid)';
+          } catch (e) { shared = 'KV error: ' + (e.message || e); }
+        }
+        return json({ ok: probe === 200, requestEnteredAt: colo, runsIn, teleridStatus: probe, shared,
           hint: probe === 200 ? 'telerid reachable from here' : 'telerid not reachable from ' + runsIn + ' - enable Smart Placement (Settings > Runtime > Placement)',
           use: ['/stations.json', '/{CODE}.detail.json', '/{CODE}.jpg'] }, 200, 0);
       }
-      else if (path === 'stations.json') res = await stationsJson(ctx);
-      else if (path.endsWith('.detail.json')) res = await detailJson(ctx, path.slice(0, -'.detail.json'.length));
-      else if (path.endsWith('.jpg')) res = await cameraJpg(ctx, path.slice(0, -'.jpg'.length));
+      else if (path === 'stations.json') res = await stationsJson(ctx, env, colo);
+      else if (path.endsWith('.detail.json')) res = await detailJson(ctx, env, path.slice(0, -'.detail.json'.length));
+      else if (path.endsWith('.jpg')) res = await cameraJpg(ctx, env, path.slice(0, -'.jpg'.length));
       else return json({ error: 'not found' }, 404, 0);
       const headers = new Headers(res.headers);
       for (const [k, v] of Object.entries(CORS)) headers.set(k, v);
@@ -219,5 +319,9 @@ export default {
       // ศูนย์นี้ดึง telerid ไม่ได้ (เช่น ถูกบล็อก) → หน้าเว็บจะไปใช้ข้อมูลจากคอม (สาขา cam) แทน
       return json({ error: String(e && e.message || e), colo, hint: 'see / for where this Worker runs' }, 502, 0);
     }
+  },
+  // Cron (ทุก 5 นาที): ลองดึงเอง ถ้ารอบนี้รันในศูนย์ที่ดึงได้ จะได้เก็บชุดใหม่ลง KV แม้ไม่มีคนเปิดเว็บ
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(stationsJson(ctx, env, 'cron').catch(() => {}));
   },
 };
