@@ -1485,14 +1485,31 @@ function openDdpm(){
    ดูวิธีตั้งค่าใน telerid-scraper/README.md · เปลี่ยน repo/สาขาได้ที่ TELERID_CAM
    raw.githubusercontent แคชไฟล์ 5 นาที → ต่อท้าย ?t=นาทีปัจจุบัน ให้ได้ไฟล์ล่าสุด (คนที่เปิดในนาทีเดียวกันยังใช้แคชร่วมกัน) */
 const TELERID_CAM = 'https://raw.githubusercontent.com/usmanwaji/waterchaidantai/cam';
-const teleUrl = f => `${TELERID_CAM}/${f}?t=${Math.floor(Date.now()/60000)}`;
+/* แหล่งที่ 2: Cloudflare Worker (telerid-proxy.worker.js) ดึงตรงจาก telerid ที่ศูนย์ BKK · ไม่ต้องเปิดคอม
+   path เดียวกับสาขา cam · ดึงทั้ง 2 แหล่งพร้อมกัน ใช้แหล่งที่ค่าวัดใหม่กว่า (เท่ากันใช้ Worker) · แหล่งไหนล่มก็ยังเหลืออีกแหล่ง */
+const TELERID_LIVE = 'https://telerid-proxy.newusmanwaji.workers.dev';
+let teleBase = TELERID_CAM;   // แหล่งของชุดที่แสดงอยู่ · ภาพกล้อง/กราฟดึงจากแหล่งเดียวกัน
+const teleUrl = (f, base = teleBase) => `${base}/${f}?t=${Math.floor(Date.now()/60000)}`;
+const teleNewest = j => (j?.stations||[]).reduce((m, s) => s.levelDt && s.levelDt > m ? s.levelDt : m, '');
+async function fetchTeleStations(){
+  const [live, cam] = await Promise.allSettled([
+    fetchJSON(teleUrl('stations.json', TELERID_LIVE), 12000),
+    fetchJSON(teleUrl('stations.json', TELERID_CAM), 15000)]);
+  const ok = r => r.status === 'fulfilled' && Array.isArray(r.value?.stations) && r.value.stations.length;
+  const pickLive = ok(live) && (!ok(cam) || teleNewest(live.value) >= teleNewest(cam.value));
+  if(pickLive) return {j: live.value, base: TELERID_LIVE};
+  if(ok(cam)) return {j: cam.value, base: TELERID_CAM};
+  throw new Error('no telerid source');
+}
 let teleUpdated = null, teleSeq = 0;
 async function loadTelerid(pre){
   const seq = ++teleSeq;   // รอบโหลดซ้อนกัน (รีเฟรช 10 นาที + เช็กทุก 2 นาที) ให้รอบล่าสุดวาดอย่างเดียว
   // 1) ใช้ภาพ+ข้อมูลที่ scraper ดึงมา (สาขา cam) ก่อน
   try{
-    const j = pre || await fetchJSON(teleUrl('stations.json'), 15000);
+    const got = pre || await fetchTeleStations();
     if(seq !== teleSeq) return;
+    const j = got.j;
+    teleBase = got.base;
     const rows = Array.isArray(j?.stations) ? j.stations : [];
     teleUpdated = j?.updated || null;
     gTele.clearLayers();
@@ -1510,7 +1527,7 @@ async function loadTelerid(pre){
           const at = d.levelDt || d.dt || j.updated;
           const upd = at ? new Date(at).toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}) : '';
           const img = d.hasImage
-            ? `<img src="${TELERID_CAM}/${esc(d.code)}.jpg?v=${encodeURIComponent(j.updated||'')}" alt="กล้อง ${esc(d.code)}" style="width:100%;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;background:var(--card-2);margin:6px 0" onclick="window.open(this.src,'_blank')">`
+            ? `<img src="${got.base}/${encodeURIComponent(d.code)}.jpg?v=${encodeURIComponent(j.updated||'')}" alt="กล้อง ${esc(d.code)}" style="width:100%;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;background:var(--card-2);margin:6px 0" onerror="this.remove()" onclick="window.open(this.src,'_blank')">`
             : '';
           const crit = d.critical ?? d.bank;
           // ค่า -9.99 = เซนเซอร์ไม่ส่งค่า · ค่าที่วัดเกิน 6 ชม. ไม่ใช่ "ตอนนี้" (เกณฑ์เดียวกับหน้าแรก)
@@ -1563,8 +1580,8 @@ function teleReporting(d, updated){
 async function pollTelerid(){
   if(document.hidden || !map.hasLayer(gTele) || gTele.getLayers().some(m=>m.isPopupOpen())) return;
   try{
-    const j = await fetchJSON(teleUrl('stations.json'), 15000);
-    if(j?.updated && j.updated !== teleUpdated) await loadTelerid(j);
+    const got = await fetchTeleStations();
+    if(got.j?.updated && (got.j.updated !== teleUpdated || got.base !== teleBase)) await loadTelerid(got);
   }catch(e){}
 }
 setInterval(pollTelerid, 2*60*1000);
