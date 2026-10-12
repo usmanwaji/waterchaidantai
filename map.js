@@ -605,8 +605,11 @@ async function onwrSetAccum(on){
   if(on){
     onwrMsg(t('onwrLoading'));
     const ok = await onwrBuildAccum();
-    onwrMsg(!ok ? t('onwrFail') : (ONWR.zones[ONWR.level]?.accum ? '' : t('onwrNoNowcast')));
-  }else if(ONWR.accumLayer){ map.removeLayer(ONWR.accumLayer); ONWR.accumLayer=null; onwrMsg(''); }
+    onwrMsg(!ok ? `${t('lyOnwrAccum')}: ${t('onwrFail')}` : (ONWR.zones[ONWR.level]?.accum ? '' : t('onwrNoNowcast')));
+  }else{
+    if(ONWR.accumLayer){ map.removeLayer(ONWR.accumLayer); ONWR.accumLayer=null; }
+    onwrMsg('');                                             // ล้างข้อความค้าง (รวมกรณีโหลดไม่สำเร็จ) เมื่อปิดชั้น
+  }
   buildLegend();
 }
 function onwrSetLevel(level){
@@ -673,10 +676,13 @@ function onwrBuildRain(){
 async function onwrSetRain(on){
   if(on){
     onwrMsg(t('onwrLoading'));
-    if(!ONWR.rain){ try{ await onwrLoadRain(); }catch(e){ onwrMsg(t('onwrFail')); buildLegend(); return; } }
+    if(!ONWR.rain){ try{ await onwrLoadRain(); }catch(e){ onwrMsg(`${t('lyOnwrRain')}: ${t('onwrFail')}`); buildLegend(); return; } }
     onwrMsg('');
     if(onwrOn('lyOnwrRain')) onwrBuildRain();
-  }else if(ONWR.rainLayer){ map.removeLayer(ONWR.rainLayer); ONWR.rainLayer=null; }
+  }else{
+    if(ONWR.rainLayer){ map.removeLayer(ONWR.rainLayer); ONWR.rainLayer=null; }
+    onwrMsg('');
+  }
   buildLegend();
 }
 function onwrSetRainMode(mode){ ONWR.rainMode = mode; onwrSyncSeg(); if(ONWR.rainLayer){ onwrBuildRain(); buildLegend(); } }
