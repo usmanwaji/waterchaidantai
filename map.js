@@ -38,7 +38,7 @@ th:{
   lyOnwrRain:'ฝนสถานีรายชั่วโมง', lyOnwrSites:'สถานีเรดาร์', lyOnwrLabels:'ป้าย',
   sgDist:'อำเภอ', sgSub:'ตำบล', sgDots:'จุด', sgHeat:'Heat', sgW1:'1 ชม.', sgW24:'24 ชม.',
   onwrObs:'ตรวจวัด', onwrFc:'คาดการณ์', onwrBase:'เวลาฐาน', onwrStale:'ข้อมูลเก่า', onwrMin:'นาที', onwrMm:'มม.', onwrKm:'กม.',
-  onwrLoading:'กำลังโหลดข้อมูล สทนช.…', onwrFail:'โหลดข้อมูล สทนช. ไม่สำเร็จ (ตรวจสอบ onwr-proxy)', onwrNoNowcast:'รอบนี้ยังไม่มีข้อมูลคาดการณ์',
+  onwrLoading:'กำลังโหลดข้อมูล สทนช.…', onwrFail:'โหลดข้อมูล สทนช. ไม่สำเร็จ (ตรวจสอบ onwr-proxy)', onwrUseLongdo:'เรดาร์ สทนช. ใช้ไม่ได้ขณะนี้ — สลับไปใช้ "เรดาร์ฝน" ของ Longdo แทน', onwrNoNowcast:'รอบนี้ยังไม่มีข้อมูลคาดการณ์',
   onwrAccMax:'ฝนสะสม 3 ชม. ล่วงหน้า สูงสุด', onwrAccMean:'เฉลี่ยทั้งพื้นที่', onwrPeak:'ความแรงสูงสุด (มม./ชม.)', onwrRaining:'ฝนกำลังตกอยู่แล้ว',
   onwrOnset:'คาดว่าเริ่มตกในอีก', onwrNoRadar:'ไม่มีข้อมูลเรดาร์ในพื้นที่นี้', onwrCov:'เรดาร์ครอบคลุมเพียง',
   onwrRainNow:'ฝน 1 ชม. ล่าสุด', onwrRain12:'12 ชม.', onwrRain24:'24 ชม.', onwrLastObs:'ตรวจวัดล่าสุด', onwrHist:'รายชั่วโมง 6 ชม. ล่าสุด (มม.)',
@@ -103,7 +103,7 @@ en:{
   lyOnwrRain:'Hourly gauge rain', lyOnwrSites:'Radar sites', lyOnwrLabels:'Labels',
   sgDist:'District', sgSub:'Subdistrict', sgDots:'Dots', sgHeat:'Heat', sgW1:'1 h', sgW24:'24 h',
   onwrObs:'observed', onwrFc:'forecast', onwrBase:'Base time', onwrStale:'stale', onwrMin:'min', onwrMm:'mm', onwrKm:'km',
-  onwrLoading:'Loading ONWR data…', onwrFail:'ONWR data unavailable (check onwr-proxy)', onwrNoNowcast:'No nowcast in this cycle yet',
+  onwrLoading:'Loading ONWR data…', onwrFail:'ONWR data unavailable (check onwr-proxy)', onwrUseLongdo:'ONWR radar is down — switched to the Longdo "Rain radar" layer', onwrNoNowcast:'No nowcast in this cycle yet',
   onwrAccMax:'Max 3 h rain ahead', onwrAccMean:'Area mean', onwrPeak:'Peak intensity (mm/h)', onwrRaining:'Already raining',
   onwrOnset:'Rain expected to start in', onwrNoRadar:'No radar data for this area', onwrCov:'Radar covers only',
   onwrRainNow:'Last 1 h rain', onwrRain12:'12 h', onwrRain24:'24 h', onwrLastObs:'Last observed', onwrHist:'Last 6 hours, hourly (mm)',
@@ -168,7 +168,7 @@ ms:{
   lyOnwrRain:'Hujan stesen sejam', lyOnwrSites:'Stesen radar', lyOnwrLabels:'Label',
   sgDist:'Daerah', sgSub:'Mukim', sgDots:'Titik', sgHeat:'Heat', sgW1:'1 jam', sgW24:'24 jam',
   onwrObs:'cerapan', onwrFc:'ramalan', onwrBase:'Masa asas', onwrStale:'data lama', onwrMin:'minit', onwrMm:'mm', onwrKm:'km',
-  onwrLoading:'Memuatkan data ONWR…', onwrFail:'Data ONWR tidak tersedia (semak onwr-proxy)', onwrNoNowcast:'Belum ada ramalan untuk kitaran ini',
+  onwrLoading:'Memuatkan data ONWR…', onwrFail:'Data ONWR tidak tersedia (semak onwr-proxy)', onwrUseLongdo:'Radar ONWR tidak tersedia — ditukar ke lapisan "Radar hujan" Longdo', onwrNoNowcast:'Belum ada ramalan untuk kitaran ini',
   onwrAccMax:'Hujan 3 jam akan datang (maks)', onwrAccMean:'Purata kawasan', onwrPeak:'Keamatan puncak (mm/j)', onwrRaining:'Sudah hujan',
   onwrOnset:'Hujan dijangka mula dalam', onwrNoRadar:'Tiada data radar di kawasan ini', onwrCov:'Radar meliputi hanya',
   onwrRainNow:'Hujan 1 jam terkini', onwrRain12:'12 jam', onwrRain24:'24 jam', onwrLastObs:'Cerapan terakhir', onwrHist:'6 jam terakhir, setiap jam (mm)',
@@ -505,7 +505,17 @@ async function onwrSetRadar(on){
     if(bar) bar.innerHTML = `<div class="rdrow"><span class="rdinfo">${t('onwrLoading')}</span></div>`;
     if(!ONWR.frames) await onwrLoadFrames();
     if(!onwrOn('lyOnwrRadar')) return;                       // ผู้ใช้ปิดไปแล้วระหว่างโหลด
-    if(!ONWR.frames){ if(bar) bar.innerHTML = `<div class="rdrow"><span class="rdinfo">${t('onwrFail')}</span></div>`; return; }
+    if(!ONWR.frames){
+      // สทนช. ล่ม → สลับไปเรดาร์ Longdo (โหลดตรง ไม่ผ่าน proxy) แทนการค้างข้อความ error · ปิดช่อง สทนช. ก่อน
+      // เพื่อไม่ให้ตัวฟัง change ของ lyRadar (ใน setupOnwr) วนมาปิดซ้ำ
+      onwrEl('lyOnwrRadar').checked = false;
+      if(bar) bar.innerHTML = '';
+      if(lg){ lg.checked = true; lg.dispatchEvent(new Event('change')); }
+      onwrMsg(t('onwrUseLongdo'));
+      buildLegend();
+      return;
+    }
+    if(onwrEl('onwrMsg')?.textContent === t('onwrUseLongdo')) onwrMsg('');   // สทนช. กลับมาแล้ว
     onwrShowFrame(ONWR.idx<0 ? onwrPresentIdx() : ONWR.idx);
   }else{
     onwrStop();
@@ -605,8 +615,11 @@ async function onwrSetAccum(on){
   if(on){
     onwrMsg(t('onwrLoading'));
     const ok = await onwrBuildAccum();
-    onwrMsg(!ok ? t('onwrFail') : (ONWR.zones[ONWR.level]?.accum ? '' : t('onwrNoNowcast')));
-  }else if(ONWR.accumLayer){ map.removeLayer(ONWR.accumLayer); ONWR.accumLayer=null; onwrMsg(''); }
+    onwrMsg(!ok ? `${t('lyOnwrAccum')}: ${t('onwrFail')}` : (ONWR.zones[ONWR.level]?.accum ? '' : t('onwrNoNowcast')));
+  }else{
+    if(ONWR.accumLayer){ map.removeLayer(ONWR.accumLayer); ONWR.accumLayer=null; }
+    onwrMsg('');                                             // ล้างข้อความค้าง (รวมกรณีโหลดไม่สำเร็จ) เมื่อปิดชั้น
+  }
   buildLegend();
 }
 function onwrSetLevel(level){
@@ -673,10 +686,13 @@ function onwrBuildRain(){
 async function onwrSetRain(on){
   if(on){
     onwrMsg(t('onwrLoading'));
-    if(!ONWR.rain){ try{ await onwrLoadRain(); }catch(e){ onwrMsg(t('onwrFail')); buildLegend(); return; } }
+    if(!ONWR.rain){ try{ await onwrLoadRain(); }catch(e){ onwrMsg(`${t('lyOnwrRain')}: ${t('onwrFail')}`); buildLegend(); return; } }
     onwrMsg('');
     if(onwrOn('lyOnwrRain')) onwrBuildRain();
-  }else if(ONWR.rainLayer){ map.removeLayer(ONWR.rainLayer); ONWR.rainLayer=null; }
+  }else{
+    if(ONWR.rainLayer){ map.removeLayer(ONWR.rainLayer); ONWR.rainLayer=null; }
+    onwrMsg('');
+  }
   buildLegend();
 }
 function onwrSetRainMode(mode){ ONWR.rainMode = mode; onwrSyncSeg(); if(ONWR.rainLayer){ onwrBuildRain(); buildLegend(); } }
