@@ -77,6 +77,29 @@ footer a{color:var(--st-warn);text-decoration:none}
 .freq-dot{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;color:var(--muted)}
 .freq-dot i{display:inline-block;width:10px;height:10px;border-radius:50%}
 
+/* ===== ดินโคลนถล่ม (FFR) map + sidebar ===== */
+#ffr-content{display:none;flex:1;min-height:0}
+#ffr-map{flex:1;min-width:0}
+#ffr-side{width:330px;background:#fff;border-left:1px solid var(--outline);overflow-y:auto;padding:10px}
+@media(max-width:820px){
+  #ffr-content{flex-direction:column}
+  #ffr-map{min-height:52vh}
+  #ffr-side{width:100%;flex:1;border-left:none;border-top:1px solid var(--outline)}
+}
+.ffr-badge{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;color:#fff;font:700 12px/1 'IBM Plex Sans',sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.ffr-lv{display:inline-block;padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:600;white-space:nowrap}
+.ffr-lv.high{background:#dc2626;color:#fff}
+.ffr-lv.mid{background:#f97316;color:#fff}
+.ffr-lv.low{background:#fde68a;color:#713f12}
+.ffr-tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.ffr-tbl th{color:var(--ink-3);font-weight:600;text-align:left;padding:3px 4px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff}
+.ffr-tbl td{padding:3px 4px;border-bottom:1px solid var(--line)}
+.ffr-tbl tbody tr{cursor:pointer}
+.ffr-tbl tbody tr:hover,.ffr-tbl tbody tr.sel{background:var(--st-warn-wash)}
+.ffr-pop{max-height:220px;overflow-y:auto}
+.ffr-pop table{border-collapse:collapse;width:100%;font-size:12px;margin-top:4px}
+.ffr-pop td{padding:2px 4px;border-bottom:1px solid var(--line)}
+
 /* ===== GISTDA content ===== */
 #gistda-content{display:flex;flex:1;min-height:0}
 
@@ -130,6 +153,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
   <div class="src-toggle">
     <button class="src-btn on" data-src="gistda" onclick="switchSource('gistda')">GISTDA</button>
     <button class="src-btn" data-src="ddpm" onclick="switchSource('ddpm')">ปภ.</button>
+    <button class="src-btn" data-src="ffr" onclick="switchSource('ffr')">ความเสี่ยงดินโคลนถล่ม</button>
   </div>
 
   <!-- GISTDA province chips -->
@@ -154,6 +178,18 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
     </select>
     <select id="ddpmDist" onchange="onDdpmDistChange()" disabled>
       <option value=""> · เลือกอำเภอ · </option>
+    </select>
+  </div>
+
+  <!-- ดินโคลนถล่ม: กรองระดับความเสี่ยง/อำเภอ (hidden by default) -->
+  <div id="ffr-selectors" class="ddpm-filters" style="display:none">
+    <select id="ffrLevel" onchange="renderFfr()">
+      <option value="">ทุกระดับ</option>
+      <option value="high">เสี่ยงสูง</option>
+      <option value="low">เสี่ยงต่ำ</option>
+    </select>
+    <select id="ffrAmp" onchange="renderFfr(true)">
+      <option value="">ทุกอำเภอ</option>
     </select>
   </div>
 
@@ -185,6 +221,16 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
       <div class="card"><h3>จุดที่คลิกล่าสุด</h3><div id="ddpm-pick" style="font-size:12.5px;color:var(--ink-3)">ยังไม่ได้เลือก · คลิกจุดบนแผนที่</div></div>
     </aside>
   </div>
+
+  <!-- ดินโคลนถล่ม (FFR) map + sidebar (hidden by default) -->
+  <div id="ffr-content">
+    <div id="ffr-map"></div>
+    <aside id="ffr-side">
+      <div class="disc">⛰️ <b>คาดการณ์หมู่บ้านเสี่ยงภัยน้ำหลากดินถล่ม 36 ชม.</b> จ.นราธิวาส<br>ช่วงเวลา <b id="ffr-period"></b><br>ค่า FFR (Flash Flood Risk) ยิ่งสูงยิ่งเสี่ยง · ตารางต้นทางไม่มีพิกัดหมู่บ้าน แผนที่จึง<b>ระบายสีทั้งตำบล</b>ตามหมู่บ้านที่เสี่ยงที่สุด ตัวเลขบนแผนที่คือจำนวนหมู่บ้านเสี่ยงในตำบลนั้น · <b>คลิกตำบล</b>เพื่อดูรายชื่อหมู่บ้าน</div>
+      <div class="card"><h3>สรุปตามอำเภอ</h3><div id="ffr-stats"><span class="spin"></span> กำลังโหลด…</div></div>
+      <div class="card"><h3>รายชื่อหมู่บ้าน (<span id="ffr-count">0</span>)</h3><div id="ffr-list" style="max-height:420px;overflow-y:auto"></div><div id="ffr-note" style="font-size:10.5px;color:var(--ink-3);margin-top:4px"></div></div>
+    </aside>
+  </div>
 </div>
 
 <footer id="foot">
@@ -194,6 +240,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
 
 <script src="js/ddpm_risk_data.js"></script>
 <script src="js/shelters_nwt.js"></script>
+<script src="js/ffr_risk_data.js?v=1"></script>
 <script>
 'use strict';
 
@@ -219,38 +266,32 @@ function freqRadius(f){ return f <= 0 ? 4 : Math.min(4 + f * 0.8, 10); }
 /* ===== Data Source Toggle ===== */
 let currentSource = 'gistda';
 
+const SOURCES = {
+  gistda: {content:'gistda-content', bar:'gistda-chips', opa:true,
+    sub:'วิเคราะห์จากดาวเทียม 14 ปี (2554-2567) · GISTDA',
+    foot:'<span>ข้อมูล: GISTDA Disaster Platform (Open API) · flood-freq 2554-2567</span><span style="margin-left:auto"><a href="https://disaster.gistda.or.th/flood/" target="_blank">เปิดระบบ GISTDA ↗</a></span>'},
+  ddpm: {content:'ddpm-content', bar:'ddpm-selectors',
+    sub:'ข้อมูลพื้นที่เสี่ยง · กรมป้องกันและบรรเทาสาธารณภัย (ปภ.)',
+    foot:'<span>ข้อมูล: กรมป้องกันและบรรเทาสาธารณภัย (ปภ.) · ประกาศเขตภัยพิบัติ 2560-2568</span><span style="margin-left:auto"><a href="https://riskmap.disaster.go.th/" target="_blank">เปิดระบบ ปภ. ↗</a></span>'},
+  ffr: {content:'ffr-content', bar:'ffr-selectors',
+    sub:'คาดการณ์หมู่บ้านเสี่ยงน้ำหลากดินถล่ม 36 ชม. · กรมทรัพยากรน้ำ',
+    foot:'<span>ข้อมูล: Mekong River Commission Flash Flood Guidance System (MRCFFGS) · จัดทำโดย กรมทรัพยากรน้ำ กองวิจัย พัฒนาและอุทกวิทยา</span>'}
+};
+
 function switchSource(src) {
-  if (src === currentSource) return;
+  if (src === currentSource || !SOURCES[src]) return;
   currentSource = src;
   document.querySelectorAll('.src-btn').forEach(b => b.classList.toggle('on', b.dataset.src === src));
-
-  const gistdaContent = document.getElementById('gistda-content');
-  const gistdaChips   = document.getElementById('gistda-chips');
-  const opaLabel      = document.getElementById('opa');
-  const ddpmContent   = document.getElementById('ddpm-content');
-  const ddpmSel       = document.getElementById('ddpm-selectors');
-  const headerSub     = document.getElementById('headerSub');
-  const foot          = document.getElementById('foot');
-
-  if (src === 'gistda') {
-    gistdaContent.style.display = 'flex';
-    gistdaChips.style.display   = '';
-    opaLabel.style.display      = '';
-    ddpmContent.style.display   = 'none';
-    ddpmSel.style.display       = 'none';
-    headerSub.textContent = 'วิเคราะห์จากดาวเทียม 14 ปี (2554-2567) · GISTDA';
-    foot.innerHTML = '<span>ข้อมูล: GISTDA Disaster Platform (Open API) · flood-freq 2554-2567</span><span style="margin-left:auto"><a href="https://disaster.gistda.or.th/flood/" target="_blank">เปิดระบบ GISTDA ↗</a></span>';
-    map.invalidateSize();
-  } else {
-    gistdaContent.style.display = 'none';
-    gistdaChips.style.display   = 'none';
-    opaLabel.style.display      = 'none';
-    ddpmContent.style.display   = 'flex';
-    ddpmSel.style.display       = 'flex';
-    headerSub.textContent = 'ข้อมูลพื้นที่เสี่ยง · กรมป้องกันและบรรเทาสาธารณภัย (ปภ.)';
-    foot.innerHTML = '<span>ข้อมูล: กรมป้องกันและบรรเทาสาธารณภัย (ปภ.) · ประกาศเขตภัยพิบัติ 2560-2568</span><span style="margin-left:auto"><a href="https://riskmap.disaster.go.th/" target="_blank">เปิดระบบ ปภ. ↗</a></span>';
-    initDdpmMap();
-  }
+  Object.entries(SOURCES).forEach(([k, s]) => {
+    document.getElementById(s.content).style.display = k === src ? 'flex' : 'none';
+    document.getElementById(s.bar).style.display = k === src ? (k === 'gistda' ? '' : 'flex') : 'none';
+  });
+  document.getElementById('opa').style.display = SOURCES[src].opa ? '' : 'none';
+  document.getElementById('headerSub').textContent = SOURCES[src].sub;
+  document.getElementById('foot').innerHTML = SOURCES[src].foot;
+  if (src === 'gistda') map.invalidateSize();
+  else if (src === 'ddpm') initDdpmMap();
+  else initFfrMap();
 }
 
 /* ===== ปภ Map ===== */
@@ -401,6 +442,149 @@ function onDdpmDistChange() {
 }
 
 
+/* ===== ดินโคลนถล่ม: คาดการณ์หมู่บ้านเสี่ยงน้ำหลากดินถล่ม (FFR 36 ชม.) ===== */
+// ตารางไม่มีพิกัดหมู่บ้าน → จับคู่ อำเภอ+ตำบล กับขอบเขตตำบลใน onwr-nara-subdistricts.geojson
+const FFR_LV = {
+  high: {name:'เสี่ยงสูง',     color:'#dc2626', rank:3},
+  mid:  {name:'เสี่ยงปานกลาง', color:'#f97316', rank:2},
+  low:  {name:'เสี่ยงต่ำ',     color:'#eab308', rank:1}
+};
+let ffrMap = null, ffrPolys = null, ffrBadges = null, ffrGeo = null, ffrInited = false;
+const ffrRows = (typeof FFR_RISK !== 'undefined' ? FFR_RISK.rows : [])
+  .map(([ap, tb, ban, ffr, lv], i) => ({i, ap, tb, ban, ffr, lv}));
+const ffrKey = (ap, tb) => ap + '|' + tb;
+const ffrLayerByKey = {};
+
+function ffrLvTag(lv){ const L_ = FFR_LV[lv] || FFR_LV.low; return `<span class="ffr-lv ${esc(lv)}">${L_.name}</span>`; }
+
+async function initFfrMap() {
+  if (!ffrMap) {
+    ffrMap = L.map('ffr-map', {zoomControl:false}).setView([6.0,101.75], 10);
+    L.control.zoom({position:'topright'}).addTo(ffrMap);
+    L.control.scale({imperial:false, position:'bottomright'}).addTo(ffrMap);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap | กรมทรัพยากรน้ำ · MRCFFGS'}).addTo(ffrMap);
+    if (window.OMSRivers) window.OMSRivers.drawLeaflet(ffrMap);
+    ffrPolys = L.layerGroup().addTo(ffrMap);
+    ffrBadges = L.layerGroup().addTo(ffrMap);
+    const legend = L.control({position:'bottomleft'});
+    legend.onAdd = () => {
+      const d = L.DomUtil.create('div');
+      d.style.cssText = 'background:#fff;padding:6px 9px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.3);font-size:12px;line-height:1.6';
+      d.innerHTML = '<b>ระดับความเสี่ยง (FFR)</b><br>' + ['high','low'].map(k =>
+        `<span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${FFR_LV[k].color};vertical-align:-1px;margin-right:4px"></span>${FFR_LV[k].name}`).join('<br>');
+      return d;
+    };
+    legend.addTo(ffrMap);
+    document.getElementById('ffr-period').textContent = (typeof FFR_RISK !== 'undefined' && FFR_RISK.period) || '-';
+    document.getElementById('ffr-note').textContent = (typeof FFR_RISK !== 'undefined' && FFR_RISK.note) || '';
+    const ampSel = document.getElementById('ffrAmp');
+    [...new Set(ffrRows.map(r => r.ap))].sort((a,b) => a.localeCompare(b,'th')).forEach(ap => {
+      ampSel.insertAdjacentHTML('beforeend', `<option value="${esc(ap)}">${esc(ap)}</option>`);
+    });
+  }
+  ffrMap.invalidateSize();
+  if (ffrInited) return;
+  ffrInited = true;
+  try {
+    ffrGeo = await fetch('js/onwr-nara-subdistricts.geojson').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+  } catch (e) {
+    ffrGeo = null;
+    document.getElementById('ffr-note').innerHTML = '<span style="color:var(--st-danger)">โหลดขอบเขตตำบลไม่สำเร็จ · แสดงเฉพาะรายชื่อ</span>';
+  }
+  renderFfr(true);
+}
+
+function ffrFiltered() {
+  const lv = document.getElementById('ffrLevel').value;
+  const ap = document.getElementById('ffrAmp').value;
+  return ffrRows.filter(r => (!lv || r.lv === lv) && (!ap || r.ap === ap));
+}
+
+function ffrPopupHtml(ap, tb, rows) {
+  const sorted = rows.slice().sort((a,b) => b.ffr - a.ffr);
+  return `<b>ต.${esc(tb)} อ.${esc(ap)}</b> · ${rows.length} หมู่บ้าน<div class="ffr-pop"><table>${sorted.map(r =>
+    `<tr><td>บ.${esc(r.ban)}</td><td style="text-align:right">${r.ffr.toFixed(2)}</td><td>${ffrLvTag(r.lv)}</td></tr>`).join('')}</table></div>`;
+}
+
+function renderFfr(fit) {
+  if (!ffrMap) return;
+  const rows = ffrFiltered();
+  const groups = new Map();
+  rows.forEach(r => {
+    const k = ffrKey(r.ap, r.tb);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(r);
+  });
+
+  ffrPolys.clearLayers(); ffrBadges.clearLayers();
+  Object.keys(ffrLayerByKey).forEach(k => delete ffrLayerByKey[k]);
+  const bounds = L.latLngBounds([]);
+  if (ffrGeo) {
+    ffrGeo.features.forEach(f => {
+      const p = f.properties, k = ffrKey(p.district_th, p.name_th), g = groups.get(k);
+      if (!g) {
+        // ตำบลที่ไม่มีหมู่บ้านในรายการ: เส้นขอบบาง ๆ เป็นบริบท
+        ffrPolys.addLayer(L.geoJSON(f, {style:{color:'#94a3b8', weight:.6, fill:false}, interactive:false}));
+        return;
+      }
+      const top = g.reduce((a,b) => (FFR_LV[b.lv]?.rank||0) > (FFR_LV[a.lv]?.rank||0) || ((FFR_LV[b.lv]?.rank||0) === (FFR_LV[a.lv]?.rank||0) && b.ffr > a.ffr) ? b : a);
+      const c = (FFR_LV[top.lv] || FFR_LV.low).color;
+      const poly = L.geoJSON(f, {style:{color:c, weight:1.5, fillColor:c, fillOpacity:.15 + Math.min(top.ffr, 1) * .45}});
+      poly.bindPopup(ffrPopupHtml(p.district_th, p.name_th, g), {maxWidth:280});
+      poly.bindTooltip(`ต.${esc(p.name_th)} · ${g.length} หมู่บ้าน · FFR สูงสุด ${top.ffr.toFixed(2)}`, {sticky:true});
+      ffrPolys.addLayer(poly);
+      const center = [p.center_lat, p.center_lon];
+      const badge = L.marker(center, {icon: L.divIcon({className:'', html:`<div class="ffr-badge" style="background:${c}">${g.length}</div>`, iconSize:[26,26], iconAnchor:[13,13]})});
+      badge.on('click', () => poly.openPopup(center));
+      ffrBadges.addLayer(badge);
+      ffrLayerByKey[k] = {poly, center};
+      bounds.extend(poly.getBounds());
+    });
+  }
+  if (fit && bounds.isValid()) ffrMap.fitBounds(bounds.pad(0.08));
+
+  renderFfrStats(rows);
+  renderFfrList(rows);
+}
+
+function renderFfrStats(rows) {
+  const by = new Map();
+  rows.forEach(r => {
+    if (!by.has(r.ap)) by.set(r.ap, {high:0, mid:0, low:0, tb:new Set()});
+    const o = by.get(r.ap); o[r.lv] = (o[r.lv]||0) + 1; o.tb.add(r.tb);
+  });
+  const nHigh = rows.filter(r => r.lv === 'high').length, nLow = rows.filter(r => r.lv === 'low').length;
+  const el = document.getElementById('ffr-stats');
+  if (!rows.length) { el.innerHTML = '<div style="font-size:12px;color:var(--ink-3)">ไม่มีหมู่บ้านตามเงื่อนไขที่เลือก</div>'; return; }
+  el.innerHTML = `<div style="font-size:12px;margin-bottom:6px">${ffrLvTag('high')} <b>${nHigh}</b> หมู่บ้าน &nbsp; ${ffrLvTag('low')} <b>${nLow}</b> หมู่บ้าน</div>` +
+    [...by.entries()].sort((a,b) => b[1].high - a[1].high || (b[1].high+b[1].low) - (a[1].high+a[1].low)).map(([ap, o]) =>
+      `<div class="provcard" onclick="ffrGoAmp('${esc(ap)}')"><span>อ.${esc(ap)} <small style="color:var(--ink-3)">${o.tb.size} ตำบล</small></span><span>${o.high ? `<span class="badge" style="background:${FFR_LV.high.color}">สูง ${o.high}</span>` : ''} ${o.low ? `<span class="badge" style="background:${FFR_LV.low.color};color:#713f12">ต่ำ ${o.low}</span>` : ''}</span></div>`
+    ).join('') + '<div style="font-size:10.5px;color:var(--ink-3);margin-top:3px">คลิกอำเภอเพื่อกรองและซูม</div>';
+}
+
+function renderFfrList(rows) {
+  document.getElementById('ffr-count').textContent = rows.length;
+  const sorted = rows.slice().sort((a,b) => b.ffr - a.ffr || a.i - b.i);
+  document.getElementById('ffr-list').innerHTML = sorted.length ? `<table class="ffr-tbl"><thead><tr><th>บ้าน</th><th>ต. / อ.</th><th style="text-align:right">FFR</th><th></th></tr></thead><tbody>${sorted.map(r =>
+    `<tr data-i="${r.i}" onclick="ffrPick(${r.i})"><td>${esc(r.ban)}</td><td>${esc(r.tb)} / ${esc(r.ap)}</td><td style="text-align:right">${r.ffr.toFixed(2)}</td><td>${ffrLvTag(r.lv)}</td></tr>`).join('')}</tbody></table>` : '';
+}
+
+function ffrGoAmp(ap) {
+  document.getElementById('ffrAmp').value = ap;
+  renderFfr(true);
+}
+
+function ffrPick(i) {
+  const r = ffrRows[i];
+  document.querySelectorAll('#ffr-list tr.sel').forEach(x => x.classList.remove('sel'));
+  document.querySelector(`#ffr-list tr[data-i="${i}"]`)?.classList.add('sel');
+  const hit = ffrLayerByKey[ffrKey(r.ap, r.tb)];
+  if (!hit) return;
+  ffrMap.flyToBounds(hit.poly.getBounds().pad(0.3), {duration:.6, maxZoom:13});
+  ffrMap.once('moveend', () => hit.poly.openPopup(hit.center));
+}
+
+
 /* ===== GISTDA Map (original logic) ===== */
 const KEY = 'm4bUUjGDPc3rdxyb8JHcL8SDhgLHPgRjq2NBeibPIucJkpxuoHahMVwXwRjKTOq6';
 const B = 'https://api-gateway.gistda.or.th/api/2.0/resources';
@@ -506,6 +690,8 @@ function gapCsv(){
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download='gap_analysis_narathiwat.csv'; a.click();
 }
 buildGap();
+// ลิงก์ตรงไปแท็บ: repeat.html#ffr หรือ #ddpm
+if (SOURCES[location.hash.slice(1)]) switchSource(location.hash.slice(1));
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
