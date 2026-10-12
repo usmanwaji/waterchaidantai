@@ -15,6 +15,9 @@
               → ชื่อ telerid-proxy → Deploy → Edit code → วางไฟล์นี้ → Deploy
               ได้ URL https://telerid-proxy.<บัญชี>.workers.dev (map.js / index.html ตั้งไว้ที่บัญชี newusmanwaji)
   ทดสอบ: เปิด https://telerid-proxy.<บัญชี>.workers.dev/stations.json จากเน็ตไทย
+  สำคัญ: ต้องเปิด Smart Placement (Settings → Runtime → Placement → Smart) ให้ Worker ย้ายไปรันใกล้ telerid (ไทย)
+         ไม่งั้นคนที่เน็ตวิ่งผ่านศูนย์ฮ่องกง/สิงคโปร์ จะได้ 522 (telerid ไม่รับการเชื่อมต่อจากนอกไทย)
+         เช็กว่ารันที่ไหน: เปิดหน้าแรก https://telerid-proxy.<บัญชี>.workers.dev/ ดูค่า runsIn
   ------------------------------------------------------------------
 */
 const BASE = 'https://telerid.rid.go.th';
@@ -190,10 +193,18 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
     if (request.method !== 'GET') return new Response('Method Not Allowed', { status: 405, headers: CORS });
     const path = decodeURIComponent(new URL(request.url).pathname.replace(/^\/+/, ''));
-    const colo = (request.cf && request.cf.colo) || '';
+    const colo = (request.cf && request.cf.colo) || '';   // ศูนย์ที่รับคำขอ (อาจไม่ใช่ที่โค้ดรัน ถ้าเปิด Smart Placement)
     try {
       let res;
-      if (path === '' ) return json({ ok: true, colo, use: ['/stations.json', '/{CODE}.detail.json', '/{CODE}.jpg'] }, 200, 0);
+      if (path === '') {
+        // ศูนย์ที่โค้ดรันจริง (ขาออก) · ต้องเป็น BKK ถึงจะดึง telerid ได้
+        let runsIn = null;
+        try { runsIn = ((await (await withTimeout(fetch('https://www.cloudflare.com/cdn-cgi/trace'), 8000, 'trace')).text()).match(/^colo=(\w+)/m) || [])[1] || null; } catch {}
+        const probe = await withTimeout(fetch(BASE + '/restapi/main/station_list/', { method: 'HEAD', headers: { 'User-Agent': UA } }), 15000, 'probe').then((r) => r.status, (e) => String(e.message || e));
+        return json({ ok: probe === 200, requestEnteredAt: colo, runsIn, teleridStatus: probe,
+          hint: probe === 200 ? 'telerid reachable from here' : 'telerid not reachable from ' + runsIn + ' - enable Smart Placement (Settings > Runtime > Placement)',
+          use: ['/stations.json', '/{CODE}.detail.json', '/{CODE}.jpg'] }, 200, 0);
+      }
       else if (path === 'stations.json') res = await stationsJson(ctx);
       else if (path.endsWith('.detail.json')) res = await detailJson(ctx, path.slice(0, -'.detail.json'.length));
       else if (path.endsWith('.jpg')) res = await cameraJpg(ctx, path.slice(0, -'.jpg'.length));
@@ -206,7 +217,7 @@ export default {
       return new Response(res.body, { status: res.status, headers });
     } catch (e) {
       // ศูนย์นี้ดึง telerid ไม่ได้ (เช่น ถูกบล็อก) → หน้าเว็บจะไปใช้ข้อมูลจากคอม (สาขา cam) แทน
-      return json({ error: String(e && e.message || e), colo }, 502, 0);
+      return json({ error: String(e && e.message || e), colo, hint: 'see / for where this Worker runs' }, 502, 0);
     }
   },
 };
