@@ -167,7 +167,9 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
   <button class="hbtn" data-h="48">+48 ชม.</button>
   <button class="hbtn" data-h="72">+72 ชม.</button>
   <button type="button" id="btnDistRain">คาดการณ์ปริมาณฝนรายอำเภอ</button>
-  <button type="button" id="btnFfr" aria-pressed="false">ความเสี่ยงดินโคลนถล่ม</button>
+  <!-- ปุ่มความเสี่ยงดินโคลนถล่ม: ซ่อนไว้ก่อนจนกว่าจะได้พิกัดรายหมู่บ้าน · ระบบยังทำงานครบ
+       เปิดดูได้ทาง forecast.html#ffr · จะแสดงปุ่มอีกครั้ง ให้ลบ attribute hidden ออก -->
+  <button type="button" id="btnFfr" aria-pressed="false" hidden>ความเสี่ยงดินโคลนถล่ม</button>
   <span id="conf"></span>
 </div>
 
