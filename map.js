@@ -761,14 +761,14 @@ async function loadOnwrActive(){
 })();
 
 /* ================= โซนลุ่มน้ำรายอำเภอ =================
- * ระบายสีอำเภอทั้ง 13 อำเภอเป็น 4 กลุ่มตามแผนที่ในเอกสารนำเสนอ นรม.
+ * ระบายสีอำเภอทั้ง 13 อำเภอเป็น 3 กลุ่มตามแผนที่ในเอกสารนำเสนอ นรม.
  * (ขอบเขตอำเภอใช้ไฟล์เดียวกับชั้นฝนสะสม สทนช. · จับคู่ด้วย pcode)
- * อำเภอที่คร่อมสองลุ่มน้ำ (จะแนะ · สุคิริน · ตากใบ) จัดเข้ากลุ่มที่กินพื้นที่ส่วนใหญ่ในแผนที่ต้นฉบับ */
+ * อำเภอที่คร่อมสองลุ่มน้ำ (จะแนะ · สุคิริน · ตากใบ) จัดเข้ากลุ่มที่กินพื้นที่ส่วนใหญ่ในแผนที่ต้นฉบับ
+ * บาเจาะใช้สีเดียวกับรือเสาะ (ตามที่เจ้าของเว็บกำหนด) */
 const ZONES = [
-  {th:'ลุ่มน้ำสายบุรี',     en:'Sai Buri basin',     ms:'Lembangan Sai Buri',     fill:'#d6b06e', line:'#c2410c', pcodes:['TH9606','TH9607','TH9612','TH9609']},  // รือเสาะ ศรีสาคร จะแนะ สุคิริน
+  {th:'ลุ่มน้ำสายบุรี',     en:'Sai Buri basin',     ms:'Lembangan Sai Buri',     fill:'#d6b06e', line:'#c2410c', pcodes:['TH9606','TH9607','TH9612','TH9609','TH9603']},  // รือเสาะ ศรีสาคร จะแนะ สุคิริน บาเจาะ
   {th:'ลุ่มน้ำบางนรา',      en:'Bang Nara basin',    ms:'Lembangan Bang Nara',    fill:'#2dd4bf', line:'#16a34a', pcodes:['TH9601','TH9604','TH9605','TH9613','TH9602']},  // เมือง ยี่งอ ระแงะ เจาะไอร้อง ตากใบ
-  {th:'ลุ่มน้ำสุไหงโก-ลก',  en:'Su-ngai Kolok basin', ms:'Lembangan Sungai Golok', fill:'#c4b5fd', line:'#db2777', pcodes:['TH9611','TH9610','TH9608']},  // สุไหงปาดี สุไหงโก-ลก แว้ง
-  {th:'พื้นที่ชายฝั่งบาเจาะ', en:'Bacho coastal area', ms:'Kawasan pantai Bacho',   fill:'#f87171', line:'#dc2626', pcodes:['TH9603']}   // บาเจาะ
+  {th:'ลุ่มน้ำสุไหงโก-ลก',  en:'Su-ngai Kolok basin', ms:'Lembangan Sungai Golok', fill:'#c4b5fd', line:'#db2777', pcodes:['TH9611','TH9610','TH9608']}   // สุไหงปาดี สุไหงโก-ลก แว้ง
 ];
 const ZONE_BY_PCODE = new Map(ZONES.flatMap(z => z.pcodes.map(c => [c, z])));
 const zoneName = z => z[lang] || z.th;
