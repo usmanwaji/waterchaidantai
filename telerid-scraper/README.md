@@ -103,5 +103,6 @@ setx RID_PASS "รหัสผ่าน RID"
 ---
 
 ## หมายเหตุ
-- ไฟล์ `.github/workflows/telerid-cctv.yml` (ตัวรันบน GitHub) **ใช้ไม่ได้กับ telerid** เพราะ IP ต่างประเทศโดนบล็อก — จะลบทิ้งจาก repo ก็ได้ หรือเก็บไว้เผื่ออนาคตมี VPS ไทย
+- รันบน GitHub Actions ไม่ได้ (telerid บล็อก IP ต่างประเทศ) · workflow เดิม `telerid-cctv.yml` ลบออกแล้ว
+- ไม่อยากเปิดคอม: ใช้ Cloudflare Worker `telerid-proxy.worker.js` (รันที่ศูนย์ BKK) ซึ่งหน้าเว็บดึงคู่กับข้อมูลจากคอมอยู่แล้ว
 - อย่าอัปโหลดโฟลเดอร์ `node_modules` หรือ `telerid-cam` ขึ้น GitHub (มี `.gitignore` กันไว้แล้วสำหรับคนใช้ git)
