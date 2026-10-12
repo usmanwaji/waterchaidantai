@@ -670,7 +670,9 @@ async function loadRid(pre){
   try{
     const j = pre || await fetchRid();
     ridUpdated = j?.updated || null;
-    ridAll = (j?.stations||[]).filter(d=>d.province===prov).map(d=>{
+    // แสดงเฉพาะสถานีที่ส่งค่าจริง (เกณฑ์เดียวกับหน้าแผนที่: มีค่า ไม่ใช่ -9.99 และค่าไม่เก่ากว่ารอบดึงเกิน 6 ชม.)
+    const reporting = d => d.level!=null && d.level > -9 && (!d.levelDt || ((j.updated ? new Date(j.updated) : new Date()) - new Date(d.levelDt)) <= 6*3600e3);
+    ridAll = (j?.stations||[]).filter(d=>d.province===prov && reporting(d)).map(d=>{
       let cur = num(d.level); if(cur!=null && cur <= -9) cur = null;
       const bank = num(d.critical) ?? num(d.bank), warn = num(d.warning);
       const r = cur==null || bank==null ? 0 : cur >= bank ? 3 : (warn!=null && cur >= warn) ? 2 : 0;
