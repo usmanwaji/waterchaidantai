@@ -167,7 +167,9 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
   <button class="hbtn" data-h="48">+48 ชม.</button>
   <button class="hbtn" data-h="72">+72 ชม.</button>
   <button type="button" id="btnDistRain">คาดการณ์ปริมาณฝนรายอำเภอ</button>
-  <button type="button" id="btnFfr" aria-pressed="false">ความเสี่ยงดินโคลนถล่ม</button>
+  <!-- ปุ่มความเสี่ยงดินโคลนถล่ม: ซ่อนไว้ก่อนจนกว่าจะได้พิกัดรายหมู่บ้าน · ระบบยังทำงานครบ
+       เปิดดูได้ทาง forecast.html#ffr · จะแสดงปุ่มอีกครั้ง ให้ลบ attribute hidden ออก -->
+  <button type="button" id="btnFfr" aria-pressed="false" hidden>ความเสี่ยงดินโคลนถล่ม</button>
   <span id="conf"></span>
 </div>
 
@@ -726,9 +728,9 @@ const FFR_LV = {
   low:  {name:'เสี่ยงต่ำ',     color:'#eab308', rank:1}
 };
 const ffrRows = (typeof FFR_RISK !== 'undefined' ? FFR_RISK.rows : [])
-  .map(([ap, tb, ban, ffr, lv], i) => ({i, ap, tb, ban, ffr, lv}));
+  .map(([ap, tb, ban, ffr, lv, lat, lng], i) => ({i, ap, tb, ban, ffr, lv, lat, lng}));
 const ffrKey = (ap, tb) => ap + '|' + tb;
-const ffrLayer = L.layerGroup(), ffrByKey = {};
+const ffrLayer = L.layerGroup(), ffrByKey = {}, ffrPins = {};
 let ffrOn = false, ffrGeo, ffrLegend = null;
 
 function ffrLvTag(lv){ return `<span class="ffr-lv ${esc(lv)}">${(FFR_LV[lv] || FFR_LV.low).name}</span>`; }
@@ -814,6 +816,17 @@ function ffrRender(fit){
     ffrByKey[k] = {poly, center};
     bounds.extend(poly.getBounds());
   });
+  // หมุดรายหมู่บ้าน: เฉพาะแถวที่มีพิกัด (คอลัมน์ 6-7 ใน js/ffr_risk_data.js) · แถวที่ไม่มีพิกัดเห็นได้จากตำบลอย่างเดียว
+  Object.keys(ffrPins).forEach(k => delete ffrPins[k]);
+  rows.filter(r => r.lat != null && r.lng != null).sort((a,b) => a.ffr - b.ffr).forEach(r => {
+    const c = (FFR_LV[r.lv] || FFR_LV.low).color;
+    const pin = L.circleMarker([r.lat, r.lng], {radius:7, color:'#fff', weight:2, fillColor:c, fillOpacity:1});
+    pin.bindPopup(`<b>บ.${esc(r.ban)}</b><br>ต.${esc(r.tb)} อ.${esc(r.ap)}<br>ค่า FFR <b>${r.ffr.toFixed(2)}</b> ${ffrLvTag(r.lv)}`);
+    pin.bindTooltip(`บ.${esc(r.ban)} · ${r.ffr.toFixed(2)}`);
+    ffrLayer.addLayer(pin);
+    ffrPins[r.i] = pin;
+    bounds.extend([r.lat, r.lng]);
+  });
   if (fit && bounds.isValid()) map.fitBounds(bounds.pad(0.08));
   ffrRenderStats(rows);
   ffrRenderList(rows);
@@ -852,6 +865,12 @@ function ffrPick(i){
   const r = ffrRows[i];
   document.querySelectorAll('#ffrList tr.sel').forEach(x => x.classList.remove('sel'));
   document.querySelector(`#ffrList tr[data-i="${i}"]`)?.classList.add('sel');
+  const pin = ffrPins[i];
+  if (pin) {
+    map.flyTo(pin.getLatLng(), Math.max(map.getZoom(), 14), {duration:.6});
+    map.once('moveend', () => pin.openPopup());
+    return;
+  }
   const hit = ffrByKey[ffrKey(r.ap, r.tb)];
   if (!hit) return;
   map.flyToBounds(hit.poly.getBounds().pad(0.3), {duration:.6, maxZoom:13});
