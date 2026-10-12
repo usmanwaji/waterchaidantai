@@ -174,6 +174,7 @@ header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-
 .lg{display:flex;align-items:center;gap:6px}
 .sw{width:12px;height:12px;border-radius:50%;flex:0 0 12px;border:1px solid rgba(0,0,0,.15)}
 .sw.sq{border-radius:3px}
+.legend .lg-tog{display:none}   /* ปุ่มพับ/กาง ใช้เฉพาะมือถือ (ดูกฎใน @media ด้านล่าง) */
 
 /* ===== Popup ===== */
 .leaflet-popup-content{font-family:'Noto Sans Thai',Tahoma,sans-serif;font-size:12.5px;margin:10px 12px;line-height:1.55}
@@ -224,13 +225,38 @@ footer a:hover{text-decoration:underline}
   #sidebar.open ~ #btnSidebar{left:calc(min(85%,330px) + 8px)}
   /* การ์ดสรุป 5 ช่องในแผงกว้าง 330px เหลือช่องละ ~60px · ให้ไหลลงแถวใหม่เองแทน */
   #summary{grid-template-columns:repeat(auto-fit,minmax(92px,1fr));padding:10px 8px 6px}
-  /* คำอธิบายสัญลักษณ์ (ระดับน้ำ/ฝน/เรดาร์) บังแผนที่บนจอเล็ก
-     ย่อให้เล็กลงอีกและโปร่งแสงขึ้น (จาก 95% เหลือ 65% ความทึบ) ให้เห็นแผนที่ข้างใต้ได้
+  /* คำอธิบายสัญลักษณ์ (ระดับน้ำ/ฝน/เรดาร์) บังแผนที่และ popup บนจอเล็ก
+     เดิมเปิดค้างและโปร่งแสง 65% ตัวอักษรของ popup ใต้มันจึงซ้อนกันอ่านไม่ออกทั้งสองชั้น
+     ตอนนี้พับเหลือปุ่ม "สัญลักษณ์" แตะเพื่อกาง (map.js buildLegend) กางแล้วพื้นทึบให้อ่านได้
      ใช้ #map .legend (ไม่ใช่ .legend เฉย ๆ) เพราะ shared.css โหลดทีหลังและมีกฎ .legend
      ในเบรกพอยท์เดียวกัน (font-size:12.5px) ความจำเพาะเท่ากันจึงชนะเพราะมาทีหลัง ต้องเพิ่ม #map นำหน้า */
-  #map .legend{max-height:22vh;font-size:10.5px;line-height:1.45;padding:6px 9px;background:rgba(255,255,255,.65)}
+  #map .legend{max-height:none;overflow:visible;padding:0;background:none;box-shadow:none;font-size:10.5px;line-height:1.45}
+  #map .legend .lg-body{display:none}
+  #map .legend.open .lg-body{display:block;max-height:42vh;overflow-y:auto;overscroll-behavior:contain;margin-bottom:6px;
+    padding:6px 9px;border-radius:10px;background:rgba(255,255,255,.96);box-shadow:0 1px 6px rgba(0,0,0,.25)}
   #map .legend h4{font-size:10.5px;margin:2px 0 1px}
   #map .legend .sw{width:10px;height:10px;flex:0 0 10px}
+  #map .legend .lg-tog{display:flex;align-items:center;gap:5px;margin-left:auto;min-height:36px;padding:0 12px;
+    border:none;border-radius:18px;background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.28);
+    font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}
+  #map .legend .lg-tog::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--c-overflow);box-shadow:5px 0 0 var(--c-high);margin-right:5px}
+  #map .legend .lg-tog::after{content:"▴";margin-left:7px;font-size:11px;color:var(--ink-3)}
+  #map .legend.open .lg-tog::after{content:"▾"}
+  /* shared.css ยก .leaflet-bottom ขึ้นพ้นแถบแท็บ แต่หน้านี้ body เว้น padding-bottom ให้แถบแท็บอยู่แล้ว
+     แผนที่จึงจบเหนือแถบแท็บพอดี การยกซ้ำทำให้คำอธิบายสัญลักษณ์/แถบเครดิตลอยขึ้นมากลางจอ ~70px
+     ส่วนปุ่มติดตั้งแอป (ลอยคร่อมขอบล่างแผนที่ ~46px) ยกมุมซ้ายให้พ้นแค่ความสูงปุ่ม */
+  #map .leaflet-bottom{margin-bottom:0}
+  body.has-install-fab #map .leaflet-bottom.leaflet-left{margin-bottom:calc(var(--install-fab-h) + var(--s4))}
+  #map .leaflet-bottom .legend{margin-bottom:8px}
+  /* แถบเครดิตเต็มบรรทัด 12px กินความกว้างเกือบทั้งจอ · ย่อแต่ยังอ่านได้ (เงื่อนไขการใช้แผนที่ OSM ต้องมองเห็น) */
+  #map .leaflet-control-attribution{font-size:9.5px;line-height:1.5;padding:0 5px;background:rgba(255,255,255,.8)}
+  /* popup เปิดอยู่ → ซ่อนของที่ลอยทับ popup (ซูมด้วยสองนิ้วได้อยู่แล้ว) ปิด popup แล้วกลับมาเอง
+     ใช้ visibility ไม่ใช่ display:none: js/install.js วัดขนาดมุมล่างซ้ายเพื่อหลบปุ่มติดตั้งแอป
+     ถ้าแถบมาตราส่วนหายไปจาก layout ตอนวัด ปิด popup แล้วมันจะกลับมาทับปุ่ม (การถอด popup ไม่ทำให้วัดใหม่) */
+  #map.pp-open .legend,#map.pp-open .leaflet-control-zoom,#map.pp-open .leaflet-control-layers,#map.pp-open .leaflet-control-scale{visibility:hidden}
+  /* popup กว้าง/สูงไม่เกินพื้นที่แผนที่ (หักคอลัมน์ปุ่มซ้าย 56px + ขอบขวา ตาม autoPan ใน map.js)
+     ภาพกล้อง+กราฟ ปภ. สูงเกินจอ → เลื่อนดูในกรอบ popup แทนการล้นขึ้นไปใต้หัวเว็บ */
+  #map .leaflet-popup-content{max-width:calc(100vw - 92px);max-height:calc(var(--map-h,70vh) - 80px);overflow-y:auto;overscroll-behavior:contain}
   /* กฎ #search ด้านบนแรงกว่า element selector ใน shared.css จึงต้องระบุซ้ำ
      ต่ำกว่า 16px iOS จะซูมหน้าจอทุกครั้งที่แตะช่องค้นหา */
   #search{font-size:16px}
@@ -365,7 +391,7 @@ footer a:hover{text-decoration:underline}
 </footer>
 
 <script src="js/rivers.js?v=4"></script>
-<script src="map.js?v=25"></script>
+<script src="map.js?v=26"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
