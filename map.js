@@ -54,7 +54,7 @@ th:{
   cctvView:'เปิดดูภาพสด ↗', cctvNote:'กล้องเพิ่มเติม:', cctvDdpm:'CCTV ปภ.', cctvRid:'โทรมาตร ชป.',
   riskTitle:'จุดเสี่ยงน้ำท่วมฉับพลัน 24 ชม.', riskRain:'ฝนสะสม (มม.)', riskSrc:'ที่มา: สสน. (HII)',
   bannerFF:'<b>เฝ้าระวังน้ำท่วมฉับพลัน 24 ชม. ข้างหน้า:</b>', andMore:'และอื่น ๆ',
-  legWL:'ระดับน้ำ (% ความจุลำน้ำ)', legRain:'◼ ฝนสะสม 24 ชม.', legOther:'เขื่อน · 🌊 น้ำทะเล · 📷 CCTV · ▲ โทรมาตร · ⚠ จุดเสี่ยง',
+  legBtn:'สัญลักษณ์', legWL:'ระดับน้ำ (% ความจุลำน้ำ)', legRain:'◼ ฝนสะสม 24 ชม.', legOther:'เขื่อน · 🌊 น้ำทะเล · 📷 CCTV · ▲ โทรมาตร · ⚠ จุดเสี่ยง',
   legR1:'เล็กน้อย ≤10 มม.', legR2:'ปานกลาง 10-35 มม.', legR3:'หนัก 35-90 มม.', legR4:'หนักมาก >90 มม.',
   src:'แหล่งข้อมูล:', note:'อยู่ระหว่างการทดลองปรับปรุง หากมีข้อเสนอ/แก้ไข ติดต่อผู้พัฒนา <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a>',
   rpTitle:'รายงานสถานการณ์น้ำ จังหวัดนราธิวาส', rpStations:'สถานี', rpCrit:'สถานีเฝ้าระวังเร่งด่วน:', rpNoCrit:'ไม่มีสถานีล้นตลิ่ง/น้ำมาก', rpRainMax:'ฝนสะสม 24 ชม. สูงสุด:', rpDam:'เขื่อน/อ่างเก็บน้ำ:', rpRisk:'พื้นที่เสี่ยงน้ำท่วมฉับพลัน:', rpSrc:'ที่มา: thaiwater.net (สสน.) / HII',
@@ -119,7 +119,7 @@ en:{
   cctvView:'Open live view ↗', cctvNote:'More cameras:', cctvDdpm:'DDPM CCTV', cctvRid:'RID telemetry',
   riskTitle:'Flash-flood risk, next 24 h', riskRain:'Accum. rain (mm)', riskSrc:'Source: HII',
   bannerFF:'<b>Flash-flood watch, next 24 h:</b>', andMore:'and more',
-  legWL:'Water level (% channel capacity)', legRain:'◼ Rain, 24 h', legOther:'Dam · 🌊 Sea · 📷 CCTV · ▲ Telemetry · ⚠ Risk',
+  legBtn:'Legend', legWL:'Water level (% channel capacity)', legRain:'◼ Rain, 24 h', legOther:'Dam · 🌊 Sea · 📷 CCTV · ▲ Telemetry · ⚠ Risk',
   legR1:'Light ≤10 mm', legR2:'Moderate 10-35 mm', legR3:'Heavy 35-90 mm', legR4:'Very heavy >90 mm',
   src:'Sources:', note:'Trial version under improvement · suggestions/corrections: <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a>',
   rpTitle:'Water situation report · Narathiwat', rpStations:'stations', rpCrit:'Priority stations:', rpNoCrit:'No overflow/high stations', rpRainMax:'Max rain 24 h:', rpDam:'Dams/reservoirs:', rpRisk:'Flash-flood risk areas:', rpSrc:'Source: thaiwater.net (HII)',
@@ -184,7 +184,7 @@ ms:{
   cctvView:'Buka paparan langsung ↗', cctvNote:'Kamera lain:', cctvDdpm:'CCTV DDPM', cctvRid:'Telemetri RID',
   riskTitle:'Risiko banjir kilat, 24 jam akan datang', riskRain:'Hujan terkumpul (mm)', riskSrc:'Sumber: HII',
   bannerFF:'<b>Amaran banjir kilat 24 jam akan datang:</b>', andMore:'dan lain-lain',
-  legWL:'Paras air (% kapasiti sungai)', legRain:'◼ Hujan 24 jam', legOther:'Empangan · 🌊 Laut · 📷 CCTV · ▲ Telemetri · ⚠ Risiko',
+  legBtn:'Petunjuk', legWL:'Paras air (% kapasiti sungai)', legRain:'◼ Hujan 24 jam', legOther:'Empangan · 🌊 Laut · 📷 CCTV · ▲ Telemetri · ⚠ Risiko',
   legR1:'Ringan ≤10 mm', legR2:'Sederhana 10-35 mm', legR3:'Lebat 35-90 mm', legR4:'Sangat lebat >90 mm',
   src:'Sumber:', note:'Versi percubaan dalam penambahbaikan · cadangan/pembetulan: <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a>',
   rpTitle:'Laporan situasi air · Narathiwat', rpStations:'stesen', rpCrit:'Stesen keutamaan:', rpNoCrit:'Tiada stesen melimpah/tinggi', rpRainMax:'Hujan 24 j tertinggi:', rpDam:'Empangan:', rpRisk:'Kawasan risiko banjir kilat:', rpSrc:'Sumber: thaiwater.net (HII)',
@@ -293,6 +293,20 @@ const baseSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/service
   maxZoom:18, attribution:'© Esri | สสน./สทนช./ชป./HII'
 });
 L.control.layers({'แผนที่ถนน / Road':baseOSM,'ดาวเทียม / Satellite':baseSat}, null, {position:'topright'}).addTo(map);
+
+/* มือถือ: ของที่ลอยบนแผนที่บัง popup (ภาพกล้อง ปภ. + กราฟ) จนอ่านไม่ได้
+   · ตัดคำนำ "🇺🇦 Leaflet |" ออกจากแถบเครดิตให้สั้นลง (ไม่ใช่เงื่อนไขสัญญาอนุญาต) เครดิต OSM/หน่วยงานยังอยู่ครบ
+   · autoPan ให้ popup หลบคอลัมน์ปุ่ม ☰ ⚠ 📷 ด้านซ้าย และไม่ลงไปทับแถบเครดิตด้านล่าง
+   · --map-h ให้ CSS จำกัดความสูง popup ไม่เกินแผนที่ (เนื้อหาที่เหลือเลื่อนดูในกรอบ)
+   · pp-open: ระหว่างเปิด popup ซ่อนคำอธิบายสัญลักษณ์/ปุ่มซูม/ชั้นแผนที่/มาตราส่วน (กฎอยู่ใน map.html) */
+if(matchMedia('(max-width:768px)').matches){
+  map.attributionControl.setPrefix(false);
+  L.Popup.mergeOptions({autoPanPaddingTopLeft:[56,8], autoPanPaddingBottomRight:[6,22]});
+}
+const setMapH = () => map.getContainer().style.setProperty('--map-h', map.getSize().y+'px');
+setMapH(); map.on('resize', setMapH);
+map.on('popupopen', () => map.getContainer().classList.add('pp-open'));
+map.on('popupclose', () => map.getContainer().classList.remove('pp-open'));
 
 // ค่า default: แสดงเฉพาะชั้น "ระดับน้ำ" เท่านั้น ส่วนชั้นอื่น (ฝน/เขื่อน/น้ำทะเล/CCTV/โทรมาตร/จุดเสี่ยง) ผู้ใช้กดติ๊กเปิดเองทีหลัง
 const gWL=L.layerGroup().addTo(map), gRain=L.layerGroup().addTo(map),
@@ -885,13 +899,16 @@ function mkIcon(cls, color, size, text, blink){
 }
 
 /* ---------- คำอธิบายสัญลักษณ์ ---------- */
-let legendCtl = null;
+/* มือถือเริ่มแบบพับเหลือแค่ปุ่ม แตะเพื่อกาง (จอคอมแสดงเต็มเสมอ ปุ่มถูกซ่อนด้วย CSS)
+   ปุ่มอยู่ใต้เนื้อหา: กล่องชิดมุมล่าง กางแล้วโตขึ้นด้านบน ปุ่มจึงอยู่ที่เดิมให้แตะพับได้ทันที
+   เก็บสถานะไว้ในตัวแปร เพราะ buildLegend ถูกเรียกสร้างใหม่ทุกครั้งที่เปิด/ปิดชั้นข้อมูลหรือเปลี่ยนภาษา */
+let legendCtl = null, legendOpen = false;
 function buildLegend(){
   if(legendCtl) map.removeControl(legendCtl);
   legendCtl = L.control({position:'bottomright'});
   legendCtl.onAdd = () => {
-    const d = L.DomUtil.create('div','legend');
-    d.innerHTML = `
+    const d = L.DomUtil.create('div','legend'+(legendOpen?' open':''));
+    d.innerHTML = `<div class="lg-body">
       <h4>${t('legWL')}</h4>
       ${['overflow','high'].map(k=>`<div class="lg"><span class="sw" style="background:${WL_CLASSES[k].color}"></span>${wlLabel(k)}</div>`).join('')}
       <h4>${t('legRain')}</h4>
@@ -899,7 +916,15 @@ function buildLegend(){
       <div class="lg"><span class="sw sq" style="background:#dc2626"></span>${t('legR4')}</div>
       ${zoneLegendHTML()}
       ${onwrLegendHTML()}
-      <h4>${t('legOther')}</h4>`;
+      <h4>${t('legOther')}</h4></div>
+      <button type="button" class="lg-tog" aria-expanded="${legendOpen}">${t('legBtn')}</button>`;
+    const tog = d.querySelector('.lg-tog');
+    tog.onclick = () => {
+      legendOpen = !legendOpen;
+      d.classList.toggle('open', legendOpen);
+      tog.setAttribute('aria-expanded', legendOpen);
+    };
+    L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
     return d;
   };
   legendCtl.addTo(map);
