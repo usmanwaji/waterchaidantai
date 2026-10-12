@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-:root{--bg:var(--paper-2);--ink:var(--ink);--muted:var(--ink-3);--orange:var(--st-warn);--orange-d:var(--st-warn);--navy:var(--signal);--navy-d:var(--signal-deep);--peach:var(--paper-2)}
+:root{--pk:#1d5fd1;--bg:var(--paper-2);--ink:var(--ink);--muted:var(--ink-3);--orange:var(--st-warn);--orange-d:var(--st-warn);--navy:var(--signal);--navy-d:var(--signal-deep);--peach:var(--paper-2)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%}
 body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
@@ -74,6 +74,18 @@ footer a{color:var(--st-warn);text-decoration:none}
 .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--outline-strong)}
 .btn.sm{padding:3px 9px;font-size:11.5px}
 #nearBtn{white-space:nowrap}
+/* ที่จอดรถหนีน้ำ (แบบสำรวจ อปท.) */
+#parkBtn{white-space:nowrap}
+#parkBtn.on{background:var(--pk);color:#fff;border-color:var(--pk)}
+.pkic{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:var(--pk);color:#fff;font:700 13px/1 'IBM Plex Sans',sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.pkic.approx{background:#fff;color:var(--pk);border:2px dashed var(--pk)}
+.mlegend .pkic{display:inline-flex;width:16px;height:16px;font-size:10px;border-width:1.5px;vertical-align:-3px;margin-right:3px;box-shadow:none}
+#pkLegend,#parkCard{display:none}
+body.pk-on #pkLegend{display:flex}
+body.pk-on #parkCard{display:block}
+.pkstats{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);margin-bottom:8px}
+.pkstats b{font-size:18px;color:var(--pk)}
+.approxtag{font-size:10.5px;color:var(--st-warn);white-space:nowrap}
 a.tel2{display:inline-block;margin-top:3px;color:#fff;background:var(--navy);padding:2px 9px;border-radius:7px;text-decoration:none;font-size:11.5px;font-weight:600}
 .leaflet-popup-content .pnav.call{background:var(--navy)}
 @media(max-width:768px){
@@ -131,6 +143,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
   <select id="ampSel"><option value="">ทุกอำเภอ</option></select>
   <input type="search" id="q" placeholder="🔎 ค้นหา ชื่อสถานที่ / ตำบล / ผู้ดูแล / เบอร์โทร / รหัส ปภ.">
   <button class="btn ghost" id="nearBtn">ใกล้ฉัน</button>
+  <button class="btn ghost" id="parkBtn" aria-pressed="false">🅿️ ที่จอดรถ</button>
   <span id="selCount"></span>
 </div>
 
@@ -151,7 +164,26 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
       <span><i class="dot" style="background:var(--st-warn)"></i>&lt;100</span>
       <span><i class="dot" style="background:var(--ink-3)"></i>ไม่ระบุ</span>
     </div>
+    <div class="mlegend" id="pkLegend">
+      <span><b>ที่จอดรถหนีน้ำ:</b></span>
+      <span><i class="pkic">P</i>พิกัดจากแบบสำรวจ</span>
+      <span><i class="pkic approx">P</i>ตำแหน่งโดยประมาณ (กลางตำบล)</span>
+    </div>
     <div class="note" id="mapNote"></div>
+  </div>
+
+  <div class="card" id="parkCard">
+    <h2>🅿️ ที่จอดรถหนีน้ำ <span class="where" id="pkWhere"></span></h2>
+    <div class="pkstats" id="pkStats"></div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr>
+          <th>อำเภอ / ตำบล</th><th>สถานที่</th><th>รองรับ</th><th>ผู้ประสานงาน / เบอร์โทร</th><th>พิกัด / นำทาง</th>
+        </tr></thead>
+        <tbody id="pkBody"></tbody>
+      </table>
+    </div>
+    <div class="note">ที่มา: แบบสำรวจสถานที่จอดรถฯ ที่ อปท. ในจังหวัดนราธิวาสกรอก · ตำแหน่งโดยประมาณ = แบบสำรวจไม่ระบุพิกัด หรือพิกัดที่กรอกไม่อยู่ในอำเภอนั้น จึงวางไว้กลางตำบล ควรโทรสอบถามผู้ประสานงานก่อนเดินทาง</div>
   </div>
 
   <div class="card" id="tblCard">
@@ -188,6 +220,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/rivers.js?v=4"></script>
+<script src="js/parking_nwt.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
@@ -207,6 +240,9 @@ const DDPM_SHELTER_URL = 'https://gis-portal.disaster.go.th/arcgis/rest/services
 let ALL = [], loadState = 'loading', lastUpdated = null;   // loadState: loading | ok | fail
 let amp = '', q = '';
 let map, markers = [], byId = {}, userMarker = null, userPos = null;
+// ที่จอดรถหนีน้ำ: แบบสำรวจ อปท. (js/parking_nwt.js) · เปิด/ปิดด้วยปุ่ม "ที่จอดรถ" หรือเข้าหน้าด้วย #parking
+const PARK = (window.PARKING_NWT || []).map((r,i)=>Object.assign({key:'pk'+i}, r));
+let showPark = location.hash === '#parking', pkMarkers = [], pkById = {};
 
 const SH_STATUS = {
   open: {c:'var(--st-normal)', l:'เปิดรับ'},
@@ -296,7 +332,7 @@ function render(){
   ].map(s=>`<div class="stat ${s[2]}"><div class="n">${s[1]}</div><div class="l">${s[0]}</div></div>`).join('');
   document.getElementById('selCount').textContent = ok ? 'แสดง '+rows.length+' / '+ALL.length+' แห่ง' : '';
   document.getElementById('mapWhere').textContent = document.getElementById('tblWhere').textContent = 'จ.นราธิวาส'+(amp?' · อ.'+amp:'');
-  renderMap(rows); renderTable(rows);
+  renderMap(rows); renderTable(rows); renderParkTable(currentPark());
   const noGeo = rows.filter(r=>r.lat==null).length;
   const when = lastUpdated ? ' · ข้อมูล ณ '+new Date(lastUpdated).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Bangkok'}) : '';
   document.getElementById('mapNote').textContent = 'ที่มา: ระบบศูนย์พักพิง ปภ. (shelter.disaster.go.th)' + when +
@@ -319,7 +355,76 @@ function renderMap(rows){
       (r.phone?` <a class="pnav call" href="${telHref(r.phone)}">โทร</a>`:''));
     m.addTo(map); markers.push(m); byId[r.key]=m; pts.push([r.lat,r.lon]);
   });
+  renderParkMap(pts);
   if(pts.length && !userPos){ map.fitBounds(pts,{padding:[30,30],maxZoom:13}); }
+}
+
+/* ---------- ที่จอดรถหนีน้ำ ---------- */
+function currentPark(){
+  if(!showPark) return [];
+  let rows = PARK;
+  if(amp) rows = rows.filter(r=>r.a===amp);
+  if(q){ const s=q.toLowerCase();
+    rows = rows.filter(r => [r.p,r.t,r.a,r.m,r.o,r.c,r.tel].join(' ').toLowerCase().includes(s)); }
+  if(userPos){ rows = rows.slice();
+    rows.forEach(r=>{ r._d = haversine(userPos[0],userPos[1],r.lat,r.lon); });
+    rows.sort((a,b)=>a._d-b._d); }
+  return rows;
+}
+// พิกัดโดยประมาณไม่ใช่ตำแหน่งจริง จึงนำทางด้วยการค้นชื่อสถานที่แทน
+function pkNav(r){
+  return 'https://www.google.com/maps/search/?api=1&query=' + (r.x ? r.lat+','+r.lon
+    : encodeURIComponent([r.p, r.t&&'ต.'+r.t, 'อ.'+r.a, 'นราธิวาส'].filter(Boolean).join(' ')));
+}
+const pkCap = r => [r.car!=null?`🚗 ${fmt(r.car)} คัน`:'', r.mc!=null?`🏍️ ${fmt(r.mc)} คัน`:''].filter(Boolean).join(' · ') || 'ไม่ระบุจำนวน';
+function renderParkMap(pts){
+  pkMarkers.forEach(m=>map.removeLayer(m)); pkMarkers=[]; pkById={};
+  // แถวที่วางกลางตำบลเดียวกันจะทับกันจนกดไม่ได้ จึงกระจายเป็นวงรอบจุดกลาง (~300 ม.)
+  const rows = currentPark(), stack = {};
+  rows.forEach(r=>{ const k=r.lat+','+r.lon; (stack[k]=stack[k]||[]).push(r); });
+  rows.forEach(r=>{
+    const grp = stack[r.lat+','+r.lon], i = grp.indexOf(r), n = grp.length;
+    const ll = n>1 ? [r.lat+0.0027*Math.cos(2*Math.PI*i/n), r.lon+0.0027*Math.sin(2*Math.PI*i/n)] : [r.lat,r.lon];
+    const icon = L.divIcon({className:'', html:`<div class="pkic${r.x?'':' approx'}">P</div>`, iconSize:[22,22], iconAnchor:[11,11], popupAnchor:[0,-10]});
+    const m = L.marker(ll,{icon, zIndexOffset:r.x?500:0, title:r.p});
+    m.bindPopup(`<b>🅿️ ${esc(r.p)}</b><br>อ.${esc(r.a)}${r.t?' · ต.'+esc(r.t):''}${r.m?' · '+esc(r.m):''}<br>`+
+      `<span style="color:var(--ink-3)">${esc(r.o)}</span><br>${pkCap(r)}<br>`+
+      (r.x?'':`<span class="approxtag">⚠ ตำแหน่งโดยประมาณ (กลางตำบล)${r.raw?' · แบบสำรวจระบุ: '+esc(r.raw):''}</span><br>`)+
+      (r.c?`👤 ${esc(r.c)}<br>`:'')+
+      `<a class="pnav" target="_blank" rel="noopener" href="${pkNav(r)}">${r.x?'นำทาง':'ค้นหาใน Google Maps'}</a>`+
+      (r.tel?` <a class="pnav call" href="${telHref(r.tel)}">โทร</a>`:''));
+    m.addTo(map); pkMarkers.push(m); pkById[r.key]=m; pts.push(ll);
+  });
+}
+function renderParkTable(rows){
+  document.getElementById('pkWhere').textContent = 'จ.นราธิวาส'+(amp?' · อ.'+amp:'');
+  const car = rows.reduce((a,r)=>a+(r.car||0),0), mc = rows.reduce((a,r)=>a+(r.mc||0),0);
+  document.getElementById('pkStats').innerHTML =
+    `<span><b>${fmt(rows.length)}</b> แห่ง</span><span>🚗 รถยนต์ <b>${fmt(car)}</b> คัน</span>`+
+    `<span>🏍️ จักรยานยนต์ <b>${fmt(mc)}</b> คัน</span><span>มีพิกัดจากแบบสำรวจ ${fmt(rows.filter(r=>r.x).length)} แห่ง</span>`;
+  const tb = document.getElementById('pkBody');
+  tb.innerHTML = rows.map(r=>{
+    const dist = (userPos&&r._d!=null)?`<div class="sub">~${r._d<1?Math.round(r._d*1000)+' ม.':r._d.toFixed(1)+' กม.'}${r.x?'':' (ประมาณ)'}</div>`:'';
+    return `<tr data-id="${r.key}">
+      <td><b>${esc(r.a)}</b><div class="sub">${r.t?'ต.'+esc(r.t):''}${r.m?' · '+esc(r.m):''}</div>${dist}</td>
+      <td>${esc(r.p)}<div class="sub">${esc(r.o)}</div></td>
+      <td style="white-space:nowrap">${pkCap(r).replace(' · ','<br>')}</td>
+      <td>${esc(r.c)||'<span class="no">ไม่ระบุ</span>'}<div class="sub">${r.tel?`<a class="tel2" href="${telHref(r.tel)}">${esc(r.tel)}</a>`:''}</div></td>
+      <td><a class="gmap" target="_blank" rel="noopener" href="${pkNav(r)}">นำทาง</a>${r.x?'':'<div class="approxtag">ตำแหน่งโดยประมาณ</div>'}</td></tr>`;
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--ink-3);padding:20px">ไม่พบที่จอดรถตามเงื่อนไขที่ค้นหา</td></tr>';
+  tb.querySelectorAll('tr[data-id]').forEach(tr=>tr.addEventListener('click',e=>{
+    if(e.target.closest('a')) return;
+    const m=pkById[tr.dataset.id];
+    if(m){ map.setView(m.getLatLng(),14,{animate:true}); m.openPopup(); document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'}); }
+  }));
+}
+function setPark(on){
+  showPark = on;
+  document.body.classList.toggle('pk-on', on);
+  const b = document.getElementById('parkBtn');
+  b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+  history.replaceState(null, '', on ? '#parking' : location.pathname + location.search);
+  render();
 }
 
 function facil(v){ return v?'<span class="yes">✓</span>':'<span class="no">✗</span>'; }
@@ -361,7 +466,7 @@ document.getElementById('nearBtn').addEventListener('click',()=>{
 
 function fillAmp(){
   const sel=document.getElementById('ampSel');
-  const amps=[...new Set(ALL.map(r=>r.amphoe))].filter(Boolean).sort((a,b)=>a.localeCompare(b,'th'));
+  const amps=[...new Set(ALL.map(r=>r.amphoe).concat(PARK.map(r=>r.a)))].filter(Boolean).sort((a,b)=>a.localeCompare(b,'th'));
   sel.innerHTML='<option value="">ทุกอำเภอ</option>'+amps.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('');
   sel.value = amps.includes(amp) ? amp : '';
 }
@@ -385,11 +490,13 @@ function renderOfficial(){
   }).join('') + `<tr><td><b>รวม</b></td><td><b>${fmt(tot.tambons)}</b></td><td><b>${fmt(tot.n)}</b></td><td><b>${fmt(tot.cap)}</b></td><td><b>${fmt(tot.toilet)}</b></td></tr>`;
 }
 
+document.getElementById('parkBtn').addEventListener('click',()=>setPark(!showPark));
 document.getElementById('ampSel').addEventListener('change',e=>{ amp=e.target.value; render(); });
 document.getElementById('q').addEventListener('input',e=>{ q=e.target.value.trim(); render(); });
 
 window.loadShelters = loadShelters;
 initMap(); renderOfficial();
+if(showPark) setPark(true);
 setTimeout(()=>map.invalidateSize(),200);
 loadShelters();
 </script>
