@@ -1501,11 +1501,10 @@ async function loadTelerid(pre){
       const lat = num(d.lat), lon = num(d.lon);
       if(lat==null || lon==null) return;
       if(PROV_SET.size && !PROV_SET.has(String(d.province||'').trim())) return;
+      // แสดงเฉพาะสถานีที่ส่งค่าจริง · ไม่ส่งค่า / -9.99 / ค่าเก่ากว่ารอบดึงล่าสุดเกิน 6 ชม. → ไม่แสดง (กลับมาเองเมื่อสถานีส่งค่าใหม่)
+      if(!teleReporting(d, j.updated)) return;
       n++;
-      // ไม่มีค่าระดับน้ำที่ใช้ได้ (ไม่ส่งค่า / -9.99 / ค่าเก่าเกิน 6 ชม.) → หมุดสีเทา จนกว่าสถานีจะส่งค่าใหม่
-      const okLv = d.level!=null && d.level > -9;
-      const dead = !okLv || (d.levelDt && (Date.now() - new Date(d.levelDt)) > 6*3600e3);
-      const mk = L.marker([lat,lon], {icon: mkIcon('mk-tele', dead ? 'var(--ink-3)' : 'var(--signal)', 18, '▲', false), zIndexOffset:dead ? 40 : 80})
+      const mk = L.marker([lat,lon], {icon: mkIcon('mk-tele', 'var(--signal)', 18, '▲', false), zIndexOffset:80})
         .bindPopup(()=>{
           // เวลาที่สถานีวัดค่า/ถ่ายภาพจริง (dt) · ไม่มีจึงใช้เวลาที่ scraper ส่งขึ้น
           const at = d.levelDt || d.dt || j.updated;
@@ -1547,30 +1546,17 @@ async function loadTelerid(pre){
         });
       }
     });
-    if(n>0) return;   // ใช้ข้อมูล scraper สำเร็จ
-  }catch(e){ /* ยังไม่มีสาขา cam / scraper ยังไม่รัน → ใช้ station_list สดแบบเดิม */ }
-
-  // 2) fallback: station_list สด (ลิงก์อย่างเดียว)
-  try{
-    const g = await fetchJSON('https://telerid.rid.go.th/restapi/main/station_list/', 20000);
-    if(seq !== teleSeq) return;
-    const rows = Array.isArray(g?.results) ? g.results : (Array.isArray(g) ? g : []);
-    gTele.clearLayers();
-    rows.forEach(d => {
-      if(!PROV_SET.has(String(d.province_name||'').trim())) return;
-      const co = d.geom?.coordinates;
-      const lon = num(co?.[0]), lat = num(co?.[1]);
-      if(lat==null || lon==null) return;
-      // station_list ไม่มีค่าระดับน้ำเลย → สีเทา
-      L.marker([lat,lon], {icon: mkIcon('mk-tele', 'var(--ink-3)', 18, '▲', false), zIndexOffset:40})
-        .bindPopup(()=>`
-          <div class="pp-title">▲ ${esc(d.name||d.code||'')} ${d.code&&d.name?`(${esc(d.code)})`:''}</div>
-          <div class="pp-sub">${esc(d.basin_name||'')} · ${esc(d.amphur_name||'')} · ${tProv(String(d.province_name||'').trim())} · ${t('teleSrc')}</div>
-          ${d.project_name?`<dl class="pp-grid"><dt>${t('teleProj')}</dt><dd>${esc(d.project_name)}</dd></dl>`:''}
-          <a class="pp-link" href="https://telerid.rid.go.th/#/" target="_blank">${t('teleView')}</a>`, {maxWidth:280})
-        .addTo(gTele);
-    });
-  }catch(e){ /* ถูกบล็อก CORS · ใช้ลิงก์โทรมาตรในหมุดสถานี ชป. แทน */ }
+  }catch(e){ /* ยังไม่มีสาขา cam / โหลดไม่ได้ → คงหมุดชุดเดิมไว้ */ }
+  // (เลิกใช้ station_list สดของ telerid เป็นทางสำรอง: เบราว์เซอร์เรียกไม่ได้ (CORS) และไม่มีค่าระดับน้ำ)
+}
+/* สถานีโทรมาตร ชป. ที่ "ส่งค่าอยู่": มีค่าระดับน้ำจริง (ไม่ใช่ -9.99) และเวลาวัด (levelDt) ไม่เก่ากว่ารอบที่ scraper ดึง (updated) เกิน 6 ชม.
+   เทียบกับเวลาดึง ไม่ใช่เวลาปัจจุบัน: ปิดคอมทุกเครื่องข้ามคืน สถานีที่ปกติยังแสดงพร้อมเวลาวัด ไม่หายทั้งชั้น
+   ใช้ร่วมกับหน้าแรก (index.html มีฟังก์ชันเดียวกัน) */
+function teleReporting(d, updated){
+  if(d.level==null || !(d.level > -9)) return false;
+  if(!d.levelDt) return true;   // scraper รุ่นเก่ายังไม่ส่ง levelDt → ดูจากค่าอย่างเดียว
+  const ref = updated ? new Date(updated) : new Date();
+  return (ref - new Date(d.levelDt)) <= 6*3600e3;
 }
 /* โทรมาตร ชป. เช็กถี่กว่าชั้นอื่น: ดู stations.json ทุก 2 นาที วาดใหม่เฉพาะเมื่อ scraper ส่งค่าใหม่ขึ้นมา
    (scraper โหมดสด ดึงทุก 2 นาที · สถานีวัดค่าทุก 15 นาที) · ข้ามถ้าซ่อนแท็บ/ปิดชั้น/กำลังเปิด popup สถานีอยู่ */
