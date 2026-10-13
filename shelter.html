@@ -207,12 +207,12 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
     <div class="tblwrap">
       <table>
         <thead><tr>
-          <th>อำเภอ / ตำบล</th><th>บ้านพี่เลี้ยง</th><th>รองรับ</th><th>ผู้ประสานข้อมูล / เบอร์โทร</th><th>ตำแหน่ง</th>
+          <th>อำเภอ / ตำบล / หมู่</th><th>อปท.</th><th>รองรับ</th><th>ผู้ประสานข้อมูล / เบอร์โทร</th><th>ตำแหน่ง</th>
         </tr></thead>
         <tbody id="hsBody"></tbody>
       </table>
     </div>
-    <div class="note">บ้านพี่เลี้ยง = ครัวเรือนที่พร้อมรับญาติ/เพื่อนบ้านที่ได้รับผลกระทบจากอุทกภัยเข้าพักชั่วคราว · ที่มา: แบบสำรวจบ้านพี่เลี้ยงที่ อปท. ในจังหวัดนราธิวาสกรอก<span id="hsSrc"> (ณ 8 ต.ค. 2569)</span> · แบบสำรวจไม่มีพิกัด จุดบนแผนที่จึงวางไว้กลางหมู่บ้าน (หรือกลางตำบล/เขตเทศบาล) ใกล้เคียงเท่านั้น ต้องโทรประสานก่อนเดินทางทุกครั้ง</div>
+    <div class="note">บ้านพี่เลี้ยง = ครัวเรือนที่พร้อมรับญาติ/เพื่อนบ้านที่ได้รับผลกระทบจากอุทกภัยเข้าพักชั่วคราว · ที่มา: แบบสำรวจบ้านพี่เลี้ยงที่ อปท. ในจังหวัดนราธิวาสกรอก<span id="hsSrc"> (ณ 8 ต.ค. 2569)</span> · แบบสำรวจไม่มีพิกัด จุดบนแผนที่จึงวางไว้กลางหมู่บ้าน (หรือกลางตำบล/เขตเทศบาล) ใกล้เคียงเท่านั้น ต้องโทรประสานก่อนเดินทางทุกครั้งที่ <a class="tel2" href="tel:073532134">073-532134</a> · ไม่เผยแพร่ชื่อและที่อยู่ของเจ้าของบ้าน</div>
   </div>
 
   <div class="card" id="tblCard">
@@ -472,7 +472,7 @@ function currentHost(){
   let rows = HOST;
   if(amp) rows = rows.filter(r=>r.a===amp);
   if(q){ const s=q.toLowerCase();
-    rows = rows.filter(r => [r.p,r.h,r.t,r.a,r.m,r.r,r.o,r.c,r.tel,r.note].join(' ').toLowerCase().includes(s)); }
+    rows = rows.filter(r => [r.t,r.a,r.m,r.o,r.c].join(' ').toLowerCase().includes(s)); }
   if(userPos){ rows = rows.slice();
     rows.forEach(r=>{ r._d = haversine(userPos[0],userPos[1],r.lat,r.lon); });
     rows.sort((a,b)=>a._d-b._d); }
@@ -480,8 +480,8 @@ function currentHost(){
 }
 const HS_LV = {m:'กลางหมู่บ้าน', w:'กลางเขตเทศบาล'};
 const hsWhereTxt = r => HS_LV[r.lv] || 'กลางตำบล';
-const hsOwner = r => r.p || 'ไม่ระบุชื่อเจ้าของบ้าน';
-const hsAddr = r => [r.h&&'บ้านเลขที่ '+r.h, r.note, r.m, r.r].filter(Boolean).join(' · ');
+// ไม่แสดงชื่อเจ้าของบ้าน/บ้านเลขที่/เบอร์ส่วนตัว — แสดงเฉพาะผู้ประสานข้อมูล กับเบอร์กลางเบอร์เดียวทุกจุด
+const HOST_TEL = '073-532134';
 function renderHostMap(pts){
   hsMarkers.forEach(m=>map.removeLayer(m)); hsMarkers=[]; hsById={};
   // หลายหลังในหมู่บ้านเดียวกันใช้จุดเดียวกัน จึงกระจายเป็นวงรอบจุดกลาง (วงใหญ่ขึ้นเมื่อมีหลายหลัง)
@@ -491,15 +491,13 @@ function renderHostMap(pts){
     const grp = stack[r.lat+','+r.lon], i = grp.indexOf(r), n = grp.length, rad = 0.0022*Math.max(1, Math.sqrt(n/5));
     const ll = n>1 ? [r.lat+rad*Math.cos(2*Math.PI*i/n), r.lon+rad*Math.sin(2*Math.PI*i/n)] : [r.lat,r.lon];
     const icon = L.divIcon({className:'', html:'<div class="hsic">🏡</div>', iconSize:[22,22], iconAnchor:[11,11], popupAnchor:[0,-10]});
-    const m = L.marker(ll,{icon, title:'บ้านพี่เลี้ยง '+hsOwner(r)});
-    const addr = hsAddr(r);
-    m.bindPopup(`<b>🏡 บ้านพี่เลี้ยง</b><br>${esc(hsOwner(r))}<br>`+
-      (addr?`${esc(addr)}<br>`:'')+
-      `อ.${esc(r.a)} · ต.${esc(r.t)} <span style="color:var(--ink-3)">(${esc(r.o)})</span><br>`+
+    const m = L.marker(ll,{icon, title:'บ้านพี่เลี้ยง ต.'+r.t+(r.m?' '+r.m:'')});
+    m.bindPopup(`<b>🏡 บ้านพี่เลี้ยง</b><br>`+
+      `อ.${esc(r.a)} · ต.${esc(r.t)}${r.m?' · '+esc(r.m):''}<br><span style="color:var(--ink-3)">${esc(r.o||'')}</span><br>`+
       `👥 รองรับ ${r.cap!=null?fmt(r.cap)+' คน':'ไม่ระบุ'}<br>`+
       `<span class="approxtag">⚠ ตำแหน่งโดยประมาณ (${hsWhereTxt(r)}) โทรประสานก่อนเดินทาง</span><br>`+
-      (r.c?`👤 ${esc(r.c)}<br>`:'')+
-      (r.tel?`<a class="pnav call" href="${telHref(r.tel)}">โทร ${esc(r.tel)}</a>`:'<span class="no">ไม่มีเบอร์ติดต่อ</span>'));
+      (r.c?`👤 ผู้ประสาน: ${esc(r.c)}<br>`:'')+
+      `<a class="pnav call" href="${telHref(HOST_TEL)}">โทร ${HOST_TEL}</a>`);
     m.addTo(map); hsMarkers.push(m); hsById[r.key]=m; pts.push(ll);
   });
 }
@@ -515,9 +513,9 @@ function renderHostTable(rows){
     const g = 'https://www.google.com/maps/search/?api=1&query='+r.lat+','+r.lon;
     return `<tr data-id="${r.key}">
       <td><b>${esc(r.a)}</b><div class="sub">ต.${esc(r.t)}${r.m?' · '+esc(r.m):''}</div>${dist}</td>
-      <td>${esc(hsOwner(r))}<div class="sub">${esc(hsAddr(r))}</div><div class="sub">${esc(r.o)}</div></td>
+      <td>${esc(r.o||'')}</td>
       <td style="white-space:nowrap">${r.cap!=null?fmt(r.cap)+' คน':'<span class="no">ไม่ระบุ</span>'}</td>
-      <td>${esc(r.c)||'<span class="no">ไม่ระบุ</span>'}<div class="sub">${r.tel?`<a class="tel2" href="${telHref(r.tel)}">${esc(r.tel)}</a>`:''}</div></td>
+      <td>${esc(r.c)||'<span class="no">ไม่ระบุ</span>'}<div class="sub"><a class="tel2" href="${telHref(HOST_TEL)}">${HOST_TEL}</a></div></td>
       <td><a class="gmap" target="_blank" rel="noopener" href="${g}">ดูบริเวณ</a><div class="approxtag">${hsWhereTxt(r)} (ประมาณ)</div></td></tr>`;
   }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--ink-3);padding:20px">ไม่พบบ้านพี่เลี้ยงตามเงื่อนไขที่ค้นหา</td></tr>';
   tb.querySelectorAll('tr[data-id]').forEach(tr=>tr.addEventListener('click',e=>{

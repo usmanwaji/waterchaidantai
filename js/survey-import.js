@@ -4,7 +4,7 @@
  * ขั้นตอน: ไฟล์ → ตาราง 2 มิติ (tableFromSheet / tableFromPdfPages) → หาแถวหัวตาราง + จับคู่คอลัมน์จากคำในหัว
  *   → toRecords() ทำความสะอาดค่า แล้ววางพิกัด
  * รูปแบบแถวที่ได้ตรงกับไฟล์ในเว็บ:
- *   hosts   (บ้านพี่เลี้ยง)  = js/hosts_nwt.js   — ไม่มีพิกัดในแบบสำรวจ: กลางหมู่บ้าน (lv:'m') / กลางเขตเทศบาล (lv:'w') / กลางตำบล
+ *   hosts   (บ้านพี่เลี้ยง)  = js/hosts_nwt.js   — ไม่เก็บชื่อ/บ้านเลขที่/เบอร์เจ้าของบ้าน · ไม่มีพิกัดในแบบสำรวจ: กลางหมู่บ้าน (lv:'m') / กลางเขตเทศบาล (lv:'w') / กลางตำบล
  *   parking (ที่จอดรถหนีน้ำ) = js/parking_nwt.js — ใช้พิกัดที่กรอกถ้าอยู่ในอำเภอนั้น (x:1) ไม่งั้นกลางตำบล (raw = ค่าที่กรอก)
  */
 (function (root) {
@@ -187,6 +187,7 @@ function tableFromPdfPages(pages) {
 // villages = DDPM_RISK_DATA (pv, ap, tb, mu, lat, lng) · subdistricts / districts = GeoJSON ของ สทนช.
 const AMP_ALIAS = { 'เมือง': 'เมืองนราธิวาส', 'อเมือง': 'เมืองนราธิวาส', 'โกลก': 'สุไหงโก-ลก', 'สุไหงโกลก': 'สุไหงโก-ลก' };
 // เทศบาลที่แบบสำรวจกรอกถนน/ซอยแทนหมู่ → ใช้จุดกลางเขตเทศบาล (พิกัดจากแบบสำรวจที่จอดรถ)
+const HOST_TEL = '073-532134';   // เบอร์กลางบ้านพี่เลี้ยง (แสดงทุกจุดแทนเบอร์ส่วนตัว)
 const MUNI_POINTS = { 'สุไหงปาดี|ปะลุรู': [6.085697, 101.881283] };
 function buildGeo(villages, subdistricts, districts) {
   const amps = {}, tams = {}, vill = {}, polys = {};
@@ -307,17 +308,13 @@ function toRecords(table, geo, kind) {
     const road = !mnum && muRaw && !blank(muRaw) ? muRaw : '';
     const d = { n, a, t };
     if (mnum) d.m = 'ม.' + mnum;
-    if (road) d.r = road;
+    if (road && kind !== 'hosts') d.r = road;
     if (o) d.o = o;
     let c = fixThai(get(r, 'c')), ph = tel(get(r, 'tel'));
     // ข้อความยาวล้นเซลล์ใน PDF ทำให้เบอร์ไปติดท้ายชื่อผู้ประสานงาน
     if (!ph && tel(c)) { ph = tel(c); c = c.replace(/\s*0?\d[\d\- ]{7,11}\d\s*$/, '').replace(/\s+ะ$/, 'ะ'); }
     if (kind === 'hosts') {
-      const p = fixThai(get(r, 'owner')); if (!blank(p)) d.p = p;
-      const hRaw = (cm.house || []).map(i => r[i]).find(v => !blank(v));
-      const h = house(hRaw);
-      if (h && !/^\d/.test(h) && !/^\d/.test(h.replace(/^บ้านเลขที่\s*/, ''))) d.note = h.replace(/^\(|\)$/g, '');
-      else if (h) d.h = h;
+      // ไม่เก็บชื่อเจ้าของบ้าน บ้านเลขที่ ถนน/ซอย และเบอร์ส่วนตัว — เผยแพร่เฉพาะผู้ประสานข้อมูลกับเบอร์กลาง
       const cap = num(get(r, 'cap')); if (cap != null) d.cap = cap;
     } else {
       d.p = fixThai(get(r, 'place')) || 'ไม่ระบุชื่อสถานที่';
@@ -326,7 +323,7 @@ function toRecords(table, geo, kind) {
       if (car != null) d.car = car;
     }
     if (!blank(c)) d.c = c;
-    if (ph) d.tel = ph;
+    if (kind === 'hosts') d.tel = HOST_TEL; else if (ph) d.tel = ph;
     // พิกัด
     let ll = null;
     if (kind === 'parking') {
