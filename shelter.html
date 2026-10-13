@@ -198,7 +198,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
         <tbody id="pkBody"></tbody>
       </table>
     </div>
-    <div class="note">ที่มา: แบบสำรวจสถานที่จอดรถฯ ที่ อปท. ในจังหวัดนราธิวาสกรอก · ตำแหน่งโดยประมาณ = แบบสำรวจไม่ระบุพิกัด หรือพิกัดที่กรอกไม่อยู่ในอำเภอนั้น จึงวางไว้กลางตำบล ควรโทรสอบถามผู้ประสานงานก่อนเดินทาง</div>
+    <div class="note">ที่มา: แบบสำรวจสถานที่จอดรถฯ ที่ อปท. ในจังหวัดนราธิวาสกรอก<span id="pkSrc"></span> · ตำแหน่งโดยประมาณ = แบบสำรวจไม่ระบุพิกัด หรือพิกัดที่กรอกไม่อยู่ในอำเภอนั้น จึงวางไว้กลางตำบล ควรโทรสอบถามผู้ประสานงานก่อนเดินทาง</div>
   </div>
 
   <div class="card" id="hostCard">
@@ -212,7 +212,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
         <tbody id="hsBody"></tbody>
       </table>
     </div>
-    <div class="note">บ้านพี่เลี้ยง = ครัวเรือนที่พร้อมรับญาติ/เพื่อนบ้านที่ได้รับผลกระทบจากอุทกภัยเข้าพักชั่วคราว · ที่มา: แบบสำรวจบ้านพี่เลี้ยงที่ อปท. ในจังหวัดนราธิวาสกรอก (53 อปท. · 83 หลัง · รองรับ 1,505 คน) · แบบสำรวจไม่มีพิกัด จุดบนแผนที่จึงวางไว้กลางหมู่บ้าน (หรือกลางตำบล/เขตเทศบาล) ใกล้เคียงเท่านั้น ต้องโทรประสานก่อนเดินทางทุกครั้ง</div>
+    <div class="note">บ้านพี่เลี้ยง = ครัวเรือนที่พร้อมรับญาติ/เพื่อนบ้านที่ได้รับผลกระทบจากอุทกภัยเข้าพักชั่วคราว · ที่มา: แบบสำรวจบ้านพี่เลี้ยงที่ อปท. ในจังหวัดนราธิวาสกรอก<span id="hsSrc"> (ณ 8 ต.ค. 2569)</span> · แบบสำรวจไม่มีพิกัด จุดบนแผนที่จึงวางไว้กลางหมู่บ้าน (หรือกลางตำบล/เขตเทศบาล) ใกล้เคียงเท่านั้น ต้องโทรประสานก่อนเดินทางทุกครั้ง</div>
   </div>
 
   <div class="card" id="tblCard">
@@ -534,6 +534,25 @@ function setHost(on){
   syncHash(); render();
 }
 
+/* ---------- ข้อมูลแบบสำรวจที่เจ้าหน้าที่อัปโหลดล่าสุด (Supabase survey_current · schema-v11) ----------
+   มีชุดใหม่ก็ใช้แทนไฟล์ในเว็บ · โหลดไม่ได้/ยังไม่เคยอัปโหลด ใช้ js/parking_nwt.js และ js/hosts_nwt.js ตามเดิม */
+async function loadSurveyLive(){
+  if(typeof sb==='undefined') return;
+  try{
+    const {data, error} = await sb.from('survey_current').select('kind,rows,source_name,uploaded_at');
+    if(error || !Array.isArray(data)) return;
+    data.forEach(d=>{
+      const arr = d.kind==='hosts' ? HOST : d.kind==='parking' ? PARK : null;
+      if(!arr || !Array.isArray(d.rows) || !d.rows.length) return;
+      const pre = d.kind==='hosts' ? 'hs' : 'pk';
+      arr.splice(0, arr.length, ...d.rows.filter(r=>r && isFinite(r.lat) && isFinite(r.lon)).map((r,i)=>Object.assign({}, r, {key:pre+i})));
+      const src = document.getElementById(d.kind==='hosts' ? 'hsSrc' : 'pkSrc');
+      src.textContent = ' (อัปเดต '+new Date(d.uploaded_at).toLocaleDateString('th-TH',{dateStyle:'medium',timeZone:'Asia/Bangkok'})+')';
+    });
+    fillAmp(); render();
+  }catch(e){}
+}
+
 function facil(v){ return v?'<span class="yes">✓</span>':'<span class="no">✗</span>'; }
 function renderTable(rows){
   const tb=document.getElementById('tbody');
@@ -612,7 +631,7 @@ initMap(); renderOfficial();
 if(showPark) setPark(true);
 if(showHost) setHost(true);
 setTimeout(()=>map.invalidateSize(),200);
-loadShelters();
+loadShelters(); loadSurveyLive();
 </script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
