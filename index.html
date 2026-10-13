@@ -133,6 +133,12 @@ footer a{color:var(--orange-warm);text-decoration:none}
 
 /* สถานการณ์น้ำท่า (telemeter gauges) */
 .wtaRow{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-around;align-items:flex-start}
+/* โทรมาตรหลัก 3 ลุ่มน้ำในการ์ดแนวโน้มระดับน้ำ · ใช้แถว/คอลัมน์ชุดเดียวกับการ์ดน้ำท่า (มือถือปัดได้) */
+.dirMain{--dm-earth:#e9a66a;--dm-water:#5b9bd5;margin:var(--s2) 0 var(--s3);padding-bottom:var(--s3);border-bottom:1px solid var(--line)}
+.dirMain .wtaCol .bs{font-size:11.5px;font-weight:700;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px}
+.dirMain .tr{font-size:12.5px;font-weight:700;margin-top:3px}
+.dirMain .tr.up{color:var(--st-warn)} .dirMain .tr.dn{color:var(--st-normal)} .dirMain .tr.fl{color:var(--ink-2)}
+.dirMain .q{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}
 .wtaCol{flex:1;min-width:150px;max-width:230px;text-align:center;padding:4px}
 .wtaCol .nm{font-weight:700;font-size:12.5px;color:var(--navy-d);line-height:1.2}
 .wtaCol .sub{font-size:10.5px;color:var(--muted);line-height:1.35}
@@ -321,6 +327,7 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
   <!-- แนวโน้มระดับน้ำ (v9.5): สถานีชุดเดียวกับหน้าแผนที่ -->
   <div class="card full" id="dirCard">
     <h2>แนวโน้มระดับน้ำ <span class="where" id="dirWhere">เทียบกับค่าราว 1 ชม.ก่อน</span></h2>
+    <div class="dirMain"><div class="swipe-hint">ปัดไปทางซ้ายเพื่อดูโทรมาตรหลักถัดไป (3 สถานี)</div><div id="dirMain" class="wtaRow"><span class="spin"></span> กำลังโหลดโทรมาตรหลัก…</div></div>
     <div class="dir-bar" id="dirBar" aria-hidden="true"><i class="r" style="flex-grow:1"></i><i class="f" style="flex-grow:1"></i><i class="s" style="flex-grow:1"></i></div>
     <div class="dir-nums">
       <div class="dir-rise"><b id="dirRise">–</b><span>สถานีน้ำขึ้น</span></div>
@@ -331,7 +338,8 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     <ul class="dir-top" id="dirTop"></ul>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
-    <div class="note">ใช้สถานีชุดเดียวกับ <a href="map.html">หน้าแผนที่</a> ที่ส่งค่าในรอบ 6 ชม.: สสน./ชป. (thaiwater เทียบกับค่าครั้งก่อน ขึ้น/ลดตั้งแต่ 1 ซม.) · ปภ. (cctv.disaster.go.th เทียบค่ารายชั่วโมงล่าสุดกับชั่วโมงก่อน) · โทรมาตร ชป. (telerid เทียบกับค่าราว 1 ชม.ก่อน) สองแหล่งหลังนับขึ้น/ลดตั้งแต่ 2 ซม. เพราะค่ารายชั่วโมงแกว่งตามคลื่นลม · น้อยกว่าเกณฑ์นับเป็นทรงตัว · ภาพแม่น้ำด้านบนใช้สถานีที่ใกล้คุณที่สุด (หรือใกล้ศูนย์กลางอำเภอที่เลือก) · รายชื่อใต้แถบคือสถานีที่ระดับน้ำเปลี่ยนมากที่สุด</div>
+    <div class="note">โทรมาตรหลัก 3 ลุ่มน้ำ (ด้านบน): X.184 บ้านซากอ (ลุ่มน้ำสายบุรี) · X.73 บ้านตันหยงมัส (ลุ่มน้ำบางนรา) · X.119A สะพานลันตู (ลุ่มน้ำโก-ลก) ชุดเดียวกับรายงานสถานการณ์น้ำท่าของกรมชลประทาน · ระดับตลิ่ง/เฝ้าระวังน้ำมาก และความจุลำน้ำ (ลบ.ม./วินาที) ตามรายงาน ชป. · ค่ารายชั่วโมงจากระบบอุทกวิทยา ชป. (<a href="https://hyd-app.rid.go.th/hydro8h.html" target="_blank" rel="noopener">hyd-app.rid.go.th</a>) ถ้าโหลดไม่ได้ใช้ค่าจาก thaiwater · ภาพตัดลำน้ำเป็นภาพประกอบ ไม่ใช่รูปตัดจริง · แนวโน้มเทียบกับค่าราว 1 ชม.ก่อน กราฟเล็กคือ 24 ชม.ล่าสุด<br>
+    สถิติขึ้น/ลดด้านล่าง: ใช้สถานีชุดเดียวกับ <a href="map.html">หน้าแผนที่</a> ที่ส่งค่าในรอบ 6 ชม.: สสน./ชป. (thaiwater เทียบกับค่าครั้งก่อน ขึ้น/ลดตั้งแต่ 1 ซม.) · ปภ. (cctv.disaster.go.th เทียบค่ารายชั่วโมงล่าสุดกับชั่วโมงก่อน) · โทรมาตร ชป. (telerid เทียบกับค่าราว 1 ชม.ก่อน) สองแหล่งหลังนับขึ้น/ลดตั้งแต่ 2 ซม. เพราะค่ารายชั่วโมงแกว่งตามคลื่นลม · น้อยกว่าเกณฑ์นับเป็นทรงตัว · ภาพแม่น้ำด้านบนใช้สถานีที่ใกล้คุณที่สุด (หรือใกล้ศูนย์กลางอำเภอที่เลือก) · รายชื่อใต้แถบคือสถานีที่ระดับน้ำเปลี่ยนมากที่สุด</div>
     </details>
   </div>
 
@@ -723,7 +731,7 @@ async function loadHyd(){
       return {code:d.code, name:(d.name||'').trim(), amphoe:wtaAmpName(d.amphur), prov:d.province, river:HYD_RIVER[d.code]||'',
         lat:c[0], lng:c[1], cur, bank, warn, prev: bi!=null ? num(v[bi]) : null,
         ground: cur!=null && bank!=null ? Math.max(0, Math.min(bank, cur) - 3) : null,
-        unit:'ม.(รทก.)', src:'hyd', dt: d.levelDt ? new Date(d.levelDt) : null, rank:r,
+        unit:'ม.(รทก.)', src:'hyd', dt: d.levelDt ? new Date(d.levelDt) : null, rank:r, q: num(d.q), series: d.wl || null,
         st: r===3 ? {l:'ล้นตลิ่ง', c:'var(--st-danger)'} : r===2 ? {l:'เฝ้าระวัง', c:'var(--st-watch)'} : {l:'ปกติ', c:'var(--st-normal)'}};
     });
   }catch(e){ hydAll = []; }
@@ -906,6 +914,91 @@ const wtaWhen = d => {
   return d.toLocaleDateString('en-CA',o) === new Date().toLocaleDateString('en-CA',o) ? t : d.toLocaleDateString('th-TH',{...o, day:'numeric', month:'short'}) + ' ' + t;
 };
 const WTA_TAG = {rid:'โทรมาตร ชป.', hyd:'อุทกวิทยา ชป.'};
+/* ---------- โทรมาตรหลัก 3 ลุ่มน้ำ (การ์ดแนวโน้มระดับน้ำ) ----------
+   ชุดเดียวกับรายงาน "สถานการณ์น้ำท่า" ของกรมชลประทาน · ตลิ่ง / เฝ้าระวังน้ำมาก / ความจุลำน้ำ (qmax) ตามรายงาน
+   bed = พื้นล่างของภาพตัด (ค่าต่ำสุดของแกนในรายงาน) ใช้วาดภาพประกอบเท่านั้น
+   ค่าสด: hyd-app (hydAll · รายชั่วโมง + ปริมาณน้ำ + 24 ชม.) ถ้าไม่มีหรือเก่ากว่า ใช้ thaiwater (wlAll) */
+const DIR_MAIN = [
+  {code:'X.184',  name:'บ้านซากอ',      amphoe:'ศรีสาคร',    basin:'ลุ่มน้ำสายบุรี', bank:31.40, warn:28.00, bed:6, qmax:1638},
+  {code:'X.73',   name:'บ้านตันหยงมัส', amphoe:'ระแงะ',      basin:'ลุ่มน้ำบางนรา', bank:14.90, warn:13.90, bed:7, qmax:126},
+  {code:'X.119A', name:'สะพานลันตู',    amphoe:'สุไหงโก-ลก', basin:'ลุ่มน้ำโก-ลก',  bank:9.30,  warn:8.30,  bed:1, qmax:313},
+];
+function dirMainData(m){
+  const h = hydAll.find(x=>x.code===m.code);
+  const w = wlAll.find(x=>String(x.code||'').trim()===m.code);
+  const useW = w && w.msl!=null && (!h || (w.dt && h.dt && w.dt > h.dt));
+  if(useW) return {cur:w.msl, prev:w.prev, dt:w.dt, q:null, series:null, src:'thaiwater'};
+  if(h) return {cur:h.cur, prev:h.prev, dt:h.dt, q:h.q, series:h.series, src:'hyd'};
+  return {cur:null};
+}
+/* ภาพตัดลำน้ำแบบภาพประกอบ (ตลิ่งดินสองฝั่ง) · แถบสีซ้าย: เขียว < เฝ้าระวัง ≤ เหลือง < ตลิ่ง ≤ แดง */
+const DIR_PROFILE = [[0,-.18],[.07,0],[.12,.3],[.19,.62],[.28,.86],[.4,.98],[.55,1],[.68,.93],[.78,.74],[.86,.44],[.92,.14],[.96,-.02],[1,-.22]];
+function dirSection(m, cur){
+  const W=220,H=150,pl=24,pr=6,pt=8,pb=6, top=m.bank+(m.bank-m.bed)*0.18;
+  const y=v=>pt+(H-pt-pb)*(1-(Math.max(m.bed,Math.min(top,v))-m.bed)/(top-m.bed));
+  const gx=pl+8, gw=W-gx-pr, X=f=>gx+gw*f, Yd=d=>y(m.bank-(m.bank-m.bed)*d);
+  const prof=DIR_PROFILE.map(([f,d],i)=>`${i?'L':'M'}${X(f).toFixed(1)},${Yd(d).toFixed(1)}`).join('');
+  const earth=`${prof} L${X(1)},${H} L${X(0)},${H} Z`;
+  const bY=y(m.bank), wY=y(m.warn), bot=H-pb;
+  const water = cur!=null ? `<rect x="${gx}" y="${y(cur).toFixed(1)}" width="${gw}" height="${(H-y(cur)).toFixed(1)}" fill="var(--dm-water)"/>` : '';
+  const ticks=[]; const step=(top-m.bed)>14?4:2; for(let v=Math.ceil(m.bed/step)*step; v<=top; v+=step) ticks.push(v);
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:240px;display:block;margin:4px auto" role="img" aria-label="ภาพตัดลำน้ำ ${esc(m.code)}">
+    <rect x="${gx}" y="${pt}" width="${gw}" height="${bot-pt}" fill="var(--card-2)"/>
+    ${water}
+    <path d="${earth}" fill="var(--dm-earth)" stroke="rgba(120,70,30,.35)" stroke-width=".8"/>
+    <rect x="${pl}" y="${pt}" width="6" height="${(bY-pt).toFixed(1)}" fill="var(--st-danger)"/>
+    <rect x="${pl}" y="${bY.toFixed(1)}" width="6" height="${(wY-bY).toFixed(1)}" fill="var(--st-watch)"/>
+    <rect x="${pl}" y="${wY.toFixed(1)}" width="6" height="${(bot-wY).toFixed(1)}" fill="var(--st-normal)"/>
+    <line x1="${gx}" y1="${bY.toFixed(1)}" x2="${W-pr}" y2="${bY.toFixed(1)}" stroke="var(--st-danger)" stroke-width="1.5"/>
+    <line x1="${gx}" y1="${wY.toFixed(1)}" x2="${W-pr}" y2="${wY.toFixed(1)}" stroke="var(--st-watch)" stroke-width="1.5" stroke-dasharray="4 2"/>
+    <g font-size="8.5" style="paint-order:stroke;stroke:var(--card);stroke-width:3px">
+      <text x="${X(.5)}" y="${(bY-3).toFixed(1)}" text-anchor="middle" fill="var(--st-danger)">ตลิ่ง ${m.bank.toFixed(2)}</text>
+      <text x="${X(.5)}" y="${(wY+9).toFixed(1)}" text-anchor="middle" fill="var(--ink-2)">เฝ้าระวัง ${m.warn.toFixed(2)}</text>
+      ${cur!=null?`<text x="${X(.5)}" y="${Math.min(bot-4, y(cur)+12).toFixed(1)}" text-anchor="middle" font-weight="700" fill="var(--ink)">${cur.toFixed(2)}</text>`:''}
+    </g>
+    <g font-size="7.5" fill="var(--ink-3)" text-anchor="end">${ticks.map(v=>`<text x="${pl-3}" y="${(y(v)+2.5).toFixed(1)}">${v}</text>`).join('')}</g>
+  </svg>`;
+}
+function dirSpark(m, series){
+  const t=series?.t||[], v=(series?.v||[]).map(num);
+  const pts=t.map((x,i)=>[x,v[i]]).filter(([x,y])=>x && y!=null);
+  if(pts.length<3) return '';
+  const W=200,H=34,p=3, ys=pts.map(q=>q[1]);
+  let lo=Math.min(...ys), hi=Math.max(...ys); if(hi-lo<0.2){ const c=(hi+lo)/2; lo=c-0.1; hi=c+0.1; }
+  const X=i=>p+(W-2*p)*i/(pts.length-1), Y=y=>p+(H-2*p)*(1-(y-lo)/(hi-lo));
+  const d=pts.map(([,y],i)=>`${i?'L':'M'}${X(i).toFixed(1)},${Y(y).toFixed(1)}`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:220px;display:block;margin:4px auto 0" aria-label="ระดับน้ำ 24 ชม.">
+    <path d="${d}" fill="none" stroke="var(--signal)" stroke-width="1.6"/>
+    <circle cx="${X(pts.length-1).toFixed(1)}" cy="${Y(ys[ys.length-1]).toFixed(1)}" r="2.4" fill="var(--signal)"/>
+  </svg><div class="sub">24 ชม. · ต่ำสุด ${Math.min(...ys).toFixed(2)} · สูงสุด ${Math.max(...ys).toFixed(2)}</div>`;
+}
+function renderDirMain(){
+  const el = document.getElementById('dirMain'); if(!el) return;
+  el.innerHTML = DIR_MAIN.map(m=>{
+    const d = dirMainData(m), cur = d.cur;
+    const st = wtaStatus(m, cur);
+    const stale = d.dt && Date.now() - d.dt > WTA_STALE_H*3600e3;
+    const diff = cur!=null && d.prev!=null ? cur - d.prev : null;
+    const tr = diff==null ? '' : Math.abs(diff) < 0.01
+      ? `<div class="tr fl">● ทรงตัว (1 ชม.)</div>`
+      : `<div class="tr ${diff>0?'up':'dn'}">${diff>0?'▲ ขึ้น +':'▼ ลด '}${Math.abs(diff).toFixed(2)} ม. (1 ชม.)</div>`;
+    const below = cur!=null ? m.bank - cur : null;
+    const q = d.q!=null ? `<div class="q">ปริมาณน้ำ ${d.q.toLocaleString('th-TH',{maximumFractionDigits:2})} / ความจุ ${m.qmax.toLocaleString('th-TH')} ลบ.ม./วินาที (${Math.round(d.q/m.qmax*100)}%)</div>`
+                        : `<div class="q">ความจุลำน้ำ ${m.qmax.toLocaleString('th-TH')} ลบ.ม./วินาที</div>`;
+    return `<div class="wtaCol">
+      <div class="bs">${esc(m.basin)}</div>
+      <div class="nm">${esc(m.code)} ${esc(m.name)}</div>
+      <div class="sub">อ.${esc(m.amphoe)}${d.dt?' · ณ '+wtaWhen(d.dt):''}</div>
+      ${dirSection(m, cur)}
+      <div class="val" style="color:${stale?'var(--ink-3)':st.c}">${cur!=null?cur.toFixed(2):'…'} <span style="font-size:11px;color:var(--ink-3);font-weight:400">ม.(รทก.)</span></div>
+      <div class="sub">${below!=null?(below>=0?'ต่ำกว่าตลิ่ง '+below.toFixed(2)+' ม.':'สูงกว่าตลิ่ง '+(-below).toFixed(2)+' ม.'):'ยังไม่มีค่าล่าสุด'}</div>
+      ${tr}
+      ${dirSpark(m, d.series)}
+      ${q}
+      <div class="st" style="background:${stale?'var(--ink-3)':st.c}">${stale?'ข้อมูลเก่า':st.l}</div>
+    </div>`;
+  }).join('');
+}
 function wtaCol(s){
   const cur = s.cur, below = cur!=null && s.bank!=null ? (s.bank-cur) : null;
   // มาตรวัดต้องมีตลิ่ง · ไม่รู้พื้นท้องน้ำก็ตั้งพื้นล่างของมาตรไว้ต่ำกว่าค่าที่ต่ำกว่าระหว่างน้ำกับตลิ่ง 3 ม.
@@ -989,7 +1082,7 @@ function renderAll(){
   });
   heroReady = true;
   try{ renderHero(met, sel); }catch(e){ console.error('hero', e); }
-  renderAmpChips(); renderHour(met); renderRain7(met, sel); renderStations(); renderAmphoes(list); renderRadarBar(); renderWaterta();
+  renderAmpChips(); renderHour(met); renderRain7(met, sel); renderStations(); renderAmphoes(list); renderRadarBar(); renderWaterta(); renderDirMain();
 }
 function renderHour(met){
   const now = document.getElementById('nowBox'), row = document.getElementById('hourRow');
