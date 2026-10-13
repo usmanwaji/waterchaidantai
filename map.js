@@ -1518,10 +1518,12 @@ async function loadTelerid(pre){
       const lat = num(d.lat), lon = num(d.lon);
       if(lat==null || lon==null) return;
       if(PROV_SET.size && !PROV_SET.has(String(d.province||'').trim())) return;
-      // แสดงเฉพาะสถานีที่ส่งค่าจริง · ไม่ส่งค่า / -9.99 / ค่าเก่ากว่ารอบดึงล่าสุดเกิน 6 ชม. → ไม่แสดง (กลับมาเองเมื่อสถานีส่งค่าใหม่)
-      if(!teleReporting(d, j.updated)) return;
+      // แสดงสถานีที่ส่งค่าระดับน้ำจริง · สถานีที่ยังส่งข้อมูลแต่เซนเซอร์ระดับน้ำเป็น -9.99 (เช่น TX.358 มีกล้อง+ฝน) แสดงเป็นหมุดสีเทา
+      // ไม่ส่งข้อมูลเลย / เก่ากว่ารอบดึงล่าสุดเกิน 6 ชม. → ไม่แสดง (กลับมาเองเมื่อสถานีส่งค่าใหม่)
+      const wlOk = teleReporting(d, j.updated);
+      if(!wlOk && !teleOnline(d, j.updated)) return;
       n++;
-      const mk = L.marker([lat,lon], {icon: mkIcon('mk-tele', 'var(--signal)', 18, '▲', false), zIndexOffset:80})
+      const mk = L.marker([lat,lon], {icon: mkIcon('mk-tele', wlOk ? 'var(--signal)' : 'var(--ink-3)', 18, '▲', false), zIndexOffset: wlOk ? 80 : 70})
         .bindPopup(()=>{
           // เวลาที่สถานีวัดค่า/ถ่ายภาพจริง (dt) · ไม่มีจึงใช้เวลาที่ scraper ส่งขึ้น
           const at = d.levelDt || d.dt || j.updated;
@@ -1574,6 +1576,14 @@ function teleReporting(d, updated){
   if(!d.levelDt) return true;   // scraper รุ่นเก่ายังไม่ส่ง levelDt → ดูจากค่าอย่างเดียว
   const ref = updated ? new Date(updated) : new Date();
   return (ref - new Date(d.levelDt)) <= 6*3600e3;
+}
+/* สถานีที่ยังส่งข้อมูลเข้าระบบ (เวลาวัดหรือภาพกล้องไม่เก่ากว่ารอบดึงเกิน 6 ชม.) แม้ระดับน้ำจะเป็น -9.99
+   ใช้เฉพาะหน้าแผนที่ (ภาพกล้อง + กราฟฝน) · หน้าแรกจัดอันดับระดับน้ำจึงยังใช้ teleReporting */
+function teleOnline(d, updated){
+  if(!d.hasImage && !d.hasDetail) return false;
+  const ref = updated ? new Date(updated) : new Date();
+  const fresh = t => t && (ref - new Date(t)) <= 6*3600e3;
+  return fresh(d.levelDt) || (d.hasImage && fresh(d.dt));
 }
 /* โทรมาตร ชป. เช็กถี่กว่าชั้นอื่น: ดู stations.json ทุก 2 นาที วาดใหม่เฉพาะเมื่อ scraper ส่งค่าใหม่ขึ้นมา
    (scraper โหมดสด ดึงทุก 2 นาที · สถานีวัดค่าทุก 15 นาที) · ข้ามถ้าซ่อนแท็บ/ปิดชั้น/กำลังเปิด popup สถานีอยู่ */
