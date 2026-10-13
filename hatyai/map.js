@@ -165,7 +165,7 @@ ms:{
   API awam: HII (thaiwater.net) · Jabatan Pengairan Diraja · pautan CCTV DDPM & telemetri RID dalam pin kamera`
 }};
 let lang = 'th';
-try{ lang = localStorage.getItem('onemap_lang') || 'th'; }catch(e){}
+lang = 'th';
 if(!STR[lang]) lang = 'th';
 const t = k => STR[lang][k] ?? STR.th[k] ?? k;
 const tProv = p => STR[lang].prov[p] || p;
@@ -1054,18 +1054,6 @@ function applyLang(){
   buildLegend();
   renderSidebar();
 }
-document.querySelectorAll('.langbtn').forEach(b=>{
-  b.onclick = () => {
-    document.querySelectorAll('.langbtn').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    lang = b.dataset.lang;
-    try{ localStorage.setItem('onemap_lang', lang); }catch(e){}
-    applyLang();
-    loadBoundaries();
-    loadFlashFlood();
-  };
-});
-document.querySelectorAll('.langbtn').forEach(b=>b.classList.toggle('active', b.dataset.lang===lang));
 
 /* start */
 applyLang();
