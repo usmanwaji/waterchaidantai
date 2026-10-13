@@ -2,11 +2,13 @@
   hyd-proxy.worker.js — Cloudflare Worker ส่งต่อคำขอไประบบอุทกวิทยา กรมชลประทาน (hyd-app.rid.go.th)
   ------------------------------------------------------------------
   hyd-app.rid.go.th ตัดการเชื่อมต่อจาก IP นอกไทย (เหมือน telerid) → ให้ Worker ที่รันศูนย์ BKK ดึงแทน
-  ตอนนี้เป็นตัวส่งต่อแบบตรงๆ ไว้ใช้สำรวจว่าหน้า hydro8h.html ดึงข้อมูลจาก API ไหน
-  เมื่อรู้รูปแบบข้อมูลแล้วจะเพิ่ม path สรุปสถานีนราธิวาส (เช่น /stations.json) ให้หน้าแผนที่ใช้
+  หน้า hydro8h.html (ศูนย์อุทกวิทยาที่ 8 · hydroid 8) ดึงระดับน้ำรายชั่วโมงจาก
+    webservice/HDService.svc/GetColModelAllHL       รายชื่อสถานี + ระดับตลิ่งของลุ่มน้ำ (BasinID 24 = ภาคใต้ฝั่งตะวันออกตอนล่าง)
+    webservice/getGroupHourlyWaterLevelReportAllHL.ashx   ค่าระดับน้ำ/ปริมาณน้ำรายชั่วโมงของวันที่เลือก (jqGrid)
 
   path:
     /                               สถานะ: Worker รันศูนย์ไหน (runsIn) และดึง hyd-app ได้หรือไม่
+    /stations.json                  สรุปสถานีในนราธิวาส: ระดับน้ำล่าสุด + ตลิ่ง + กราฟ 24 ชม. (แคช 10 นาที · hyd-app ล่มตอบชุดเก่าได้ 6 ชม.)
     /hydro8h.html                   = https://hyd-app.rid.go.th/hydro8h.html (path/query อื่นก็ส่งต่อเหมือนกัน)
     /h/<host>/<path>                = https://<host>/<path> · host ต้องเป็นโดเมนย่อยของ rid.go.th เท่านั้น
                                       (เผื่อหน้าเว็บเรียก API จากโดเมนย่อยอื่น เช่น hyd-app-db.rid.go.th)
@@ -19,12 +21,19 @@
   สำคัญ: เปิด Smart Placement (Settings → Runtime → Placement → Smart) เหมือน telerid-proxy
          แล้วเปิดหน้าแรก https://hyd-proxy.<บัญชี>.workers.dev/ ดูว่า hydStatus เป็น 200
          (Smart Placement ต้องมีคำขอเข้ามาสักพักถึงจะย้ายไปรันใกล้ไทย · ถ้ายังไม่ 200 ลองเปิดซ้ำอีกครั้งหลังผ่านไปหลายนาที)
+  แชร์ข้ามศูนย์ (ไม่บังคับ): ผูก Workers KV ชื่อ HYD_KV (Settings → Bindings) → ศูนย์ที่ดึงได้เก็บ /stations.json ล่าสุดไว้
+         ศูนย์ที่ดึง hyd-app ไม่ได้อ่านจาก KV แทน (เขียนไม่ถี่กว่า 15 นาที/ครั้ง · อยู่ในโควตาฟรี)
   ------------------------------------------------------------------
 */
 const DEFAULT_HOST = 'hyd-app.rid.go.th';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
 const TTL = 300;          // แคช GET 5 นาที
 const TIMEOUT = 25000;
+const PROVINCE = 'นราธิวาส';
+const HYDRO_ID = 8, BASIN_ID = 24;
+const TTL_STATIONS = 600;           // สรุปสถานี 10 นาที (สถานีส่งค่ารายชั่วโมง)
+const STALE_MAX = 6 * 3600;         // hyd-app ล่มชั่วคราว → ตอบชุดเก่าได้ไม่เกิน 6 ชม.
+const SHARE_EVERY = 15 * 60e3;      // เขียน KV ได้ไม่ถี่กว่านี้
 
 const CORS = {
   'access-control-allow-origin': '*',
@@ -55,7 +64,7 @@ async function status(request) {
   return json({
     ok: hydStatus === 200, requestEnteredAt: (request.cf && request.cf.colo) || '', runsIn, hydStatus, ms: Date.now() - t0,
     hint: hydStatus === 200 ? 'hyd-app reachable from here' : `hyd-app not reachable from ${runsIn} - enable Smart Placement (Settings > Runtime > Placement)`,
-    use: ['/hydro8h.html', '/<path>?<query>  (hyd-app.rid.go.th)', '/h/<host>.rid.go.th/<path>'],
+    use: ['/stations.json', '/hydro8h.html', '/<path>?<query>  (hyd-app.rid.go.th)', '/h/<host>.rid.go.th/<path>'],
   });
 }
 
@@ -85,12 +94,95 @@ async function forward(request, ctx, target) {
   return new Response(body, { status: res.status, headers: out });
 }
 
+/* ---------- /stations.json ---------- */
+const HYD = `https://${DEFAULT_HOST}/webservice/`;
+// hyd-app ตอบช้า/ตัดการเชื่อมต่อเป็นพักๆ → ลองซ้ำ
+async function hydPost(path, body, ctype) {
+  let err;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const res = await withTimeout(fetch(HYD + path, { method: 'POST', body, headers: { 'User-Agent': UA, 'Content-Type': ctype, Accept: 'application/json', Referer: `https://${DEFAULT_HOST}/hydro8h.html` } }), 12000, path);
+      if (res.ok) return await res.json();
+      err = new Error(path + ' ' + res.status);
+    } catch (e) { err = e; }
+  }
+  throw err;
+}
+// วันที่ตามเวลาไทย (พ.ศ.) แบบที่หน้าเว็บส่ง: dd/mm/yyyy
+function thaiDay(offsetDays) {
+  const d = new Date(Date.now() + 7 * 3600e3 + offsetDays * 86400e3);
+  return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate(),
+    str: `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear() + 543}` };
+}
+const num = (x) => (x == null || x === '' || x === '-' || !isFinite(Number(x)) ? null : Number(x));
+async function hourlyRows(day) {
+  const form = new URLSearchParams({ 'DW[UtokID]': HYDRO_ID, 'DW[BasinID]': BASIN_ID, 'DW[TimeCurrent]': day.str,
+    _search: 'false', nd: String(Date.now()), rows: '100', page: '1', sidx: 'indexhourly', sord: 'asc' });
+  const j = await hydPost('getGroupHourlyWaterLevelReportAllHL.ashx', form.toString(), 'application/x-www-form-urlencoded; charset=UTF-8');
+  // hourlytime "1.00" … "24.00" = ชั่วโมงตามเวลาไทยของวันนั้น ("24.00" = เที่ยงคืนต่อวันถัดไป)
+  return (j.rows || []).map((r) => ({ r, unix: (Date.UTC(day.y, day.m - 1, day.d, parseInt(r.hourlytime, 10)) - 7 * 3600e3) / 1000 }));
+}
+async function buildStations() {
+  const today = thaiDay(0), yday = thaiDay(-1);
+  const cm = await hydPost('HDService.svc/GetColModelAllHL', JSON.stringify({ hydro: { UtokID: HYDRO_ID, BasinID: BASIN_ID, TimeCurrent: today.str } }), 'application/json; charset=utf-8');
+  const head = (k, i) => ((cm[k] || []).find((g) => g.startColumnName === 'wlvalues' + i) || {}).titleText || '';
+  const n = cm.NoOfStation || (cm.StationIDList || []).length;
+  const [rToday, rYday] = await Promise.allSettled([hourlyRows(today), hourlyRows(yday)]);
+  if (rToday.status !== 'fulfilled' && rYday.status !== 'fulfilled') throw rToday.reason;
+  const rows = [...(rYday.status === 'fulfilled' ? rYday.value : []), ...(rToday.status === 'fulfilled' ? rToday.value : [])];
+  const stations = [];
+  for (let i = 1; i <= n; i++) {
+    const province = head('groupHeadersStationProvince', i).trim();
+    if (!province.includes(PROVINCE)) continue;
+    const col = (cm.colModel || []).find((c) => c.name === 'wlvalues' + i) || {};
+    const bank = num(((col.label || '').match(/ตลิ่ง\s*(-?[\d.]+)/) || [])[1]);
+    const pts = rows.map(({ r, unix }) => ({ t: unix, v: num(r['wlvalues' + i]), q: num(r['qvalues' + i]) })).filter((p) => p.v != null).slice(-24);
+    const last = pts[pts.length - 1] || null;
+    stations.push({
+      code: head('groupHeadersStationCode', i).trim(), name: head('groupHeadersStationDetail', i).trim(),
+      amphur: head('groupHeadersStationAmpur', i).trim(), province, stationId: (cm.StationIDList || [])[i - 1] ?? null,
+      bank, level: last ? Math.round(last.v * 100) / 100 : null, q: last ? last.q : null,
+      levelDt: last ? new Date(last.t * 1000).toISOString() : null,
+      wl: { t: pts.map((p) => p.t), v: pts.map((p) => Math.round(p.v * 100) / 100) },
+    });
+  }
+  if (!stations.some((x) => x.level != null)) throw new Error('hyd-app gave no data');
+  const dts = stations.map((x) => x.levelDt).filter(Boolean).sort();
+  return { updated: dts[dts.length - 1], fetchedAt: new Date().toISOString(), source: 'hyd-proxy (hyd-app.rid.go.th hydro8h)', total: stations.length, stations };
+}
+async function stationsJson(env, ctx) {
+  const cache = caches.default, key = new Request('https://hyd-proxy.cache/stations.json');
+  const hit = await cache.match(key);
+  const age = hit ? (Date.now() - Number(hit.headers.get('x-stored') || 0)) / 1000 : Infinity;
+  const send = (text, from) => new Response(text, { headers: { ...CORS, 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=120', 'x-cache': from } });
+  if (hit && age < TTL_STATIONS) return send(await hit.text(), 'HIT');
+  const kv = env && env.HYD_KV;
+  try {
+    const body = await buildStations();
+    const text = JSON.stringify(body);
+    ctx.waitUntil(cache.put(key, new Response(text, { headers: { 'x-stored': String(Date.now()), 'cache-control': `public, max-age=${STALE_MAX}` } })));
+    if (kv) ctx.waitUntil((async () => {
+      const m = (await kv.getWithMetadata('stations', { type: 'stream' }).then((r) => { if (r.value) r.value.cancel(); return r.metadata; }).catch(() => null)) || null;
+      if (!m || m.u !== body.updated || Date.now() - m.t > SHARE_EVERY) await kv.put('stations', text, { metadata: { t: Date.now(), u: body.updated }, expirationTtl: STALE_MAX * 2 });
+    })().catch(() => {}));
+    return send(text, 'MISS');
+  } catch (e) {
+    if (hit && age < STALE_MAX) return send(await hit.text(), 'STALE');
+    if (kv) {
+      const r = await kv.getWithMetadata('stations').catch(() => null);
+      if (r && r.value && r.metadata && Date.now() - r.metadata.t < STALE_MAX * 1000) return send(r.value, 'KV');
+    }
+    return json({ error: String(e.message || e) }, 502);
+  }
+}
+
 export default {
   async fetch(request, env, ctx) {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
     if (request.method !== 'GET' && request.method !== 'POST') return new Response('Method Not Allowed', { status: 405, headers: CORS });
     const url = new URL(request.url);
     if (url.pathname === '/' && !url.search) return status(request);
+    if (url.pathname === '/stations.json' && request.method === 'GET') return stationsJson(env, ctx);
     const target = upstreamUrl(url);
     if (!target) return json({ error: 'host not allowed (only *.rid.go.th)' }, 403);
     try {

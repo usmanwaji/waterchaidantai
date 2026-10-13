@@ -941,7 +941,8 @@ async function loadAll(){
   const btn = document.getElementById('btnRefresh');
   btn.classList.add('loading'); btn.disabled = true;
   document.getElementById('updated').textContent = t('loading');
-  const results = await Promise.allSettled([loadWaterLevel(), loadRain(), loadDam(), loadSea(), loadCctv(), loadDdpm(), loadTelerid(), loadFlashFlood(), loadOnwrActive()]);
+  const results = await Promise.allSettled([loadWaterLevel(), loadRain(), loadDam(), loadSea(), loadCctv(), loadDdpm(), loadTelerid(), loadFlashFlood(), loadOnwrActive(), loadHyd()]);
+  renderHyd();   // thaiwater โหลดเสร็จทีหลังก็ตัดสถานีที่ซ้ำออก
   const fails = results.filter(r=>r.status==='rejected').length;
   const now = new Date().toLocaleString(locale(),{dateStyle:'medium', timeStyle:'short'});
   document.getElementById('updated').innerHTML =
@@ -1598,6 +1599,63 @@ setInterval(pollTelerid, 2*60*1000);
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollTelerid(); });
 gTele.on('add', pollTelerid);   // เปิดชั้นกลับมา → เช็กค่าใหม่ทันที
 
+/* ---------- 6.55) สถานีอุทกวิทยา ชป. (hyd-app.rid.go.th/hydro8h.html) ----------
+   ระดับน้ำรายชั่วโมงของศูนย์อุทกวิทยาที่ 8 ผ่าน Worker hyd-proxy (hyd-app ตัดการเชื่อมต่อจาก IP นอกไทย)
+   สถานีส่วนใหญ่ซ้ำกับชั้น "ระดับน้ำ" (thaiwater) → แสดงเฉพาะสถานีที่ thaiwater ไม่มี (ตอนนี้คือ X.199)
+   ถ้า thaiwater ล่ม ก็แสดงครบทุกสถานีแทน · ใช้ชั้น "โทรมาตร ชป." ร่วมกับ telerid
+   hyd-app ไม่ให้พิกัด → ใช้พิกัดจาก thaiwater · X.199 ไม่มีในข้อมูลเปิด ใช้ตำแหน่งบ้านท่าเรือ ต.รือเสาะ (โดยประมาณ) */
+const HYD_LIVE = 'https://hyd-proxy.newusmanwaji.workers.dev';
+const HYD_COORDS = {
+  'X.73':[6.33992,101.726959], 'X.73A':[6.16992,101.713257], 'X.119':[6.07114,102.035881], 'X.119A':[6.02261,101.974892],
+  'X.184':[6.22716,101.496948], 'X.274':[5.83916,101.892143], 'X.199':[6.36024,101.51764,'approx'],
+};
+const gHyd = L.layerGroup();
+if(map.hasLayer(gTele)) gHyd.addTo(map);
+gTele.on('add', ()=>map.addLayer(gHyd));
+gTele.on('remove', ()=>map.removeLayer(gHyd));
+let hydData = null;
+async function loadHyd(){
+  hydData = await fetchJSON(`${HYD_LIVE}/stations.json?t=${Math.floor(Date.now()/600000)}`, 30000);
+  renderHyd();
+}
+function renderHyd(){
+  if(!hydData || !Array.isArray(hydData.stations)) return;
+  gHyd.clearLayers();
+  const have = new Set(wlStations.map(s=>String(s.code||'').trim()));
+  hydData.stations.forEach(d => {
+    const c = HYD_COORDS[d.code];
+    if(!c || have.has(d.code)) return;
+    if(d.level==null) return;
+    // ค่าวัดเก่ากว่า 6 ชม. → หมุดสีเทา (สถานีอาจหยุดส่ง)
+    const old = d.levelDt && (Date.now() - new Date(d.levelDt)) > 6*3600e3;
+    const over = d.bank!=null && d.level >= d.bank;
+    const color = old ? 'var(--ink-3)' : over ? 'var(--st-danger)' : 'var(--signal)';
+    const pts = d.wl && Array.isArray(d.wl.v) ? d.wl.v : [];
+    const prev3 = pts.length > 3 ? pts[pts.length-4] : null;
+    const diff3 = prev3!=null ? d.level - prev3 : null;
+    L.marker([c[0],c[1]], {icon: mkIcon('mk-tele', color, 18, '▲', !old && over), zIndexOffset:85})
+      .bindPopup(()=>{
+        const at = d.levelDt ? new Date(d.levelDt).toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}) : '';
+        const toBank = d.bank!=null ? d.bank - d.level : null;
+        return `
+        <div class="pp-title">▲ ${esc(d.name||d.code)} (${esc(d.code)})</div>
+        <div class="pp-sub">${esc(d.amphur||'')} · ${tProv(String(d.province||'').trim())} · กรมชลประทาน (สถานีอุทกวิทยา)</div>
+        <dl class="pp-grid">
+          <dt>${t('ddpmWL')}</dt><dd><b style="${old?'color:var(--ink-3)':''}">${fmt(d.level)}</b>${old?' <span style="font-size:10.5px;color:var(--st-watch)">(ค่าเก่า)</span>':''}</dd>
+          ${d.bank!=null?`<dt style="color:var(--st-danger)">ระดับตลิ่ง</dt><dd>${fmt(d.bank)} ม.</dd>`:''}
+          ${toBank!=null?`<dt>${toBank>=0?'ต่ำกว่าตลิ่ง':'สูงกว่าตลิ่ง'}</dt><dd>${fmt(Math.abs(toBank))} ม.</dd>`:''}
+          ${diff3!=null?`<dt>3 ชม.ก่อน</dt><dd>${diff3>=0?'+':''}${diff3.toFixed(2)} ม.</dd>`:''}
+          ${d.q!=null?`<dt>ปริมาณน้ำ</dt><dd>${fmt(d.q)} ลบ.ม./วิ</dd>`:''}
+        </dl>
+        ${teleDetailHTML({wl:d.wl, critical:d.bank, wlLabel:'ระดับน้ำ 24 ชม.'})}
+        ${c[2]==='approx'?'<div style="font-size:10.5px;color:var(--st-watch);margin-top:4px">ตำแหน่งหมุดโดยประมาณ (บ้านท่าเรือ ต.รือเสาะ) · ระบบ ชป. ไม่ระบุพิกัด</div>':''}
+        <div style="font-size:10px;color:var(--ink-3)">ค่าวัดล่าสุด ${esc(at)}</div>
+        <a class="pp-link" href="https://hyd-app.rid.go.th/hydro8h.html" target="_blank" rel="noopener">เปิดระบบอุทกวิทยา ชป. ↗</a>`;
+      }, {maxWidth:320})
+      .addTo(gHyd);
+  });
+}
+
 /* ---------- 6.6) รายละเอียดสถานีโทรมาตร: กราฟระดับน้ำ + น้ำฝน + ภาพตัดลำน้ำ ----------
    ดึงไฟล์ {code}.detail.json (จาก scraper) ตอนเปิด popup แล้ววาดเป็น SVG ในตัว */
 async function renderTeleDetail(el, code){
@@ -1631,7 +1689,7 @@ function teleWLChart(det){
   const gl=(y,c)=> (y!=null&&y>=ymin&&y<=ymax)?`<line x1="${pl}" y1="${Y(y).toFixed(1)}" x2="${W-pr}" y2="${Y(y).toFixed(1)}" stroke="${c}" stroke-width="1" stroke-dasharray="3 2"/>`:'';
   const yt=y=>`<text x="${pl-4}" y="${(Y(y)+3).toFixed(1)}" font-size="9" fill="var(--ink-3)" text-anchor="end">${y.toFixed(2)}</text>`;
   const last=pts[pts.length-1].y;
-  return `<div style="font-size:11px;color:var(--ink-2);margin:6px 0 2px">ระดับน้ำ 48 ชม. <b style="color:var(--signal)">${last.toFixed(2)} ม.</b></div>
+  return `<div style="font-size:11px;color:var(--ink-2);margin:6px 0 2px">${det.wlLabel||'ระดับน้ำ 48 ชม.'} <b style="color:var(--signal)">${last.toFixed(2)} ม.</b></div>
   <svg viewBox="0 0 ${W} ${H}" style="width:100%;background:var(--card);border:1px solid var(--line);border-radius:6px">
     ${gl(warn,'var(--st-watch)')}${gl(crit,'var(--st-danger)')}
     <path d="${line}" fill="none" stroke="var(--signal)" stroke-width="1.6"/>
