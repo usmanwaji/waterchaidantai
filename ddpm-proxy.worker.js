@@ -20,7 +20,7 @@
 */
 
 const UPSTREAM = 'https://cctv.disaster.go.th/api/v1';
-const ALLOW_ORIGIN = '*';          // จะจำกัดเป็น 'https://waterchaidantai.com' ก็ได้เพื่อความปลอดภัย
+const ALLOW_ORIGIN = '*';          // จะจำกัดเป็น 'https://naraflood.com' ก็ได้เพื่อความปลอดภัย
 const CACHE_SECONDS = 240;         // แคช 4 นาที (ฝั่ง ปภ. อัปเดตภาพ/ระดับน้ำทุก ~5 นาที)
 
 export default {

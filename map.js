@@ -882,7 +882,7 @@ function shareSnapshot(){
   let yy=208; x.font='14px sans-serif';
   top.forEach(s=>{ x.fillStyle=(WL_CLASSES[s.cls]||{color:'#888'}).color; x.fillRect(20,yy-12,10,10);
     x.fillStyle='#e2e8f0'; x.fillText(`${s.code||''} ${s.name} (อ.${s.amphoe}) ${s.pct!=null?Math.round(s.pct)+'%':''}`.slice(0,58), 38, yy); yy+=28; });
-  x.fillStyle='#64748b'; x.font='12px sans-serif'; x.fillText('waterchaidantai.com/map.html', 20, H-14);
+  x.fillStyle='#64748b'; x.font='12px sans-serif'; x.fillText('naraflood.com/map.html', 20, H-14);
   c.toBlob(b=>{ if(!b){ alert('สร้างภาพไม่สำเร็จ'); return; }
     const f=new File([b],'situation.png',{type:'image/png'});
     if(navigator.canShare && navigator.canShare({files:[f]})){ navigator.share({files:[f],title:'สรุปสถานการณ์น้ำ',text:'สรุปสถานการณ์น้ำ ชายแดนใต้'}).catch(()=>{}); }

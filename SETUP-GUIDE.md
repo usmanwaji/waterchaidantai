@@ -44,11 +44,10 @@
 1. ใน Supabase Dashboard → **Authentication → Sign In / Providers → Google**
 2. เปิด (Enable) แล้ววาง **Client ID** และ **Client Secret** จากข้อ 2 ลงไป → Save
 3. ไปที่ **Authentication → URL Configuration**:
-   - **Site URL**: `https://usmanwaji.github.io/waterchaidantai/route.html`
-   - **Redirect URLs**: เพิ่มทั้งสองบรรทัด
+   - **Site URL**: `https://naraflood.com`
+   - **Redirect URLs**: เพิ่มบรรทัดนี้ (หลังล็อกอิน ระบบพากลับมาหน้าที่ผู้ใช้กดล็อกอิน จึงต้องอนุญาตทุกหน้าของโดเมน)
      ```
-     https://usmanwaji.github.io/waterchaidantai/route.html
-     https://usmanwaji.github.io/waterchaidantai/admin.html
+     https://naraflood.com/**
      ```
 
 ---
@@ -126,7 +125,7 @@ $$;
 4. คลิก **Restrict Key** (แนะนำ):
    - **Application restrictions**: เลือก **HTTP referrers** แล้วเพิ่ม:
      ```
-     https://usmanwaji.github.io/*
+     https://naraflood.com/*
      ```
      (ถ้าทดสอบในเครื่องเพิ่ม `http://localhost:*` ด้วย)
    - **API restrictions**: เลือก **Restrict key** แล้วเลือก 3 APIs ข้างต้น
@@ -156,7 +155,7 @@ const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 ## 8. ตั้งตัวเองเป็นแอดมินคนแรก
 
 1. Deploy เว็บ (route.html, admin.html) ขึ้น GitHub Pages ตามปกติ
-2. เปิด `https://usmanwaji.github.io/waterchaidantai/route.html` แล้วกด **เข้าสู่ระบบด้วย Google** ด้วยบัญชี `newusmanwaji@gmail.com`
+2. เปิด `https://naraflood.com/route.html` แล้วกด **เข้าสู่ระบบด้วย Google** ด้วยบัญชี `newusmanwaji@gmail.com`
    - ตอนนี้บัญชีจะถูกสร้างในสถานะ "pending" (ยังไม่มีแอดมินอนุมัติได้ เพราะยังไม่มีแอดมิน)
 3. กลับไป Supabase → SQL Editor → รันคำสั่งนี้ (แก้ให้ตรงอีเมลถ้าใช้อีเมลอื่น):
    ```sql
@@ -187,6 +186,6 @@ const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 ## หมายเหตุสำคัญ
 
 - **เส้นทาง + แผนที่ (Google Maps)**: ใช้ Google Maps JavaScript API ซึ่งมีเครดิตฟรี $200/เดือน เพียงพอสำหรับการใช้งานระดับหน่วยงาน ตรวจสอบการใช้งานได้ที่ Google Cloud Console → APIs & Services → Dashboard
-- **API Key Security**: ควรจำกัด referrer ให้เฉพาะโดเมนที่ใช้งาน (เช่น `https://usmanwaji.github.io/*`) เพื่อป้องกันการใช้งานโดยคนอื่น
+- **API Key Security**: ควรจำกัด referrer ให้เฉพาะโดเมนที่ใช้งาน (เช่น `https://naraflood.com/*`) เพื่อป้องกันการใช้งานโดยคนอื่น
 - **ระดับความลึกน้ำที่ปลอดภัยต่อรถแต่ละประเภท** (ในไฟล์ `js/supabase-client.js`, ตัวแปร `VEHICLE_TYPES`) เป็นค่าอ้างอิงทั่วไป ปรับตัวเลขให้ตรงกับสภาพจริงของพื้นที่ได้ตลอดเวลา
 - Claude ไม่ได้และจะไม่จัดการรหัสผ่าน/API key ของคุณโดยตรง ทุกขั้นตอนข้างต้นทำในบัญชีของคุณเองทั้งหมด

@@ -3,7 +3,7 @@
 ขั้นตอน deploy: **(1) เว็บหน้าเว็บ → GitHub Pages** · **(2) ฐานข้อมูล → Supabase (schema v6–v8)** · **(3) แจ้งเตือน → Telegram + Edge Function**
 
 Project ref (Supabase): `tnvzeahfugmmrydtnsdv`
-Site: https://usmanwaji.github.io/waterchaidantai/
+Site: https://naraflood.com/ (GitHub Pages + custom domain จากไฟล์ `CNAME` · ลิงก์เก่า usmanwaji.github.io/waterchaidantai/ จะ redirect มาที่นี่)
 
 ---
 
@@ -135,7 +135,7 @@ supabase functions deploy notify-water --no-verify-jwt
 
 supabase secrets set TELEGRAM_BOT_TOKEN=<token เดียวกับข้อ 3.1/3.2>
 supabase secrets set CRON_SECRET=<สุ่มสตริงยาว ๆ เอง>
-supabase secrets set SITE_URL=https://usmanwaji.github.io/waterchaidantai
+supabase secrets set SITE_URL=https://naraflood.com
 ```
 - `--no-verify-jwt` จำเป็น เพราะฟังก์ชันถูกเรียกโดยตัวตั้งเวลา ไม่ใช่ผู้ใช้ล็อกอิน (ป้องกันด้วย `CRON_SECRET` แทน)
 - **ไม่ต้อง** ตั้ง `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` — Supabase ใส่ให้อัตโนมัติ

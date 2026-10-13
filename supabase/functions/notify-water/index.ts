@@ -23,7 +23,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!; // ข้าม RLS ได้ (เขียน alert_log)
 const TG_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
 const CRON_SECRET = Deno.env.get("CRON_SECRET");
-const SITE = Deno.env.get("SITE_URL") ?? "https://waterchaidantai.com";
+const SITE = Deno.env.get("SITE_URL") ?? "https://naraflood.com";
 
 // API สาธารณะเดียวกับที่หน้าเว็บใช้
 const TW_API = "https://api-v3.thaiwater.net/api/v1/thaiwater30";

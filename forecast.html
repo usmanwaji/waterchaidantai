@@ -497,7 +497,7 @@ function alertMsg(s,p){
   m += ' | ระดับน้ำ '+fmt(s.msl)+' ม.รทก. (ตลิ่ง '+fmt(s.bank)+')';
   m += ' | แนวโน้ม '+rateTxt(s.rate).replace(/[▲▼]/g,'').trim();
   if(p.tta!=null&&p.tta>0&&p.tta<48) m += ' | คาดถึงตลิ่ง '+ttaClock(p.tta)+' (~'+fmt(p.tta,1)+' ชม.)';
-  m += ' | ดูสด: waterchaidantai.com/map.html';
+  m += ' | ดูสด: naraflood.com/map.html';
   return m;
 }
 function copyAlert(ev,i){
