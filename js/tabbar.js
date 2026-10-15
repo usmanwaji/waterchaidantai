@@ -58,12 +58,14 @@
       { href: 'repeat.html',    label: 'พื้นที่ท่วมซ้ำซาก', icon: 'alert'  }
     ]},
     { head: 'ลงมือ', items: [
-      { href: 'route.html',     label: 'เส้นทาง',     icon: 'car'    },
-      { href: 'resources.html', label: 'ทรัพยากร',   icon: 'truck'  },
-      { href: 'alert.html',     label: 'แจ้งเตือน',   icon: 'bell'   }
+      { href: 'route.html',     label: 'เส้นทาง',     icon: 'car'    }
+      /* ปิดปุ่ม "ทรัพยากร" และ "แจ้งเตือน" ไว้ก่อน — เก็บโค้ดไว้เผื่อเปิดกลับมาใช้ในอนาคต */
+      // { href: 'resources.html', label: 'ทรัพยากร',   icon: 'truck'  },
+      // { href: 'alert.html',     label: 'แจ้งเตือน',   icon: 'bell'   }
     ]},
     { head: 'สำหรับเจ้าหน้าที่', items: [
-      { href: 'eoc.html',       label: 'ศูนย์บัญชาการ', icon: 'grid'   },
+      /* ปิดปุ่ม "ศูนย์บัญชาการ" ไว้ก่อน */
+      // { href: 'eoc.html',       label: 'ศูนย์บัญชาการ', icon: 'grid'   },
       { href: 'people.html',    label: 'กลุ่มเปราะบาง', icon: 'people' },
       { href: 'admin.html',     label: 'ผู้ดูแล',      icon: 'tools'  },
       /* หน้าสถิติเปิดได้เฉพาะแอดมิน คนอื่นกดเข้าไปจะเจอหน้าให้ล็อกอินแทน
