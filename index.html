@@ -48,10 +48,11 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 .card h2 .where{font-size:11px;color:var(--muted);font-weight:400}
 @media(max-width:768px){
   #content{grid-template-columns:1fr;padding:18px 14px 24px;gap:18px}
-  #dirCard{order:-5}
+  #dirCard{order:-6}
   /* มือถือ: ยกการ์ดเรดาร์ขึ้นบนสุดของหน้า (จอใหญ่คงลำดับเดิมใน HTML) */
-  /* มือถือ: เรียงการ์ดกรมอุตุฯ บนสุด — เรดาร์ (ตอนนี้) → ฝนระยะสั้น → คาดการณ์ (ล่วงหน้า) → ข้อมูลทางการ (เมื่อวาน) */
-  #radarCard{order:-4}
+  /* มือถือ: เรียงการ์ดฝนบนสุด — เรดาร์ (ตอนนี้) → ฝนสะสมจริง (วันนี้/เมื่อวาน) → ฝนระยะสั้น → คาดการณ์ (ล่วงหน้า) → ข้อมูลทางการ (เมื่อวาน) */
+  #radarCard{order:-5}
+  #rainObsCard{order:-4}
   #ncCard{order:-3}
   #drCard{order:-2}
   #tmdCard{order:-1}
@@ -154,6 +155,34 @@ footer a{color:var(--orange-warm);text-decoration:none}
 #wtaChips .wtaBasin:first-of-type{padding-left:0}
 .wtaEmpty{font-size:12.5px;color:var(--ink-3);padding:6px 0}
 .wtaNear{display:inline-block;font-size:10.5px;font-weight:600;color:var(--ink-2);background:var(--card-2);border:1px dashed var(--outline-strong);border-radius:99px;padding:1px 8px;margin-bottom:3px}
+
+/* ฝนสะสมวันนี้ · เมื่อวาน (สถานีวัดฝนจริง ผ่าน thaiwater) · ซ้าย: ฝนสูงสุดของจังหวัด · ขวา: เทียบรายอำเภอ */
+.roWrap{display:grid;grid-template-columns:minmax(0,300px) 1fr;gap:18px;align-items:start}
+.roTiles{display:grid;grid-template-columns:1fr;gap:10px}
+.roTile{background:var(--card);border:1px solid var(--card-2);border-top:4px solid var(--rc);border-radius:10px;padding:10px 12px}
+.roTile .k{font-size:13px;font-weight:700;color:var(--navy-d)}
+.roTile .k small{display:block;font-size:10.5px;font-weight:400;color:var(--muted)}
+.roTile .big{font-size:30px;font-weight:800;line-height:1.15;margin-top:4px;color:var(--rc);font-variant-numeric:tabular-nums}
+.roTile .big small{font-size:13px;font-weight:600}
+.roTile .s{font-size:11.5px;color:var(--ink-2);line-height:1.5;margin-top:2px}
+.roAmp{display:grid;grid-template-columns:auto 1fr 1fr;gap:5px 12px;align-items:center;font-size:12.5px}
+.roAmp .h{font-size:10.5px;font-weight:600;color:var(--muted)}
+.roAmp .a{font-weight:600;white-space:nowrap}
+.roCell{display:flex;align-items:center;gap:6px;min-width:0}
+.roCell .bar{flex:1;height:9px;background:var(--card-2);border-radius:6px;overflow:hidden}
+.roCell .bar i{display:block;height:100%}
+.roCell b{flex:0 0 40px;text-align:right;font-variant-numeric:tabular-nums}
+#roTable{overflow-x:auto}
+.roTbl{width:100%;font-size:12px;border-collapse:collapse}
+.roTbl th{text-align:right;color:var(--muted);font-size:10.5px;font-weight:600;padding-bottom:3px}
+.roTbl td{text-align:right;padding:3px 4px;border-top:1px solid var(--outline);font-variant-numeric:tabular-nums}
+.roTbl th:first-child,.roTbl td:first-child{text-align:left;padding-left:0}
+.roTbl td small{display:block;font-size:10px;color:var(--muted)}
+@media(max-width:768px){
+  .roWrap{grid-template-columns:1fr;gap:12px}
+  .roTiles{grid-template-columns:1fr 1fr}
+  .roTile .big{font-size:26px}
+}
 
 /* ฝนคาดการณ์รายอำเภอ 7 วัน (แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุฯ) */
 #drDays{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
@@ -340,6 +369,26 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     <summary>คำอธิบาย</summary>
     <div class="note">โทรมาตรหลัก 3 ลุ่มน้ำ (ด้านบน): X.184 บ้านซากอ (ลุ่มน้ำสายบุรี) · X.73 บ้านตันหยงมัส (ลุ่มน้ำบางนรา) · X.119A สะพานลันตู (ลุ่มน้ำโก-ลก) ชุดเดียวกับรายงานสถานการณ์น้ำท่าของกรมชลประทาน · ระดับตลิ่ง/เฝ้าระวังน้ำมาก และความจุลำน้ำ (ลบ.ม./วินาที) ตามรายงาน ชป. · ค่ารายชั่วโมงจากระบบอุทกวิทยา ชป. (<a href="https://hyd-app.rid.go.th/hydro8h.html" target="_blank" rel="noopener">hyd-app.rid.go.th</a>) ถ้าโหลดไม่ได้ใช้ค่าจาก thaiwater · ภาพตัดลำน้ำเป็นภาพประกอบ ไม่ใช่รูปตัดจริง · แนวโน้มเทียบกับค่าราว 1 ชม.ก่อน กราฟเล็กคือ 24 ชม.ล่าสุด<br>
     สถิติขึ้น/ลดด้านล่าง: ใช้สถานีชุดเดียวกับ <a href="map.html">หน้าแผนที่</a> ที่ส่งค่าในรอบ 6 ชม.: สสน./ชป. (thaiwater เทียบกับค่าครั้งก่อน ขึ้น/ลดตั้งแต่ 1 ซม.) · ปภ. (cctv.disaster.go.th เทียบค่ารายชั่วโมงล่าสุดกับชั่วโมงก่อน) · โทรมาตร ชป. (telerid เทียบกับค่าราว 1 ชม.ก่อน) สองแหล่งหลังนับขึ้น/ลดตั้งแต่ 2 ซม. เพราะค่ารายชั่วโมงแกว่งตามคลื่นลม · น้อยกว่าเกณฑ์นับเป็นทรงตัว · ภาพแม่น้ำด้านบนใช้สถานีที่ใกล้คุณที่สุด (หรือใกล้ศูนย์กลางอำเภอที่เลือก) · รายชื่อใต้แถบคือสถานีที่ระดับน้ำเปลี่ยนมากที่สุด</div>
+    </details>
+  </div>
+
+  <!-- ฝนสะสมวันนี้ · เมื่อวาน: ค่าที่วัดได้จริงจากสถานีวัดฝนอัตโนมัติใน จ.นราธิวาส (thaiwater ผ่าน tmd-proxy) -->
+  <div class="card full" id="rainObsCard">
+    <h2><span class="t-desk">ปริมาณฝนสะสม วันนี้ · เมื่อวาน (สถานีวัดฝน)</span><span class="t-mob">ฝนตกไปแล้วเท่าไหร่ ? (วันนี้ · เมื่อวาน)</span> <span class="where" id="roWhere">จ.นราธิวาส</span></h2>
+    <div class="roWrap">
+      <div class="roTiles" id="roTiles"><div style="font-size:12.5px;color:var(--muted)"><span class="spin"></span> กำลังโหลดฝนสะสม…</div></div>
+      <div>
+        <div class="roAmp" id="roAmp"></div>
+        <div class="drLegend" id="roLegend"></div>
+      </div>
+    </div>
+    <details class="fold">
+    <summary>ดูฝนสะสมรายสถานีทั้งหมด</summary>
+    <div class="fold-body"><div id="roTable"></div></div>
+    </details>
+    <details class="fold fold-note">
+    <summary>คำอธิบาย</summary>
+    <div class="note">ค่าที่วัดได้จริงจากสถานีวัดฝนอัตโนมัติใน จ.นราธิวาส ของหลายหน่วยงาน (สสน. · กรมทรัพยากรน้ำ · กรมอุตุฯ · มูลนิธิ พพภ.) รวบรวมโดยคลังข้อมูลน้ำแห่งชาติ (<a href="https://www.thaiwater.net/water/rain" target="_blank" rel="noopener">thaiwater.net ↗</a>) · <b>วันนี้</b> = ฝนสะสมตั้งแต่ 07:00 น. ถึงค่าล่าสุด (สถานี สสน. ส่งค่าทุก 10 นาที หน้านี้ดึงใหม่ทุก 10 นาที) · <b>เมื่อวาน</b> = 07:00 น. เมื่อวาน ถึง 07:00 น. วันนี้ ตามรอบตัดยอดฝนรายวันของกรมอุตุฯ · สถานีกรมทรัพยากรน้ำมีเฉพาะยอดรายวัน จึงมีตัวเลขแค่ช่องเมื่อวาน · ค่ารายอำเภอ = สถานีที่ฝนมากที่สุดในอำเภอ (ชื่อสถานีดูได้ในตารางรายสถานี) · "–" = ไม่มีสถานีส่งค่าในช่วงนั้น · เกณฑ์ฝนรายวัน (กรมอุตุฯ): เล็กน้อย 0.1–10 · ปานกลาง 10.1–35 · หนัก 35.1–90 · หนักมาก มากกว่า 90 มม.</div>
     </details>
   </div>
 
@@ -557,10 +606,139 @@ async function loadTmd(){
   }
 }
 
+/* ---------- ฝนสะสมวันนี้ · เมื่อวาน รายสถานี จ.นราธิวาส (thaiwater · สสน.) ----------
+   rain_today = ตั้งแต่ 07:00 น. ถึงค่าล่าสุด · rain_yesterday = 07:00 เมื่อวาน ถึง 07:00 วันนี้
+   ต้นทางส่งทั้งประเทศ (~4–6 MB ไม่มีตัวกรองจังหวัด) จึงอ่านผ่าน tmd-proxy ที่กรองเหลือนราธิวาสไว้แล้ว
+   ถ้า worker ยังไม่มีเส้นทางนี้ (ยังไม่ deploy รุ่นใหม่) ค่อยดึงตรงจาก thaiwater แล้วกรองเอง
+   rain_today มีสถานีที่ค่าค้างเป็นเดือนปนมาด้วย (สถานี ทน. ค่าล่าสุด ก.ค.–ส.ค.) จึงใช้เฉพาะค่าตั้งแต่ 07:00 ของรอบวันนี้
+   rain_yesterday ส่วนใหญ่ประทับเวลา "วันที่เมื่อวาน 00:00" แต่สถานีกรมอุตุฯ ประทับ 07:00 และมีมาสองวัน
+   บอกไม่ได้แน่ว่าเป็นรอบไหน จึงใช้เฉพาะแถวที่เวลาตรงกับเวลาที่พบมากที่สุด */
+const RO_PROV = PROV_CODE['นราธิวาส'];
+let rainObs, rainObsBusy = null;        // rainObs: undefined = กำลังโหลดรอบแรก · null = โหลดไม่ได้
+const twTime = s => s ? new Date(String(s).replace(' ','T')+'+07:00') : null;
+const thYmd = ms => new Date(ms + 7*3600e3).toISOString().slice(0,10);       // ms → 'YYYY-MM-DD' ตามเวลาไทย
+const thDM = ymd => new Date(ymd+'T12:00:00+07:00').toLocaleDateString('th-TH',{day:'numeric',month:'short'});
+/* เวลาเริ่มรอบวันฝนปัจจุบัน (07:00 น. เวลาไทย) เป็น ms · ก่อน 07:00 ยังนับเป็นรอบของเมื่อวาน */
+function rainDayStart(now = Date.now()){
+  const th = new Date(now + 7*3600e3);   // อ่านนาฬิกาไทยผ่าน getUTC*
+  const s = Date.UTC(th.getUTCFullYear(), th.getUTCMonth(), th.getUTCDate(), 7) - 7*3600e3;
+  return now < s ? s - 864e5 : s;
+}
+/* ระดับฝนที่ตกจริงรายวัน (เกณฑ์กรมอุตุฯ) · ช่วงและสีชุดเดียวกับ rainInfo ใน map.js */
+function obsRain(mm){
+  if(mm==null) return {l:'ไม่มีข้อมูล', c:'var(--ink-3)'};
+  if(!(mm>0))  return {l:'ไม่มีฝน',    c:'var(--ink-3)'};
+  if(mm<=10)   return {l:'ฝนเล็กน้อย', c:'var(--st-normal)'};
+  if(mm<=35)   return {l:'ฝนปานกลาง', c:'var(--signal)'};
+  if(mm<=90)   return {l:'ฝนหนัก',     c:'var(--st-warn)'};
+  return {l:'ฝนหนักมาก', c:'var(--st-danger)'};
+}
+async function fetchProvRain(kind){
+  const get = u => fetch(u).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+  const rows = j => {
+    const r = (j?.data||[]).filter(d=>String(d.geocode?.province_code)===RO_PROV);
+    if(!r.length) throw new Error('no rows');
+    return r;
+  };
+  try{ return rows(await get(`${TMD_PROXY}/${kind}`)); }
+  catch(e){ return rows(await get(`${API}/public/${kind}`)); }
+}
+const roRow = d => ({
+  id: d.station?.id, name: thName(d.station?.tele_station_name).trim(),
+  amphoe: thName(d.geocode?.amphoe_name).replace(/^อำเภอ/,'').trim(),
+  agency: thName(d.agency?.agency_shortname), mm: num(d.rainfall_value), dt: d.rainfall_datetime||''
+});
+/* เรียกซ้อนกันได้ (loadAll กับรอบ 10 นาทีชนกัน) — ใช้คำขอที่กำลังวิ่งอยู่ร่วมกัน */
+function loadRainObs(){
+  if(rainObsBusy) return rainObsBusy;
+  return rainObsBusy = (async ()=>{
+    const [t, y] = await Promise.allSettled([fetchProvRain('rain_today'), fetchProvRain('rain_yesterday')]);
+    if(t.status!=='fulfilled' && y.status!=='fulfilled'){
+      if(!rainObs) rainObs = null;       // เคยโหลดได้แล้วคงค่าเดิมไว้ เน็ตสะดุดชั่วคราวไม่ต้องล้างการ์ด
+      return;
+    }
+    const start = rainDayStart();
+    const today = t.status==='fulfilled' ? t.value.filter(d=>twTime(d.rainfall_datetime) >= start).map(roRow) : null;
+    let yesterday = null, yDt = '';
+    if(y.status==='fulfilled'){
+      const n = {};
+      y.value.forEach(d=>{ n[d.rainfall_datetime] = (n[d.rainfall_datetime]||0) + 1; });
+      yDt = Object.keys(n).sort((a,b)=>n[b]-n[a])[0] || '';
+      yesterday = y.value.filter(d=>d.rainfall_datetime===yDt).map(roRow);
+    }
+    rainObs = {today, yesterday, start, yDate: yDt.slice(0,10)};
+  })().finally(()=>{ rainObsBusy = null; renderRainObs(); });
+}
+/* สถานีที่ฝนมากที่สุดในชุด (ไม่นับสถานีที่ไม่มีค่า) */
+const roPeak = rows => (rows||[]).reduce((p,r)=> r.mm!=null && (!p || r.mm > p.mm) ? r : p, null);
+function roTile(title, win, rows){
+  const head = `<div class="k">${esc(title)}<small>${esc(win)}</small></div>`;
+  if(!rows) return `<div class="roTile" style="--rc:var(--ink-3)">${head}<div class="s">โหลดไม่สำเร็จ</div></div>`;
+  const top = roPeak(rows);
+  if(!top) return `<div class="roTile" style="--rc:var(--ink-3)">${head}<div class="s">ยังไม่มีสถานีส่งค่าของรอบนี้</div></div>`;
+  const R = obsRain(top.mm), n = rows.filter(r=>r.mm!=null).length, wet = rows.filter(r=>r.mm>0).length;
+  return `<div class="roTile" style="--rc:${R.c}">${head}
+    <div class="big">${fmt1(top.mm)} <small>มม.</small></div>
+    <div class="s">${top.mm>0
+      ? `สูงสุดที่ ${esc(top.name)} (อ.${esc(top.amphoe)}) <span class="badge" style="background:${R.c}">${R.l}</span>`
+      : 'ยังไม่มีฝนตกที่สถานีใด'}</div>
+    <div class="s">มีฝน ${wet} จาก ${n} สถานี</div>
+  </div>`;
+}
+function renderRainObs(){
+  const tilesEl = document.getElementById('roTiles'), ampEl = document.getElementById('roAmp'),
+        legEl = document.getElementById('roLegend'), tEl = document.getElementById('roTable');
+  if(!tilesEl || rainObs===undefined) return;
+  if(!rainObs){
+    tilesEl.innerHTML = `<div style="font-size:12.5px;color:var(--muted)">โหลดข้อมูลฝนไม่สำเร็จ · ดูที่ <a href="https://www.thaiwater.net/water/rain" target="_blank" rel="noopener">thaiwater.net ↗</a></div>`;
+    ampEl.innerHTML = legEl.innerHTML = tEl.innerHTML = '';
+    return;
+  }
+  const {today, yesterday, start, yDate} = rainObs;
+  const last = (today||[]).reduce((m,r)=>r.dt>m ? r.dt : m, '').slice(11,16);
+  // ต้นทางอาจยังไม่ตัดรอบหลัง 07:00 ทันที → ถ้าวันที่ไม่ใช่เมื่อวานจริง ใช้วันที่เป็นหัวข้อแทนคำว่า "เมื่อวาน"
+  const yTitle = !yDate || yDate===thYmd(start - 864e5) ? 'เมื่อวาน' : thDM(yDate);
+  const yWin = yDate ? `${thDM(yDate)} 07:00 – ${thDM(thYmd(Date.parse(yDate+'T07:00:00+07:00') + 864e5))} 07:00 น.` : '';
+  document.getElementById('roWhere').textContent = 'จ.นราธิวาส' + (last ? ` · ล่าสุด ${last} น.` : '');
+  tilesEl.innerHTML = roTile('วันนี้', last ? `07:00 – ${last} น.` : 'ตั้งแต่ 07:00 น.', today) + roTile(yTitle, yWin, yesterday);
+
+  // รายอำเภอ: สถานีที่ฝนมากที่สุดของแต่ละอำเภอ เรียงตามฝนวันนี้ก่อน เสมอกันดูเมื่อวาน
+  const peakIn = (rows, a) => roPeak((rows||[]).filter(r=>r.amphoe===a));
+  const list = ampsOf('นราธิวาส').map(a=>({a:a[1], t:peakIn(today, a[1]), y:peakIn(yesterday, a[1])}))
+    .sort((p,q)=>((q.t?.mm ?? -1) - (p.t?.mm ?? -1)) || ((q.y?.mm ?? -1) - (p.y?.mm ?? -1)));
+  // สเกลแถบเริ่มที่ 35 มม. (ฝนหนัก) ฝนเล็กน้อยจะได้ไม่เต็มแถบจนดูน่าตกใจ
+  const scale = Math.max(35, ...list.flatMap(x=>[x.t?.mm||0, x.y?.mm||0]));
+  const cell = r => {
+    if(!r) return `<div class="roCell"><span class="bar"></span><b style="color:var(--ink-3);font-weight:400">–</b></div>`;
+    const R = obsRain(r.mm);
+    return `<div class="roCell" title="${esc(r.name)} · ${fmt1(r.mm)} มม.">
+      <span class="bar"><i style="width:${Math.min(100, r.mm/scale*100).toFixed(1)}%;background:${R.c}"></i></span>
+      <b style="color:${r.mm>0 ? R.c : 'var(--ink-3)'}">${fmt1(r.mm)}</b></div>`;
+  };
+  ampEl.innerHTML = `<div class="h">อำเภอ</div><div class="h">วันนี้ (มม.)</div><div class="h">${esc(yTitle)} (มม.)</div>` +
+    list.map(x=>`<div class="a">${esc(x.a)}</div>${cell(x.t)}${cell(x.y)}`).join('');
+  legEl.innerHTML = [[5,'0.1–10'],[20,'10.1–35'],[60,'35.1–90'],[100,'>90']].map(([mm,rng])=>{
+    const R = obsRain(mm);
+    return `<span class="lg"><span class="sw" style="background:${R.c}"></span>${R.l} ${rng}</span>`;
+  }).join('');
+
+  // รายสถานี: รวมสองชุดด้วยรหัสสถานี (สถานีที่มีแค่ยอดรายวันจะมีเฉพาะช่องเมื่อวาน)
+  const byId = new Map();
+  (yesterday||[]).forEach(r=>byId.set(r.id, {s:r, t:null, y:r.mm}));
+  (today||[]).forEach(r=>{ const o = byId.get(r.id); if(o) o.t = r.mm; else byId.set(r.id, {s:r, t:r.mm, y:null}); });
+  const all = [...byId.values()].sort((p,q)=>((q.t ?? -1) - (p.t ?? -1)) || ((q.y ?? -1) - (p.y ?? -1)));
+  const v = mm => mm==null ? '<span style="color:var(--ink-3)">–</span>'
+    : `<b style="color:${mm>0 ? obsRain(mm).c : 'var(--ink-3)'}">${fmt1(mm)}</b>`;
+  tEl.innerHTML = `<table class="roTbl"><tr><th>สถานี (${all.length})</th><th>วันนี้ (มม.)</th><th>${esc(yTitle)} (มม.)</th></tr>` +
+    all.map(o=>`<tr><td>${esc(o.s.name)}<small>อ.${esc(o.s.amphoe)} · ${esc(o.s.agency)}</small></td><td>${v(o.t)}</td><td>${v(o.y)}</td></tr>`).join('') +
+    `</table>`;
+}
+
 /* ---------- โหลดข้อมูล ---------- */
 let loadingAll = false;
 async function loadAll(){
   loadingAll = true;
+  loadRainObs();   // ไม่รอ · การ์ดฝนสะสมวาดเองเมื่อโหลดเสร็จ
   try{
     document.getElementById('updated').innerHTML = '<span class="spin"></span>';
     meteoCache = {};   // บังคับพยากรณ์ใหม่
@@ -1897,6 +2075,7 @@ loadTmd();
 loadDistRain();
 setInterval(loadTmd, 60*60*1000);
 setInterval(loadAll, 30*60*1000);
+setInterval(loadRainObs, 10*60*1000);
 setInterval(pollRid, 2*60*1000);
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollRid(); });
 setInterval(loadRadarImg, 10*60*1000);

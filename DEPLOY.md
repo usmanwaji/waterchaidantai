@@ -30,7 +30,7 @@ PWA/Service Worker ทำงานเฉพาะบน https (GitHub Pages เ�
 | ไฟล์ | ชื่อ worker | ใช้กับ | ทดสอบ |
 |------|-------------|--------|--------|
 | `ddpm-proxy.worker.js` | `ddpm-proxy` | map.html — ภาพกล้อง ปภ. | `https://ddpm-proxy.<บัญชี>.workers.dev/stations/PTN07` |
-| `tmd-proxy.worker.js` | `tmd-proxy` | index.html — พยากรณ์ 7 วัน TMD + แผนที่ฝนคาดการณ์รายอำเภอ · forecast.html — ฝนคาดการณ์รายอำเภอ + ปุ่มเปิดหน้าแผนที่เสี่ยงภัยรายอำเภอ | `https://tmd-proxy.<บัญชี>.workers.dev/region7days` · `/riskmap` · `/riskmap-district` |
+| `tmd-proxy.worker.js` | `tmd-proxy` | index.html — พยากรณ์ 7 วัน TMD + แผนที่ฝนคาดการณ์รายอำเภอ + ฝนสะสมวันนี้/เมื่อวานรายสถานี · forecast.html — ฝนคาดการณ์รายอำเภอ + ปุ่มเปิดหน้าแผนที่เสี่ยงภัยรายอำเภอ | `https://tmd-proxy.<บัญชี>.workers.dev/region7days` · `/riskmap` · `/riskmap-district` · `/rain_today` · `/rain_yesterday` |
 | `hyd-proxy.worker.js` | `hyd-proxy` | map.html — ชั้น "โทรมาตร ชป.": สถานีอุทกวิทยา ชป. (hyd-app.rid.go.th/hydro8h.html) ที่ thaiwater ไม่มี เช่น X.199 · ต้องเปิด Smart Placement | `https://hyd-proxy.<บัญชี>.workers.dev/stations.json` |
 | `onwr-proxy.worker.js` | `onwr-proxy` | map.html — 4 ชั้นเรดาร์ สทนช. (เรดาร์ TMD + คาดการณ์ 3 ชม. · ฝนสะสม 3 ชม. ล่วงหน้ารายอำเภอ/ตำบล · ฝนสถานีรายชั่วโมง · สถานีเรดาร์) | `https://onwr-proxy.<บัญชี>.workers.dev/frames` |
 
@@ -42,6 +42,11 @@ PWA/Service Worker ทำงานเฉพาะบน https (GitHub Pages เ�
 หน้า forecast.html จะขึ้น "โหลดไม่สำเร็จ" เฉพาะการ์ดฝนรายอำเภอ ส่วนอื่นทำงานปกติ · หน้า index.html
 ใช้เส้นทางเดียวกันวาดเป็นแผนที่ 13 อำเภอพร้อมตัวเลขฝนรายวัน (การ์ด "คาดการณ์ปริมาณฝนรายอำเภอ")
 ถ้ายังไม่ deploy การ์ดนี้จะขึ้น "โหลดไม่สำเร็จ" เช่นกัน ส่วนอื่นของหน้าแรกทำงานปกติ
+
+`tmd-proxy` เส้นทาง `/rain_today` กับ `/rain_yesterday` ดึงฝนสะสมวันนี้ (ตั้งแต่ 07:00) / เมื่อวาน (07:00–07:00)
+รายสถานีจาก thaiwater (ไฟล์ทั้งประเทศ ~4.4 / 5.7 MB ต้นทางกรองจังหวัดไม่ได้) กรองเหลือเฉพาะนราธิวาสแล้วแคช 10 / 30 นาที
+→ เหลือ ~50–60 KB · ใช้กับการ์ด "ฝนสะสมวันนี้ · เมื่อวาน" ในหน้าแรก · ถ้ายังไม่ deploy รอบใหม่ การ์ดยังทำงาน
+เพราะหน้าเว็บจะดึงไฟล์ทั้งประเทศตรงจาก thaiwater แล้วกรองเอง (โหลดหนักกว่า ~1 MB ต่อรอบ)
 
 `tmd-proxy` เส้นทาง `/riskmap-district` เสิร์ฟหน้าเว็บ "แผนที่เสี่ยงภัยรายอำเภอ" ของ hpc.tmd.go.th
 ให้ปุ่ม **คาดการณ์ปริมาณฝนรายอำเภอ** ใน forecast.html ฝังเป็น iframe โดยล็อกตัวกรองไว้ที่นราธิวาส
