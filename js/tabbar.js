@@ -55,7 +55,7 @@
       /* ปิดปุ่ม "แบบจำลอง" ไว้ก่อน — เก็บโค้ดไว้เผื่อเปิดกลับมาใช้ในอนาคต */
       // { href: 'sim.html',       label: 'แบบจำลอง',   icon: 'wave'   },
       { href: 'history.html',   label: 'ย้อนหลัง',    icon: 'clock'  },
-      { href: 'repeat.html',    label: 'พื้นที่เสี่ยง', icon: 'alert'  }
+      { href: 'repeat.html',    label: 'พื้นที่ท่วมซ้ำซาก', icon: 'alert'  }
     ]},
     { head: 'ลงมือ', items: [
       { href: 'route.html',     label: 'เส้นทาง',     icon: 'car'    },
