@@ -541,6 +541,13 @@ body{padding-bottom:calc(var(--tabbar-h) + var(--dock-gap) * 2 + env(safe-area-i
   header{flex-wrap:nowrap}
   header>h1{flex:none;white-space:nowrap}
   header .navtab{flex:0 1 auto;min-width:0;overflow-x:auto}
+  /* แถบเมนูต้องอยู่ที่เดิมทุกหน้า ไม่งั้นกดเปลี่ยนหน้าแล้วปุ่มกระโดดไปมา
+     เดิมชื่อหน้ายาวไม่เท่ากัน แถบเมนูจึงเริ่มคนละตำแหน่ง และแต่ละหน้าตั้งระยะในปุ่มเองไม่เท่ากัน
+     ให้ชื่อหน้ากว้างเท่ากันทุกหน้า (ยาวเกินตัดท้าย) และปุ่มเมนูขนาดเดียวกัน */
+  header{column-gap:10px}
+  header>h1{width:300px;overflow:hidden;text-overflow:ellipsis}
+  header>h1 small{overflow:hidden;text-overflow:ellipsis}
+  header .navtab a{font-size:12px;padding:5px 11px}
   header #updated,header #btnRefresh,header #authUi,header #authBox,header #btnHelp{flex:none;white-space:nowrap}
 }
 /* จอคอมไม่ต้องมีแถบล่าง เมนูบนอ่านได้สบายอยู่แล้ว */

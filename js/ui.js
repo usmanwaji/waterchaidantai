@@ -14,12 +14,24 @@
       nav.classList.toggle('at-end', scrollable && nav.scrollLeft + nav.clientWidth >= nav.scrollWidth - 4);
     }
 
-    // เลื่อนแท็บที่กำลังเปิดอยู่มาให้เห็น
+    // แถบเมนูต้องอยู่ที่เดิมเมื่อกดเปลี่ยนหน้า: คืนตำแหน่งเลื่อนจากหน้าก่อน
+    // เดิมจัดแท็บที่เปิดอยู่ไว้กลางแถบทุกครั้ง ปุ่มจึงขยับไปมาทุกครั้งที่กด
+    // เลื่อนเฉพาะเมื่อแท็บที่เปิดอยู่หลุดขอบจอเท่านั้น
+    var KEY = 'navtabScroll';
+    try {
+      var saved = parseFloat(sessionStorage.getItem(KEY));
+      if (!isNaN(saved)) nav.scrollLeft = saved;
+    } catch (e) {}
     var active = nav.querySelector('a.on');
     if (active && nav.scrollWidth > nav.clientWidth) {
-      var target = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
-      nav.scrollLeft = Math.max(0, target);
+      var left = active.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft;
+      if (left < nav.scrollLeft) nav.scrollLeft = Math.max(0, left - 8);
+      else if (left + active.offsetWidth > nav.scrollLeft + nav.clientWidth)
+        nav.scrollLeft = left + active.offsetWidth - nav.clientWidth + 8;
     }
+    function remember() { try { sessionStorage.setItem(KEY, nav.scrollLeft); } catch (e) {} }
+    nav.addEventListener('click', remember);
+    window.addEventListener('pagehide', remember);
 
     affordance();
     nav.addEventListener('scroll', affordance, { passive: true });
