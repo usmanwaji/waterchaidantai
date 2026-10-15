@@ -48,10 +48,11 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 .card h2 .where{font-size:11px;color:var(--muted);font-weight:400}
 @media(max-width:768px){
   #content{grid-template-columns:1fr;padding:18px 14px 24px;gap:18px}
-  #dirCard{order:-5}
+  #dirCard{order:-6}
   /* มือถือ: ยกการ์ดเรดาร์ขึ้นบนสุดของหน้า (จอใหญ่คงลำดับเดิมใน HTML) */
-  /* มือถือ: เรียงการ์ดกรมอุตุฯ บนสุด — เรดาร์ (ตอนนี้) → ฝนระยะสั้น → คาดการณ์ (ล่วงหน้า) → ข้อมูลทางการ (เมื่อวาน) */
-  #radarCard{order:-4}
+  /* มือถือ: เรียงการ์ดฝนบนสุด — เรดาร์ (ตอนนี้) → ฝนสะสมจริง (วันนี้/เมื่อวาน) → ฝนระยะสั้น → คาดการณ์ (ล่วงหน้า) → ข้อมูลทางการ (เมื่อวาน) */
+  #radarCard{order:-5}
+  #rainObsCard{order:-4}
   #ncCard{order:-3}
   #drCard{order:-2}
   #tmdCard{order:-1}
@@ -154,6 +155,12 @@ footer a{color:var(--orange-warm);text-decoration:none}
 #wtaChips .wtaBasin:first-of-type{padding-left:0}
 .wtaEmpty{font-size:12.5px;color:var(--ink-3);padding:6px 0}
 .wtaNear{display:inline-block;font-size:10.5px;font-weight:600;color:var(--ink-2);background:var(--card-2);border:1px dashed var(--outline-strong);border-radius:99px;padding:1px 8px;margin-bottom:3px}
+
+/* ฝนสะสมวันนี้ · เมื่อวาน: ฝังหน้า naramet.pages.dev/rainfall ทั้งหน้า (แผนที่ + ปุ่มวันนี้/เมื่อวาน ของต้นทาง)
+   ต้นทางกำหนดความสูงแผนที่เป็น vh (70% จอใหญ่ · 55% มือถือ) ซึ่งในกรอบ = % ของความสูงกรอบ
+   ส่วนหัว/แถบสีอีก ~250–370 px จึงต้องสูงอย่างน้อย ~820 px ทั้งหน้าถึงจะพอดีกรอบ ไม่มีแถบเลื่อนซ้อนในกรอบ */
+#roFrame{display:block;width:100%;height:840px;border:1px solid var(--outline);border-radius:10px;background:#fff}
+@media(max-width:400px){#roFrame{height:940px}}   /* จอแคบหัวข้อต้นทางตัดเป็น 3 บรรทัด (ทดสอบถึงจอกว้าง 320 px) */
 
 /* ฝนคาดการณ์รายอำเภอ 7 วัน (แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุฯ) */
 #drDays{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
@@ -340,6 +347,16 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     <summary>คำอธิบาย</summary>
     <div class="note">โทรมาตรหลัก 3 ลุ่มน้ำ (ด้านบน): X.184 บ้านซากอ (ลุ่มน้ำสายบุรี) · X.73 บ้านตันหยงมัส (ลุ่มน้ำบางนรา) · X.119A สะพานลันตู (ลุ่มน้ำโก-ลก) ชุดเดียวกับรายงานสถานการณ์น้ำท่าของกรมชลประทาน · ระดับตลิ่ง/เฝ้าระวังน้ำมาก และความจุลำน้ำ (ลบ.ม./วินาที) ตามรายงาน ชป. · ค่ารายชั่วโมงจากระบบอุทกวิทยา ชป. (<a href="https://hyd-app.rid.go.th/hydro8h.html" target="_blank" rel="noopener">hyd-app.rid.go.th</a>) ถ้าโหลดไม่ได้ใช้ค่าจาก thaiwater · ภาพตัดลำน้ำเป็นภาพประกอบ ไม่ใช่รูปตัดจริง · แนวโน้มเทียบกับค่าราว 1 ชม.ก่อน กราฟเล็กคือ 24 ชม.ล่าสุด<br>
     สถิติขึ้น/ลดด้านล่าง: ใช้สถานีชุดเดียวกับ <a href="map.html">หน้าแผนที่</a> ที่ส่งค่าในรอบ 6 ชม.: สสน./ชป. (thaiwater เทียบกับค่าครั้งก่อน ขึ้น/ลดตั้งแต่ 1 ซม.) · ปภ. (cctv.disaster.go.th เทียบค่ารายชั่วโมงล่าสุดกับชั่วโมงก่อน) · โทรมาตร ชป. (telerid เทียบกับค่าราว 1 ชม.ก่อน) สองแหล่งหลังนับขึ้น/ลดตั้งแต่ 2 ซม. เพราะค่ารายชั่วโมงแกว่งตามคลื่นลม · น้อยกว่าเกณฑ์นับเป็นทรงตัว · ภาพแม่น้ำด้านบนใช้สถานีที่ใกล้คุณที่สุด (หรือใกล้ศูนย์กลางอำเภอที่เลือก) · รายชื่อใต้แถบคือสถานีที่ระดับน้ำเปลี่ยนมากที่สุด</div>
+    </details>
+  </div>
+
+  <!-- ฝนสะสมวันนี้ · เมื่อวาน: ฝังหน้า naramet.pages.dev/rainfall ทั้งหน้าตามต้นฉบับ (ไม่ได้ประมวลผลข้อมูลเอง) -->
+  <div class="card full" id="rainObsCard">
+    <h2><span class="t-desk">ปริมาณฝนสะสม วันนี้ · เมื่อวาน (สถานีอุตุนิยมวิทยานราธิวาส)</span><span class="t-mob">ฝนตกไปแล้วเท่าไหร่ ? (วันนี้ · เมื่อวาน)</span> <a class="where" href="https://naramet.pages.dev/rainfall" target="_blank" rel="noopener">เปิดหน้าเต็ม ↗</a></h2>
+    <iframe id="roFrame" src="https://naramet.pages.dev/rainfall" title="ปริมาณฝนสะสม สามจังหวัดชายแดนใต้ วันนี้ · เมื่อวาน (naramet)" loading="lazy" referrerpolicy="no-referrer"></iframe>
+    <details class="fold fold-note">
+    <summary>คำอธิบาย</summary>
+    <div class="note">หน้า "ปริมาณฝนสะสม" ของสถานีอุตุนิยมวิทยานราธิวาส (<a href="https://naramet.pages.dev/rainfall" target="_blank" rel="noopener">naramet.pages.dev/rainfall ↗</a>) แสดงทั้งหน้าตามต้นฉบับ: ฝนจากสถานีตรวจอากาศอัตโนมัติ (AWS) กรมอุตุฯ อำเภอละสถานี สามจังหวัดชายแดนใต้ พื้นสีระหว่างสถานีเป็นการประมาณค่าเชิงพื้นที่ (kriging) · กดปุ่ม <b>วันนี้</b> (ตั้งแต่ 07:00 น.) หรือ <b>เมื่อวาน</b> (สะสม 24 ชม.) ที่มุมแผนที่เพื่อสลับวัน · ข้อมูล การอัปเดต และเกณฑ์สีเป็นของต้นทาง · ถ้ากรอบว่างหรือโหลดไม่ขึ้น ให้กด "เปิดหน้าเต็ม" ที่หัวการ์ด</div>
     </details>
   </div>
 
