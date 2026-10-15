@@ -974,7 +974,6 @@ function dirSection(m, cur){
     <g font-size="8.5" style="paint-order:stroke;stroke:var(--card);stroke-width:3px">
       <text x="${X(.5)}" y="${(bY-3).toFixed(1)}" text-anchor="middle" fill="var(--st-danger)">ตลิ่ง ${m.bank.toFixed(2)}</text>
       <text x="${X(.5)}" y="${(wY+9).toFixed(1)}" text-anchor="middle" fill="var(--ink-2)">เฝ้าระวัง ${m.warn.toFixed(2)}</text>
-      ${cur!=null?`<text x="${X(.5)}" y="${Math.min(bot-4, y(cur)+12).toFixed(1)}" text-anchor="middle" font-weight="700" fill="var(--ink)">${cur.toFixed(2)}</text>`:''}
     </g>
     <g font-size="7.5" fill="var(--ink-3)" text-anchor="end">${ticks.map(v=>`<text x="${pl-3}" y="${(y(v)+2.5).toFixed(1)}">${v}</text>`).join('')}</g>
   </svg>`;
