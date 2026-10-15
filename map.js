@@ -48,6 +48,7 @@ th:{
   legOnwrSites:'◎ สถานีเรดาร์ · เส้นประ = รัศมี 240 กม.',
   legZone:'โซนลุ่มน้ำรายอำเภอ',
   gcap:'ระดับน้ำ 3 วันย้อนหลัง (เส้นประแดง = ตลิ่ง)', gload:'กำลังโหลดกราฟ…', gfail:'ไม่สามารถโหลดกราฟได้', gnone:'ไม่มีข้อมูลกราฟ',
+  dwrView:'เปิดระบบโทรมาตร กรมทรัพยากรน้ำ ↗', dwrWarn:'ระดับเฝ้าระวัง (ม.รทก.)', dwrCrit:'ระดับวิกฤต (ม.รทก.)', dwrCam:'ภาพกล้องล่าสุด',
   full:'ดูข้อมูลเต็มที่ thaiwater.net ↗', damfull:'ดูข้อมูลเขื่อนทั้งหมด ↗', seafull:'ดูระดับน้ำชายฝั่งเต็ม ↗',
   rain24:'ฝนสะสม 24 ชม.', storage:'ปริมาณน้ำ (ล้าน ม³)', inflow:'น้ำไหลเข้า (ล้าน ม³/วัน)', outflow:'ระบายออก (ล้าน ม³/วัน)', damlv:'ระดับน้ำ (ม.รทก.)', damdate:'วันที่ข้อมูล', pctcap:'% รนก.',
   seawarn:'แจ้งเตือนคลื่นซัดฝั่ง', seanormal:'สถานการณ์ปกติ', seamon:'ระดับเฝ้าระวัง (ม.)', seamodel:'ข้อมูลแบบจำลอง', seasrc:'แบบจำลองคลื่นซัดฝั่ง สสน.',
@@ -113,6 +114,7 @@ en:{
   legOnwrSites:'◎ Radar site · dashed ring = 240 km range',
   legZone:'District basin zones',
   gcap:'Water level, past 3 days (red dash = bank)', gload:'Loading graph…', gfail:'Could not load graph', gnone:'No graph data',
+  dwrView:'Open DWR telemetry ↗', dwrWarn:'Watch level (m MSL)', dwrCrit:'Critical level (m MSL)', dwrCam:'Latest camera image',
   full:'Full data at thaiwater.net ↗', damfull:'All dam data ↗', seafull:'Full coastal data ↗',
   rain24:'Rain 24 h', storage:'Storage (MCM)', inflow:'Inflow (MCM/day)', outflow:'Released (MCM/day)', damlv:'Level (m MSL)', damdate:'Data date', pctcap:'% capacity',
   seawarn:'Storm-surge warning', seanormal:'Normal', seamon:'Monitoring level (m)', seamodel:'Model run', seasrc:'HII storm-surge model',
@@ -178,6 +180,7 @@ ms:{
   legOnwrSites:'◎ Stesen radar · garis putus = liputan 240 km',
   legZone:'Zon lembangan daerah',
   gcap:'Paras air 3 hari lepas (garis merah = tebing)', gload:'Memuatkan graf…', gfail:'Graf tidak dapat dimuat', gnone:'Tiada data graf',
+  dwrView:'Buka telemetri DWR ↗', dwrWarn:'Paras berjaga-jaga (m MSL)', dwrCrit:'Paras kritikal (m MSL)', dwrCam:'Imej kamera terkini',
   full:'Data penuh di thaiwater.net ↗', damfull:'Semua data empangan ↗', seafull:'Data pantai penuh ↗',
   rain24:'Hujan 24 jam', storage:'Simpanan (juta m³)', inflow:'Aliran masuk (juta m³/hari)', outflow:'Dilepaskan (juta m³/hari)', damlv:'Paras (m MSL)', damdate:'Tarikh data', pctcap:'% kapasiti',
   seawarn:'Amaran ombak besar', seanormal:'Normal', seamon:'Paras pemantauan (m)', seamodel:'Larian model', seasrc:'Model ombak HII',
@@ -941,7 +944,7 @@ async function loadAll(){
   const btn = document.getElementById('btnRefresh');
   btn.classList.add('loading'); btn.disabled = true;
   document.getElementById('updated').textContent = t('loading');
-  const results = await Promise.allSettled([loadWaterLevel(), loadRain(), loadDam(), loadSea(), loadCctv(), loadDdpm(), loadTelerid(), loadFlashFlood(), loadOnwrActive(), loadHyd()]);
+  const results = await Promise.allSettled([loadWaterLevel(), loadDwr(), loadRain(), loadDam(), loadSea(), loadCctv(), loadDdpm(), loadTelerid(), loadFlashFlood(), loadOnwrActive(), loadHyd()]);
   renderHyd();   // thaiwater โหลดเสร็จทีหลังก็ตัดสถานีที่ซ้ำออก
   const fails = results.filter(r=>r.status==='rejected').length;
   const now = new Date().toLocaleString(locale(),{dateStyle:'medium', timeStyle:'short'});
@@ -959,15 +962,12 @@ async function loadWaterLevel(){
   res.forEach(r => { if(r.status==='fulfilled' && Array.isArray(r.value?.data)) rows.push(...r.value.data); });
   if(!rows.length) throw new Error('no wl data');
 
-  gWL.clearLayers(); markersById = {}; wlStations = [];
-  rows.forEach(d => {
+  twWl = rows.map(d => {
     const st = d.station || {};
     const lat = num(st.tele_station_lat), lon = num(st.tele_station_long);
-    if(lat==null || lon==null) return;
+    if(lat==null || lon==null) return null;
     const pct = num(d.storage_percent);
-    const cls = wlClass(pct);
-    const C = WL_CLASSES[cls];
-    const s = {
+    return {
       id: 'wl'+(st.id ?? Math.random()),
       stationId: st.id,
       stationType: d.station_type || 'tele_waterlevel',
@@ -984,14 +984,25 @@ async function loadWaterLevel(){
       diff: num(d.diff_wl_bank),
       diffText: d.diff_wl_bank_text || '',
       discharge: num(d.discharge),
-      pct, cls, lat, lon
+      pct, cls: wlClass(pct), lat, lon
     };
+  }).filter(Boolean);
+  drawWL();
+}
+
+/* ชั้น "ระดับน้ำ" รวม 2 แหล่ง: thaiwater (สสน./ชป.) และโทรมาตร กรมทรัพยากรน้ำ (ทน.)
+   เก็บชุดล่าสุดที่โหลดสำเร็จของแต่ละแหล่งแยกกัน แล้ววาดใหม่ทั้งชั้น · แหล่งไหนล่มก็ยังเห็นอีกแหล่ง */
+let twWl = [], dwrWl = [];
+function drawWL(){
+  gWL.clearLayers(); markersById = {}; wlStations = [];
+  [...twWl, ...dwrWl].forEach(s => {
+    const cls = s.cls, C = WL_CLASSES[cls];
     /* สถานีที่หยุดส่งข้อมูลเกิน 24 ชม. ต้องไม่แสดงเป็นหมุดแดงกะพริบเหมือนกำลังล้นตลิ่งจริง
        ใช้สีเทา ขนาดปกติ ไม่กะพริบ และดันลงไปอยู่ชั้นล่างสุดของหมุด */
     const stale = isStale(s.dt);
     const mColor = stale ? WL_CLASSES.unknown.color : C.color;
     const size = (!stale && (cls==='overflow'||cls==='high')) ? 22 : 16;
-    const m = L.marker([lat,lon], {icon: mkIcon('mk-wl', mColor, size, '', !stale && cls==='overflow'), zIndexOffset:(stale?0:(5-C.order))*100})
+    const m = L.marker([s.lat,s.lon], {icon: mkIcon('mk-wl', mColor, size, '', !stale && cls==='overflow'), zIndexOffset:(stale?0:(5-C.order))*100})
       .bindPopup(()=>wlPopup(s), {maxWidth:300});
     m._sid = s.id;
     m.addTo(gWL);
@@ -1000,6 +1011,83 @@ async function loadWaterLevel(){
   });
   renderSidebar();
   if(typeof applyWlFilter==='function') applyWlFilter();
+}
+
+/* ---------- 1.1) โทรมาตร กรมทรัพยากรน้ำ (telemetry.dwr.go.th) ----------
+   สถานีระดับน้ำของ ทน. ในนราธิวาสที่ thaiwater ไม่มี · API สาธารณะของระบบเปิด CORS ให้หน้าเว็บเรียกได้ตรง (ไม่ต้องผ่าน Worker)
+   ค่าวัดล่าสุด + ตลิ่ง/ท้องน้ำ + เกณฑ์เฝ้าระวัง/วิกฤตของ ทน. + กราฟรายชั่วโมง 5 วัน + ภาพกล้องล่าสุด ในคำขอเดียว
+   รายชื่อสถานีเทียบจาก faonam.com/p/96 (ต.ค. 2569) · มีสถานีใหม่เพิ่มรหัสใน DWR_CODES */
+const DWR_API = 'https://telemetry.dwr.go.th/api';
+const DWR_CODES = ['TA210506'];   // สะพานแม่น้ำสายบุรี ต.ซากอ อ.ศรีสาคร
+// เวลาจาก ทน. เป็น ISO มีโซนเวลา → "YYYY-MM-DD HH:mm" เวลาไทย แบบเดียวกับ thaiwater (isStale ใช้รูปแบบนี้)
+const dwrDt = iso => { const d = new Date(iso); return iso && !isNaN(d) ? new Date(d.getTime()+7*3600e3).toISOString().slice(0,16).replace('T',' ') : ''; };
+async function loadDwr(){
+  const res = await Promise.allSettled(DWR_CODES.map(c => fetchJSON(`${DWR_API}/public/station/getByCode/${encodeURIComponent(c)}`, 30000)));
+  const got = res.map(r => r.status==='fulfilled' ? dwrStation(r.value?.value) : null).filter(Boolean);
+  if(!got.length) throw new Error('no dwr data');
+  dwrWl = got;
+  drawWL();
+}
+function dwrStation(v){
+  const e = v?.fullCon?.entity, cur = v?.stationCurrentData || {};
+  const lat = num(e?.point?.lat), lon = num(e?.point?.lon);
+  if(!e || lat==null || lon==null) return null;
+  const prov = v.fullCon.provinceLabel?.label || '';
+  if(PROV_SET.size && !PROV_SET.has(prov)) return null;
+  /* ค่าที่สูงกว่าระดับติดตั้งเซนเซอร์ (datumMsl) วัดไม่ได้จริง = ค่าผิดพลาด ตัดทิ้ง
+     (เช่น TA210506 15 ต.ค. 69 02:00 กระโดดเป็น 36.49 ม. ชั่วโมงเดียวแล้วกลับ 24.2 ทำกราฟแบน) */
+  const top = num(e.datumMsl);
+  const ok = x => x!=null && (top==null || x < top);
+  const msl = ok(num(cur.wl)) ? num(cur.wl) : null, bed = num(e.bbMsl);
+  const banks = [num(e.lbMsl), num(e.rbMsl)].filter(x => x!=null);
+  const bank = banks.length ? Math.min(...banks) : null;
+  // % ความจุลำน้ำ สูตรเดียวกับ storage_percent ของ thaiwater: (ระดับน้ำ − ท้องน้ำ) / (ตลิ่งต่ำสุด − ท้องน้ำ)
+  const pct = msl!=null && bank!=null && bed!=null && bank > bed ? (msl - bed) / (bank - bed) * 100 : null;
+  const diff = msl!=null && bank!=null ? bank - msl : null;
+  // ค่าก่อนหน้า (ลูกศรแนวโน้ม) = ค่ารายชั่วโมงล่าสุดในกราฟที่วัดก่อนค่าปัจจุบัน
+  const at = new Date(cur.wlTimeStamp).getTime();
+  const past = (v.wlChart?.past || []).map(p => ({t:new Date(p.date).getTime(), v:num(p.value)})).filter(p => ok(p.v));
+  const prev = past.filter(p => p.t < at).pop();
+  return {
+    id: 'dwr'+e.stationCode, src: 'dwr',
+    name: (e.stnNameTh || e.stationCode).trim(),
+    code: e.stationCode,
+    river: e.stream || v.fullCon.subBasin?.label || '',
+    amphoe: v.fullCon.districtLabel?.label || '',
+    prov,
+    agency: 'ทน.',
+    dt: dwrDt(cur.wlTimeStamp),
+    msl, prev: prev ? prev.v : null, bank, diff: diff!=null ? Math.abs(diff) : null,
+    diffText: diff==null ? '' : diff > 0 ? 'ต่ำกว่าตลิ่ง (ม.)' : diff < 0 ? 'ล้นตลิ่ง (ม.)' : 'เท่าระดับตลิ่ง',
+    discharge: num(cur.fr),
+    warn: num(e.wlFw), crit: num(e.wlFc),
+    graph: past.slice(-72),   // 3 วันล่าสุด รายชั่วโมง (ช่วงเดียวกับกราฟสถานี thaiwater)
+    cam: e.cctvEnabled && e.cctvLatestSnapshotPath ? {path: e.cctvLatestSnapshotPath, at: dwrDt(cur.lastUpdateCctv)} : null,
+    pct, cls: wlClass(pct), lat, lon
+  };
+}
+/* ภาพกล้องล่าสุดของสถานี ทน. · ระบบส่งภาพผ่าน POST เท่านั้น (ไม่มี URL ภาพตรง) → แปลงเป็น blob URL
+   เก็บไว้ใช้ซ้ำต่อสถานีจนกว่าภาพจะเปลี่ยน (เปลี่ยนแล้วคืนหน่วยความจำของภาพเก่า)
+   popup จองที่ภาพ 16:9 ไว้ตั้งแต่เปิด ไม่ให้ popup สูงขึ้นทีหลังจนหัว popup ล้นแผนที่ · โหลดไม่ได้ก็เอากรอบออก */
+const dwrCam = {};
+async function dwrLoadCam(s){
+  const img = document.getElementById('cam-'+s.id);
+  if(!img || !s.cam) return;
+  const ctrl = new AbortController(), tm = setTimeout(()=>ctrl.abort(), 20000);
+  try{
+    let c = dwrCam[s.id];
+    if(!c || c.path !== s.cam.path){
+      const r = await fetch(`${DWR_API}/file/image/cctv`, {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({path: s.cam.path}), signal: ctrl.signal});
+      if(!r.ok || !(r.headers.get('content-type')||'').startsWith('image/')) throw new Error('no image');
+      const url = URL.createObjectURL(await r.blob());
+      if(c) URL.revokeObjectURL(c.url);
+      c = dwrCam[s.id] = {path: s.cam.path, url};
+    }
+    img.src = c.url;
+  }catch(err){
+    img.closest('.dwr-cam')?.remove();
+  }finally{ clearTimeout(tm); }
 }
 
 function trendArrow(s){
@@ -1021,13 +1109,20 @@ function wlPopup(s){
     <dt>${t('bank')}</dt><dd>${fmt(s.bank)}</dd>
     <dt>${lang==='th' ? esc(s.diffText||t('diffbank')) : t('diffbank')}</dt><dd>${fmt(s.diff)}</dd>
     ${s.discharge!=null?`<dt>${t('flow')}</dt><dd>${fmt(s.discharge)}</dd>`:''}
+    ${s.warn!=null?`<dt style="color:var(--st-watch)">${t('dwrWarn')}</dt><dd>${fmt(s.warn)}</dd>`:''}
+    ${s.crit!=null?`<dt style="color:var(--st-danger)">${t('dwrCrit')}</dt><dd>${fmt(s.crit)}</dd>`:''}
     <dt>${t('time')}</dt><dd>${esc(s.dt)}</dd>
   </dl>
+  ${s.cam?`<div class="dwr-cam">
+    <img id="cam-${s.id}" alt="${t('dwrCam')} ${esc(s.code)}" style="display:block;width:100%;aspect-ratio:16/9;object-fit:contain;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;background:var(--card-2);margin:6px 0 0" onclick="if(this.src)window.open(this.src,'_blank')">
+    <div style="font-size:10px;color:var(--ink-3)">${t('dwrCam')} ${esc(s.cam.at)}</div></div>`:''}
   <div class="sparkwrap">
     <canvas id="spark-${s.id}" width="260" height="82"></canvas>
     <div class="cap" id="sparkcap-${s.id}">${t('gload')}</div>
   </div>
-  <a class="pp-link" href="https://www.thaiwater.net/water/wl" target="_blank">${t('full')}</a>
+  ${s.src==='dwr'
+    ? `<a class="pp-link" href="https://telemetry.dwr.go.th/" target="_blank" rel="noopener">${t('dwrView')}</a>`
+    : `<a class="pp-link" href="https://www.thaiwater.net/water/wl" target="_blank">${t('full')}</a>`}
   ${/ชป|RID/.test(s.agency)?`<a class="pp-link" href="https://telerid.rid.go.th/#/" target="_blank">${t('teleView')}</a>`:''}`;
 }
 
@@ -1035,11 +1130,19 @@ function wlPopup(s){
 async function onPopupOpen(e){
   const sid = e.popup._source?._sid;
   const s = wlStations.find(x=>x.id===sid);
-  if(!s || !s.stationId) return;
-  const reqId = ++lastGraphReq;
+  if(!s) return;
   const cv = document.getElementById('spark-'+s.id);
   const cap = document.getElementById('sparkcap-'+s.id);
   if(!cv) return;
+  // สถานี ทน.: กราฟมากับข้อมูลสถานีแล้ว วาดได้เลย · ภาพกล้องโหลดตอนเปิด popup
+  if(s.src==='dwr'){
+    drawSpark(cv, s.graph, s.bank);
+    if(cap) cap.textContent = t('gcap');
+    dwrLoadCam(s);
+    return;
+  }
+  if(!s.stationId) return;
+  const reqId = ++lastGraphReq;
   try{
     const end = new Date(), start = new Date(end.getTime()-3*86400000);
     const f = d => d.toISOString().slice(0,10);
