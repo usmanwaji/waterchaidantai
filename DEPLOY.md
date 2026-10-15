@@ -32,7 +32,12 @@ PWA/Service Worker ทำงานเฉพาะบน https (GitHub Pages เ�
 | `ddpm-proxy.worker.js` | `ddpm-proxy` | map.html — ภาพกล้อง ปภ. | `https://ddpm-proxy.<บัญชี>.workers.dev/stations/PTN07` |
 | `tmd-proxy.worker.js` | `tmd-proxy` | index.html — พยากรณ์ 7 วัน TMD + แผนที่ฝนคาดการณ์รายอำเภอ · forecast.html — ฝนคาดการณ์รายอำเภอ + ปุ่มเปิดหน้าแผนที่เสี่ยงภัยรายอำเภอ | `https://tmd-proxy.<บัญชี>.workers.dev/region7days` · `/riskmap` · `/riskmap-district` |
 | `hyd-proxy.worker.js` | `hyd-proxy` | map.html — ชั้น "โทรมาตร ชป.": สถานีอุทกวิทยา ชป. (hyd-app.rid.go.th/hydro8h.html) ที่ thaiwater ไม่มี เช่น X.199 · ต้องเปิด Smart Placement | `https://hyd-proxy.<บัญชี>.workers.dev/stations.json` |
+| `ews-proxy.worker.js` | `ews-proxy` | map.html — ชั้น "◆ เตือนภัย ทน.": สถานีวัดระดับน้ำของระบบเตือนภัยล่วงหน้า กรมทรัพยากรน้ำ (ews1.dwr.go.th) ในนราธิวาส 7 สถานี เช่น STN2155 บ้านไอปาโจ · STN2233 ชุมชนยะกัง | `https://ews-proxy.<บัญชี>.workers.dev/stations.json` |
 | `onwr-proxy.worker.js` | `onwr-proxy` | map.html — 4 ชั้นเรดาร์ สทนช. (เรดาร์ TMD + คาดการณ์ 3 ชม. · ฝนสะสม 3 ชม. ล่วงหน้ารายอำเภอ/ตำบล · ฝนสถานีรายชั่วโมง · สถานีเรดาร์) | `https://onwr-proxy.<บัญชี>.workers.dev/frames` |
+
+`ews-proxy` ดึงรายชื่อสถานีทั้งประเทศจาก ews1.dwr.go.th (~3 MB) แล้วส่งเฉพาะสถานีวัดระดับน้ำในนราธิวาส (~2 KB) แคช 10 นาที
+ews.dwr.go.th ตัดการเชื่อมต่อจาก IP นอกไทย แต่ ews1 เปิดได้จากทุกที่ จึงไม่ต้องเปิด Smart Placement · หน้าแรกของ worker บอกว่าเปิดได้ทางไหน
+ถ้ายังไม่ deploy รอบที่มี `/stations.json` หน้า map จะขึ้น "บางแหล่งข้อมูลโหลดไม่สำเร็จ" เฉพาะชั้นนี้ ชั้นอื่นทำงานปกติ
 
 `onwr-proxy` กรองข้อมูลให้เหลือเฉพาะนราธิวาสก่อนส่ง (ต้นทาง `zones?level=subdistrict` ใหญ่ 8 MB) และแคชผล 5 นาที
 ถ้ายังไม่ deploy หน้า map จะขึ้น "โหลดข้อมูล สทนช. ไม่สำเร็จ" เฉพาะชั้นเหล่านี้ ชั้นอื่นทำงานปกติ
