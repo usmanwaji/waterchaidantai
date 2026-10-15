@@ -28,15 +28,8 @@
   และ /nowcast = รายการภาพฝนระยะสั้น 15 นาที (Southern Nowcasting) ของ satda.tmd.go.th
   (leaflet_layers/layers.json) ต้นทางไม่เปิด CORS จึงส่งต่อให้ · ตัวภาพ PNG หน้าเว็บดึงตรงได้
 
-  และ /rain_today, /rain_yesterday = ฝนสะสมวันนี้ (ตั้งแต่ 07:00) / เมื่อวาน (07:00–07:00)
-  รายสถานีจาก thaiwater (สสน.) สำหรับการ์ด "ฝนสะสมวันนี้ · เมื่อวาน" ใน index.html
-  ต้นทางเปิด CORS อยู่แล้ว แต่ไม่มีตัวกรองจังหวัด (province_code ไม่มีผล) ส่งมาทั้งประเทศ
-  ~4.4 / 5.7 MB จึงกรองเหลือเฉพาะนราธิวาส (~60 สถานี) ด้วยการค้นข้อความ แล้วแคช
-  (ถ้ายังไม่ deploy รุ่นนี้ หน้าเว็บจะดึงตรงจาก thaiwater แล้วกรองเอง — ใช้ได้แต่หนักกว่า)
-
   ทดสอบ:  https://<worker>/region7days   ·   https://<worker>/today   ·   https://<worker>/riskmap
           https://<worker>/riskmap-district   ·   https://<worker>/nowcast
-          https://<worker>/rain_today   ·   https://<worker>/rain_yesterday
   ------------------------------------------------------------------
 */
 
@@ -59,11 +52,6 @@ const HPC_PAGE_CACHE_SECONDS = 900;
 const NOWCAST_UPSTREAM = 'https://satda.tmd.go.th/wp-content/uploads/data/dashboard/radar_map/leaflet_layers/layers.json';
 const NOWCAST_CACHE_SECONDS = 300;
 
-// ฝนสะสมรายสถานี (thaiwater) — สถานี สสน. ส่งค่าทุก 10 นาที · ยอดเมื่อวานนิ่งหลัง 07:00
-const RAIN_UPSTREAM = 'https://api-v3.thaiwater.net/api/v1/thaiwater30/public';
-const RAIN_CACHE_SECONDS = { rain_today: 600, rain_yesterday: 1800 };
-const PROV_CODE = '96';                 // นราธิวาส (รหัสจังหวัดของ thaiwater)
-
 // จำกัด endpoint ที่พิสูจน์แล้วว่าใช้งานได้เท่านั้น
 const ROUTES = {
   region7days: `${UPSTREAM}/WeatherForecast7DaysByRegion/v1/?uid=${UID}&ukey=${UKEY}&format=json`,
@@ -76,9 +64,8 @@ export default {
     if (request.method !== 'GET')     return new Response('Method Not Allowed', { status: 405, headers: cors() });
 
     const path = new URL(request.url).pathname.replace(/^\/+|\/+$/g, '');
-    if (!path) return new Response('TMD proxy OK — ใช้ /region7days, /today, /riskmap /riskmap-district, /nowcast, /rain_today หรือ /rain_yesterday', { headers: cors() });
+    if (!path) return new Response('TMD proxy OK — ใช้ /region7days, /today, /riskmap /riskmap-district หรือ /nowcast', { headers: cors() });
     if (path === 'riskmap') return riskmap(request, ctx);
-    if (Object.hasOwn(RAIN_CACHE_SECONDS, path)) return provRain(path, request, ctx);
     if (path === 'riskmap-district') return riskmapDistrict();
     if (path === 'nowcast') return nowcast();
     if (path.startsWith('static/') || path.startsWith('api/')) return hpcAsset(path);
@@ -180,70 +167,6 @@ async function riskmap(request, ctx) {
   });
   ctx.waitUntil(cache.put(cacheKey, res.clone()));
   return res;
-}
-
-/* ---------- /rain_today, /rain_yesterday : ฝนสะสมรายสถานีของนราธิวาส (thaiwater) ---------- */
-async function provRain(kind, request, ctx) {
-  const ttl = RAIN_CACHE_SECONDS[kind];
-  const cache = caches.default;
-  const cacheKey = new Request(new URL(request.url).origin + '/' + kind, { method: 'GET' });
-  const hit = await cache.match(cacheKey);
-  if (hit) return hit;
-
-  let text;
-  try {
-    const r = await fetch(`${RAIN_UPSTREAM}/${kind}`, {
-      signal: AbortSignal.timeout(25000),
-      headers: { 'Accept': 'application/json' },
-      cf: { cacheTtl: ttl, cacheEverything: true }
-    });
-    if (!r.ok) return new Response('Upstream ' + r.status, { status: 502, headers: cors() });
-    text = await r.text();
-  } catch (e) {
-    return new Response('Upstream fetch failed', { status: 502, headers: cors() });
-  }
-
-  let body;
-  try { body = filterProvRain(text); }
-  catch (e) { return new Response('Filter failed: ' + (e && e.message), { status: 502, headers: cors() }); }
-
-  const res = new Response(body, {
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': `public, max-age=${ttl}`,
-      ...cors()
-    }
-  });
-  ctx.waitUntil(cache.put(cacheKey, res.clone()));
-  return res;
-}
-
-/* รูปแบบต้นทาง {"result":"OK","data":[{...},{...},...]} · element เป็น object ที่ไม่มี array ซ้อน
-   object ข้างในต่อกันแบบ },"key":{ เสมอ จึงมี "},{" เฉพาะรอยต่อระหว่าง element (ตรวจแล้ว 2026-10-15:
-   นับ "},{" ได้ = จำนวน element − 1 ทั้งสองไฟล์) → หา "province_code":"96" ด้วย indexOf แล้วขยาย
-   ไปหารอยต่อสองข้าง ได้ element ทั้งก้อนโดยไม่ต้อง JSON.parse ไฟล์ 5 MB
-   rain_yesterday มี province_code ทั้งชั้นนอกและใน geocode → element เดียวกันเจอสองครั้ง จึงข้ามตัวซ้ำ */
-export function filterProvRain(text) {
-  const KEY = `"province_code":"${PROV_CODE}"`;
-  const di = text.indexOf('"data":[');
-  const end = text.lastIndexOf(']');
-  if (di < 0 || end < di) throw new Error('no data array');
-  const from = di + '"data":['.length;
-  const rows = [];
-  let last = -1;
-  for (let p = text.indexOf(KEY, from); p >= 0 && p < end; p = text.indexOf(KEY, p + KEY.length)) {
-    const sep = text.lastIndexOf('},{', p);
-    const s = sep < from ? from : sep + 2;
-    if (s === last) continue;
-    const next = text.indexOf('},{', p);
-    const e = next < 0 || next > end ? end : next + 1;
-    const row = text.slice(s, e);
-    try { JSON.parse(row); } catch (err) { continue; }
-    rows.push(row);
-    last = s;
-  }
-  if (!rows.length) throw new Error('no rows for province ' + PROV_CODE);
-  return `{"result":"OK","data":[${rows.join(',')}],"filtered":"${PROV_CODE}"}`;
 }
 
 /* ---------- /riskmap-district : หน้าแผนที่เสี่ยงภัยรายอำเภอ (ล็อกนราธิวาส) ----------
