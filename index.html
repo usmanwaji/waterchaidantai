@@ -444,20 +444,9 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     </details>
   </div>
 
-  <!-- แถวนี้จับคู่ "อำเภอที่ต้องเฝ้าระวัง" กับ "เรดาร์ฝน" ไว้ข้างกันครึ่งหน้าจอละใบ
-       อันซ้ายคืออำเภอที่ต้องจับตาในสัปดาห์นี้ อันขวาคือฝนที่กำลังตกอยู่จริงตอนนี้
+  <!-- แถวนี้จับคู่ "เรดาร์ฝน" (ฝนที่กำลังตกตอนนี้) กับ "คาดการณ์ฝนระยะสั้น" ไว้ข้างกันครึ่งหน้าจอละใบ
+       (เดิมเรดาร์คู่กับการ์ด "อำเภอที่ต้องเฝ้าระวังเป็นพิเศษ (7 วันนี้)" ซึ่งถอดออกแล้ว)
        จอแคบกว่า 768px #content เหลือคอลัมน์เดียวอยู่แล้ว จึงวางซ้อนกันเองอัตโนมัติ -->
-  <div class="card">
-    <h2>อำเภอที่ต้องเฝ้าระวังเป็นพิเศษ (7 วันนี้) <span class="where" id="whereAmp"></span></h2>
-    <div id="ampList"><span class="spin"></span> กำลังประเมิน…</div>
-    <details class="fold fold-note">
-    <summary>คำอธิบาย</summary>
-    <div class="note">ระดับความเสี่ยงตั้งต้นจาก <b>ฝนพยากรณ์</b> (Open-Meteo รายอำเภอ) ตามเกณฑ์กรมอุตุฯ: ฝนหนัก ≥35 มม./วัน · ฝนหนักมาก ≥90 มม./วัน · หรือฝนสะสม 3 วันติด ≥70/120/200 มม.<br>
-      <b>ดินอิ่มน้ำ</b> (ฝน 3 วันที่ผ่านมา สสน.) และ <b>สถานีน้ำใกล้ตลิ่ง</b> เป็นตัวยกระดับ ใช้ได้เมื่อมีฝนหนักในพยากรณ์แล้วเท่านั้น — ฝนไม่ตกจึงไม่ขึ้นสีเตือน · สถานีที่ล้นตลิ่งอยู่จริงจะขึ้นสีส้มเสมอ<br>
-      ใช้เกณฑ์ชุดเดียวกับ <a href="forecast.html">หน้าคาดการณ์</a> · คลิกชื่ออำเภอเพื่อดูพยากรณ์เฉพาะจุด</div>
-    </details>
-  </div>
-
   <div class="card" id="radarCard">
     <h2><span class="t-desk">เรดาร์ฝนนราธิวาส (กรมอุตุฯ)</span><span class="t-mob">ตอนนี้ฝนตกที่ไหน ? (เรดาร์ กรมอุตุฯ)</span> <span class="where" id="radarUpdated"></span></h2>
     <div class="fold-body">
@@ -1517,6 +1506,7 @@ document.getElementById('heroShare').addEventListener('click', async ()=>{
 });
 function renderAmphoes(list){
   const el = document.getElementById('ampList');
+  if(!el) return;   // การ์ด "อำเภอที่ต้องเฝ้าระวังเป็นพิเศษ" ถอดออกจากหน้าแล้ว
   const mets = meteoCache[prov];
   if(!mets){ el.innerHTML = '⚠️ โหลดไม่สำเร็จ'; return; }
   /* เกณฑ์อยู่ใน js/criteria.js ชุดเดียวกับหน้าคาดการณ์
@@ -1988,7 +1978,8 @@ document.querySelectorAll('.chip[data-prov]').forEach(b=>{
     b.classList.add('on');
     prov = b.dataset.prov; amp = '';
     if(!meteoCache[prov]){
-      document.getElementById('ampList').innerHTML = '<span class="spin"></span> กำลังประเมิน…';
+      const al = document.getElementById('ampList');
+      if(al) al.innerHTML = '<span class="spin"></span> กำลังประเมิน…';
       try{ await loadMeteo(prov); }catch(e){}
     }
     renderAll();
