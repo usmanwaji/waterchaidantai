@@ -80,151 +80,10 @@ th:{
   • ข้อมูลรีเฟรชอัตโนมัติทุก 10 นาที หรือกดปุ่มรีเฟรชมุมขวาบน
   <h4>แหล่งข้อมูล</h4>
   รวบรวมจาก API สาธารณะ: สสน. (thaiwater.net) · กรมชลประทาน · HII · ลิงก์ CCTV ปภ. และโทรมาตรกรมชลฯ ในหมุดกล้อง`
-},
-en:{
-  title:'One Map · Southern Border Water Watch', sub:'All agencies, one map',
-  refresh:'Refresh', loading:'Loading…', updated:'Last updated', partial:'some sources failed to load',
-  search:'Search station / river / district…', all:'All', listEmpty:'No stations match',
-  lyWL:'Water level', lyRain:'◼ Rain 24 h', lyDam:'Dams', lySea:'Sea level', lyCctv:'CCTV', lyTele:'▲ RID telemetry', lyRisk:'Flash-flood risk', lyZone:'District basin zones',
-  lyEws:'◆ DWR early warning', ewsSrc:'Dept of Water Resources (early warning system)', ewsLv:'Water level (m)', ewsAvg:'Today\'s average (m)', ewsDiff:'vs average', ewsRain15:'Rain 15 min (mm)', ewsRain12:'Rain 12 h (mm)',
-  ewsSt0:'Normal', ewsSt1:'Watch', ewsSt2:'Prepare', ewsSt3:'Critical', ewsBy:'Alert from', ewsVill:'Villages covered', ewsOld:'old reading', ewsView:'Open DWR early warning ↗',
-  ewsNote:'Level is read from the station gauge zero (not m MSL) · no bank level in this system; marker colour follows the DWR alert status.',
-  teleSrc:'Royal Irrigation Dept', teleProj:'Irrigation project', teleView:'Open RID telemetry ↗',
-  extDdpm:'DDPM CCTV ↗', extTelerid:'▲ RID telemetry ↗',
-  lyDdpm:'DDPM CCTV', ddpmSrc:'DDPM disaster surveillance system', ddpmCoord:'Coordinates (lat, lon)',
-  ddpmWL:'Current water level (m)', ddpmCam:'Camera status', camOn:'Online', camOff:'Offline', ddpmTel:'Phone',
-  ddpmLow:'Low', ddpmMed:'Medium', ddpmHigh:'High · watch', ddpmCrit:'Critical',
-  ddpmOpen:'View source at cctv.disaster.go.th', ddpmNewTabLbl:'Open in new tab ↗',
-  ddpmModalTitle:'DDPM Disaster Surveillance (cctv.disaster.go.th)',
-  ddpmNoteTxt:'If the frame above is blank, the DDPM site blocks embedding · use "Open in new tab" instead.',
-  report:'Copy situation report', copied:'Report copied · paste into LINE/documents',
-  wl_overflow:'Overflow', wl_high:'High', wl_normal:'Normal', wl_low:'Low', wl_critlow:'Critically low', wl_unknown:'No data',
-  rain_none:'No rain', rain_light:'Light rain', rain_mod:'Moderate rain', rain_heavy:'Heavy rain', rain_vheavy:'Very heavy rain',
-  dam_over:'Over capacity', dam_watch:'High · watch', dam_much:'High', dam_normal:'Normal', dam_low:'Low', nodata:'No data',
-  lv:'Water level (m MSL)', bank:'Bank level (m MSL)', diffbank:'Distance to bank (m)', flow:'Discharge (m³/s)', time:'Measured',
-  up:'▲ rising', down:'▼ falling', steady:'▬ steady', stale:'Data older than 24 h',
-  wl_nodata:'No current data',
-  lyRadar:'Rain radar', radarPlay:'Play/pause loop', radarNow:'latest',
-  radarLoading:'Loading radar…', radarFail:'Radar unavailable',
-  onwrCap:'ONWR radar data · wam.onwr.go.th', lyOnwrRadar:'TMD radar + 3 h nowcast', lyOnwrAccum:'3 h rain ahead',
-  lyOnwrRain:'Hourly gauge rain', lyOnwrSites:'Radar sites', lyOnwrLabels:'Labels',
-  sgDist:'District', sgSub:'Subdistrict', sgDots:'Dots', sgHeat:'Heat', sgW1:'1 h', sgW24:'24 h',
-  onwrObs:'observed', onwrFc:'forecast', onwrBase:'Base time', onwrStale:'stale', onwrMin:'min', onwrMm:'mm', onwrKm:'km',
-  onwrLoading:'Loading ONWR data…', onwrFail:'ONWR data unavailable (check onwr-proxy)', onwrUseLongdo:'ONWR radar is down — switched to the Longdo "Rain radar" layer', onwrNoNowcast:'No nowcast in this cycle yet',
-  onwrAccMax:'Max 3 h rain ahead', onwrAccMean:'Area mean', onwrPeak:'Peak intensity (mm/h)', onwrRaining:'Already raining',
-  onwrOnset:'Rain expected to start in', onwrNoRadar:'No radar data for this area', onwrCov:'Radar covers only',
-  onwrRainNow:'Last 1 h rain', onwrRain12:'12 h', onwrRain24:'24 h', onwrLastObs:'Last observed', onwrHist:'Last 6 hours, hourly (mm)',
-  onwrDerived:'estimated', onwrAgency:'Agency',
-  onwrSiteType:'Radar type', onwrSiteRadius:'Range', onwrSiteSrc:'TMD via ONWR',
-  legOnwrRadar:'TMD radar (mm/h)', legOnwrAccum:'3 h rain ahead (mm)', legOnwrRain1:'Gauge rain 1 h (mm)', legOnwrRain24:'Gauge rain 24 h (mm)',
-  legOnwrSites:'◎ Radar site · dashed ring = 240 km range',
-  legZone:'District basin zones',
-  gcap:'Water level, past 3 days (red dash = bank)', gload:'Loading graph…', gfail:'Could not load graph', gnone:'No graph data',
-  dwrView:'Open DWR telemetry ↗', dwrWarn:'Watch level (m MSL)', dwrCrit:'Critical level (m MSL)', dwrCam:'Latest camera image',
-  full:'Full data at thaiwater.net ↗', damfull:'All dam data ↗', seafull:'Full coastal data ↗',
-  rain24:'Rain 24 h', storage:'Storage (MCM)', inflow:'Inflow (MCM/day)', outflow:'Released (MCM/day)', damlv:'Level (m MSL)', damdate:'Data date', pctcap:'% capacity',
-  seawarn:'Storm-surge warning', seanormal:'Normal', seamon:'Monitoring level (m)', seamodel:'Model run', seasrc:'HII storm-surge model',
-  cctvView:'Open live view ↗', cctvNote:'More cameras:', cctvDdpm:'DDPM CCTV', cctvRid:'RID telemetry',
-  riskTitle:'Flash-flood risk, next 24 h', riskRain:'Accum. rain (mm)', riskSrc:'Source: HII',
-  bannerFF:'<b>Flash-flood watch, next 24 h:</b>', andMore:'and more',
-  legBtn:'Legend', legWL:'Water level (% channel capacity)', legRain:'◼ Rain, 24 h', legOther:'Dam · 🌊 Sea · 📷 CCTV · ▲ Telemetry · ◆ DWR warning · ⚠ Risk',
-  legR1:'Light ≤10 mm', legR2:'Moderate 10-35 mm', legR3:'Heavy 35-90 mm', legR4:'Very heavy >90 mm',
-  src:'Sources:', note:'Trial version under improvement · suggestions/corrections: <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a>',
-  rpTitle:'Water situation report · Narathiwat', rpStations:'stations', rpCrit:'Priority stations:', rpNoCrit:'No overflow/high stations', rpRainMax:'Max rain 24 h:', rpDam:'Dams/reservoirs:', rpRisk:'Flash-flood risk areas:', rpSrc:'Source: thaiwater.net (HII)',
-  prov:{'สตูล':'Satun','สงขลา':'Songkhla','ปัตตานี':'Pattani','ยะลา':'Yala','นราธิวาส':'Narathiwat'},
-  help:'How to use', helpTitle:'How to use this map',
-  helpBody:`
-  <h4>Map symbols</h4>
-  ⚫ Circle = water-level station, coloured by % of channel capacity (green normal · yellow/brown low · blue high · <b style="color:var(--st-danger)">blinking red = overflowing</b>)<br>
-  ◼ Square = 24-h rainfall · 🔻 dam/reservoir · 🌊 coastal sea level · 📷 CCTV · ▲ RID telemetry station · ⚠ flash-flood risk spot (HII model)
-  <h4>Using the map</h4>
-  • Click any point for details + a 3-day water-level graph (red dash = bank level)<br>
-  • Province buttons zoom & filter · search box finds stations/rivers/districts<br>
-  • Click a coloured summary card to filter by status (click again to clear)<br>
-  • Tick ☑ boxes to toggle each data layer<br>
-  • The ◀ button beside the panel hides/shows it for a full-screen map
-  <h4>Tools for officials</h4>
-  • 📋 Copy situation report = summary of critical stations/rain/dams, ready to paste into LINE<br>
-  • ⏱ yellow tag = station data older than 24 h · verify before citing<br>
-  • Data auto-refreshes every 10 minutes, or press Refresh
-  <h4>Data sources</h4>
-  Public APIs: HII (thaiwater.net) · Royal Irrigation Dept · DDPM CCTV & RID telemetry links in camera pins`
-},
-ms:{
-  title:'One Map · Paras Air Selatan Thai', sub:'Semua agensi, satu peta',
-  refresh:'Muat semula', loading:'Memuatkan…', updated:'Kemas kini terakhir', partial:'sebahagian sumber gagal dimuat',
-  search:'Cari stesen / sungai / daerah…', all:'Semua', listEmpty:'Tiada stesen sepadan',
-  lyWL:'Paras air', lyRain:'◼ Hujan 24 j', lyDam:'Empangan', lySea:'Paras laut', lyCctv:'CCTV', lyTele:'▲ Telemetri RID', lyRisk:'Risiko banjir kilat', lyZone:'Zon lembangan daerah',
-  lyEws:'◆ Amaran awal DWR', ewsSrc:'Jabatan Sumber Air (sistem amaran awal)', ewsLv:'Paras air (m)', ewsAvg:'Purata hari ini (m)', ewsDiff:'berbanding purata', ewsRain15:'Hujan 15 minit (mm)', ewsRain12:'Hujan 12 jam (mm)',
-  ewsSt0:'Normal', ewsSt1:'Berjaga-jaga', ewsSt2:'Bersedia', ewsSt3:'Kritikal', ewsBy:'Amaran daripada', ewsVill:'Kampung diliputi', ewsOld:'bacaan lama', ewsView:'Buka amaran awal DWR ↗',
-  ewsNote:'Paras dibaca dari sifar tolok stesen (bukan m MSL) · tiada paras tebing dalam sistem ini; warna penanda ikut status amaran DWR.',
-  teleSrc:'Jabatan Pengairan', teleProj:'Projek pengairan', teleView:'Buka telemetri RID ↗',
-  extDdpm:'CCTV DDPM ↗', extTelerid:'▲ Telemetri RID ↗',
-  lyDdpm:'CCTV DDPM', ddpmSrc:'Sistem pemantauan bencana DDPM', ddpmCoord:'Koordinat (lat, lon)',
-  ddpmWL:'Paras air semasa (m)', ddpmCam:'Status kamera', camOn:'Dalam talian', camOff:'Luar talian', ddpmTel:'Telefon',
-  ddpmLow:'Rendah', ddpmMed:'Sederhana', ddpmHigh:'Tinggi · berjaga', ddpmCrit:'Kritikal',
-  ddpmOpen:'Lihat sumber di cctv.disaster.go.th', ddpmNewTabLbl:'Buka tab baharu ↗',
-  ddpmModalTitle:'Pemantauan Bencana DDPM (cctv.disaster.go.th)',
-  ddpmNoteTxt:'Jika bingkai di atas kosong, laman DDPM menyekat pembenaman · guna "Buka tab baharu".',
-  report:'Salin laporan situasi', copied:'Laporan disalin · tampal ke LINE/dokumen',
-  wl_overflow:'Melimpah tebing', wl_high:'Paras tinggi', wl_normal:'Normal', wl_low:'Paras rendah', wl_critlow:'Kritikal rendah', wl_unknown:'Tiada data',
-  rain_none:'Tiada hujan', rain_light:'Hujan ringan', rain_mod:'Hujan sederhana', rain_heavy:'Hujan lebat', rain_vheavy:'Hujan sangat lebat',
-  dam_over:'Melebihi kapasiti', dam_watch:'Tinggi · berjaga-jaga', dam_much:'Tinggi', dam_normal:'Normal', dam_low:'Rendah', nodata:'Tiada data',
-  lv:'Paras air (m MSL)', bank:'Paras tebing (m MSL)', diffbank:'Jarak ke tebing (m)', flow:'Kadar aliran (m³/s)', time:'Masa cerapan',
-  up:'▲ meningkat', down:'▼ menurun', steady:'▬ stabil', stale:'Data melebihi 24 jam',
-  wl_nodata:'Tiada data semasa',
-  lyRadar:'Radar hujan', radarPlay:'Main/henti ulangan', radarNow:'terkini',
-  radarLoading:'Memuatkan radar…', radarFail:'Radar tidak tersedia',
-  onwrCap:'Data radar ONWR · wam.onwr.go.th', lyOnwrRadar:'Radar TMD + ramalan 3 jam', lyOnwrAccum:'Hujan 3 jam akan datang',
-  lyOnwrRain:'Hujan stesen sejam', lyOnwrSites:'Stesen radar', lyOnwrLabels:'Label',
-  sgDist:'Daerah', sgSub:'Mukim', sgDots:'Titik', sgHeat:'Heat', sgW1:'1 jam', sgW24:'24 jam',
-  onwrObs:'cerapan', onwrFc:'ramalan', onwrBase:'Masa asas', onwrStale:'data lama', onwrMin:'minit', onwrMm:'mm', onwrKm:'km',
-  onwrLoading:'Memuatkan data ONWR…', onwrFail:'Data ONWR tidak tersedia (semak onwr-proxy)', onwrUseLongdo:'Radar ONWR tidak tersedia — ditukar ke lapisan "Radar hujan" Longdo', onwrNoNowcast:'Belum ada ramalan untuk kitaran ini',
-  onwrAccMax:'Hujan 3 jam akan datang (maks)', onwrAccMean:'Purata kawasan', onwrPeak:'Keamatan puncak (mm/j)', onwrRaining:'Sudah hujan',
-  onwrOnset:'Hujan dijangka mula dalam', onwrNoRadar:'Tiada data radar di kawasan ini', onwrCov:'Radar meliputi hanya',
-  onwrRainNow:'Hujan 1 jam terkini', onwrRain12:'12 jam', onwrRain24:'24 jam', onwrLastObs:'Cerapan terakhir', onwrHist:'6 jam terakhir, setiap jam (mm)',
-  onwrDerived:'anggaran', onwrAgency:'Agensi',
-  onwrSiteType:'Jenis radar', onwrSiteRadius:'Jarak liputan', onwrSiteSrc:'TMD melalui ONWR',
-  legOnwrRadar:'Radar TMD (mm/j)', legOnwrAccum:'Hujan 3 jam akan datang (mm)', legOnwrRain1:'Hujan stesen 1 jam (mm)', legOnwrRain24:'Hujan stesen 24 jam (mm)',
-  legOnwrSites:'◎ Stesen radar · garis putus = liputan 240 km',
-  legZone:'Zon lembangan daerah',
-  gcap:'Paras air 3 hari lepas (garis merah = tebing)', gload:'Memuatkan graf…', gfail:'Graf tidak dapat dimuat', gnone:'Tiada data graf',
-  dwrView:'Buka telemetri DWR ↗', dwrWarn:'Paras berjaga-jaga (m MSL)', dwrCrit:'Paras kritikal (m MSL)', dwrCam:'Imej kamera terkini',
-  full:'Data penuh di thaiwater.net ↗', damfull:'Semua data empangan ↗', seafull:'Data pantai penuh ↗',
-  rain24:'Hujan 24 jam', storage:'Simpanan (juta m³)', inflow:'Aliran masuk (juta m³/hari)', outflow:'Dilepaskan (juta m³/hari)', damlv:'Paras (m MSL)', damdate:'Tarikh data', pctcap:'% kapasiti',
-  seawarn:'Amaran ombak besar', seanormal:'Normal', seamon:'Paras pemantauan (m)', seamodel:'Larian model', seasrc:'Model ombak HII',
-  cctvView:'Buka paparan langsung ↗', cctvNote:'Kamera lain:', cctvDdpm:'CCTV DDPM', cctvRid:'Telemetri RID',
-  riskTitle:'Risiko banjir kilat, 24 jam akan datang', riskRain:'Hujan terkumpul (mm)', riskSrc:'Sumber: HII',
-  bannerFF:'<b>Amaran banjir kilat 24 jam akan datang:</b>', andMore:'dan lain-lain',
-  legBtn:'Petunjuk', legWL:'Paras air (% kapasiti sungai)', legRain:'◼ Hujan 24 jam', legOther:'Empangan · 🌊 Laut · 📷 CCTV · ▲ Telemetri · ◆ Amaran DWR · ⚠ Risiko',
-  legR1:'Ringan ≤10 mm', legR2:'Sederhana 10-35 mm', legR3:'Lebat 35-90 mm', legR4:'Sangat lebat >90 mm',
-  src:'Sumber:', note:'Versi percubaan dalam penambahbaikan · cadangan/pembetulan: <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a>',
-  rpTitle:'Laporan situasi air · Narathiwat', rpStations:'stesen', rpCrit:'Stesen keutamaan:', rpNoCrit:'Tiada stesen melimpah/tinggi', rpRainMax:'Hujan 24 j tertinggi:', rpDam:'Empangan:', rpRisk:'Kawasan risiko banjir kilat:', rpSrc:'Sumber: thaiwater.net (HII)',
-  prov:{'สตูล':'Satun','สงขลา':'Songkhla','ปัตตานี':'Patani','ยะลา':'Yala','นราธิวาส':'Narathiwat'},
-  help:'Panduan', helpTitle:'Cara guna peta ini',
-  helpBody:`
-  <h4>Simbol peta</h4>
-  ⚫ Bulatan = stesen paras air, warna ikut % kapasiti sungai (hijau normal · kuning/perang rendah · biru tinggi · <b style="color:var(--st-danger)">merah berkelip = melimpah tebing</b>)<br>
-  ◼ Petak = hujan 24 jam · 🔻 empangan · 🌊 paras laut pantai · 📷 CCTV · ▲ stesen telemetri RID · ⚠ titik risiko banjir kilat (model HII)
-  <h4>Cara guna</h4>
-  • Klik mana-mana titik untuk butiran + graf paras air 3 hari (garis merah = paras tebing)<br>
-  • Butang wilayah = zum & tapis · kotak carian = cari stesen/sungai/daerah<br>
-  • Klik kad ringkasan berwarna untuk tapis ikut status (klik lagi untuk batal)<br>
-  • Tanda ☑ untuk buka/tutup setiap lapisan data<br>
-  • Butang ◀ di tepi panel menyorok/memapar panel untuk peta penuh
-  <h4>Alat untuk pegawai</h4>
-  • 📋 Salin laporan situasi = ringkasan stesen kritikal/hujan/empangan, sedia tampal ke LINE<br>
-  • ⏱ tag kuning = data stesen melebihi 24 jam · sahkan sebelum rujuk<br>
-  • Data dimuat semula automatik setiap 10 minit
-  <h4>Sumber data</h4>
-  API awam: HII (thaiwater.net) · Jabatan Pengairan Diraja · pautan CCTV DDPM & telemetri RID dalam pin kamera`
 }};
-let lang = 'th';
-try{ lang = localStorage.getItem('onemap_lang') || 'th'; }catch(e){}
-if(!STR[lang]) lang = 'th';
-const t = k => STR[lang][k] ?? STR.th[k] ?? k;
-const tProv = p => STR[lang].prov[p] || p;
-const locale = () => lang==='th' ? 'th-TH' : 'en-GB';
+const t = k => STR.th[k] ?? k;
+const tProv = p => STR.th.prov[p] || p;
+const locale = () => 'th-TH';
 
 /* ================= เกณฑ์สถานะ ================= */
 const WL_CLASSES = {
@@ -412,6 +271,7 @@ setInterval(async ()=>{
       const bar = document.getElementById('radarBar');
       if(bar) bar.innerHTML = `<div class="rdrow"><span class="rdinfo">${t('radarLoading')}</span></div>`;
       if(!radarFrames.length) await loadRadarFrames();
+      if(!cb.checked) return;                               // ถูกปิดไปแล้วระหว่างโหลด (เช่น ปิดสถานีเรดาร์ทันที)
       if(!radarFrames.length){ renderRadarBar(); return; }
       showRadarFrame(radarIdx<0 ? radarFrames.length-1 : radarIdx);
     }else{
@@ -450,7 +310,7 @@ const ONWR = {
   frames:null, idx:-1, layer:null, timer:null,            // 1) เรดาร์
   level:'district', geo:{}, zones:{}, accumLayer:null,     // 2) ฝนสะสม
   rain:null, rainMode:'dots', rainWin:'1h', rainLayer:null, // 3) ฝนสถานี
-  sitesLayer:null, labels:true                             // 4) สถานีเรดาร์
+  sitesLayer:null, labels:true, sitesRadar:false           // 4) สถานีเรดาร์ · sitesRadar = เมฆฝน Longdo ถูกเปิดโดยปุ่มนี้
 };
 const onwrEl = id => document.getElementById(id);
 const onwrOn = id => { const cb = onwrEl(id); return !!(cb && cb.checked); };
@@ -575,7 +435,7 @@ async function onwrLoadZones(level){
   }
   ONWR.geo[level] = geo; ONWR.zones[level] = st;
 }
-const onwrZoneName = p => (lang==='th' ? p.name_th : p.name_en) || p.name_th || '';
+const onwrZoneName = p => p.name_th || '';
 const ONWR_UNFILLED = {color:'#8b949e', weight:.7, opacity:.35, fillOpacity:0};
 function onwrAccumStyle(feat){
   const st = ONWR.zones[ONWR.level], rec = st?._acc.get(feat.properties.pcode);
@@ -588,7 +448,7 @@ function onwrAccumStyle(feat){
 /* full=false → tooltip สั้น (hover) · full=true → popup (คลิก) มีความแรงสูงสุด/เวลาเริ่มตก/คำเตือนความครอบคลุม */
 function onwrAccumInfo(feat, full){
   const p = feat.properties, st = ONWR.zones[ONWR.level], A = st?.accum;
-  const sub = p.district_th ? ` <span style="color:var(--muted)">${esc(lang==='th' ? 'อ.'+p.district_th : p.district_en)}</span>` : '';
+  const sub = p.district_th ? ` <span style="color:var(--muted)">${esc('อ.'+p.district_th)}</span>` : '';
   const head = `<b>${esc(onwrZoneName(p))}</b>${sub}`;
   const rec = st?._acc.get(p.pcode);
   if(!A || !rec || !rec.covered_px || rec.max_mm==null) return `${head}<br><span style="color:var(--muted)">${A ? t('onwrNoRadar') : t('onwrNoNowcast')}</span>`;
@@ -735,7 +595,7 @@ function onwrBuildSites(){
   if(ONWR.sitesLayer){ map.removeLayer(ONWR.sitesLayer); ONWR.sitesLayer=null; }
   const g = L.layerGroup();
   for(const s of ONWR_SITES){
-    const name = lang==='th' ? s.name : s.en;
+    const name = s.name;
     L.circle([s.lat,s.lon], {pane:'onwrSites', radius:s.r, color:'#475569', weight:1.2, opacity:.7, dashArray:'6 4',
       fill:true, fillColor:'#475569', fillOpacity:.03, interactive:false}).addTo(g);
     const m = L.circleMarker([s.lat,s.lon], {pane:'onwrDots', radius:7, color:'#fff', weight:2, fillColor:'#142256', fillOpacity:1})
@@ -747,9 +607,22 @@ function onwrBuildSites(){
   }
   ONWR.sitesLayer = g.addTo(map);
 }
+/* เปิดสถานีเรดาร์ = แสดงเมฆฝนจากเรดาร์ Longdo (weather.longdo.com) ด้วย ถ้ายังไม่มีเรดาร์ชั้นใดเปิดอยู่
+   (ถ้าเปิดเรดาร์ TMD ของ สทนช. อยู่แล้วก็เห็นเมฆฝนอยู่แล้ว ไม่สลับให้) · ปิดสถานีเรดาร์ = ปิดเมฆฝนคืนเฉพาะที่ปุ่มนี้เปิดให้
+   ผู้ใช้สลับ "เรดาร์ฝน" เองระหว่างนั้น → ล้าง sitesRadar (ดูตัวฟังใน setupOnwr) จะได้ไม่ไปปิดชั้นที่ผู้ใช้ตั้งใจเปิด */
 function onwrSetSites(on){
-  if(on) onwrBuildSites();
-  else if(ONWR.sitesLayer){ map.removeLayer(ONWR.sitesLayer); ONWR.sitesLayer=null; }
+  const lg = onwrEl('lyRadar');
+  if(on){
+    onwrBuildSites();
+    if(lg && !lg.checked && !onwrOn('lyOnwrRadar')){
+      lg.checked = true; lg.dispatchEvent(new Event('change'));
+      ONWR.sitesRadar = true;
+    }
+  }else{
+    if(ONWR.sitesLayer){ map.removeLayer(ONWR.sitesLayer); ONWR.sitesLayer=null; }
+    if(ONWR.sitesRadar && lg && lg.checked){ lg.checked = false; lg.dispatchEvent(new Event('change')); }
+    ONWR.sitesRadar = false;
+  }
   buildLegend();
 }
 function onwrSetLabels(on){ ONWR.labels = on; if(ONWR.sitesLayer) onwrBuildSites(); }
@@ -796,7 +669,10 @@ async function loadOnwrActive(){
   wire('lyOnwrSites', onwrSetSites); wire('lyOnwrLabels', onwrSetLabels);
   // เปิดเรดาร์ Longdo → ปิดเรดาร์ สทนช. (คู่กับ onwrSetRadar)
   const lg = onwrEl('lyRadar');
-  if(lg) lg.addEventListener('change', e => { if(e.target.checked && onwrOn('lyOnwrRadar')){ onwrEl('lyOnwrRadar').checked=false; onwrSetRadar(false); } });
+  if(lg) lg.addEventListener('change', e => {
+    ONWR.sitesRadar = false;                                 // ชั้นเรดาร์ Longdo เปลี่ยนสถานะ → ไม่ถือว่าปุ่มสถานีเรดาร์เป็นเจ้าของอีก (onwrSetSites ตั้งคืนหลัง dispatch)
+    if(e.target.checked && onwrOn('lyOnwrRadar')){ onwrEl('lyOnwrRadar').checked=false; onwrSetRadar(false); }
+  });
   document.querySelectorAll('#onwrLevelSeg button').forEach(b => b.onclick = () => onwrSetLevel(b.dataset.level));
   document.querySelectorAll('#onwrRainSeg button').forEach(b => b.onclick = () => onwrSetRainMode(b.dataset.mode));
   document.querySelectorAll('#onwrWinSeg button').forEach(b => b.onclick = () => onwrSetRainWin(b.dataset.win));
@@ -814,7 +690,7 @@ const ZONES = [
   {th:'ลุ่มน้ำสุไหงโก-ลก',  en:'Su-ngai Kolok basin', ms:'Lembangan Sungai Golok', fill:'#c4b5fd', line:'#db2777', pcodes:['TH9611','TH9610','TH9608']}   // สุไหงปาดี สุไหงโก-ลก แว้ง
 ];
 const ZONE_BY_PCODE = new Map(ZONES.flatMap(z => z.pcodes.map(c => [c, z])));
-const zoneName = z => z[lang] || z.th;
+const zoneName = z => z.th;
 map.createPane('zones'); map.getPane('zones').style.zIndex = 240;   // ใต้เรดาร์ (250) และขอบจังหวัด (350)
 let zoneLayer = null;
 async function zoneBuild(){
@@ -826,7 +702,7 @@ async function zoneBuild(){
       return z ? {color:z.line, weight:2, opacity:.9, fillColor:z.fill, fillOpacity:.35} : ONWR_UNFILLED; },
     onEachFeature: (f,l) => l.bindTooltip(() => {
       const z = ZONE_BY_PCODE.get(f.properties.pcode);
-      return `<b>${esc((lang==='th' ? 'อ.' : '') + onwrZoneName(f.properties))}</b>${z ? `<br>${esc(zoneName(z))}` : ''}`;
+      return `<b>${esc('อ.' + onwrZoneName(f.properties))}</b>${z ? `<br>${esc(zoneName(z))}` : ''}`;
     }, {sticky:true})
   }).addTo(map);
   buildLegend();
@@ -1117,7 +993,7 @@ function wlPopup(s){
   <dl class="pp-grid">
     <dt>${t('lv')}</dt><dd>${fmt(s.msl)}${trendArrow(s)}</dd>
     <dt>${t('bank')}</dt><dd>${fmt(s.bank)}</dd>
-    <dt>${lang==='th' ? esc(s.diffText||t('diffbank')) : t('diffbank')}</dt><dd>${fmt(s.diff)}</dd>
+    <dt>${esc(s.diffText||t('diffbank'))}</dt><dd>${fmt(s.diff)}</dd>
     ${s.discharge!=null?`<dt>${t('flow')}</dt><dd>${fmt(s.discharge)}</dd>`:''}
     ${s.warn!=null?`<dt style="color:var(--st-watch)">${t('dwrWarn')}</dt><dd>${fmt(s.warn)}</dd>`:''}
     ${s.crit!=null?`<dt style="color:var(--st-danger)">${t('dwrCrit')}</dt><dd>${fmt(s.crit)}</dd>`:''}
@@ -1802,7 +1678,7 @@ function ewsPopup(d, old){
   <dl class="pp-grid">
     <dt>${t('ewsLv')}</dt><dd><b style="${old?'color:var(--ink-3)':''}">${fmt(d.level)}</b>${old?` <span style="font-size:10.5px;color:var(--st-watch)">(${t('ewsOld')})</span>`:''}</dd>
     ${d.dailyAvg!=null && !old?`<dt>${t('ewsAvg')}</dt><dd>${fmt(d.dailyAvg)}</dd>`:''}
-    ${diff!=null && !old?`<dt>${t('ewsDiff')}</dt><dd>${diff>=0?'+':''}${diff.toFixed(2)} ${lang==='th'?'ม.':'m'}</dd>`:''}
+    ${diff!=null && !old?`<dt>${t('ewsDiff')}</dt><dd>${diff>=0?'+':''}${diff.toFixed(2)} ม.</dd>`:''}
     ${d.rain15!=null && !old?`<dt>${t('ewsRain15')}</dt><dd>${fmt(d.rain15,1)}</dd>`:''}
     ${d.rain12h!=null && !old?`<dt>${t('ewsRain12')}</dt><dd>${fmt(d.rain12h,1)}</dd>`:''}
     <dt>${t('time')}</dt><dd>${esc(at)}</dd>
@@ -2092,9 +1968,8 @@ function fallbackCopy(text,done){
   ta.select(); try{document.execCommand('copy'); done();}catch(e){} document.body.removeChild(ta);
 }
 
-/* ================= สลับภาษา ================= */
+/* ================= ข้อความบนหน้า ================= */
 function applyLang(){
-  document.documentElement.lang = lang;
   document.getElementById('hTitle').innerHTML = `${t('title')}<small id="hSub">${t('sub')}</small>`;
   document.getElementById('btnRefreshTxt').textContent = t('refresh');
   document.getElementById('search').placeholder = t('search');
@@ -2121,18 +1996,6 @@ function applyLang(){
   buildLegend();
   renderSidebar();
 }
-document.querySelectorAll('.langbtn').forEach(b=>{
-  b.onclick = () => {
-    document.querySelectorAll('.langbtn').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    lang = b.dataset.lang;
-    try{ localStorage.setItem('onemap_lang', lang); }catch(e){}
-    applyLang();
-    loadBoundaries();        // วาดป้ายชื่อจังหวัดใหม่ตามภาษา (ใช้ cache เบราว์เซอร์)
-    loadFlashFlood();        // แบนเนอร์ตามภาษา
-  };
-});
-document.querySelectorAll('.langbtn').forEach(b=>b.classList.toggle('active', b.dataset.lang===lang));
 
 /* ================= เริ่มทำงาน ================= */
 applyLang();
