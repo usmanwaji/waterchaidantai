@@ -156,9 +156,11 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .wtaEmpty{font-size:12.5px;color:var(--ink-3);padding:6px 0}
 .wtaNear{display:inline-block;font-size:10.5px;font-weight:600;color:var(--ink-2);background:var(--card-2);border:1px dashed var(--outline-strong);border-radius:99px;padding:1px 8px;margin-bottom:3px}
 
-/* ฝนสะสมวันนี้ · เมื่อวาน: ฝังหน้า naramet.pages.dev/rainfall ทั้งหน้า (แผนที่ + ปุ่มวันนี้/เมื่อวาน ของต้นทาง) */
-#roFrame{display:block;width:100%;height:760px;border:1px solid var(--outline);border-radius:10px;background:#fff}
-@media(max-width:768px){#roFrame{height:min(680px,85vh)}}
+/* ฝนสะสมวันนี้ · เมื่อวาน: ฝังหน้า naramet.pages.dev/rainfall ทั้งหน้า (แผนที่ + ปุ่มวันนี้/เมื่อวาน ของต้นทาง)
+   ต้นทางกำหนดความสูงแผนที่เป็น vh (70% จอใหญ่ · 55% มือถือ) ซึ่งในกรอบ = % ของความสูงกรอบ
+   ส่วนหัว/แถบสีอีก ~250–370 px จึงต้องสูงอย่างน้อย ~820 px ทั้งหน้าถึงจะพอดีกรอบ ไม่มีแถบเลื่อนซ้อนในกรอบ */
+#roFrame{display:block;width:100%;height:840px;border:1px solid var(--outline);border-radius:10px;background:#fff}
+@media(max-width:400px){#roFrame{height:940px}}   /* จอแคบหัวข้อต้นทางตัดเป็น 3 บรรทัด (ทดสอบถึงจอกว้าง 320 px) */
 
 /* ฝนคาดการณ์รายอำเภอ 7 วัน (แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุฯ) */
 #drDays{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
@@ -350,11 +352,11 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
 
   <!-- ฝนสะสมวันนี้ · เมื่อวาน: ฝังหน้า naramet.pages.dev/rainfall ทั้งหน้าตามต้นฉบับ (ไม่ได้ประมวลผลข้อมูลเอง) -->
   <div class="card full" id="rainObsCard">
-    <h2><span class="t-desk">ปริมาณฝนสะสม วันนี้ · เมื่อวาน</span><span class="t-mob">ฝนตกไปแล้วเท่าไหร่ ? (วันนี้ · เมื่อวาน)</span> <a class="where" href="https://naramet.pages.dev/rainfall" target="_blank" rel="noopener">เปิดหน้าเต็ม ↗</a></h2>
+    <h2><span class="t-desk">ปริมาณฝนสะสม วันนี้ · เมื่อวาน (สถานีอุตุนิยมวิทยานราธิวาส)</span><span class="t-mob">ฝนตกไปแล้วเท่าไหร่ ? (วันนี้ · เมื่อวาน)</span> <a class="where" href="https://naramet.pages.dev/rainfall" target="_blank" rel="noopener">เปิดหน้าเต็ม ↗</a></h2>
     <iframe id="roFrame" src="https://naramet.pages.dev/rainfall" title="ปริมาณฝนสะสม สามจังหวัดชายแดนใต้ วันนี้ · เมื่อวาน (naramet)" loading="lazy" referrerpolicy="no-referrer"></iframe>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
-    <div class="note">แสดงหน้า <a href="https://naramet.pages.dev/rainfall" target="_blank" rel="noopener">naramet.pages.dev/rainfall ↗</a> ทั้งหน้าตามต้นฉบับ: แผนที่ฝนสะสมรายอำเภอ สามจังหวัดชายแดนใต้ · กดปุ่ม <b>วันนี้</b> (ตั้งแต่ 07:00 น.) หรือ <b>เมื่อวาน</b> ที่มุมแผนที่เพื่อสลับวัน · ข้อมูล การอัปเดต และเกณฑ์สีเป็นของต้นทาง · ถ้ากรอบว่างหรือโหลดไม่ขึ้น ให้กด "เปิดหน้าเต็ม" ที่หัวการ์ด</div>
+    <div class="note">หน้า "ปริมาณฝนสะสม" ของสถานีอุตุนิยมวิทยานราธิวาส (<a href="https://naramet.pages.dev/rainfall" target="_blank" rel="noopener">naramet.pages.dev/rainfall ↗</a>) แสดงทั้งหน้าตามต้นฉบับ: ฝนจากสถานีตรวจอากาศอัตโนมัติ (AWS) กรมอุตุฯ อำเภอละสถานี สามจังหวัดชายแดนใต้ พื้นสีระหว่างสถานีเป็นการประมาณค่าเชิงพื้นที่ (kriging) · กดปุ่ม <b>วันนี้</b> (ตั้งแต่ 07:00 น.) หรือ <b>เมื่อวาน</b> (สะสม 24 ชม.) ที่มุมแผนที่เพื่อสลับวัน · ข้อมูล การอัปเดต และเกณฑ์สีเป็นของต้นทาง · ถ้ากรอบว่างหรือโหลดไม่ขึ้น ให้กด "เปิดหน้าเต็ม" ที่หัวการ์ด</div>
     </details>
   </div>
 
