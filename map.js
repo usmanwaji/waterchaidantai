@@ -1645,18 +1645,20 @@ function renderHyd(){
 }
 
 /* ---------- 6.56) ระบบเตือนภัยล่วงหน้า กรมทรัพยากรน้ำ (EWS · ews.dwr.go.th) ----------
-   สถานีวัดระดับน้ำ EWS ในนราธิวาส (7 สถานี เช่น STN2155 บ้านไอปาโจ · STN2233 ชุมชนยะกัง) ผ่าน Worker ews-proxy
+   สถานีวัดระดับน้ำ EWS ในนราธิวาส (6 สถานี เช่น STN2155 บ้านไอปาโจ · STN2233 ชุมชนยะกัง) ผ่าน Worker ews-proxy
    (ews.dwr.go.th ตัด IP นอกไทย · Worker ย่อข้อมูลทั้งประเทศเหลือเฉพาะนราธิวาส)
    ระดับน้ำวัดจากศูนย์เสาวัด ไม่มีตลิ่ง → ไม่ใช้สี % ของชั้นระดับน้ำ ใช้สถานะเตือนภัยของ EWS แทน
    ไม่มีกราฟ: กราฟของ EWS เป็นค่าเฉลี่ยสะสมรายวัน ไม่ใช่ระดับน้ำจริง */
 const EWS_LIVE = 'https://ews-proxy.newusmanwaji.workers.dev';
+// STN1798 บ้านท่าเรือ (อ.รือเสาะ) อยู่จุดเดียวกับ X.199 บ้านท่าเรือ ของ ชป. ในชั้นโทรมาตร ชป. → ไม่แสดงซ้ำ
+const EWS_SKIP = new Set(['STN1798']);
 const EWS_COLOR = ['var(--st-normal)', 'var(--st-watch)', 'var(--st-warn)', 'var(--st-danger)'];   // ปกติ · เฝ้าระวัง · เตรียมพร้อม · วิกฤติ
 async function loadEws(){
   const j = await fetchJSON(`${EWS_LIVE}/stations.json?t=${Math.floor(Date.now()/600000)}`, 30000);
   if(!Array.isArray(j?.stations)) throw new Error('no ews data');
   gEws.clearLayers();
   j.stations.forEach(d => {
-    if(d.lat==null || d.lon==null) return;
+    if(d.lat==null || d.lon==null || EWS_SKIP.has(d.code)) return;
     if(PROV_SET.size && !PROV_SET.has(String(d.province||'').trim())) return;
     // ค่าวัดเก่ากว่า 6 ชม. → หมุดสีเทา (สถานีอาจหยุดส่ง) · เกณฑ์เดียวกับชั้นโทรมาตร ชป.
     const old = !d.at || (Date.now() - new Date(d.at)) > 6*3600e3;
