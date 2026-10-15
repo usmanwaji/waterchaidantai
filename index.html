@@ -1365,14 +1365,14 @@ function renderHero(met, sel){
     W = s.lvl==='over' ? {t:'น้ำล้นตลิ่ง', k:'danger'}
       : s.lvl==='high' ? {t:'น้ำใกล้ตลิ่ง', k:'warn'}
       : s.lvl==='watch' ? {t:'น้ำถึงระดับเฝ้าระวัง', k:'watch'}
-      : d!=null && d >= s.thr ? {t:'น้ำกำลังสูงขึ้น', k:'watch'}
+      : d!=null && d >= s.thr ? {t:'น้ำกำลังเพิ่มระดับ', k:'watch'}
       : d!=null && d <= -s.thr ? {t:'น้ำกำลังลด', k:'normal'}
       : {t:'น้ำยังปกติ', k:'normal'};
   } else if(!area.length) W = {t:'ยังอ่านข้อมูลน้ำไม่ได้', k:'na'};
   else if(over.length) W = {t:'มีจุดน้ำล้นตลิ่ง', k:'danger'};
   else if(high.length) W = {t:'น้ำใกล้ตลิ่ง', k:'warn'};
   else if(watch.length) W = {t:'น้ำถึงระดับเฝ้าระวัง', k:'watch'};
-  else if(rise.length > fall.length && rise.length >= 2) W = {t:'น้ำกำลังสูงขึ้น', k:'watch'};
+  else if(rise.length > fall.length && rise.length >= 2) W = {t:'น้ำกำลังเพิ่มระดับ', k:'watch'};
   else if(fall.length > rise.length) W = {t:'น้ำกำลังลด', k:'normal'};
   else W = {t:'น้ำยังปกติ', k:'normal'};
   word.textContent = W.t; word.dataset.lv = W.k;
