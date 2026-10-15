@@ -283,11 +283,6 @@ header>h1:has(small){padding-top:0;padding-bottom:0}
 }
 #btnRefresh:hover{background:var(--signal-hover);color:var(--signal-ink)}
 #btnRefresh:active{transform:scale(.96)}
-header .langbtn{
-  background:transparent;color:var(--ink-2);opacity:1;
-  border:1px solid var(--line-mid);border-radius:var(--r-commit);
-}
-header .langbtn.active{background:var(--signal);color:var(--signal-ink);border-color:var(--signal);font-weight:700}
 header #btnHelp{background:var(--card);color:var(--signal);border:1px solid var(--line-mid);border-radius:var(--r-commit)}
 header #btnHelp:hover{background:var(--signal-wash)}
 header #authBox{color:var(--ink-2)}
@@ -546,7 +541,7 @@ body{padding-bottom:calc(var(--tabbar-h) + var(--dock-gap) * 2 + env(safe-area-i
   header{flex-wrap:nowrap}
   header>h1{flex:none;white-space:nowrap}
   header .navtab{flex:0 1 auto;min-width:0;overflow-x:auto}
-  header #updated,header #btnRefresh,header #authUi,header #authBox,header #langSw,header #btnHelp{flex:none;white-space:nowrap}
+  header #updated,header #btnRefresh,header #authUi,header #authBox,header #btnHelp{flex:none;white-space:nowrap}
 }
 /* จอคอมไม่ต้องมีแถบล่าง เมนูบนอ่านได้สบายอยู่แล้ว */
 @media(min-width:769px){
@@ -622,7 +617,7 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
   .navtab a{padding:10px 14px;font-size:13.5px;min-height:42px;display:inline-flex;align-items:center}
   .chip,.provlbl{min-height:40px;padding:8px 14px;display:inline-flex;align-items:center}
   select,input:not([type=checkbox]):not([type=radio]){min-height:40px}
-  .btn.sm,.langbtn,.pop-btn,.hbtn,.pbtn,.vbtn{min-height:38px;min-width:38px}
+  .btn.sm,.pop-btn,.hbtn,.pbtn,.vbtn{min-height:38px;min-width:38px}
   /* Leaflet วาดปุ่มควบคุมของตัวเองที่ขนาดตายตัว ปล่อยไว้
      .install-x (ปุ่มปิดปุ่มติดตั้ง) ก็ยกเว้นด้วย เพราะมันเป็นวงกลมที่คร่อมมุม
      ของปุ่มหลัก ถูกยืดเป็น 36px แล้วจะกลายเป็นวงรี และเป้าที่ใหญ่ขึ้นตรงนั้น
@@ -673,7 +668,6 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
   .card h3{font-size:14.5px}
   .disc,.provcard,.extbtn,.freq-dot,.yr{font-size:12.5px}
   .sw{font-size:11px}
-  .langbtn{font-size:12.5px}
   .src-btn,#btnReport,.ddpm-filters select{font-size:13px}
   .layerrow{font-size:13px}
   .rainScale .rsGrp b{font-size:12px}
