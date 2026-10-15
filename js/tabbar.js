@@ -45,7 +45,7 @@
     { href: 'index.html',   label: 'สถานการณ์', icon: 'home'  },
     { href: 'map.html',     label: 'แผนที่น้ำ', icon: 'map'   },
     { href: 'check.html',   label: 'พื้นที่ฉัน', icon: 'pin'   },
-    { href: 'shelter.html', label: 'ศูนย์พักพิง', icon: 'house' }
+    { href: 'shelter.html', label: 'ศูนย์พักพิง/ที่จอดรถ', icon: 'house' }
   ];
 
   /* ที่เหลืออยู่ในแผ่น จัดกลุ่มตามคำถามที่คนถาม ไม่ใช่ตามชื่อหน่วยงาน */
