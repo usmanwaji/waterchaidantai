@@ -425,11 +425,11 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
   </div>
 
   <div class="card full">
-    <h2>มาตรวัดน้ำต้องระวังเป็นพิเศษ <span class="where" id="whereSt"></span></h2>
+    <h2>มาตรวัดน้ำต้องระวังเป็นพิเศษ (ระดับน้ำ ≥ 90% ของตลิ่ง) <span class="where" id="whereSt"></span></h2>
     <div id="stList"><span class="spin"></span></div>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
-    <div class="note">เกณฑ์เดียวกับ <a href="forecast.html">หน้าคาดการณ์</a>: ล้นตลิ่งจริง / ≥85% ของตลิ่ง / กำลังขึ้นเร็วเกินครึ่งตลิ่ง · คลิกเพื่อดูบนแผนที่</div>
+    <div class="note">มาตรวัดน้ำที่ระดับน้ำถึง 90% ของตลิ่งขึ้นไป (รวมล้นตลิ่ง) เรียงจากล้นตลิ่ง แล้วตาม % · รวมทุกแหล่งชุดเดียวกับการ์ดน้ำท่า: สสน./ชป. (thaiwater) · ปภ. · โทรมาตร ชป. · อุทกวิทยา ชป. · % ของตลิ่ง = ความลึกน้ำเทียบความลึกลำน้ำจากท้องน้ำถึงตลิ่ง (สถานี ปภ. วัดจากศูนย์ไม้วัด ใช้ ระดับ ÷ ตลิ่ง) · โทรมาตร/อุทกวิทยา ชป. รายงานเป็น ม.รทก. ไม่มีระดับท้องน้ำ คิด % ไม่ได้ จึงใช้เส้นเฝ้าระวังของ ชป. (ส่วนใหญ่ต่ำกว่าตลิ่ง 1 ม.) แทน · ไม่นับค่าที่เก่ากว่า 6 ชม. · เลือกอำเภอที่การ์ดพยากรณ์อากาศเพื่อดูเฉพาะอำเภอนั้น · คลิกเพื่อดูบนแผนที่</div>
     </details>
   </div>
 
@@ -769,7 +769,7 @@ async function pollRid(){
     await loadRid(j);
     await Promise.allSettled(ridTrends());
     if(loadingAll) return;   // loadAll วาดให้เองแล้ว
-    renderWaterta(); rerenderHero();
+    renderWaterta(); renderStations(); rerenderHero();
   }catch(e){}
 }
 /* เกณฑ์ "เฝ้าระวัง" ของ ปภ. (mediumLevelThreshold) มีเฉพาะในรายละเอียดรายสถานี
@@ -1180,33 +1180,65 @@ function renderRain7(met, sel){
   document.getElementById('stripRain').textContent = fmt1(sum);
   document.getElementById('stripSoil').textContent = fmt1(soil);
 }
+/* ---------- มาตรวัดน้ำต้องระวังเป็นพิเศษ: ระดับน้ำถึง 90% ของตลิ่งขึ้นไป ----------
+   รวมทุกแหล่งชุดเดียวกับการ์ดน้ำท่า (เดิมใช้แค่ thaiwater พอ thaiwater ล่มการ์ดขึ้น "โหลดไม่สำเร็จ" ทั้งที่แหล่งอื่นมีข้อมูล)
+   % ของตลิ่ง = ความลึกน้ำเทียบความลึกลำน้ำ (ระดับน้ำ − ท้องน้ำ) ÷ (ตลิ่ง − ท้องน้ำ) แบบเดียวกับ thaiwater
+   · สสน./ชป. (thaiwater): มีท้องน้ำ (ground_level) คำนวณได้ตรง (FC.fillPct)
+   · ปภ.: ระดับวัดจากศูนย์ไม้วัด (ไม่ต่ำกว่า 0) จึงใช้ ระดับ ÷ ตลิ่ง
+   · โทรมาตร ชป. (telerid) / อุทกวิทยา ชป.: ระดับเป็น ม.รทก. ไม่มีท้องน้ำ คิด % ไม่ได้ (บ้านกาวะ 19.48 / ตลิ่ง 38
+     ไม่ได้แปลว่าน้ำครึ่งตลิ่ง) จึงใช้เส้นเฝ้าระวังของ ชป. เอง (ส่วนใหญ่ต่ำกว่าตลิ่ง 1 ม.) แทน
+     ยกเว้นสถานีหลักใน WTA ที่รู้พื้นท้องน้ำ
+   ล้นตลิ่งนับทุกแหล่ง · ค่าที่เก่ากว่า WTA_STALE_H ชม. ไม่นับ · เลือกอำเภอแล้วเหลือเฉพาะอำเภอนั้น */
+const ST_PCT = 90;
+const ST_MAX = 12;
+function stWatchList(){
+  const now = Date.now();
+  const ok = s => s.cur!=null && s.bank!=null && (!amp || wtaAmpName(s.amphoe)===amp) &&
+    !(s.dt && !isNaN(s.dt) && now - s.dt > WTA_STALE_H*3600e3);
+  const out = [];
+  const add = (s, pct, warnOnly) => {
+    const over = s.cur >= s.bank && (pct==null || pct >= 100);
+    if(over || (pct!=null ? pct >= ST_PCT : warnOnly && s.warn!=null && s.cur >= s.warn))
+      out.push({name:s.name, river:s.river, amphoe:wtaAmpName(s.amphoe), tag:s.tag, over, pct, gap:s.bank - s.cur});
+  };
+  wlAll.filter(s=>s.prov===prov).forEach(s=>{
+    const x = {...s, cur:s.msl, tag:''};
+    if(ok(x)) add(x, x.pct, false);
+  });
+  ddpmAll.forEach(s=>{
+    const x = {...s, tag:'ปภ.'};
+    if(ok(x) && x.bank > 0) add(x, x.cur / x.bank * 100, false);
+  });
+  ridAll.concat(hydExtra()).forEach(s=>{
+    const x = {...s, tag:WTA_TAG[s.src]||''}, g = WTA.find(w=>w.code===s.code)?.ground;
+    if(ok(x)) add(x, g!=null && x.bank > g ? (x.cur - g) / (x.bank - g) * 100 : null, true);
+  });
+  // ล้นตลิ่งก่อน แล้วตาม % (สถานีที่ใช้เส้นเฝ้าระวังแทน % ถือเป็น 90) เสมอกันดูว่าห่างตลิ่งน้อยกว่า
+  return out.sort((a,b)=> b.over-a.over || (b.pct ?? ST_PCT) - (a.pct ?? ST_PCT) || a.gap-b.gap);
+}
 function renderStations(){
   const el = document.getElementById('stList');
-  let list = wlAll.filter(s=>s.prov===prov);
-  if(amp) list = list.filter(s=>s.amphoe.includes(amp));
-  const rising = s => s.msl!=null && s.prev!=null && (s.msl-s.prev) >= 0.03;
-  /* เกณฑ์เดียวกับหน้าคาดการณ์: ล้นตลิ่งต้องมีตลิ่งที่ถูกต้อง · ใกล้ตลิ่งคือ >= 85%
-     ของเดิมนับ >= 70% เป็น "น้ำมาก" ซึ่งเป็นระดับปกติของหลายสถานีในฤดูฝน */
-  const lvOf = s => FC.stationLevel(s);
-  const hot = list.filter(s => lvOf(s)!=='normal' || (rising(s) && (s.pct??0) >= FC.CRIT.PCT_MID))
-    .sort((a,b)=>(b.pct??0)-(a.pct??0));
+  const any = wlAll.length || ddpmAll.length || ridAll.length || hydAll.length;
+  const hot = any ? stWatchList() : [];
 
   /* แถบคำตอบด้านบนใช้จำนวนเดียวกันกับที่การ์ดนี้แสดงจริง
      ถ้าโหลดสถานีไม่สำเร็จต้องบอกว่าไม่รู้ ไม่ใช่แสดงเลข 0
      ซึ่งจะอ่านได้ว่า "ปลอดภัย" ทั้งที่ความจริงคือไม่มีข้อมูล */
   const stripSt = document.getElementById('stripSt');
-  if(stripSt) stripSt.textContent = wlAll.length ? String(hot.length) : 'ไม่มีข้อมูล';
+  if(stripSt) stripSt.textContent = any ? String(hot.length) : 'ไม่มีข้อมูล';
 
-  if(!wlAll.length){ el.innerHTML = 'โหลดข้อมูลสถานีไม่สำเร็จ'; return; }
-  if(!hot.length){ el.innerHTML = `<div style="color:var(--st-normal);font-size:12.5px">${amp?`อ.${amp}`:`จ.${prov}`} ไม่มีสถานีเข้าเกณฑ์เฝ้าระวังขณะนี้ (ทั้งหมด ${list.length} สถานี)</div>`; return; }
-  el.innerHTML = hot.slice(0,8).map(s=>{
-    const lv = lvOf(s);
-    const c = lv==='over'?'var(--st-danger)': (lv==='high'?'var(--signal)':'var(--st-watch)');
-    const t = lv==='over'?'ล้นตลิ่ง': (lv==='high'?`น้ำใกล้ตลิ่ง ${Math.round(s.pct)}%`:'กำลังขึ้น');
+  if(!any){ el.innerHTML = 'โหลดข้อมูลสถานีไม่สำเร็จ'; return; }
+  if(!hot.length){ el.innerHTML = `<div style="color:var(--st-normal);font-size:12.5px">${amp?`อ.${amp}`:`จ.${prov}`} ไม่มีมาตรวัดน้ำที่ระดับน้ำถึง ${ST_PCT}% ของตลิ่งขณะนี้</div>`; return; }
+  el.innerHTML = hot.slice(0, ST_MAX).map(s=>{
+    const c = s.over ? 'var(--st-danger)' : 'var(--st-warn)';
+    const t = s.over ? `ล้นตลิ่ง${s.gap < 0 ? ` +${(-s.gap).toFixed(2)} ม.` : ''}`
+      : s.pct!=null ? `${Math.round(s.pct)}% ของตลิ่ง`
+      : `ถึงเกณฑ์เฝ้าระวัง · ต่ำกว่าตลิ่ง ${s.gap.toFixed(2)} ม.`;
+    const sub = [s.river, s.amphoe && `อ.${s.amphoe}`, s.tag].filter(Boolean).map(esc).join(' · ');
     return `<a class="st" style="border-left-color:${c};text-decoration:none;color:inherit" href="map.html">
-      <span><span class="nm">${esc(s.name)}</span> <span class="sub">${esc(s.river)} · อ.${esc(s.amphoe)}</span></span>
+      <span><span class="nm">${esc(s.name)}</span> <span class="sub">${sub}</span></span>
       <span class="badge" style="background:${c}">${t}</span></a>`;
-  }).join('');
+  }).join('') + (hot.length > ST_MAX ? `<div class="note">และอีก ${hot.length - ST_MAX} สถานี · ดูทั้งหมดที่ <a href="map.html">หน้าแผนที่</a></div>` : '');
 }
 /* ---------- ฮีโร่ "ตอบก่อน" + การ์ดทิศทางน้ำ (v9) ----------
    ไม่ดึงข้อมูลใหม่ ใช้ wlAll (thaiwater) กับพยากรณ์ Open-Meteo ที่หน้านี้โหลดอยู่แล้ว
