@@ -399,6 +399,7 @@ setInterval(async ()=>{
       const bar = document.getElementById('radarBar');
       if(bar) bar.innerHTML = `<div class="rdrow"><span class="rdinfo">${t('radarLoading')}</span></div>`;
       if(!radarFrames.length) await loadRadarFrames();
+      if(!cb.checked) return;                               // ถูกปิดไปแล้วระหว่างโหลด (เช่น ปิดสถานีเรดาร์ทันที)
       if(!radarFrames.length){ renderRadarBar(); return; }
       showRadarFrame(radarIdx<0 ? radarFrames.length-1 : radarIdx);
     }else{
@@ -437,7 +438,7 @@ const ONWR = {
   frames:null, idx:-1, layer:null, timer:null,            // 1) เรดาร์
   level:'district', geo:{}, zones:{}, accumLayer:null,     // 2) ฝนสะสม
   rain:null, rainMode:'dots', rainWin:'1h', rainLayer:null, // 3) ฝนสถานี
-  sitesLayer:null, labels:true                             // 4) สถานีเรดาร์
+  sitesLayer:null, labels:true, sitesRadar:false           // 4) สถานีเรดาร์ · sitesRadar = เมฆฝน Longdo ถูกเปิดโดยปุ่มนี้
 };
 const onwrEl = id => document.getElementById(id);
 const onwrOn = id => { const cb = onwrEl(id); return !!(cb && cb.checked); };
@@ -734,9 +735,22 @@ function onwrBuildSites(){
   }
   ONWR.sitesLayer = g.addTo(map);
 }
+/* เปิดสถานีเรดาร์ = แสดงเมฆฝนจากเรดาร์ Longdo (weather.longdo.com) ด้วย ถ้ายังไม่มีเรดาร์ชั้นใดเปิดอยู่
+   (ถ้าเปิดเรดาร์ TMD ของ สทนช. อยู่แล้วก็เห็นเมฆฝนอยู่แล้ว ไม่สลับให้) · ปิดสถานีเรดาร์ = ปิดเมฆฝนคืนเฉพาะที่ปุ่มนี้เปิดให้
+   ผู้ใช้สลับ "เรดาร์ฝน" เองระหว่างนั้น → ล้าง sitesRadar (ดูตัวฟังใน setupOnwr) จะได้ไม่ไปปิดชั้นที่ผู้ใช้ตั้งใจเปิด */
 function onwrSetSites(on){
-  if(on) onwrBuildSites();
-  else if(ONWR.sitesLayer){ map.removeLayer(ONWR.sitesLayer); ONWR.sitesLayer=null; }
+  const lg = onwrEl('lyRadar');
+  if(on){
+    onwrBuildSites();
+    if(lg && !lg.checked && !onwrOn('lyOnwrRadar')){
+      lg.checked = true; lg.dispatchEvent(new Event('change'));
+      ONWR.sitesRadar = true;
+    }
+  }else{
+    if(ONWR.sitesLayer){ map.removeLayer(ONWR.sitesLayer); ONWR.sitesLayer=null; }
+    if(ONWR.sitesRadar && lg && lg.checked){ lg.checked = false; lg.dispatchEvent(new Event('change')); }
+    ONWR.sitesRadar = false;
+  }
   buildLegend();
 }
 function onwrSetLabels(on){ ONWR.labels = on; if(ONWR.sitesLayer) onwrBuildSites(); }
@@ -783,7 +797,10 @@ async function loadOnwrActive(){
   wire('lyOnwrSites', onwrSetSites); wire('lyOnwrLabels', onwrSetLabels);
   // เปิดเรดาร์ Longdo → ปิดเรดาร์ สทนช. (คู่กับ onwrSetRadar)
   const lg = onwrEl('lyRadar');
-  if(lg) lg.addEventListener('change', e => { if(e.target.checked && onwrOn('lyOnwrRadar')){ onwrEl('lyOnwrRadar').checked=false; onwrSetRadar(false); } });
+  if(lg) lg.addEventListener('change', e => {
+    ONWR.sitesRadar = false;                                 // ชั้นเรดาร์ Longdo เปลี่ยนสถานะ → ไม่ถือว่าปุ่มสถานีเรดาร์เป็นเจ้าของอีก (onwrSetSites ตั้งคืนหลัง dispatch)
+    if(e.target.checked && onwrOn('lyOnwrRadar')){ onwrEl('lyOnwrRadar').checked=false; onwrSetRadar(false); }
+  });
   document.querySelectorAll('#onwrLevelSeg button').forEach(b => b.onclick = () => onwrSetLevel(b.dataset.level));
   document.querySelectorAll('#onwrRainSeg button').forEach(b => b.onclick = () => onwrSetRainMode(b.dataset.mode));
   document.querySelectorAll('#onwrWinSeg button').forEach(b => b.onclick = () => onwrSetRainWin(b.dataset.win));
