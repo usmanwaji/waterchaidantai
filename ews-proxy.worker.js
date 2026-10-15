@@ -1,18 +1,21 @@
 /*
   ews-proxy.worker.js — Cloudflare Worker ส่งต่อคำขอไประบบเตือนภัยล่วงหน้า กรมทรัพยากรน้ำ (ews.dwr.go.th)
   ------------------------------------------------------------------
-  ews.dwr.go.th ตัดการเชื่อมต่อจาก IP นอกไทยตั้งแต่ขั้น TLS handshake (เหมือน telerid / hyd-app)
-  → ให้ Worker ที่รันศูนย์ BKK ดึงแทน (ต้องเปิด Smart Placement)
-  สถานีระดับน้ำ EWS ในนราธิวาสที่หน้าแผนที่ยังไม่มี: STN2155 บ้านไอปาโจ (อ.สุคิริน) · STN2233 ชุมชนยะกัง (อ.เมือง)
-  (ระบบโทรมาตร telemetry.dwr.go.th มีทะเบียน STN2155 แต่ไม่มีค่าวัด · ไม่มี STN2233 เลย → ค่าสดมีที่ EWS ที่เดียว)
-
-  รุ่นนี้เป็นขั้นที่ 1: ส่งต่อคำขออย่างเดียว ไว้สำรวจว่า EWS เผยแพร่ระดับน้ำรายสถานีที่หน้าไหน/รูปแบบใด
-  ขั้นถัดไปจะเพิ่ม /stations.json สรุปเฉพาะสถานีในนราธิวาสให้หน้าแผนที่ใช้
+  ระบบเตือนภัยล่วงหน้า (EWS) ของ ทน. มีสถานีวัดระดับน้ำในนราธิวาส 7 สถานี (เช่น STN2155 บ้านไอปาโจ · STN2233 ชุมชนยะกัง)
+  ที่ thaiwater และระบบโทรมาตร telemetry.dwr.go.th ไม่มีค่าวัด → ค่าสดมีที่ EWS ที่เดียว
+  ews.dwr.go.th ตัดการเชื่อมต่อจาก IP นอกไทย · Worker ยังย่อข้อมูลทั้งประเทศ (~3 MB) ให้เหลือเฉพาะนราธิวาส (~3 KB)
+  ews1.dwr.go.th (เว็บเดียวกัน อีกเครื่อง) เปิดได้จากทุกที่ ส่วน ews.dwr.go.th เปิดไม่ได้แม้จาก Cloudflare → ใช้ ews1 ก่อน
+  ข้อมูลสถานี: POST ews/web-service/stn (action=LoadStation) = ทุกสถานีทั่วประเทศ ~3 MB
+    wl = ระดับน้ำล่าสุด (ม. จากศูนย์เสาวัด ไม่ใช่ ม.รทก.) · wl07h = ระดับน้ำเฉลี่ยรายวัน (ตั้งแต่ 07:00)
+    status 1 เฝ้าระวัง · 2 เตรียมพร้อม · 3 วิกฤติ · ค่าอื่น (0, 9) หน้าเว็บ EWS แสดงเป็น "สถานะปกติ"
+    ไม่มีระดับตลิ่ง · alert_min/alert_max เป็นค่าเดียวกันทุกสถานี (55 / 4 ม.) และหน้าเว็บ EWS เองก็ไม่แสดง จึงไม่ใช้
+    graph/wl_graph.php เป็นกราฟค่าเฉลี่ยสะสมรายวัน (จุดสุดท้าย = wl07h) ไม่ใช่ระดับน้ำจริง จึงไม่ใช้
 
   path:
+    /stations.json            สถานีวัดระดับน้ำ EWS ในนราธิวาส (แคช 10 นาที · EWS ล่มตอบชุดเก่าได้ 6 ชม.)
     /                         สถานะ: Worker รันศูนย์ไหน (runsIn) และเปิด ews.dwr.go.th / ews1.dwr.go.th
                               ทั้ง https และ http ได้หรือไม่ (ok: true = มีอย่างน้อยหนึ่งทางที่เปิดได้)
-    /<path>?<query>           = https://ews.dwr.go.th/<path>?<query>   เช่น /ews/index.php
+    /<path>?<query>           = https://ews1.dwr.go.th/<path>?<query>   เช่น /ews/index.php
     /h/<host>/<path>          = https://<host>/<path>   host ต้องเป็นโดเมนย่อยของ dwr.go.th เท่านั้น
     /http/<host>/<path>       = http://<host>/<path>    (เผื่อหน้าเก่าที่เปิดได้แค่ http)
   รับ GET / POST (ส่ง body และ content-type ต่อให้) · GET ที่ได้ 200 แคชในศูนย์ Cloudflare 5 นาที
@@ -21,12 +24,12 @@
   วิธี deploy: dash.cloudflare.com → Workers & Pages → Create → Create Worker (ไม่ใช่ Import a repository)
               → ชื่อ ews-proxy → Deploy → Edit code → วางไฟล์นี้ → Deploy
               ได้ URL https://ews-proxy.<บัญชี>.workers.dev
-  สำคัญ: เปิด Smart Placement (Settings → Runtime → Placement → Smart) เหมือน hyd-proxy / telerid-proxy
-         แล้วเปิดหน้าแรก https://ews-proxy.<บัญชี>.workers.dev/ ดูว่า ok เป็น true และ runsIn เป็น BKK
-         (Smart Placement ต้องมีคำขอเข้ามาสักพักถึงจะย้ายไปรันใกล้ไทย · ถ้ายังไม่ได้ ลองเปิดซ้ำหลังผ่านไปหลายนาที)
+  ตรวจ: เปิด https://ews-proxy.<บัญชี>.workers.dev/ ต้องได้ ok เป็น true (ews1 ตอบ 200)
+        แล้วเปิด /stations.json ต้องได้รายชื่อสถานี · ไม่ต้องเปิด Smart Placement เพราะ ews1 เปิดได้จากศูนย์ไหนก็ได้
+        (ถ้าวันหนึ่ง ews1 ปิดรับ IP นอกไทยเหมือน ews ค่อยเปิด Smart Placement / Placement Hint เป็น BKK)
   ------------------------------------------------------------------
 */
-const DEFAULT_HOST = 'ews.dwr.go.th';
+const DEFAULT_HOST = 'ews1.dwr.go.th';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
 const TTL = 300;          // แคช GET 5 นาที
 const TIMEOUT = 25000;
@@ -73,7 +76,7 @@ async function status(request) {
   return json({
     ok, requestEnteredAt: (request.cf && request.cf.colo) || '', runsIn, probes,
     hint: ok ? 'ews reachable from here' : `ews not reachable from ${runsIn} - enable Smart Placement (Settings > Runtime > Placement), then reload this page after a few minutes`,
-    use: ['/ews/index.php  (https://ews.dwr.go.th)', '/h/<host>.dwr.go.th/<path>', '/http/<host>.dwr.go.th/<path>'],
+    use: ['/stations.json', '/ews/index.php  (https://ews1.dwr.go.th)', '/h/<host>.dwr.go.th/<path>', '/http/<host>.dwr.go.th/<path>'],
   });
 }
 
@@ -107,12 +110,82 @@ async function forward(request, ctx, target) {
   return new Response(body, { status: res.status, headers: out });
 }
 
+/* ---------- /stations.json ---------- */
+const PROVINCE = 'นราธิวาส';
+const STN_HOSTS = ['https://ews1.dwr.go.th', 'https://ews.dwr.go.th'];
+const TTL_STATIONS = 600;           // สถานีส่งค่าทุก 15 นาที
+const STALE_MAX = 6 * 3600;         // EWS ล่มชั่วคราว → ตอบชุดเก่าได้ไม่เกิน 6 ชม.
+const num = (x) => (x == null || x === '' || x === 'N/A' || !isFinite(Number(x)) ? null : Number(x));
+// "15/10/69 22:15 น." (พ.ศ. 2 หลัก · เวลาไทย) → ISO UTC
+function ewsDate(s) {
+  const m = String(s || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})\s+(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  let y = Number(m[3]);
+  if (y < 100) y += 2500;
+  if (y > 2400) y -= 543;
+  return new Date(Date.UTC(y, Number(m[2]) - 1, Number(m[1]), Number(m[4]) - 7, Number(m[5]))).toISOString();
+}
+async function loadStationList() {
+  let err;
+  for (const host of STN_HOSTS) {
+    try {
+      const res = await withTimeout(fetch(`${host}/ews/web-service/stn`, {
+        method: 'POST', body: 'action=LoadStation',
+        headers: { 'User-Agent': UA, 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json', Referer: `${host}/ews/` },
+      }), 30000, host);
+      if (!res.ok) throw new Error(`${host} ${res.status}`);
+      const list = await res.json();
+      if (!Array.isArray(list) || !list.length) throw new Error(`${host} gave no stations`);
+      return { host, list };
+    } catch (e) { err = e; }
+  }
+  throw err;
+}
+async function buildStations() {
+  const { host, list } = await loadStationList();
+  const stations = list
+    .filter((s) => String(s.province || '').trim() === PROVINCE && String(s.stn_type || '').trim().toUpperCase() === 'WL')
+    .map((s) => {
+      const level = num(s.wl), avg = num(s.wl07h), st = Number(s.status);
+      return {
+        code: String(s.stn).trim(), name: String(s.name || '').replace(/\*+\s*$/, '').trim(),
+        tambon: String(s.tambon || '').trim(), amphoe: String(s.amphoe || '').trim(), province: PROVINCE,
+        dept: String(s.dept || '').trim(), lat: num(s.latitude), lon: num(s.longitude),
+        level, dailyAvg: avg, rain15: num(s.rain), rain12h: num(s.rain12h),
+        status: st >= 1 && st <= 3 ? st : 0, warnBy: [1, 2, 3].includes(st) ? (s.warn || null) : null,
+        at: ewsDate(s.date),
+        villages: (s.sub_station || []).map((v) => String(v.name || '').trim()).filter(Boolean),
+      };
+    })
+    .filter((s) => s.lat != null && s.lon != null)
+    .sort((a, b) => a.code.localeCompare(b.code));
+  if (!stations.length) throw new Error('no stations for ' + PROVINCE);
+  const dts = stations.map((x) => x.at).filter(Boolean).sort();
+  return { updated: dts[dts.length - 1] || null, fetchedAt: new Date().toISOString(), source: `ews-proxy (${host.replace('https://', '')} web-service/stn)`, total: stations.length, stations };
+}
+async function stationsJson(ctx) {
+  const cache = caches.default, key = new Request('https://ews-proxy.cache/stations.json');
+  const hit = await cache.match(key);
+  const age = hit ? (Date.now() - Number(hit.headers.get('x-stored') || 0)) / 1000 : Infinity;
+  const send = (text, from) => new Response(text, { headers: { ...CORS, 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=120', 'x-cache': from } });
+  if (hit && age < TTL_STATIONS) return send(await hit.text(), 'HIT');
+  try {
+    const text = JSON.stringify(await buildStations());
+    ctx.waitUntil(cache.put(key, new Response(text, { headers: { 'x-stored': String(Date.now()), 'cache-control': `public, max-age=${STALE_MAX}` } })));
+    return send(text, 'MISS');
+  } catch (e) {
+    if (hit && age < STALE_MAX) return send(await hit.text(), 'STALE');
+    return json({ error: String(e.message || e) }, 502);
+  }
+}
+
 export default {
   async fetch(request, env, ctx) {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
     if (request.method !== 'GET' && request.method !== 'POST') return new Response('Method Not Allowed', { status: 405, headers: CORS });
     const url = new URL(request.url);
     if (url.pathname === '/' && !url.search) return status(request);
+    if (url.pathname === '/stations.json' && request.method === 'GET') return stationsJson(ctx);
     const target = upstreamUrl(url);
     if (!target) return json({ error: 'host not allowed (only *.dwr.go.th)' }, 403);
     try {

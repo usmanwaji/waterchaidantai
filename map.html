@@ -161,6 +161,7 @@ header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-
 .ddpm-img{display:block}
 .mk-cctv{border-radius:6px;font-size:11px}
 .mk-tele{border-radius:3px 3px 8px 8px}
+.mk-ews{border-radius:3px;transform:rotate(45deg)}
 .mk-risk{border-radius:50% 0 50% 50%;transform:rotate(45deg)}
 .mk-risk span{transform:rotate(-45deg)}
 .blink{animation:blink 1s ease-in-out infinite}
@@ -317,6 +318,7 @@ footer a:hover{text-decoration:underline}
         <label><input type="checkbox" id="lyCctv"> <span id="tCctv">CCTV</span></label>
         <label><input type="checkbox" id="lyDdpm"> <span id="tDdpm">CCTV ปภ.</span></label>
         <label><input type="checkbox" id="lyTele"> <span id="tTele">โทรมาตร ชป.</span></label>
+        <label><input type="checkbox" id="lyEws"> <span id="tEws">◆ เตือนภัย ทน.</span></label>
         <label><input type="checkbox" id="lyRisk"> <span id="tRisk">จุดเสี่ยงฉับพลัน</span></label>
         <label><input type="checkbox" id="lyZone" checked> <span id="tZone">โซนลุ่มน้ำรายอำเภอ</span></label>
         <label><input type="checkbox" id="lyRadar"> <span id="tRadar">เรดาร์ฝน</span></label>
@@ -392,7 +394,7 @@ footer a:hover{text-decoration:underline}
 </footer>
 
 <script src="js/rivers.js?v=4"></script>
-<script src="map.js?v=33"></script>
+<script src="map.js?v=34"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
