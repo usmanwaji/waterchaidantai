@@ -1824,10 +1824,14 @@ const NARAMET_CSS = '<style>#navbar{display:none!important}.container.mt-3{margi
   '@media(max-width:576px){#rainfall{height:auto!important}#mapCanvas{flex:none!important;height:clamp(320px,115vw,480px)!important}}</style>';
 const NARAMET_WATCH = '<script>(function(){var t0=Date.now(),'+
   'H=function(){return Math.ceil(document.documentElement.getBoundingClientRect().height);},'+
+  // ต้นทางเปิดที่แท็บ "รวม 3 จังหวัด" · เราเลือกแท็บ "นราธิวาส" ให้เป็นค่าเริ่มต้น (กดครั้งเดียวหลังข้อมูลขึ้น ผู้ใช้สลับแท็บเองได้)
+  // หาปุ่มที่ข้อความตรง "นราธิวาส" พอดีและมองเห็นอยู่ (เมนูที่ซ่อนไว้ไม่นับ) เพราะไม่ได้ผูกกับ id/class ของต้นทาง
+  'P=function(){var a=document.querySelectorAll("button,a,[role=tab],.nav-link,.btn");'+
+  'for(var i=0;i<a.length;i++){if(a[i].offsetParent&&(a[i].innerText||"").trim()==="นราธิวาส"){a[i].click();return;}}},'+
   'iv=setInterval(function(){'+
   'var s=(document.getElementById("dataSubtitle")||{}).innerText||"";'+
   'var ok=/ประจำวันที่/.test(s)&&!/ประมวลผล/.test(s),bad=/ผิดพลาด/.test(s)||Date.now()-t0>30000;'+
-  'if(ok||bad){clearInterval(iv);parent.postMessage({naramet:ok?"ok":"fail",h:H()},"*");}},500);'+
+  'if(ok||bad){clearInterval(iv);if(ok)P();parent.postMessage({naramet:ok?"ok":"fail",h:H()},"*");}},500);'+
   'new ResizeObserver(function(){parent.postMessage({naramet:"h",h:H()},"*");}).observe(document.body);'+
   '})();<\/script>';
 function naraRainFull(){
