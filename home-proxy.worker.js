@@ -11,9 +11,11 @@
   ใช้แผนฟรีได้ทั้งหมด:
     · เก็บใน Cache API (ไม่มีโควตาเขียนแบบ KV ที่ telerid-proxy ใช้ไปเกือบเต็มแล้ว)
       แคชแยกตามศูนย์ แต่คนดูในไทยเข้าศูนย์ BKK เป็นหลัก จึงใช้ชุดเดียวกัน
-    · Cron ทุก 6 นาที (ดูวิธีตั้งด้านล่าง) ดึงส่วนที่ถึงรอบไว้ล่วงหน้า → คนดูเจอข้อมูลสดในแคชเสมอ ไม่ต้องรอดึง
-      ต้นทางถูกเรียกเป็นรอบคงที่ไม่ขึ้นกับจำนวนคนดู: รายการสถานี ปภ. + โทรมาตร ชป. ราว 240 รอบ/วัน
-      กราฟ ปภ. (ทิศทางน้ำ) ชั่วโมงละครั้ง · ส่งคำขอพร้อมกันทีละไม่กี่รายการ (POOL) ไม่ยิงเป็นชุดใหญ่ กัน 429
+    · Cron ทุกนาที (ดูวิธีตั้งด้านล่าง) แต่ดึงแต่ละส่วนเฉพาะเมื่อถึงรอบของมัน (PARTS: every / at) นาทีที่ไม่มีอะไรถึงรอบจบทันที
+      → คนดูเจอข้อมูลสดในแคชเสมอ ไม่ต้องรอดึง · ต้นทางถูกเรียกเป็นรอบคงที่ไม่ขึ้นกับจำนวนคนดู:
+      รายการสถานี ปภ. ทุก 5 นาที · โทรมาตร ชป. + ทิศทางน้ำ ชป. + เรดาร์ทุก 14 นาที · กราฟ ปภ. ชั่วโมงละครั้ง · X.199 ทุก 30 นาที
+      ฝนรายอำเภอทุก 12 ชม. · ฝน 3 วันทุก 22 ชม. · พยากรณ์รายภาควันละครั้ง 14:00 · เกณฑ์ ปภ. ทุกวันที่ 15 ของเดือน
+      ส่งคำขอพร้อมกันทีละไม่กี่รายการ (POOL) ไม่ยิงเป็นชุดใหญ่ กัน 429
       Placement มีผลกับ fetch เท่านั้น ไม่มีผลกับ cron → cron เรียก /cron ของตัวเองผ่าน binding SELF
       ให้ไปรันที่ BKK ใช้แคชชุดเดียวกับคนดู (ไม่ได้ผูก SELF cron จะไม่ทำอะไร)
       cron หยุด/ยังไม่ตั้ง → คนดูเป็นคนกระตุ้นให้ดึงใหม่เมื่อเกิน ttl แบบเดิม
@@ -21,8 +23,9 @@
     · ดึงต้นทางไม่เกิน FETCH_BUDGET ครั้งต่อคำขอ (แผนฟรีจำกัด 50 subrequest) · ไม่พอ → เลื่อนไปคำขอถัดไป
 
   อายุของแต่ละส่วน (PARTS):
-    every  cron ดึงให้เมื่ออายุถึงเท่านี้ (ส่วนที่เปลี่ยนเร็วทุกรอบ cron ส่วนที่เปลี่ยนช้าห่างกว่านั้น)
+    every  cron ดึงให้เมื่ออายุถึงเท่านี้ · at = ดึงตามเวลาที่กำหนดแทน (วันละครั้ง/เดือนละครั้ง เวลาไทย)
     ttl  หมดอายุ → คำขอของคนดูสั่งดึงใหม่เอง (ยาวกว่า every → ถ้า cron ทำงาน ไม่ถึงตรงนี้)
+         ส่วนที่ใช้ at: คนดูสั่งดึงเองเฉพาะเมื่อเลยเวลาที่กำหนดมาเกิน SCHED_GRACE แล้วยังไม่ได้ดึง (cron พลาด)
     swr  ยังไม่เก่าเกินนี้ → ตอบชุดเดิมทันที แล้วดึงใหม่เบื้องหลัง
          เก่าเกินนี้ → รอผลใหม่ได้ไม่เกิน SOFT_WAIT (ยังไม่มีข้อมูลเลยรอได้ COLD_WAIT) ไม่ทันก็ตอบชุดเดิม
     max  เก่าเกินนี้ไม่ส่ง (d:null) → หน้าเว็บดึงตรงจากต้นทางเองแบบเดิม
@@ -34,7 +37,7 @@
     /cron             ดึงส่วนที่ถึงรอบ cron แล้วรอจนบันทึกเสร็จ (cron เรียกผ่าน SELF · ถึงรอบแล้วเท่านั้นจึงดึง เรียกถี่ก็ไม่เพิ่มภาระ)
   รูปแบบ: {"v":1,"now":ms,"parts":{"ddpm":{"t":เวลาดึง(ms),"s":0|1,"d":<JSON จากต้นทาง>|null}, ...}}
          rid    d = {"base": URL ที่หน้าเว็บใช้ดึง {CODE}.detail.json, "j": stations.json ของแหล่งที่ค่าใหม่กว่า}
-         trends d = {"ddpm":{code:[ค่าก่อนหน้า, ค่าล่าสุด]}, "rid":{...}, "ddpmAt": เวลาดึงกราฟ ปภ.}  (ทิศทางน้ำ เกณฑ์เดียวกับ index.html)
+         trends d = {"ddpm":{code:[ค่าก่อนหน้า, ค่าล่าสุด]}, "rid":{...}, "ddpmAt"/"ridAt": เวลาคิดแต่ละฝั่ง}  (ทิศทางน้ำ เกณฑ์เดียวกับ index.html)
          thr    d = {code: เกณฑ์ "เฝ้าระวัง" ของ ปภ. (mediumLevelThreshold) | null}
 
   วิธี deploy:
@@ -45,9 +48,9 @@
          TELERID → telerid-proxy · HYD → hyd-proxy · TMD → tmd-proxy
        Worker เรียก Worker อื่นในบัญชีเดียวกันผ่าน URL workers.dev ไม่ได้ (error 1042) ต้องผ่าน binding
        ไม่ผูก: ส่วน hyd/tmd/nowcast/riskmap ว่าง (หน้าเว็บดึงตรงเอง) · rid ใช้สาขา cam อย่างเดียว
-    3) Settings → Bindings → Service binding อีกตัว: SELF → home-proxy (ตัวเอง) · Settings → Trigger events → Cron Triggers: ทุก 6 นาที (นิพจน์ cron อยู่ใน DEPLOY.md)
+    3) Settings → Bindings → Service binding อีกตัว: SELF → home-proxy (ตัวเอง) · Settings → Trigger events → Cron Triggers: ทุกนาที (นิพจน์ cron อยู่ใน DEPLOY.md)
     4) เปิด https://home-proxy.<บัญชี>.workers.dev/home.json สักครั้ง แล้วเปิด / ดูว่าทุกส่วนมี ageSec และไม่มี lastError
-       หลังตั้ง cron สักพัก ช่อง cron ในหน้า / ต้องมี lastRunAgoSec ไม่เกิน ~360 และ runsIn เป็น BKK
+       หลังตั้ง cron สักพัก ช่อง cron ในหน้า / ต้องมี lastRunAgoSec ไม่เกิน ~300 (รอบ ปภ.) และ runsIn เป็น BKK
   ยังไม่ deploy หรือส่วนไหนล่ม → หน้าเว็บดึงส่วนนั้นตรงจากต้นทางแบบเดิมเอง ไม่พัง
   ------------------------------------------------------------------
 */
@@ -68,10 +71,16 @@ const TIMEOUT = 12000;
 const SOFT_WAIT = 2000;       // ส่วนที่เก่าเกิน swr: รอผลใหม่ได้เท่านี้ก่อนตอบชุดเดิม
 const COLD_WAIT = 6000;       // ยังไม่มีข้อมูลเลย (เพิ่ง deploy / แคชถูกล้าง)
 const RETRY_GAP = 30e3;       // ส่วนเดียวกันสั่งดึงซ้ำใน isolate เดียวกันได้ไม่ถี่กว่านี้
+const FAIL_GAP = 3 * 60e3;    // ดึงไม่สำเร็จ (ไม่ใช่ 429) → พักเท่านี้ก่อนลองใหม่ (cron มาทุกนาที ไม่ให้ยิงซ้ำทุกนาที)
 const LIMIT_GAP = 5 * 60e3;   // ต้นทางตอบ 429 (จำกัดคำขอต่อ IP ซึ่ง Worker ใช้ IP ร่วมกับคนอื่น) → พักนานขึ้น
 const LIMIT_MAX = 60 * 60e3;  // 429 ซ้ำ ๆ: พักเพิ่มเป็นเท่าตัวทุกครั้ง (5 → 10 → 20 … นาที) ไม่เกินนี้
-const CRON_SLACK = 60;        // cron ดึงเมื่ออายุ ≥ every − นี้ (วินาที) · รอบ cron มาเร็ว/ช้ากว่ากำหนดเล็กน้อยก็ไม่ข้ามรอบ
-const GRAPH_EVERY = 55 * 60;  // กราฟ ปภ. เป็นรายชั่วโมง → ดึงใหม่ชั่วโมงละครั้ง รอบอื่นใช้ค่าทิศทางเดิม
+const CRON_SLACK = 30;        // cron ดึงเมื่ออายุ ≥ every − นี้ (วินาที) · cron มาทุกนาที เวลาดึงที่ช้าเล็กน้อยไม่ทำให้เลื่อนไปอีกนาที
+const GRAPH_EVERY = 60 * 60;  // กราฟ ปภ. เป็นรายชั่วโมง → ดึงใหม่ชั่วโมงละครั้ง รอบอื่นใช้ค่าทิศทางเดิม
+const SCHED_GRACE = 30 * 60;  // ส่วนที่ดึงตามเวลา (at): เลยเวลาเกินนี้แล้วยังไม่ได้ดึง → คนดูสั่งดึงเอง/ติดธงว่าเก่า
+const ICT = 7 * 3600e3;
+// เวลาที่กำหนดรอบล่าสุดที่ผ่านมาแล้ว (ms) ตามนาฬิกาไทย · วันละครั้งตอน h:00 / เดือนละครั้งวันที่ day 00:00
+const dailyAt = (h) => (now) => { const d = new Date(now + ICT); const t = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), h) - ICT; return t > now ? t - 86400e3 : t; };
+const monthlyOn = (day) => (now) => { const d = new Date(now + ICT); const t = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), day) - ICT; return t > now ? Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, day) - ICT : t; };
 const POOL = 3;               // คำขอไปต้นทางเดียวกันพร้อมกันได้ไม่เกินนี้ (กราฟ/รายละเอียดรายสถานี) ไม่ยิงเป็นชุดใหญ่
 const FRESH_MS = 6 * HOUR * 1000;   // ทิศทางน้ำคิดเฉพาะสถานีที่ส่งค่าใน 6 ชม. (HERO_FRESH_H ใน index.html)
 const STORE = 'https://home-proxy.cache/store-v1';
@@ -146,8 +155,11 @@ async function rid(env, budget) {
 
 /* ทิศทางน้ำ (ค่าราว 1 ชม. ก่อน) · คิดแบบเดียวกับ loadTrends/ridTrends ใน index.html
    ปภ.: 2 ค่าท้ายของกราฟรายชั่วโมง · ชป.: ค่าล่าสุดเทียบค่าล่าสุดที่วัดก่อนนั้นอย่างน้อย 1 ชม. ใน {CODE}.detail.json
-   กราฟ ปภ. เปลี่ยนชั่วโมงละครั้ง: ลองดึงครั้งล่าสุด (ddpmAt) ยังไม่เกิน GRAPH_EVERY ใช้ชุดเดิม (dep.prev) ไม่ยิง ปภ. ทุกรอบ
-   นับจากเวลาที่ลอง ไม่ใช่เวลาที่สำเร็จ → ตอน ปภ. ตอบ 429/ล่ม ก็ลองชั่วโมงละครั้ง ไม่ยิงซ้ำทุก 6 นาที */
+   แต่ละฝั่งคิดใหม่ตามรอบของตัวเอง ฝั่งที่ยังไม่ถึงรอบใช้ชุดเดิม (dep.prev):
+   ชป.: เมื่อรอบนี้ได้โทรมาตรใหม่ (dep.updated) หรือคิดครั้งล่าสุด (ridAt) นานเกินรอบโทรมาตร
+        → ขอ {CODE}.detail.json ทันทีหลัง telerid-proxy เพิ่งสร้างชุดข้อมูล ได้จากชุดนั้นเลย ไม่เปิด WebSocket ซ้ำ
+   ปภ.: กราฟรายชั่วโมง ลองดึงครั้งล่าสุด (ddpmAt) เกิน GRAPH_EVERY จึงดึงใหม่ · นับจากเวลาที่ลอง ไม่ใช่เวลาที่สำเร็จ
+        → ตอน ปภ. ตอบ 429/ล่ม ก็ลองชั่วโมงละครั้ง ไม่ยิงซ้ำทุกรอบ */
 async function trends(env, budget, dep) {
   if (!Array.isArray(dep.ddpm?.data) && !dep.rid?.j) throw new Error('waiting for ddpm/rid station lists');
   const now = Date.now();
@@ -157,11 +169,13 @@ async function trends(env, budget, dep) {
   const rr = (dep.rid?.j?.stations || []).filter((d) => d.province === PROV && num(d.level) != null && num(d.level) > -9
     && (d.levelDt || d.dt) && now - Date.parse(d.levelDt || d.dt) <= FRESH_MS).map((d) => d.code);
   const prev = dep.prev;
-  const graphsFresh = prev?.ddpmAt && now - prev.ddpmAt < GRAPH_EVERY * 1000;
+  const graphsFresh = prev?.ddpmAt && now - prev.ddpmAt < (GRAPH_EVERY - CRON_SLACK) * 1000;
+  const ridFresh = !dep.updated?.includes('rid') && prev?.ridAt && now - prev.ridAt < (PARTS.rid.every - CRON_SLACK) * 1000;
   // โควตาไม่พอ (มักเป็นรอบแรกที่ดึงทุกส่วนพร้อมกัน): ตัดท้าย สถานีที่เหลือไม่มีลูกศรรอบนี้
   const room = Math.max(0, budget.left);
-  const ddUse = graphsFresh ? [] : dd.slice(0, room), rrUse = rr.slice(0, Math.max(0, room - ddUse.length));
-  const out = { ddpm: graphsFresh ? prev.ddpm || {} : {}, rid: {}, ddpmAt: graphsFresh ? prev.ddpmAt : null };
+  const ddUse = graphsFresh ? [] : dd.slice(0, room), rrUse = ridFresh ? [] : rr.slice(0, Math.max(0, room - ddUse.length));
+  const out = { ddpm: graphsFresh ? prev.ddpm || {} : {}, rid: ridFresh ? prev.rid || {} : {},
+    ddpmAt: graphsFresh ? prev.ddpmAt : null, ridAt: ridFresh ? prev.ridAt : now };
   const minute = Math.floor(now / 60000);
   await Promise.all([
     eachLimit(ddUse, POOL, (code) => fetchText(env, `${DDPM}/water-level/graph?stationCode=${encodeURIComponent(code)}&type=hour&isSimulatorMode=false`, budget).then((r) => {
@@ -180,8 +194,8 @@ async function trends(env, budget, dep) {
       if (back[0] < tl) out.rid[code] = [back[1], vl];
     })),
   ]);
-  if (ddUse.length) {
-    out.ddpmAt = now;
+  if (!graphsFresh) {
+    out.ddpmAt = now;   // ถึงรอบแล้ว ลองแล้ว (แม้ไม่มีสถานีให้ดึง) → รอบถัดไปชั่วโมงหน้า
     if (!Object.keys(out.ddpm).length && prev?.ddpm) out.ddpm = prev.ddpm;   // ดึงกราฟรอบนี้ไม่ได้: คงค่าทิศทางเดิม
   }
   if (ddUse.length + rrUse.length && !Object.keys(out.ddpm).length && !Object.keys(out.rid).length) throw new Error('no trend data');
@@ -203,18 +217,18 @@ async function thresholds(env, budget, dep) {
   return { text: JSON.stringify(out), j: out };
 }
 
-/* every/ttl/swr/max เป็นวินาที · after = ส่วนที่ต้องใช้ข้อมูลก่อน (ถ้ากำลังดึงใหม่ รอผลนั้น)
-   every 6 นาที = ทุกรอบ cron (ปภ. ประมวลผลทุก 5 นาที · โทรมาตร ชป. ราย 15 นาที) · X.199 รายชั่วโมงจึง 12 นาที */
+/* every/ttl/swr/max เป็นวินาที · at = ดึงตามเวลาที่กำหนด (ใช้แทน every/ttl) · after = ส่วนที่ต้องใช้ข้อมูลก่อน (ถ้ากำลังดึงใหม่ รอผลนั้น)
+   trends ไม่มี every: cron คิดต่อจากรอบที่ได้โทรมาตร ชป. ใหม่ หรือเมื่อกราฟ ปภ. ถึงชั่วโมง (ดู cronRun) */
 const PARTS = {
-  ddpm:    { every: 6 * MIN,   ttl: 9 * MIN,   swr: 20 * MIN, max: 6 * HOUR,  get: simple(`${DDPM}/stations?provCode=${PROV_CODE}&limit=100`, (j) => Array.isArray(j?.data)) },
-  rid:     { every: 6 * MIN,   ttl: 9 * MIN,   swr: 20 * MIN, max: 6 * HOUR,  get: rid },
-  hyd:     { every: 12 * MIN,  ttl: 18 * MIN,  swr: 60 * MIN, max: 6 * HOUR,  get: simple(['HYD', '/stations.json'], (j) => Array.isArray(j?.stations), 28000) },   // hyd-proxy ที่ไม่มีแคชรอ hyd-app ~25 วิ
-  rain3d:  { every: 30 * MIN,  ttl: 45 * MIN,  swr: 3 * HOUR, max: 12 * HOUR, get: simple(`${TW}/provinces/rain3d?province_code=${PROV_CODE}`, (j) => Array.isArray(j?.data)) },
-  tmd:     { every: 30 * MIN,  ttl: 45 * MIN,  swr: 6 * HOUR, max: 24 * HOUR, get: simple(['TMD', '/region7days'], (j) => !!j?.WeatherForecast7DaysByRegion) },
-  nowcast: { every: 6 * MIN,   ttl: 9 * MIN,   swr: 15 * MIN, max: 1 * HOUR,  get: simple(['TMD', '/nowcast'], (j) => Array.isArray(j?.frames) && j.frames.length) },
-  riskmap: { every: 30 * MIN,  ttl: 45 * MIN,  swr: 6 * HOUR, max: 24 * HOUR, get: simple(['TMD', '/riskmap'], (j) => Array.isArray(j?.districts) && j.districts.length) },
-  trends:  { every: 6 * MIN,   ttl: 9 * MIN,   swr: 30 * MIN, max: 6 * HOUR,  get: trends, after: ['ddpm', 'rid'] },
-  thr:     { every: 12 * HOUR, ttl: 13 * HOUR, swr: 7 * 24 * HOUR, max: 7 * 24 * HOUR, get: thresholds, after: ['ddpm'] },
+  ddpm:    { every: 5 * MIN,   ttl: 8 * MIN,   swr: 20 * MIN,  max: 6 * HOUR,   get: simple(`${DDPM}/stations?provCode=${PROV_CODE}&limit=100`, (j) => Array.isArray(j?.data)) },
+  rid:     { every: 14 * MIN,  ttl: 20 * MIN,  swr: 40 * MIN,  max: 6 * HOUR,   get: rid },
+  hyd:     { every: 30 * MIN,  ttl: 40 * MIN,  swr: 90 * MIN,  max: 6 * HOUR,   get: simple(['HYD', '/stations.json'], (j) => Array.isArray(j?.stations), 28000) },   // hyd-proxy ที่ไม่มีแคชรอ hyd-app ~25 วิ
+  rain3d:  { every: 22 * HOUR, ttl: 24 * HOUR, swr: 30 * HOUR, max: 48 * HOUR,  get: simple(`${TW}/provinces/rain3d?province_code=${PROV_CODE}`, (j) => Array.isArray(j?.data)) },
+  tmd:     { at: dailyAt(14), label: 'daily 14:00 ICT', swr: 48 * HOUR, max: 48 * HOUR, get: simple(['TMD', '/region7days'], (j) => !!j?.WeatherForecast7DaysByRegion) },
+  nowcast: { every: 14 * MIN,  ttl: 20 * MIN,  swr: 30 * MIN,  max: 1 * HOUR,   get: simple(['TMD', '/nowcast'], (j) => Array.isArray(j?.frames) && j.frames.length) },
+  riskmap: { every: 12 * HOUR, ttl: 14 * HOUR, swr: 18 * HOUR, max: 36 * HOUR,  get: simple(['TMD', '/riskmap'], (j) => Array.isArray(j?.districts) && j.districts.length) },
+  trends:  { ttl: 20 * MIN,    swr: 40 * MIN,  max: 6 * HOUR,  get: trends, after: ['ddpm', 'rid'] },
+  thr:     { at: monthlyOn(15), label: 'monthly on the 15th 00:00 ICT', swr: 45 * 24 * HOUR, max: 45 * 24 * HOUR, get: thresholds, after: ['ddpm'] },
 };
 
 /* ---------- ที่เก็บ: Cache API รายการเดียว ----------
@@ -255,24 +269,39 @@ async function saveStore(fresh, cron) {
 
 const startedAt = {};   // ส่วนที่กำลังดึงอยู่ใน isolate นี้ (เวลาเริ่ม) · ไม่แชร์ promise ข้ามคำขอ (Workers ไม่ให้รอ I/O ของคำขออื่น)
 const ageSec = (m, now) => (m && m.t ? (now - m.t) / 1000 : Infinity);
-// cron = ถึงรอบ cron (every) · ไม่ใช่ = หมดอายุสำหรับคนดู (ttl)
+// หมดอายุสำหรับคนดู (ใช้ทั้งสั่งดึงเองและติดธง s) · ส่วนที่ใช้ at: เลยเวลาที่กำหนดเกิน SCHED_GRACE แล้วยังไม่ได้ดึง
+function expired(p, m, now) {
+  const def = PARTS[p];
+  if (!m?.t) return true;
+  if (def.at) { const b = def.at(now); return m.t < b && now - b > SCHED_GRACE * 1000; }
+  return ageSec(m, now) > def.ttl;
+}
+// ถึงรอบ cron · trends ไม่มีรอบของตัวเอง (cronRun สั่งต่อจากโทรมาตร/กราฟ ปภ.) ยกเว้นยังไม่มีข้อมูลเลย
+function cronDue(p, m, now) {
+  const def = PARTS[p];
+  if (!m?.t) return true;
+  if (def.at) return m.t < def.at(now);
+  return def.every ? ageSec(m, now) >= def.every - CRON_SLACK : false;
+}
+// cron = ถึงรอบ cron · ไม่ใช่ = หมดอายุสำหรับคนดู
 function due(store, p, now, cron) {
   const m = store.meta[p], age = ageSec(m, now);
   // เพิ่งล้มเหลว ไม่ยิงถี่ใส่ต้นทาง · 429 ติดกันพักนานขึ้นเป็นเท่าตัว
-  const gap = /HTTP 429/.test(m?.e) ? Math.min(LIMIT_GAP * 2 ** ((m.k || 1) - 1), LIMIT_MAX) : RETRY_GAP;
+  const gap = /HTTP 429/.test(m?.e) ? Math.min(LIMIT_GAP * 2 ** ((m.k || 1) - 1), LIMIT_MAX) : FAIL_GAP;
   if (m?.et && now - m.et < gap) return false;
   if (m?.u && age > RETRY_GAP / 1000) return true;
-  return cron ? age >= PARTS[p].every - CRON_SLACK : age > PARTS[p].ttl;
+  return cron ? cronDue(p, m, now) : expired(p, m, now);
 }
 /* ดึงส่วนที่หมดอายุพร้อมกัน · fresh ได้ผลทีละส่วนเมื่อเสร็จ (คำตอบหยิบเฉพาะที่เสร็จทันไปใช้) · runs = promise รายส่วน */
 function refresh(env, store, parts) {
   const budget = { left: FETCH_BUDGET };
   const fresh = {}, runs = {};
   const run = (p) => runs[p] || (runs[p] = (async () => {
-    const dep = { prev: storedJson(store, p) };   // ชุดเดิมของส่วนนี้เอง (trends ใช้กราฟ ปภ. ซ้ำ)
+    const dep = { prev: storedJson(store, p), updated: [] };   // ชุดเดิมของส่วนนี้เอง · updated = ส่วนที่พึ่งซึ่งได้ข้อมูลใหม่รอบนี้
     for (const d of PARTS[p].after || []) {
       if (parts.includes(d)) await run(d).catch(() => {});
       dep[d] = fresh[d]?.j ?? storedJson(store, d);
+      if (fresh[d]?.text != null) dep.updated.push(d);
     }
     try {
       fresh[p] = { t: Date.now(), ...(await PARTS[p].get(env, budget, dep)) };
@@ -294,7 +323,7 @@ function bundle(store, fresh, want, now) {
     const m = f || store.meta[p] || {};
     const age = ageSec(m, now);
     const usable = text != null && age <= PARTS[p].max;
-    const s = !usable || age > PARTS[p].ttl || m.u ? 1 : 0;
+    const s = !usable || expired(p, m, now) || m.u ? 1 : 0;
     return JSON.stringify(p) + ':{"t":' + (m.t || 0) + ',"s":' + s + ',"d":' + (usable ? text : 'null') + '}';
   }).join(',') + '}}';
 }
@@ -343,9 +372,17 @@ async function cronRun(env) {
     (PARTS[p].after || []).forEach(add);
   };
   Object.keys(PARTS).forEach(add);
+  // ทิศทางน้ำคิดต่อเมื่อรอบนี้ได้โทรมาตร ชป. ใหม่ หรือกราฟ ปภ. ถึงชั่วโมง (builder เลือกคิดเฉพาะฝั่งที่ถึงรอบ)
+  const tr = storedJson(store, 'trends');
+  const graphsDue = !tr?.ddpmAt || now - tr.ddpmAt >= (GRAPH_EVERY - CRON_SLACK) * 1000;
+  const tm = store.meta.trends;
+  const trendsWait = (tm?.et && now - tm.et < FAIL_GAP) || now - (startedAt.trends || 0) < RETRY_GAP;
+  if (!need.includes('trends') && !trendsWait && (need.includes('rid') || graphsDue)) need.push('trends');
+  // นาทีที่ไม่มีอะไรถึงรอบ: จบทันที ไม่ถามศูนย์ ไม่เขียนแคช (cron มาทุกนาที)
+  if (!need.length) return json({ at: now, refreshed: 0 });
   need.forEach((p) => { startedAt[p] = now; });
   const [fresh, runsIn] = await Promise.all([
-    need.length ? refresh(env, store, need).done : {},
+    refresh(env, store, need).done,
     withTimeout(fetch('https://www.cloudflare.com/cdn-cgi/trace').then((r) => r.text()), 5000, 'trace')
       .then((t) => (t.match(/^colo=(\w+)/m) || [])[1] || '', () => ''),
   ]);
@@ -360,7 +397,10 @@ async function status(request, env) {
   const parts = {};
   for (const p of Object.keys(PARTS)) {
     const m = store.meta[p] || {};
-    parts[p] = { ageSec: m.t ? Math.round((now - m.t) / 1000) : null, ttlSec: PARTS[p].ttl, sizeKB: Math.round((m.n || 0) / 102.4) / 10,
+    const def = PARTS[p];
+    parts[p] = { ageSec: m.t ? Math.round((now - m.t) / 1000) : null,
+      refresh: def.at ? def.label : def.every ? `every ${def.every >= HOUR ? def.every / HOUR + ' h' : def.every / MIN + ' min'}` : 'after rid (14 min) / DDPM graphs hourly',
+      sizeKB: Math.round((m.n || 0) / 102.4) / 10,
       upstreamStale: !!m.u, lastError: m.e || null, lastErrorAgoSec: m.et ? Math.round((now - m.et) / 1000) : null };
   }
   const bindings = Object.fromEntries(Object.keys(PUBLIC).map((n) => [n, !!(env && env[n])]));
@@ -371,7 +411,7 @@ async function status(request, env) {
     colo: (request.cf && request.cf.colo) || '', bindings,
     hint: missing.length ? `add Service bindings (Settings > Bindings): ${missing.map((n) => `${n} -> ${n === 'SELF' ? 'home-proxy (itself, for cron)' : PUBLIC[n].replace(/^https:\/\/|\..*$/g, '')}`).join(', ')}` : 'all bindings set',
     cron: c ? { lastRunAgoSec: Math.round((now - c.at) / 1000), runsIn: c.runsIn, tookMs: c.ms, refreshed: c.refreshed, failed: c.failed }
-      : 'no cron run seen in this cache yet (needs SELF binding + Cron Trigger */6 * * * *)',
+      : 'no cron run seen in this cache yet (needs SELF binding + Cron Trigger * * * * *)',
     note: 'cache is per Cloudflare data center: this shows the one serving you',
     use: ['/home.json', '/home.json?parts=rid,trends', '/cron'],
     parts,
@@ -392,7 +432,7 @@ export default {
       return json({ error: String(e?.message || e) }, 500);
     }
   },
-  // Cron Trigger (*/6 * * * *): Placement ไม่มีผลกับ scheduled → เรียก /cron ของตัวเองผ่าน SELF ให้ fetch ไปรันที่ BKK
+  // Cron Trigger (ทุกนาที * * * * *): Placement ไม่มีผลกับ scheduled → เรียก /cron ของตัวเองผ่าน SELF ให้ fetch ไปรันที่ BKK
   // ไม่ได้ผูก SELF: ไม่ทำอะไร (ดึงจากศูนย์อื่นจะเติมแคชผิดที่ เปลืองต้นทางเปล่า ๆ)
   async scheduled(event, env, ctx) {
     if (env && env.SELF) ctx.waitUntil(env.SELF.fetch('https://home-proxy/cron').then((r) => r.text()).catch(() => {}));

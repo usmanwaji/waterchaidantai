@@ -853,6 +853,23 @@ async function pollRid(){
     renderWaterta(); renderStations(); rerenderHero();
   }catch(e){}
 }
+/* แท็บที่เปิดค้าง: ขอทุกส่วนของ home-proxy ทุก HOME_POLL_MS แล้ววาดใหม่ · Worker ตอบจากแคช (cron ดึงต้นทางตามรอบของมันเอง)
+   จึงไม่เพิ่มภาระต้นทาง · ระดับน้ำ thaiwater / พยากรณ์ open-meteo ยังดึงตรงตามรอบ loadAll 30 นาที (ไม่ยิงถี่ใส่ต้นทาง)
+   ส่วนที่ไม่มีในคำตอบ ข้ามไป คงชุดเดิม (รอบ loadAll ถัดไปค่อยดึงตรงแทน) */
+const HOME_POLL_MS = 6*60*1000;
+async function pollHome(){
+  if(document.hidden || loadingAll || !heroReady) return;
+  const h = await homeGet(HOME_MAIN);
+  if(loadingAll) return;
+  const pre = { rain3d: homeData(h,'rain3d'), ddpm: homeData(h,'ddpm'), rid: ridFromHome(h), hyd: homeData(h,'hyd') };
+  if(!Object.values(pre).some(Boolean)) return;
+  await Promise.allSettled([pre.rain3d && loadSoil(pre.rain3d), pre.ddpm && loadDdpm(pre.ddpm), pre.rid && loadRid(pre.rid), pre.hyd && loadHyd(pre.hyd)]);
+  Object.assign(ddpmThr, homeData(h,'thr'));
+  if(homeData(h,'trends')) applyTrends(homeData(h,'trends'));
+  if(loadingAll) return;   // loadAll วาดให้เองแล้ว
+  renderAll();
+  document.getElementById('updated').textContent = 'อัปเดต ' + new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+}
 /* เกณฑ์ "เฝ้าระวัง" ของ ปภ. (mediumLevelThreshold) มีเฉพาะในรายละเอียดรายสถานี
    โหลดเฉพาะสถานีที่แสดงอยู่ (ไม่เกิน 3) แล้ววาดใหม่ · ใช้เป็นเส้นเหลืองบนมาตรวัด */
 const ddpmThr = {};
@@ -2087,7 +2104,9 @@ loadDistRain();
 setInterval(loadTmd, 60*60*1000);
 setInterval(loadAll, 30*60*1000);
 setInterval(pollRid, 2*60*1000);
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollRid(); });
+setInterval(pollHome, HOME_POLL_MS);
+// กลับมาที่แท็บ: ขอชุดล่าสุดทั้งหมดจาก home-proxy (รวมโทรมาตร ชป.) · ระหว่างซ่อนแท็บรอบ poll ข้ามไป
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollHome(); });
 setInterval(loadRadarImg, 10*60*1000);
 setInterval(loadNowcast, 5*60*1000);
 setInterval(loadDistRain, 60*60*1000);
