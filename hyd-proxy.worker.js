@@ -9,6 +9,7 @@
   path:
     /                               สถานะ: Worker รันศูนย์ไหน (runsIn) และดึง hyd-app ได้หรือไม่
     /stations.json                  สรุปสถานีในนราธิวาส: ระดับน้ำล่าสุด + ตลิ่ง + กราฟ 24 ชม. (แคช 10 นาที · hyd-app ล่มตอบชุดเก่าได้ 6 ชม.)
+                                    แคชเกิน 10 นาทีแต่ไม่เกิน 1 ชม. → ตอบชุดเดิมทันทีแล้วดึงใหม่เบื้องหลัง (ไม่ให้คนดูรอ hyd-app 20–30 วิ)
     /hydro8h.html                   = https://hyd-app.rid.go.th/hydro8h.html (path/query อื่นก็ส่งต่อเหมือนกัน)
     /h/<host>/<path>                = https://<host>/<path> · host ต้องเป็นโดเมนย่อยของ rid.go.th เท่านั้น
                                       (เผื่อหน้าเว็บเรียก API จากโดเมนย่อยอื่น เช่น hyd-app-db.rid.go.th)
@@ -33,6 +34,7 @@ const PROVINCE = 'นราธิวาส';
 const HYDRO_ID = 8, BASIN_ID = 24;
 const TTL_STATIONS = 600;           // สรุปสถานี 10 นาที (สถานีส่งค่ารายชั่วโมง)
 const STALE_MAX = 6 * 3600;         // hyd-app ล่มชั่วคราว → ตอบชุดเก่าได้ไม่เกิน 6 ชม.
+const SWR_MAX = 3600;               // เกิน TTL_STATIONS แต่ไม่เกินนี้ → ตอบชุดในแคชทันที แล้วดึงใหม่เบื้องหลัง
 const SHARE_EVERY = 15 * 60e3;      // เขียน KV ได้ไม่ถี่กว่านี้
 
 const CORS = {
@@ -150,24 +152,44 @@ async function buildStations() {
   const dts = stations.map((x) => x.levelDt).filter(Boolean).sort();
   return { updated: dts[dts.length - 1], fetchedAt: new Date().toISOString(), source: 'hyd-proxy (hyd-app.rid.go.th hydro8h)', total: stations.length, stations };
 }
+const STATIONS_KEY = 'https://hyd-proxy.cache/stations.json';
+let revalidateAt = 0;   // เวลาที่สั่งดึงเบื้องหลังรอบล่าสุดใน isolate นี้ · กันคำขอที่เข้ามาระหว่างรอ hyd-app สั่งดึงซ้ำ
+/* ดึง hyd-app ใหม่ · คืน { text, saved } โดย saved = งานเก็บลงแคชของศูนย์ (+ KV ถ้าผูกไว้) ให้ผู้เรียกส่งเข้า ctx.waitUntil
+   ไม่แชร์ promise ข้ามคำขอ: Workers ไม่ให้คำขอหนึ่งรอ I/O ที่เริ่มจากอีกคำขอ (ค้างได้ถ้าคำขอต้นทางจบก่อน) */
+async function refreshStations(env) {
+  const body = await buildStations();
+  const text = JSON.stringify(body);
+  const kv = env && env.HYD_KV;
+  const saved = Promise.all([
+    caches.default.put(STATIONS_KEY, new Response(text, { headers: { 'x-stored': String(Date.now()), 'cache-control': `public, max-age=${STALE_MAX}` } })),
+    kv && (async () => {
+      const m = (await kv.getWithMetadata('stations', { type: 'stream' }).then((r) => { if (r.value) r.value.cancel(); return r.metadata; }).catch(() => null)) || null;
+      if (!m || m.u !== body.updated || Date.now() - m.t > SHARE_EVERY) await kv.put('stations', text, { metadata: { t: Date.now(), u: body.updated }, expirationTtl: STALE_MAX * 2 });
+    })(),
+  ]).catch(() => {});
+  return { text, saved };
+}
 async function stationsJson(env, ctx) {
-  const cache = caches.default, key = new Request('https://hyd-proxy.cache/stations.json');
-  const hit = await cache.match(key);
+  const hit = await caches.default.match(STATIONS_KEY);
   const age = hit ? (Date.now() - Number(hit.headers.get('x-stored') || 0)) / 1000 : Infinity;
   const send = (text, from) => new Response(text, { headers: { ...CORS, 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=120', 'x-cache': from } });
   if (hit && age < TTL_STATIONS) return send(await hit.text(), 'HIT');
-  const kv = env && env.HYD_KV;
+  // hyd-app ตอบช้า ดึงครบชุดราว 20–30 วิ · เดิมคนแรกหลังแคชหมดต้องรอทั้งหมดนี้ (หน้าแรกค้างตาม)
+  // ชุดในแคชยังไม่เก่าเกิน SWR_MAX → ตอบทันที แล้วดึงใหม่เบื้องหลัง คนถัดไปได้ชุดใหม่
+  if (hit && age < SWR_MAX) {
+    if (Date.now() - revalidateAt > 60e3) {
+      revalidateAt = Date.now();
+      ctx.waitUntil(refreshStations(env).then((r) => r.saved).catch(() => {}));
+    }
+    return send(await hit.text(), 'REVALIDATING');
+  }
   try {
-    const body = await buildStations();
-    const text = JSON.stringify(body);
-    ctx.waitUntil(cache.put(key, new Response(text, { headers: { 'x-stored': String(Date.now()), 'cache-control': `public, max-age=${STALE_MAX}` } })));
-    if (kv) ctx.waitUntil((async () => {
-      const m = (await kv.getWithMetadata('stations', { type: 'stream' }).then((r) => { if (r.value) r.value.cancel(); return r.metadata; }).catch(() => null)) || null;
-      if (!m || m.u !== body.updated || Date.now() - m.t > SHARE_EVERY) await kv.put('stations', text, { metadata: { t: Date.now(), u: body.updated }, expirationTtl: STALE_MAX * 2 });
-    })().catch(() => {}));
+    const { text, saved } = await refreshStations(env);
+    ctx.waitUntil(saved);
     return send(text, 'MISS');
   } catch (e) {
     if (hit && age < STALE_MAX) return send(await hit.text(), 'STALE');
+    const kv = env && env.HYD_KV;
     if (kv) {
       const r = await kv.getWithMetadata('stations').catch(() => null);
       if (r && r.value && r.metadata && Date.now() - r.metadata.t < STALE_MAX * 1000) return send(r.value, 'KV');
