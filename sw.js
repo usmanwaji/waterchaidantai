@@ -5,7 +5,7 @@
  *   • ข้อมูล API (GET) → network-first แล้วเก็บชุดล่าสุดไว้ ใช้ตอนออฟไลน์ ("last good data")
  * เพิ่มเลขเวอร์ชันเมื่อแก้ไฟล์เพื่อบังคับอัปเดตแคช
  */
-const VERSION = 'oms-v85';
+const VERSION = 'oms-v87';
 const SHELL = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 
@@ -40,7 +40,8 @@ self.addEventListener('activate', event => {
 function isApiGet(url) {
   // ภาพสดกล้อง ปภ. (/api/webrtc/...frame.jpeg) ไม่เก็บแคช: เปลี่ยนทุกครั้งที่เปิด ถ้าเก็บจะสะสมไฟล์ภาพไม่รู้จบ
   if (/disaster\.go\.th\/api\/webrtc\//.test(url)) return false;
-  return /thaiwater\.net|open-meteo\.com|disaster\.go\.th|gistda\.or\.th|rid\.go\.th|dwr\.go\.th|supabase\.co/.test(url);
+  // home-proxy: ข้อมูลรวมของหน้าแรก · เก็บชุดล่าสุดไว้ใช้ตอนออฟไลน์เหมือนแหล่งอื่น
+  return /thaiwater\.net|open-meteo\.com|disaster\.go\.th|gistda\.or\.th|rid\.go\.th|dwr\.go\.th|supabase\.co|home-proxy\.[\w-]+\.workers\.dev/.test(url);
 }
 
 self.addEventListener('fetch', event => {
