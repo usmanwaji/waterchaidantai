@@ -175,7 +175,7 @@ async function thresholds(env, budget, dep) {
 const PARTS = {
   ddpm:    { ttl: 2 * MIN,   swr: 15 * MIN, max: 6 * HOUR,  get: simple(`${DDPM}/stations?provCode=${PROV_CODE}&limit=100`, (j) => Array.isArray(j?.data)) },
   rid:     { ttl: 1 * MIN,   swr: 10 * MIN, max: 6 * HOUR,  get: rid },
-  hyd:     { ttl: 5 * MIN,   swr: 60 * MIN, max: 6 * HOUR,  get: simple(['HYD', '/stations.json'], (j) => Array.isArray(j?.stations), 25000) },
+  hyd:     { ttl: 5 * MIN,   swr: 60 * MIN, max: 6 * HOUR,  get: simple(['HYD', '/stations.json'], (j) => Array.isArray(j?.stations), 28000) },   // hyd-proxy ที่ไม่มีแคชรอ hyd-app ~25 วิ
   rain3d:  { ttl: 30 * MIN,  swr: 3 * HOUR, max: 12 * HOUR, get: simple(`${TW}/provinces/rain3d?province_code=${PROV_CODE}`, (j) => Array.isArray(j?.data)) },
   tmd:     { ttl: 30 * MIN,  swr: 6 * HOUR, max: 24 * HOUR, get: simple(['TMD', '/region7days'], (j) => !!j?.WeatherForecast7DaysByRegion) },
   nowcast: { ttl: 4 * MIN,   swr: 15 * MIN, max: 1 * HOUR,  get: simple(['TMD', '/nowcast'], (j) => Array.isArray(j?.frames) && j.frames.length) },
