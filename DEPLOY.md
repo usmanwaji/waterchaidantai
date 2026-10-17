@@ -160,6 +160,22 @@ select path, sum(views) as views from public.page_views group by path order by v
 
 ตั้งขอบเขตจังหวัดให้สมาชิก/แอดมินได้ที่หน้า **admin.html** (ช่อง “ขอบเขตจังหวัด”)
 
+### 2.1) หน้าอัปโหลดแบบสำรวจสำหรับเจ้าหน้าที่ (`staff-upload.html`, schema v11)
+
+เจ้าหน้าที่อัปโหลด Excel/PDF แบบสำรวจ **บ้านพี่เลี้ยง** หรือ **ที่จอดรถหนีน้ำ** แล้วหน้า shelter.html ใช้ชุดใหม่ทันที
+หน้านี้ไม่มีลิงก์จากหน้าไหนในเว็บ และไม่ให้ search engine เก็บ · สิทธิ์อัปโหลดอยู่ที่ **คีย์ลับในลิงก์** (ตรวจที่ฐานข้อมูล ไม่ใช่แค่ซ่อน URL)
+
+1. รัน `supabase/schema-v11.sql` ใน SQL Editor (ครั้งเดียว)
+2. ออกคีย์ให้แต่ละคน (คีย์ = ข้อความสุ่มยาว ๆ ที่ตั้งเอง ฐานข้อมูลเก็บแค่ค่า hash):
+   ```sql
+   insert into public.survey_upload_keys(label, key_hash)
+   values ('ชื่อคน/หน่วยงาน', encode(sha256(convert_to('คีย์ลับ', 'UTF8')), 'hex'));
+   ```
+3. ส่งลิงก์ `https://naraflood.com/staff-upload.html#k=คีย์ลับ` ให้คนนั้น (เปิดครั้งแรกแล้วเครื่องจะจำคีย์ไว้ และลบคีย์ออกจากแถบที่อยู่)
+4. ปิดสิทธิ์: `update public.survey_upload_keys set active = false where label = 'ชื่อคน/หน่วยงาน';`
+
+ทุกการอัปโหลดเก็บประวัติพร้อมชื่อผู้อัปโหลด ย้อนกลับเวอร์ชันเก่า หรือกลับไปใช้ไฟล์ที่ติดมากับเว็บ (`js/hosts_nwt.js`, `js/parking_nwt.js`) ได้จากหน้าเดียวกัน
+
 ---
 
 ## 3) แจ้งเตือนน้ำผ่าน Telegram (Edge Functions `telegram-webhook` + `notify-water`)

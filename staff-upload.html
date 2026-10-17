@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- หน้าสำหรับเจ้าหน้าที่: ไม่มีลิงก์จากหน้าไหนในเว็บ และไม่ให้เครื่องมือค้นหาเก็บ · เข้าได้ด้วยลิงก์ที่มีคีย์ #k=... เท่านั้น -->
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<title>อัปโหลดแบบสำรวจ · เจ้าหน้าที่</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📤</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="shared.css?v=11">
+<style>
+:root{--hs:#0f8a6b;--pk:#1d5fd1}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans Thai','Noto Sans Thai',Tahoma,sans-serif;font-size:14px}
+main{max-width:1000px;margin:0 auto;padding:16px 16px 40px}
+h1{font-size:19px;margin:4px 0 2px}
+h2{font-size:15px;margin:0 0 10px}
+.sub{color:var(--ink-3);font-size:12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:5px;background:var(--signal);color:#fff;border:none;font:inherit;font-size:13px;font-weight:700;padding:7px 14px;border-radius:8px;cursor:pointer;text-decoration:none}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line-mid)}
+.btn.sm{padding:3px 9px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.drop{display:block;border:2px dashed var(--line-mid);border-radius:12px;padding:22px;text-align:center;cursor:pointer;background:var(--paper-2)}
+.drop.over{border-color:var(--signal);background:#fff}
+.drop b{font-size:15px}
+label.kind{display:inline-flex;gap:5px;align-items:center;border:1px solid var(--line-mid);border-radius:8px;padding:5px 10px;cursor:pointer}
+label.kind:has(input:checked){border-color:var(--signal);background:var(--paper-2);font-weight:700}
+.msg{padding:10px 12px;border-radius:9px;margin-top:10px;font-size:13px}
+.msg.err{background:#fde8e8;color:#8a1c1c}
+.msg.ok{background:#e3f6ee;color:#0b5e45}
+.msg.info{background:var(--paper-2);color:var(--ink-2)}
+.warn{color:#8a4b00;font-size:12.5px;margin:4px 0 0 18px;padding:0}
+.stats{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:8px}
+.stats b{font-size:18px}
+#map{height:360px;border-radius:10px;margin:8px 0}
+.tblwrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:9px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--card-2);position:sticky;top:0}
+.ap{font-size:11px;color:#8a4b00}
+.cur{font-size:11px;font-weight:700;color:var(--hs)}
+input[type=text]{font:inherit;padding:7px 10px;border:1px solid var(--line-mid);border-radius:8px;min-width:260px;flex:1}
+select{font:inherit;padding:6px 8px;border:1px solid var(--line-mid);border-radius:8px}
+.hide{display:none!important}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px dashed;vertical-align:-2px}
+@media(max-width:600px){input[type=text]{min-width:0}}
+</style>
+</head>
+<body>
+<main>
+  <h1>📤 อัปโหลดแบบสำรวจ</h1>
+  <div class="sub">สำหรับเจ้าหน้าที่ · อัปเดตข้อมูล <b>บ้านพี่เลี้ยง</b> และ <b>ที่จอดรถหนีน้ำ</b> บนหน้า <a href="shelter.html" target="_blank" rel="noopener">ศูนย์พักพิง</a> · <span id="who"></span></div>
+
+  <div id="gate" class="msg info">กำลังตรวจสอบลิงก์…</div>
+
+  <div id="app" class="hide">
+    <div class="card">
+      <h2>สถานะข้อมูลบนเว็บตอนนี้</h2>
+      <div id="status" class="sub">…</div>
+    </div>
+
+    <div class="card">
+      <h2>1. เลือกไฟล์</h2>
+      <div class="row" style="margin-bottom:10px">
+        <span>ชนิดข้อมูล:</span>
+        <label class="kind"><input type="radio" name="kind" value="" checked> ตรวจจากหัวตารางอัตโนมัติ</label>
+        <label class="kind"><input type="radio" name="kind" value="hosts"> 🏡 บ้านพี่เลี้ยง</label>
+        <label class="kind"><input type="radio" name="kind" value="parking"> 🅿️ ที่จอดรถหนีน้ำ</label>
+      </div>
+      <label class="drop" id="drop">
+        <input type="file" id="file" accept=".xlsx,.xls,.csv,.pdf" hidden>
+        <b>แตะเพื่อเลือกไฟล์ หรือลากไฟล์มาวาง</b>
+        <div class="sub">Excel (.xlsx .xls) · CSV · PDF ที่ export จาก Excel — Excel แม่นยำกว่า PDF (PDF บางไฟล์สระ/วรรณยุกต์เพี้ยน)</div>
+        <div class="sub">บ้านพี่เลี้ยง: ระบบไม่นำชื่อเจ้าของบ้าน บ้านเลขที่ และเบอร์ส่วนตัวขึ้นเว็บ แสดงเฉพาะผู้ประสานข้อมูลกับเบอร์กลาง 073-532134</div>
+      </label>
+      <div class="row hide" id="sheetRow" style="margin-top:8px"><span>แผ่นงาน:</span><select id="sheetSel"></select></div>
+      <div id="parseMsg"></div>
+      <div class="sub" style="margin-top:8px">ไฟล์จะถูกอ่านในเครื่องนี้ก่อน แสดงตัวอย่างให้ตรวจ แล้วจึงเผยแพร่เมื่อกดยืนยัน · การเผยแพร่ <b>แทนที่ข้อมูลทั้งชุด</b> ของชนิดนั้น (ย้อนกลับได้จากประวัติด้านล่าง)</div>
+    </div>
+
+    <div class="card hide" id="preview">
+      <h2>2. ตรวจตัวอย่าง <span class="sub" id="pvKind"></span></h2>
+      <div class="stats" id="pvStats"></div>
+      <div class="sub" id="pvCols"></div>
+      <ul class="warn" id="pvWarn"></ul>
+      <div id="map"></div>
+      <div class="tblwrap"><table><thead id="pvHead"></thead><tbody id="pvBody"></tbody></table></div>
+      <div class="row" style="margin-top:12px">
+        <input type="text" id="note" maxlength="300" placeholder="หมายเหตุ (ไม่บังคับ) เช่น ข้อมูล ณ 8 ต.ค. 69 จาก สถ.จ.">
+        <button class="btn" id="publish">3. เผยแพร่ขึ้นเว็บ</button>
+      </div>
+      <div id="pubMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>ประวัติการอัปโหลด</h2>
+      <div class="row" style="margin-bottom:8px">
+        <select id="histKind"><option value="hosts">🏡 บ้านพี่เลี้ยง</option><option value="parking">🅿️ ที่จอดรถหนีน้ำ</option></select>
+        <button class="btn ghost sm" id="builtin">กลับไปใช้ข้อมูลเดิมที่ติดมากับเว็บ</button>
+      </div>
+      <div class="tblwrap"><table><thead><tr><th>เวลา</th><th>ไฟล์ / หมายเหตุ</th><th>แถว</th><th>โดย</th><th></th></tr></thead><tbody id="histBody"></tbody></table></div>
+    </div>
+
+    <div class="sub" style="margin-top:14px">ห้ามส่งต่อลิงก์หน้านี้ · <a href="#" id="logout">ออกจากระบบบนเครื่องนี้</a></div>
+  </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js?v=3"></script>
+<script src="js/survey-import.js"></script>
+<script>
+'use strict';
+const XLSX_URL = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+const PDFJS_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.min.mjs';
+const PDFJS_WORKER = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.worker.min.mjs';
+const KIND_LABEL = {hosts:'🏡 บ้านพี่เลี้ยง', parking:'🅿️ ที่จอดรถหนีน้ำ'};
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const fmt = n => Number(n||0).toLocaleString('th-TH');
+const when = t => new Date(t).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Bangkok'});
+
+/* ---------- คีย์จากลิงก์ #k=... · จำไว้บนเครื่องนี้ แล้วลบออกจากแถบที่อยู่ ---------- */
+const KEY_LS = 'naraflood.staffUploadKey';
+let KEY = new URLSearchParams(location.hash.slice(1)).get('k');
+if (KEY) { try{ localStorage.setItem(KEY_LS, KEY); }catch(e){} history.replaceState(null, '', location.pathname); }
+else { try{ KEY = localStorage.getItem(KEY_LS); }catch(e){} }
+// เปิดลิงก์ใหม่ (คีย์อื่น) ทับหน้าที่เปิดอยู่: hash เปลี่ยนแต่หน้าไม่โหลดใหม่ จึงโหลดเอง
+window.addEventListener('hashchange', ()=>{ if(/(^#|&)k=/.test(location.hash)) location.reload(); });
+
+async function gate(){
+  const g = $('gate');
+  if(!KEY){ g.className='msg err'; g.textContent='ต้องเปิดจากลิงก์ที่ได้รับจากผู้ดูแลระบบเท่านั้น'; return; }
+  if(typeof sb==='undefined'){ g.className='msg err'; g.textContent='เชื่อมต่อฐานข้อมูลไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วโหลดหน้าใหม่'; return; }
+  const {data, error} = await sb.rpc('survey_check_key', {p_key: KEY});
+  if(error){ g.className='msg err'; g.textContent = /survey_check_key/.test(error.message)
+      ? 'ฐานข้อมูลยังไม่ได้ติดตั้งระบบอัปโหลด (ผู้ดูแลต้องรัน supabase/schema-v11.sql)' : 'ตรวจสอบลิงก์ไม่สำเร็จ: '+error.message; return; }
+  if(!data){ g.className='msg err'; g.textContent='ลิงก์ไม่ถูกต้องหรือถูกปิดใช้งานแล้ว'; try{ localStorage.removeItem(KEY_LS); }catch(e){} return; }
+  g.classList.add('hide'); $('app').classList.remove('hide');
+  $('who').textContent = 'เข้าใช้ในชื่อ: '+data;
+  loadStatus(); loadHistory();
+}
+
+async function loadStatus(){
+  const {data} = await sb.from('survey_current').select('kind,row_count,source_name,uploaded_at');
+  const by = Object.fromEntries((data||[]).map(d=>[d.kind,d]));
+  $('status').innerHTML = ['hosts','parking'].map(k=>{
+    const d = by[k];
+    return `<div>${KIND_LABEL[k]}: `+(d ? `<b>${fmt(d.row_count)} แห่ง</b> จากไฟล์ “${esc(d.source_name)}” · อัปเดต ${when(d.uploaded_at)}`
+      : `ใช้ข้อมูลเดิมที่ติดมากับเว็บ (${k==='hosts'?'js/hosts_nwt.js':'js/parking_nwt.js'})`)+`</div>`;
+  }).join('');
+}
+
+/* ---------- ข้อมูลภูมิศาสตร์ (โหลดครั้งแรกที่ใช้) ---------- */
+let GEO = null;
+function loadScript(src){ return new Promise((ok,bad)=>{ const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=()=>bad(new Error('โหลด '+src+' ไม่สำเร็จ')); document.head.appendChild(s); }); }
+async function geo(){
+  if(GEO) return GEO;
+  const [sub, dist] = await Promise.all(['js/onwr-nara-subdistricts.geojson','js/onwr-nara-districts.geojson'].map(u=>fetch(u).then(r=>r.json())));
+  if(typeof DDPM_RISK_DATA==='undefined') await loadScript('js/ddpm_risk_data.js');
+  return GEO = SurveyImport.buildGeo(DDPM_RISK_DATA, sub, dist);   // eslint-disable-line no-undef
+}
+
+/* ---------- อ่านไฟล์ ---------- */
+let WB = null, FILE = null, RESULT = null;
+async function readPdfTable(buf){
+  const pdfjs = await import(PDFJS_URL);
+  pdfjs.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+  const doc = await pdfjs.getDocument({data: buf, isEvalSupported: false}).promise;
+  const pages = [];
+  for(let i=1;i<=doc.numPages;i++){
+    const tc = await (await doc.getPage(i)).getTextContent();
+    pages.push(tc.items.map(t=>({str:t.str, x:t.transform[4], y:t.transform[5], w:t.width})));
+  }
+  return SurveyImport.tableFromPdfPages(pages);
+}
+async function handleFile(f){
+  FILE = f; WB = null; RESULT = null;
+  $('preview').classList.add('hide'); $('sheetRow').classList.add('hide'); $('pubMsg').innerHTML='';
+  const m = $('parseMsg'); m.className='msg info'; m.textContent='กำลังอ่าน “'+f.name+'”…';
+  try{
+    const buf = await f.arrayBuffer();
+    if(/\.pdf$/i.test(f.name)){
+      const [table, g] = await Promise.all([readPdfTable(buf), geo()]);
+      show(SurveyImport.toRecords(table, g, kindChoice()));
+    }else{
+      if(typeof XLSX==='undefined') await loadScript(XLSX_URL);
+      WB = XLSX.read(buf, {cellDates:true});
+      const sel = $('sheetSel');
+      sel.innerHTML = WB.SheetNames.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join('');
+      $('sheetRow').classList.toggle('hide', WB.SheetNames.length<2);
+      // เลือกแผ่นงานแรกที่อ่านหัวตารางได้
+      const g = await geo(); let err = null;
+      for(let i=0;i<WB.SheetNames.length;i++){
+        try{ const r = parseSheet(i, g); sel.value=i; show(r); return; }catch(e){ err = err || e; }
+      }
+      throw err;
+    }
+  }catch(e){ m.className='msg err'; m.textContent='อ่านไฟล์ไม่สำเร็จ: '+e.message; }
+}
+function parseSheet(i, g){
+  const ws = WB.Sheets[WB.SheetNames[i]];
+  return SurveyImport.toRecords(SurveyImport.tableFromSheet(XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''})), g, kindChoice());
+}
+const kindChoice = () => document.querySelector('input[name=kind]:checked').value || null;
+
+/* ---------- ตัวอย่าง ---------- */
+let map, layer;
+const COL_TH = {n:'ลำดับ',amp:'อำเภอ',tam:'ตำบล',mu:'หมู่',org:'อปท.',owner:'เจ้าของบ้าน',house:'บ้านเลขที่',cap:'รองรับ',place:'สถานที่',mc:'จักรยานยนต์',car:'รถยนต์',lat:'ละติจูด',lon:'ลองจิจูด',pos:'พิกัด',c:'ผู้ประสานงาน',tel:'เบอร์'};
+function show(res){
+  RESULT = res;
+  $('parseMsg').className='msg ok'; $('parseMsg').textContent='อ่าน “'+FILE.name+'” ได้ '+fmt(res.rows.length)+' แถว ตรวจตัวอย่างด้านล่างก่อนเผยแพร่';
+  $('preview').classList.remove('hide');
+  $('pvKind').textContent = '· '+KIND_LABEL[res.kind];
+  const R = res.rows, hosts = res.kind==='hosts';
+  $('pvStats').innerHTML = hosts
+    ? `<span><b>${fmt(R.length)}</b> หลัง</span><span>รองรับรวม <b>${fmt(R.reduce((a,r)=>a+(r.cap||0),0))}</b> คน</span>`+
+      `<span>วางกลางหมู่บ้าน <b>${fmt(R.filter(r=>r.lv==='m').length)}</b></span><span>กลางเขตเทศบาล <b>${fmt(R.filter(r=>r.lv==='w').length)}</b></span><span>กลางตำบล/อำเภอ <b>${fmt(R.filter(r=>!r.lv).length)}</b></span>`
+    : `<span><b>${fmt(R.length)}</b> แห่ง</span><span>🚗 <b>${fmt(R.reduce((a,r)=>a+(r.car||0),0))}</b> คัน</span><span>🏍️ <b>${fmt(R.reduce((a,r)=>a+(r.mc||0),0))}</b> คัน</span>`+
+      `<span>พิกัดจากแบบสำรวจ <b>${fmt(R.filter(r=>r.x).length)}</b></span><span>กลางตำบล (ประมาณ) <b>${fmt(R.filter(r=>!r.x).length)}</b></span>`;
+  $('pvCols').innerHTML = 'คอลัมน์ที่จับคู่ได้: '+Object.entries(res.columns).map(([f,h])=>`<b>${COL_TH[f]||f}</b> ← “${esc(h.join('”, “'))}”`).join(' · ');
+  $('pvWarn').innerHTML = res.warn.map(w=>`<li>${esc(w)}</li>`).join('');
+  $('pvHead').innerHTML = hosts
+    ? '<tr><th>#</th><th>อำเภอ / ตำบล / หมู่</th><th>อปท.</th><th>รองรับ</th><th>ผู้ประสาน / เบอร์</th><th>ตำแหน่ง</th></tr>'
+    : '<tr><th>#</th><th>อำเภอ / ตำบล / หมู่</th><th>สถานที่</th><th>รถยนต์ / จยย.</th><th>ผู้ประสาน / เบอร์</th><th>ตำแหน่ง</th></tr>';
+  const pos = r => hosts ? `<span class="ap">${r.lv==='m'?'กลางหมู่บ้าน':r.lv==='w'?'กลางเขตเทศบาล':r.t?'กลางตำบล':'กลางอำเภอ'}</span>`
+    : (r.x ? 'พิกัดจากแบบสำรวจ' : `<span class="ap">กลางตำบล${r.raw?' (กรอก: '+esc(r.raw)+')':''}</span>`);
+  $('pvBody').innerHTML = R.slice(0,1000).map(r=>`<tr><td>${r.n}</td><td>${esc(r.a)}<div class="sub">${r.t?'ต.'+esc(r.t):''} ${esc(r.m||r.r||'')}</div></td>`+
+    (hosts ? `<td>${esc(r.o||'-')}</td><td>${r.cap!=null?fmt(r.cap):'-'}</td>`
+           : `<td>${esc(r.p)}<div class="sub">${esc(r.o||'')}</div></td><td>${r.car!=null?fmt(r.car):'-'} / ${r.mc!=null?fmt(r.mc):'-'}</td>`)+
+    `<td>${esc(r.c||'-')}<div class="sub">${esc(r.tel||'')}</div></td><td>${pos(r)}</td></tr>`).join('');
+  if(!map){ map = L.map('map').setView([6.25,101.75],9);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(map); }
+  if(layer) map.removeLayer(layer);
+  const col = hosts ? 'var(--hs)' : 'var(--pk)';
+  layer = L.featureGroup(R.map(r=>L.circleMarker([r.lat,r.lon],{radius:6,color:col,weight:2,dashArray:(hosts||!r.x)?'3':null,fillColor:'#fff',fillOpacity:.9})
+    .bindTooltip(esc((hosts?'บ้านพี่เลี้ยง':r.p)+' · ต.'+(r.t||'-')+(r.m?' '+r.m:''))))).addTo(map);
+  setTimeout(()=>{ map.invalidateSize(); if(R.length) map.fitBounds(layer.getBounds(),{padding:[20,20],maxZoom:13}); },50);
+  $('publish').disabled = !R.length;
+}
+
+/* ---------- เผยแพร่ / ประวัติ ---------- */
+async function publish(){
+  if(!RESULT || !RESULT.rows.length) return;
+  if(!confirm(`เผยแพร่ ${KIND_LABEL[RESULT.kind]} ${RESULT.rows.length} แถว จาก “${FILE.name}” แทนข้อมูลชุดเดิมบนเว็บ?`)) return;
+  const b = $('publish'); b.disabled = true; b.textContent = 'กำลังเผยแพร่…';
+  const {data, error} = await sb.rpc('survey_publish', {p_key:KEY, p_kind:RESULT.kind, p_rows:RESULT.rows, p_source:FILE.name, p_note:$('note').value.trim()||null});
+  b.disabled = false; b.textContent = '3. เผยแพร่ขึ้นเว็บ';
+  const m = $('pubMsg');
+  if(error){ m.className='msg err'; m.textContent='เผยแพร่ไม่สำเร็จ: '+error.message; return; }
+  m.className='msg ok';
+  m.innerHTML = `เผยแพร่แล้ว (เวอร์ชัน #${data}) · <a href="shelter.html#${RESULT.kind}" target="_blank" rel="noopener">เปิดดูบนหน้าศูนย์พักพิง</a> (ผู้ใช้จะเห็นข้อมูลใหม่เมื่อโหลดหน้า)`;
+  $('histKind').value = RESULT.kind; loadStatus(); loadHistory();
+}
+async function loadHistory(){
+  const kind = $('histKind').value, tb = $('histBody');
+  const {data, error} = await sb.rpc('survey_history', {p_key:KEY, p_kind:kind});
+  if(error){ tb.innerHTML = `<tr><td colspan="5">${esc(error.message)}</td></tr>`; return; }
+  tb.innerHTML = (data||[]).map(v=>`<tr><td style="white-space:nowrap">${when(v.uploaded_at)}</td><td>${esc(v.source_name)}<div class="sub">${esc(v.note||'')}</div></td>`+
+    `<td>${fmt(v.row_count)}</td><td>${esc(v.uploaded_by)}</td><td>${v.is_current?'<span class="cur">ใช้งานอยู่</span>':`<button class="btn ghost sm" data-v="${v.id}">ใช้เวอร์ชันนี้</button>`}</td></tr>`).join('')
+    || '<tr><td colspan="5" class="sub">ยังไม่เคยอัปโหลด — หน้าเว็บใช้ข้อมูลที่ติดมากับเว็บ</td></tr>';
+  tb.querySelectorAll('button[data-v]').forEach(b=>b.addEventListener('click', async ()=>{
+    if(!confirm('ย้อนกลับไปใช้เวอร์ชันนี้บนเว็บ?')) return;
+    const {error} = await sb.rpc('survey_rollback', {p_key:KEY, p_version_id:+b.dataset.v});
+    if(error) alert('ไม่สำเร็จ: '+error.message); loadStatus(); loadHistory();
+  }));
+}
+
+$('file').addEventListener('change', e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); e.target.value=''; });
+const drop = $('drop');
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e=>{ const f = e.dataTransfer.files[0]; if(f) handleFile(f); });
+$('sheetSel').addEventListener('change', async e=>{
+  try{ show(parseSheet(+e.target.value, await geo())); }catch(err){ $('preview').classList.add('hide'); $('parseMsg').className='msg err'; $('parseMsg').textContent='แผ่นงานนี้อ่านไม่ได้: '+err.message; }
+});
+document.querySelectorAll('input[name=kind]').forEach(r=>r.addEventListener('change', ()=>{ if(FILE) handleFile(FILE); }));
+$('publish').addEventListener('click', publish);
+$('histKind').addEventListener('change', loadHistory);
+$('builtin').addEventListener('click', async ()=>{
+  const k = $('histKind').value;
+  if(!confirm(`ให้หน้าเว็บกลับไปใช้ข้อมูล${KIND_LABEL[k]}ที่ติดมากับเว็บ? (ประวัติการอัปโหลดยังอยู่ เลือกใช้ใหม่ได้)`)) return;
+  const {error} = await sb.rpc('survey_use_builtin', {p_key:KEY, p_kind:k});
+  if(error) alert('ไม่สำเร็จ: '+error.message); loadStatus(); loadHistory();
+});
+$('logout').addEventListener('click', e=>{ e.preventDefault(); try{ localStorage.removeItem(KEY_LS); }catch(err){} location.replace(location.pathname); });
+gate();
+</script>
+</body>
+</html>

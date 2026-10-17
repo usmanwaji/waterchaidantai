@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-:root{--pk:#1d5fd1;--bg:var(--paper-2);--ink:var(--ink);--muted:var(--ink-3);--orange:var(--st-warn);--orange-d:var(--st-warn);--navy:var(--signal);--navy-d:var(--signal-deep);--peach:var(--paper-2)}
+:root{--pk:#1d5fd1;--hs:#0f8a6b;--bg:var(--paper-2);--ink:var(--ink);--muted:var(--ink-3);--orange:var(--st-warn);--orange-d:var(--st-warn);--navy:var(--signal);--navy-d:var(--signal-deep);--peach:var(--paper-2)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%}
 body{font-family:'Noto Sans Thai',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
@@ -85,6 +85,15 @@ body.pk-on #pkLegend{display:flex}
 body.pk-on #parkCard{display:block}
 .pkstats{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);margin-bottom:8px}
 .pkstats b{font-size:18px;color:var(--pk)}
+/* บ้านพี่เลี้ยง (แบบสำรวจ อปท.) — ไม่มีพิกัด ทุกจุดเป็นตำแหน่งโดยประมาณ */
+#hostBtn{white-space:nowrap}
+#hostBtn.on{background:var(--hs);color:#fff;border-color:var(--hs)}
+.hsic{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#fff;font-size:12px;line-height:1;border:2px dashed var(--hs);box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.mlegend .hsic{display:inline-flex;width:16px;height:16px;font-size:9px;border-width:1.5px;vertical-align:-3px;margin-right:3px;box-shadow:none}
+#hsLegend,#hostCard{display:none}
+body.hs-on #hsLegend{display:flex}
+body.hs-on #hostCard{display:block}
+.pkstats.hs b{color:var(--hs)}
 .approxtag{font-size:10.5px;color:var(--st-warn);white-space:nowrap}
 a.tel2{display:inline-block;margin-top:3px;color:#fff;background:var(--navy);padding:2px 9px;border-radius:7px;text-decoration:none;font-size:11.5px;font-weight:600}
 .leaflet-popup-content .pnav.call{background:var(--navy)}
@@ -145,6 +154,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
   <input type="search" id="q" placeholder="🔎 ค้นหา ชื่อสถานที่ / ตำบล / ผู้ดูแล / เบอร์โทร / รหัส ปภ.">
   <button class="btn ghost" id="nearBtn">ใกล้ฉัน</button>
   <button class="btn ghost" id="parkBtn" aria-pressed="false">🅿️ ที่จอดรถ</button>
+  <button class="btn ghost" id="hostBtn" aria-pressed="false">🏡 บ้านพี่เลี้ยง</button>
   <span id="selCount"></span>
 </div>
 
@@ -170,6 +180,10 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
       <span><i class="pkic">P</i>พิกัดจากแบบสำรวจ</span>
       <span><i class="pkic approx">P</i>ตำแหน่งโดยประมาณ (กลางตำบล)</span>
     </div>
+    <div class="mlegend" id="hsLegend">
+      <span><b>บ้านพี่เลี้ยง:</b></span>
+      <span><i class="hsic">🏡</i>ตำแหน่งโดยประมาณ (กลางหมู่บ้าน / กลางตำบล) ไม่ใช่ที่ตั้งบ้านจริง</span>
+    </div>
     <div class="note" id="mapNote"></div>
   </div>
 
@@ -184,7 +198,21 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
         <tbody id="pkBody"></tbody>
       </table>
     </div>
-    <div class="note">ที่มา: แบบสำรวจสถานที่จอดรถฯ ที่ อปท. ในจังหวัดนราธิวาสกรอก · ตำแหน่งโดยประมาณ = แบบสำรวจไม่ระบุพิกัด หรือพิกัดที่กรอกไม่อยู่ในอำเภอนั้น จึงวางไว้กลางตำบล ควรโทรสอบถามผู้ประสานงานก่อนเดินทาง</div>
+    <div class="note">ที่มา: แบบสำรวจสถานที่จอดรถฯ ที่ อปท. ในจังหวัดนราธิวาสกรอก<span id="pkSrc"></span> · ตำแหน่งโดยประมาณ = แบบสำรวจไม่ระบุพิกัด หรือพิกัดที่กรอกไม่อยู่ในอำเภอนั้น จึงวางไว้กลางตำบล ควรโทรสอบถามผู้ประสานงานก่อนเดินทาง</div>
+  </div>
+
+  <div class="card" id="hostCard">
+    <h2>🏡 บ้านพี่เลี้ยง <span class="where" id="hsWhere"></span></h2>
+    <div class="pkstats hs" id="hsStats"></div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr>
+          <th>อำเภอ / ตำบล / หมู่</th><th>อปท.</th><th>รองรับ</th><th>ผู้ประสานข้อมูล / เบอร์โทร</th><th>ตำแหน่ง</th>
+        </tr></thead>
+        <tbody id="hsBody"></tbody>
+      </table>
+    </div>
+    <div class="note">บ้านพี่เลี้ยง = ครัวเรือนที่พร้อมรับญาติ/เพื่อนบ้านที่ได้รับผลกระทบจากอุทกภัยเข้าพักชั่วคราว · ที่มา: แบบสำรวจบ้านพี่เลี้ยงที่ อปท. ในจังหวัดนราธิวาสกรอก<span id="hsSrc"> (ณ 8 ต.ค. 2569)</span> · แบบสำรวจไม่มีพิกัด จุดบนแผนที่จึงวางไว้กลางหมู่บ้าน (หรือกลางตำบล/เขตเทศบาล) ใกล้เคียงเท่านั้น ต้องโทรประสานก่อนเดินทางทุกครั้งที่ <a class="tel2" href="tel:073532134">073-532134</a> · ไม่เผยแพร่ชื่อและที่อยู่ของเจ้าของบ้าน</div>
   </div>
 
   <div class="card" id="tblCard">
@@ -222,6 +250,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/rivers.js?v=4"></script>
 <script src="js/parking_nwt.js"></script>
+<script src="js/hosts_nwt.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
@@ -243,7 +272,11 @@ let amp = '', q = '';
 let map, markers = [], byId = {}, userMarker = null, userPos = null;
 // ที่จอดรถหนีน้ำ: แบบสำรวจ อปท. (js/parking_nwt.js) · เปิด/ปิดด้วยปุ่ม "ที่จอดรถ" หรือเข้าหน้าด้วย #parking
 const PARK = (window.PARKING_NWT || []).map((r,i)=>Object.assign({key:'pk'+i}, r));
-let showPark = location.hash === '#parking', pkMarkers = [], pkById = {};
+// บ้านพี่เลี้ยง: แบบสำรวจ อปท. (js/hosts_nwt.js) · ปุ่ม "บ้านพี่เลี้ยง" หรือ #hosts · เปิดพร้อมที่จอดรถได้ (#parking+hosts)
+const HOST = (window.HOSTS_NWT || []).map((r,i)=>Object.assign({key:'hs'+i}, r));
+const hashHas = k => location.hash.slice(1).split('+').includes(k);
+let showPark = hashHas('parking'), pkMarkers = [], pkById = {};
+let showHost = hashHas('hosts'), hsMarkers = [], hsById = {};
 
 const SH_STATUS = {
   open: {c:'var(--st-normal)', l:'เปิดรับ'},
@@ -333,7 +366,7 @@ function render(){
   ].map(s=>`<div class="stat ${s[2]}"><div class="n">${s[1]}</div><div class="l">${s[0]}</div></div>`).join('');
   document.getElementById('selCount').textContent = ok ? 'แสดง '+rows.length+' / '+ALL.length+' แห่ง' : '';
   document.getElementById('mapWhere').textContent = document.getElementById('tblWhere').textContent = 'จ.นราธิวาส'+(amp?' · อ.'+amp:'');
-  renderMap(rows); renderTable(rows); renderParkTable(currentPark());
+  renderMap(rows); renderTable(rows); renderParkTable(currentPark()); renderHostTable(currentHost());
   const noGeo = rows.filter(r=>r.lat==null).length;
   const when = lastUpdated ? ' · ข้อมูล ณ '+new Date(lastUpdated).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Bangkok'}) : '';
   document.getElementById('mapNote').textContent = 'ที่มา: ระบบศูนย์พักพิง ปภ. (shelter.disaster.go.th)' + when +
@@ -356,7 +389,7 @@ function renderMap(rows){
       (r.phone?` <a class="pnav call" href="${telHref(r.phone)}">โทร</a>`:''));
     m.addTo(map); markers.push(m); byId[r.key]=m; pts.push([r.lat,r.lon]);
   });
-  renderParkMap(pts);
+  renderParkMap(pts); renderHostMap(pts);
   if(pts.length && !userPos){ map.fitBounds(pts,{padding:[30,30],maxZoom:13}); }
 }
 
@@ -419,14 +452,102 @@ function renderParkTable(rows){
     if(m){ map.setView(m.getLatLng(),14,{animate:true}); m.openPopup(); document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'}); }
   }));
 }
+function syncHash(){
+  const h = [showPark&&'parking', showHost&&'hosts'].filter(Boolean).join('+');
+  history.replaceState(null, '', h ? '#'+h : location.pathname + location.search);
+}
 function setPark(on){
   showPark = on;
   document.body.classList.toggle('pk-on', on);
   const b = document.getElementById('parkBtn');
   b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
   // เมนู "ศูนย์พักพิง/ที่จอดรถ" เป็นเมนูเดียว ไฮไลต์ค้างไว้ทั้งสองโหมด
-  history.replaceState(null, '', on ? '#parking' : location.pathname + location.search);
-  render();
+  syncHash(); render();
+}
+
+/* ---------- บ้านพี่เลี้ยง ---------- */
+function currentHost(){
+  if(!showHost) return [];
+  let rows = HOST;
+  if(amp) rows = rows.filter(r=>r.a===amp);
+  if(q){ const s=q.toLowerCase();
+    rows = rows.filter(r => [r.t,r.a,r.m,r.o,r.c].join(' ').toLowerCase().includes(s)); }
+  if(userPos){ rows = rows.slice();
+    rows.forEach(r=>{ r._d = haversine(userPos[0],userPos[1],r.lat,r.lon); });
+    rows.sort((a,b)=>a._d-b._d); }
+  return rows;
+}
+const HS_LV = {m:'กลางหมู่บ้าน', w:'กลางเขตเทศบาล'};
+const hsWhereTxt = r => HS_LV[r.lv] || 'กลางตำบล';
+// ไม่แสดงชื่อเจ้าของบ้าน/บ้านเลขที่/เบอร์ส่วนตัว — แสดงเฉพาะผู้ประสานข้อมูล กับเบอร์กลางเบอร์เดียวทุกจุด
+const HOST_TEL = '073-532134';
+function renderHostMap(pts){
+  hsMarkers.forEach(m=>map.removeLayer(m)); hsMarkers=[]; hsById={};
+  // หลายหลังในหมู่บ้านเดียวกันใช้จุดเดียวกัน จึงกระจายเป็นวงรอบจุดกลาง (วงใหญ่ขึ้นเมื่อมีหลายหลัง)
+  const rows = currentHost(), stack = {};
+  rows.forEach(r=>{ const k=r.lat+','+r.lon; (stack[k]=stack[k]||[]).push(r); });
+  rows.forEach(r=>{
+    const grp = stack[r.lat+','+r.lon], i = grp.indexOf(r), n = grp.length, rad = 0.0022*Math.max(1, Math.sqrt(n/5));
+    const ll = n>1 ? [r.lat+rad*Math.cos(2*Math.PI*i/n), r.lon+rad*Math.sin(2*Math.PI*i/n)] : [r.lat,r.lon];
+    const icon = L.divIcon({className:'', html:'<div class="hsic">🏡</div>', iconSize:[22,22], iconAnchor:[11,11], popupAnchor:[0,-10]});
+    const m = L.marker(ll,{icon, title:'บ้านพี่เลี้ยง ต.'+r.t+(r.m?' '+r.m:'')});
+    m.bindPopup(`<b>🏡 บ้านพี่เลี้ยง</b><br>`+
+      `อ.${esc(r.a)} · ต.${esc(r.t)}${r.m?' · '+esc(r.m):''}<br><span style="color:var(--ink-3)">${esc(r.o||'')}</span><br>`+
+      `👥 รองรับ ${r.cap!=null?fmt(r.cap)+' คน':'ไม่ระบุ'}<br>`+
+      `<span class="approxtag">⚠ ตำแหน่งโดยประมาณ (${hsWhereTxt(r)}) โทรประสานก่อนเดินทาง</span><br>`+
+      (r.c?`👤 ผู้ประสาน: ${esc(r.c)}<br>`:'')+
+      `<a class="pnav call" href="${telHref(HOST_TEL)}">โทร ${HOST_TEL}</a>`);
+    m.addTo(map); hsMarkers.push(m); hsById[r.key]=m; pts.push(ll);
+  });
+}
+function renderHostTable(rows){
+  document.getElementById('hsWhere').textContent = 'จ.นราธิวาส'+(amp?' · อ.'+amp:'');
+  const cap = rows.reduce((a,r)=>a+(r.cap||0),0);
+  document.getElementById('hsStats').innerHTML =
+    `<span><b>${fmt(rows.length)}</b> หลัง</span><span>👥 รองรับรวม <b>${fmt(cap)}</b> คน</span>`+
+    `<span>อปท. ${fmt(new Set(rows.map(r=>r.o)).size)} แห่ง</span>`;
+  const tb = document.getElementById('hsBody');
+  tb.innerHTML = rows.map(r=>{
+    const dist = (userPos&&r._d!=null)?`<div class="sub">~${r._d<1?Math.round(r._d*1000)+' ม.':r._d.toFixed(1)+' กม.'} (ประมาณ)</div>`:'';
+    const g = 'https://www.google.com/maps/search/?api=1&query='+r.lat+','+r.lon;
+    return `<tr data-id="${r.key}">
+      <td><b>${esc(r.a)}</b><div class="sub">ต.${esc(r.t)}${r.m?' · '+esc(r.m):''}</div>${dist}</td>
+      <td>${esc(r.o||'')}</td>
+      <td style="white-space:nowrap">${r.cap!=null?fmt(r.cap)+' คน':'<span class="no">ไม่ระบุ</span>'}</td>
+      <td>${esc(r.c)||'<span class="no">ไม่ระบุ</span>'}<div class="sub"><a class="tel2" href="${telHref(HOST_TEL)}">${HOST_TEL}</a></div></td>
+      <td><a class="gmap" target="_blank" rel="noopener" href="${g}">ดูบริเวณ</a><div class="approxtag">${hsWhereTxt(r)} (ประมาณ)</div></td></tr>`;
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--ink-3);padding:20px">ไม่พบบ้านพี่เลี้ยงตามเงื่อนไขที่ค้นหา</td></tr>';
+  tb.querySelectorAll('tr[data-id]').forEach(tr=>tr.addEventListener('click',e=>{
+    if(e.target.closest('a')) return;
+    const m=hsById[tr.dataset.id];
+    if(m){ map.setView(m.getLatLng(),15,{animate:true}); m.openPopup(); document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'}); }
+  }));
+}
+function setHost(on){
+  showHost = on;
+  document.body.classList.toggle('hs-on', on);
+  const b = document.getElementById('hostBtn');
+  b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+  syncHash(); render();
+}
+
+/* ---------- ข้อมูลแบบสำรวจที่เจ้าหน้าที่อัปโหลดล่าสุด (Supabase survey_current · schema-v11) ----------
+   มีชุดใหม่ก็ใช้แทนไฟล์ในเว็บ · โหลดไม่ได้/ยังไม่เคยอัปโหลด ใช้ js/parking_nwt.js และ js/hosts_nwt.js ตามเดิม */
+async function loadSurveyLive(){
+  if(typeof sb==='undefined') return;
+  try{
+    const {data, error} = await sb.from('survey_current').select('kind,rows,source_name,uploaded_at');
+    if(error || !Array.isArray(data)) return;
+    data.forEach(d=>{
+      const arr = d.kind==='hosts' ? HOST : d.kind==='parking' ? PARK : null;
+      if(!arr || !Array.isArray(d.rows) || !d.rows.length) return;
+      const pre = d.kind==='hosts' ? 'hs' : 'pk';
+      arr.splice(0, arr.length, ...d.rows.filter(r=>r && isFinite(r.lat) && isFinite(r.lon)).map((r,i)=>Object.assign({}, r, {key:pre+i})));
+      const src = document.getElementById(d.kind==='hosts' ? 'hsSrc' : 'pkSrc');
+      src.textContent = ' (อัปเดต '+new Date(d.uploaded_at).toLocaleDateString('th-TH',{dateStyle:'medium',timeZone:'Asia/Bangkok'})+')';
+    });
+    fillAmp(); render();
+  }catch(e){}
 }
 
 function facil(v){ return v?'<span class="yes">✓</span>':'<span class="no">✗</span>'; }
@@ -468,7 +589,7 @@ document.getElementById('nearBtn').addEventListener('click',()=>{
 
 function fillAmp(){
   const sel=document.getElementById('ampSel');
-  const amps=[...new Set(ALL.map(r=>r.amphoe).concat(PARK.map(r=>r.a)))].filter(Boolean).sort((a,b)=>a.localeCompare(b,'th'));
+  const amps=[...new Set(ALL.map(r=>r.amphoe).concat(PARK.map(r=>r.a), HOST.map(r=>r.a)))].filter(Boolean).sort((a,b)=>a.localeCompare(b,'th'));
   sel.innerHTML='<option value="">ทุกอำเภอ</option>'+amps.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('');
   sel.value = amps.includes(amp) ? amp : '';
 }
@@ -493,16 +614,21 @@ function renderOfficial(){
 }
 
 document.getElementById('parkBtn').addEventListener('click',()=>setPark(!showPark));
+document.getElementById('hostBtn').addEventListener('click',()=>setHost(!showHost));
 // ลิงก์ "ที่จอดรถ" ในเมนูบนหน้านี้เปลี่ยนแค่ hash ไม่โหลดหน้าใหม่
-window.addEventListener('hashchange',()=>{ if((location.hash==='#parking')!==showPark) setPark(!showPark); });
+window.addEventListener('hashchange',()=>{
+  if(hashHas('parking')!==showPark) setPark(!showPark);
+  if(hashHas('hosts')!==showHost) setHost(!showHost);
+});
 document.getElementById('ampSel').addEventListener('change',e=>{ amp=e.target.value; render(); });
 document.getElementById('q').addEventListener('input',e=>{ q=e.target.value.trim(); render(); });
 
 window.loadShelters = loadShelters;
 initMap(); renderOfficial();
 if(showPark) setPark(true);
+if(showHost) setHost(true);
 setTimeout(()=>map.invalidateSize(),200);
-loadShelters();
+loadShelters(); loadSurveyLive();
 </script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
