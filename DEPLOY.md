@@ -35,6 +35,7 @@ PWA/Service Worker ทำงานเฉพาะบน https (GitHub Pages เ�
 | `hyd-proxy.worker.js` | `hyd-proxy` | map.html — ชั้น "โทรมาตร ชป.": สถานีอุทกวิทยา ชป. (hyd-app.rid.go.th/hydro8h.html) ที่ thaiwater ไม่มี เช่น X.199 · ต้องเปิด Smart Placement | `https://hyd-proxy.<บัญชี>.workers.dev/stations.json` |
 | `ews-proxy.worker.js` | `ews-proxy` | map.html — ชั้น "◆ เตือนภัย ทน.": สถานีวัดระดับน้ำของระบบเตือนภัยล่วงหน้า กรมทรัพยากรน้ำ (ews1.dwr.go.th) ในนราธิวาส 7 สถานี เช่น STN2155 บ้านไอปาโจ · STN2233 ชุมชนยะกัง | `https://ews-proxy.<บัญชี>.workers.dev/stations.json` |
 | `onwr-proxy.worker.js` | `onwr-proxy` | map.html — 4 ชั้นเรดาร์ สทนช. (เรดาร์ TMD + คาดการณ์ 3 ชม. · ฝนสะสม 3 ชม. ล่วงหน้ารายอำเภอ/ตำบล · ฝนสถานีรายชั่วโมง · สถานีเรดาร์) | `https://onwr-proxy.<บัญชี>.workers.dev/frames` |
+| `status-dash.worker.js` | `status-dash` | ไม่ได้ใช้กับหน้าเว็บ — หน้าสถานะ Worker ทุกตัวสำหรับผู้ดูแล เปิดได้เฉพาะลิงก์ที่มีรหัสลับ · ต้องผูก Service binding 7 ตัว + secret `DASH_KEY` (ด้านล่าง) | `https://status-dash.<บัญชี>.workers.dev/<DASH_KEY>` |
 
 `home-proxy` เก็บผลของแต่ละแหล่งไว้ใน Cache ของ Cloudflare แล้วตอบหน้าแรกเป็น JSON ก้อนเดียว
 ยกเว้นระดับน้ำ thaiwater (ตอบ 429 ให้ IP ร่วมของ Cloudflare) และพยากรณ์ open-meteo (ตอบ Worker ไม่ทัน) ที่หน้าเว็บดึงตรง
@@ -64,6 +65,12 @@ Cron ทุกนาทีดึงข้อมูลไว้ล่วงหน
 ตรวจ: เปิด `/home.json` สักครั้ง แล้วเปิด `/` ทุกส่วนควรมี `ageSec` และ `lastError` เป็น null · `hint` บอกว่ายังขาด binding ตัวไหน
 หลังตั้ง cron สักพัก ช่อง `cron` ต้องมี `lastRunAgoSec` ไม่เกินราว 300 (รอบ ปภ.) และ `runsIn` เป็น `BKK`
 ถ้ายังไม่ deploy หรือส่วนไหนล่ม หน้าแรกดึงส่วนนั้นตรงจากต้นทางแบบเดิมเอง ไม่พัง
+
+`status-dash` รวมหน้าสถานะ (`/`) ของ home-proxy, telerid-proxy, hyd-proxy, ews-proxy, tmd-proxy, ddpm-proxy, onwr-proxy และรุ่น service worker ของเว็บจริงไว้หน้าเดียว (รีเฟรชเองทุก 2 นาที เก็บผล 60 วิ)
+ไม่มีลิงก์จากเว็บ เปิดได้เฉพาะ `/<DASH_KEY>` path อื่นตอบ 404 · หลัง deploy ต้องตั้ง:
+- **Settings → Bindings → Service binding** 7 ตัว: `HOME` → `home-proxy` · `TELERID` → `telerid-proxy` · `HYD` → `hyd-proxy` · `EWS` → `ews-proxy` · `TMD` → `tmd-proxy` · `DDPM` → `ddpm-proxy` · `ONWR` → `onwr-proxy`
+- **Settings → Variables and Secrets → Secret** ชื่อ `DASH_KEY` ค่าเป็นข้อความสุ่มยาว ๆ (ห้าม commit ลง repo นี้ เพราะ repo เป็นสาธารณะ) · เปลี่ยนค่า = ลิงก์เดิมใช้ไม่ได้ทันที
+- **Settings → Runtime → Placement → Region**: AWS `ap-southeast-7` (ให้เห็นแคชของ home-proxy ชุดเดียวกับที่ cron เขียน)
 
 `ews-proxy` ดึงรายชื่อสถานีทั้งประเทศจาก ews1.dwr.go.th (~3 MB) แล้วส่งเฉพาะสถานีวัดระดับน้ำในนราธิวาส (~2 KB) แคช 10 นาที
 ews.dwr.go.th ตัดการเชื่อมต่อจาก IP นอกไทย แต่ ews1 เปิดได้จากทุกที่ จึงไม่ต้องเปิด Smart Placement · หน้าแรกของ worker บอกว่าเปิดได้ทางไหน

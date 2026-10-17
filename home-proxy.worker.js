@@ -401,6 +401,7 @@ async function status(request, env) {
     parts[p] = { ageSec: m.t ? Math.round((now - m.t) / 1000) : null,
       refresh: def.at ? def.label : def.every ? `every ${def.every >= HOUR ? def.every / HOUR + ' h' : def.every / MIN + ' min'}` : 'after rid (14 min) / DDPM graphs hourly',
       sizeKB: Math.round((m.n || 0) / 102.4) / 10,
+      late: expired(p, m, now),   // เกินรอบแล้วยังไม่ได้ดึงใหม่ (เกณฑ์เดียวกับธง s ที่หน้าเว็บเห็น)
       upstreamStale: !!m.u, lastError: m.e || null, lastErrorAgoSec: m.et ? Math.round((now - m.et) / 1000) : null };
   }
   const bindings = Object.fromEntries(Object.keys(PUBLIC).map((n) => [n, !!(env && env[n])]));
