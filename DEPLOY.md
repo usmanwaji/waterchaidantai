@@ -37,7 +37,7 @@ PWA/Service Worker ทำงานเฉพาะบน https (GitHub Pages เ�
 | `onwr-proxy.worker.js` | `onwr-proxy` | map.html — 4 ชั้นเรดาร์ สทนช. (เรดาร์ TMD + คาดการณ์ 3 ชม. · ฝนสะสม 3 ชม. ล่วงหน้ารายอำเภอ/ตำบล · ฝนสถานีรายชั่วโมง · สถานีเรดาร์) | `https://onwr-proxy.<บัญชี>.workers.dev/frames` |
 
 `home-proxy` เก็บผลของแต่ละแหล่งไว้ใน Cache ของ Cloudflare (ระดับน้ำ ปภ./ชป. 1–2 นาที · พยากรณ์ 15–30 นาที) แล้วตอบหน้าแรกเป็น JSON ก้อนเดียว
-ยกเว้นระดับน้ำ thaiwater ที่หน้าเว็บดึงตรง (thaiwater ตอบ 429 ให้ IP ร่วมของ Cloudflare)
+ยกเว้นระดับน้ำ thaiwater (ตอบ 429 ให้ IP ร่วมของ Cloudflare) และพยากรณ์ open-meteo (ตอบ Worker ไม่ทัน) ที่หน้าเว็บดึงตรง
 ใช้แผนฟรีได้ทั้งหมด (ไม่ใช้ KV ไม่ใช้ Cron) · หลัง deploy ต้องผูก **Settings → Bindings → Add binding → Service binding** 3 ตัว
 ชื่อตัวแปรต้องตรง: `TELERID` → `telerid-proxy` · `HYD` → `hyd-proxy` · `TMD` → `tmd-proxy`
 (Worker เรียก Worker อื่นในบัญชีเดียวกันผ่าน URL workers.dev ไม่ได้ ได้ error 1042)

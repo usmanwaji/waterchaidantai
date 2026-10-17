@@ -4,8 +4,9 @@
   เดิมเปิดหน้าแรก 1 ครั้ง เบราว์เซอร์ยิง 20–30 คำขอไป thaiwater / open-meteo / ปภ. / Worker ตัวอื่น ๆ
   แหล่งไหนช้า คนดูก็รอตาม · Worker นี้เก็บผลของแต่ละแหล่งไว้ใน Cache ของศูนย์ Cloudflare
   แล้วตอบรวมเป็น JSON ก้อนเดียว (/home.json)
-  ยกเว้นระดับน้ำ thaiwater (public/waterlevel): thaiwater จำกัดคำขอต่อ IP และ Worker ใช้ IP ร่วมกับคนอื่น
-  จึงโดน 429 บ่อย (ดูจากหน้าสถานะจริง) → หน้าเว็บดึงตรงจากเครื่องผู้ใช้แทน
+  ยกเว้น 2 แหล่งที่หน้าเว็บดึงตรงจากเครื่องผู้ใช้แทน (ดูจากหน้าสถานะจริง):
+    · ระดับน้ำ thaiwater (public/waterlevel): จำกัดคำขอต่อ IP และ Worker ใช้ IP ร่วมกับคนอื่น → โดน 429 บ่อย
+    · พยากรณ์ open-meteo: ตอบ Worker ไม่ทันใน 12 วิ (timeout) ทั้งที่จากเบราว์เซอร์ตอบเร็วและเปิด CORS อยู่แล้ว
 
   ใช้แผนฟรีได้ทั้งหมด:
     · เก็บใน Cache API (ไม่มีโควตาเขียนแบบ KV ที่ telerid-proxy ใช้ไปเกือบเต็มแล้ว)
@@ -52,15 +53,6 @@ const PUBLIC = {
   HYD: 'https://hyd-proxy.newusmanwaji.workers.dev',
   TMD: 'https://tmd-proxy.newusmanwaji.workers.dev',
 };
-// จุดศูนย์กลาง 13 อำเภอนราธิวาส · ลำดับเดียวกับ AMPHOES ใน index.html (หน้าเว็บจับคู่ผลพยากรณ์ตามลำดับนี้)
-const AMPHOES = [
-  [6.4297, 101.813], [6.2407, 102.0025], [6.5542, 101.6498], [6.4217, 101.7041], [6.2238, 101.7138],
-  [6.3792, 101.5171], [6.1906, 101.5017], [5.8877, 101.8733], [5.91, 101.7221], [6.073, 101.99],
-  [6.1298, 101.9017], [6.0404, 101.614], [6.2149, 101.8411],
-];
-const METEO = 'https://api.open-meteo.com/v1/forecast?latitude=' + AMPHOES.map((a) => a[0]).join(',') +
-  '&longitude=' + AMPHOES.map((a) => a[1]).join(',') +
-  '&hourly=precipitation,precipitation_probability,weather_code&daily=precipitation_sum&forecast_days=7&timezone=Asia%2FBangkok';
 
 const MIN = 60, HOUR = 3600;
 const FETCH_BUDGET = 40;      // ดึงต้นทางต่อคำขอ (แผนฟรี 50 subrequest · เผื่อ Cache API อีกไม่กี่ครั้ง)
@@ -184,7 +176,6 @@ const PARTS = {
   ddpm:    { ttl: 2 * MIN,   swr: 15 * MIN, max: 6 * HOUR,  get: simple(`${DDPM}/stations?provCode=${PROV_CODE}&limit=100`, (j) => Array.isArray(j?.data)) },
   rid:     { ttl: 1 * MIN,   swr: 10 * MIN, max: 6 * HOUR,  get: rid },
   hyd:     { ttl: 5 * MIN,   swr: 60 * MIN, max: 6 * HOUR,  get: simple(['HYD', '/stations.json'], (j) => Array.isArray(j?.stations), 25000) },
-  meteo:   { ttl: 15 * MIN,  swr: 3 * HOUR, max: 12 * HOUR, get: simple(METEO, (j) => Array.isArray(j) && j.length === AMPHOES.length && !!j[0]?.hourly) },
   rain3d:  { ttl: 30 * MIN,  swr: 3 * HOUR, max: 12 * HOUR, get: simple(`${TW}/provinces/rain3d?province_code=${PROV_CODE}`, (j) => Array.isArray(j?.data)) },
   tmd:     { ttl: 30 * MIN,  swr: 6 * HOUR, max: 24 * HOUR, get: simple(['TMD', '/region7days'], (j) => !!j?.WeatherForecast7DaysByRegion) },
   nowcast: { ttl: 4 * MIN,   swr: 15 * MIN, max: 1 * HOUR,  get: simple(['TMD', '/nowcast'], (j) => Array.isArray(j?.frames) && j.frames.length) },
