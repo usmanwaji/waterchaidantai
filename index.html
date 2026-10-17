@@ -559,7 +559,7 @@ async function fetchJSON(url, timeout=15000, tries=2, meta){
    รอบแรกตอนเปิดหน้าทุกตัวโหลดใช้ homeBoot (เริ่มขอใน <head>) ร่วมกัน ส่วนละครั้ง · รอบต่อไปขอเฉพาะส่วนที่ใช้
    ส่วนที่ไม่มี (Worker ยังไม่ deploy / ต้นทางล่ม / เก่าเกิน) homeData ได้ null → ตัวโหลดดึงตรงจากต้นทางแบบเดิม
    ส่วนที่ติดธง s (Worker ตอบชุดหมดอายุไปก่อนแล้วกำลังดึงใหม่) → loadAll ขอซ้ำอีกครั้งหลัง HOME_RECHECK_MS */
-const HOME_MAIN = ['meteo','wl','rain3d','ddpm','rid','hyd','trends','thr'];
+const HOME_MAIN = ['meteo','rain3d','ddpm','rid','hyd','trends','thr'];   // ไม่มีระดับน้ำ thaiwater: loadWater ดึงตรงเสมอ
 const HOME_RECHECK_MS = 40*1000;
 const homeBootLeft = new Set([...HOME_MAIN, 'tmd', 'nowcast', 'riskmap']);
 async function homeGet(parts){
@@ -631,11 +631,14 @@ async function loadAll(recheck){
   let res = [], h = {}, hyd = Promise.resolve();
   try{
     document.getElementById('updated').innerHTML = '<span class="spin"></span>';
+    // ระดับน้ำ thaiwater ดึงตรงจากเครื่องผู้ใช้ (thaiwater จำกัดคำขอต่อ IP · IP ร่วมของ Worker โดน 429) · เริ่มพร้อมกันไม่ต้องรอ home-proxy
+    const wl = loadWater();
+    wl.catch(()=>{});   // ผลจริงอ่านใน allSettled ด้านล่าง · กัน unhandled rejection ระหว่างรอ home-proxy
     h = await homeGet(HOME_MAIN);
     // ไม่รอ hyd-app: hyd-proxy ตอบช้าได้ราว 30 วิ ตอนแคชใน Worker หมด (กรณีดึงตรง ไม่ผ่าน home-proxy)
     // มาถึงแล้ววาดเฉพาะส่วนที่ใช้ (X.199 ในการ์ดมาตรวัด/ทิศทางน้ำ + ฮีโร่) แบบเดียวกับ pollRid
     hyd = loadHyd(homeData(h,'hyd'));
-    res = await Promise.allSettled([loadMeteo(prov, true, homeData(h,'meteo')), loadWater(homeData(h,'wl')),
+    res = await Promise.allSettled([loadMeteo(prov, true, homeData(h,'meteo')), wl,
       loadSoil(homeData(h,'rain3d')), loadDdpm(homeData(h,'ddpm')), loadRid(ridFromHome(h))]);
     Object.assign(ddpmThr, homeData(h,'thr'));   // เกณฑ์เฝ้าระวัง ปภ. ครบทุกสถานี → ddpmNeedThr ไม่ต้องดึงเพิ่ม
     if(homeData(h,'trends')) applyTrends(homeData(h,'trends'));
@@ -700,10 +703,10 @@ async function loadMeteo(p, force, pre){
   if(!arr[0]?.hourly) throw new Error('open-meteo: no hourly');
   return meteoCache[p] = arr;
 }
-async function loadWater(pre){
+async function loadWater(){
   // ดึงใหม่ทุกรอบ (ปุ่มรีเฟรช/ทุก 30 นาที) · ประกอบใส่ตัวแปรชั่วคราวก่อน การ์ดจะได้ไม่ว่างระหว่างโหลด
   // ดึงเฉพาะนราธิวาส (96) เหมือนหน้าแผนที่ · เดิมดึงทั้ง 5 จังหวัดทุกรอบ ทำให้ thaiwater ตอบ 429 (เรียกถี่เกิน)
-  const res = pre ? [{status:'fulfilled', value:pre}] : await Promise.allSettled([PROV_CODE['นราธิวาส']].map(c =>
+  const res = await Promise.allSettled([PROV_CODE['นราธิวาส']].map(c =>
     fetchJSON(`${API}/public/waterlevel?province_code=${c}`)));
   const next = [];
   res.forEach(r=>{

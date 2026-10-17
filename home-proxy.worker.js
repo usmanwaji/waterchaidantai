@@ -4,6 +4,8 @@
   เดิมเปิดหน้าแรก 1 ครั้ง เบราว์เซอร์ยิง 20–30 คำขอไป thaiwater / open-meteo / ปภ. / Worker ตัวอื่น ๆ
   แหล่งไหนช้า คนดูก็รอตาม · Worker นี้เก็บผลของแต่ละแหล่งไว้ใน Cache ของศูนย์ Cloudflare
   แล้วตอบรวมเป็น JSON ก้อนเดียว (/home.json)
+  ยกเว้นระดับน้ำ thaiwater (public/waterlevel): thaiwater จำกัดคำขอต่อ IP และ Worker ใช้ IP ร่วมกับคนอื่น
+  จึงโดน 429 บ่อย (ดูจากหน้าสถานะจริง) → หน้าเว็บดึงตรงจากเครื่องผู้ใช้แทน
 
   ใช้แผนฟรีได้ทั้งหมด:
     · เก็บใน Cache API (ไม่มีโควตาเขียนแบบ KV ที่ telerid-proxy ใช้ไปเกือบเต็มแล้ว)
@@ -22,8 +24,8 @@
 
   path:
     /                 สถานะ: อายุ/ข้อผิดพลาดล่าสุดของแต่ละส่วนในแคชศูนย์นี้ + ผูก Service binding ครบไหม
-    /home.json        ทุกส่วน · ?parts=wl,rid  เฉพาะบางส่วน
-  รูปแบบ: {"v":1,"now":ms,"parts":{"wl":{"t":เวลาดึง(ms),"s":0|1,"d":<JSON จากต้นทาง>|null}, ...}}
+    /home.json        ทุกส่วน · ?parts=ddpm,rid  เฉพาะบางส่วน
+  รูปแบบ: {"v":1,"now":ms,"parts":{"ddpm":{"t":เวลาดึง(ms),"s":0|1,"d":<JSON จากต้นทาง>|null}, ...}}
          rid    d = {"base": URL ที่หน้าเว็บใช้ดึง {CODE}.detail.json, "j": stations.json ของแหล่งที่ค่าใหม่กว่า}
          trends d = {"ddpm":{code:[ค่าก่อนหน้า, ค่าล่าสุด]}, "rid":{...}}  (ทิศทางน้ำ เกณฑ์เดียวกับ index.html)
          thr    d = {code: เกณฑ์ "เฝ้าระวัง" ของ ปภ. (mediumLevelThreshold) | null}
@@ -66,7 +68,7 @@ const TIMEOUT = 12000;
 const SOFT_WAIT = 2000;       // ส่วนที่เก่าเกิน swr: รอผลใหม่ได้เท่านี้ก่อนตอบชุดเดิม
 const COLD_WAIT = 6000;       // ยังไม่มีข้อมูลเลย (เพิ่ง deploy / แคชถูกล้าง)
 const RETRY_GAP = 30e3;       // ส่วนเดียวกันสั่งดึงซ้ำใน isolate เดียวกันได้ไม่ถี่กว่านี้
-const LIMIT_GAP = 5 * 60e3;   // ต้นทางตอบ 429 (thaiwater จำกัดคำขอต่อ IP ซึ่ง Worker ใช้ IP ร่วมกับคนอื่น) → พักนานขึ้น
+const LIMIT_GAP = 5 * 60e3;   // ต้นทางตอบ 429 (จำกัดคำขอต่อ IP ซึ่ง Worker ใช้ IP ร่วมกับคนอื่น) → พักนานขึ้น
 const FRESH_MS = 6 * HOUR * 1000;   // ทิศทางน้ำคิดเฉพาะสถานีที่ส่งค่าใน 6 ชม. (HERO_FRESH_H ใน index.html)
 const STORE = 'https://home-proxy.cache/store-v1';
 
@@ -179,7 +181,6 @@ async function thresholds(env, budget, dep) {
 
 /* ttl/swr/max เป็นวินาที · after = ส่วนที่ต้องใช้ข้อมูลก่อน (ถ้ากำลังดึงใหม่ รอผลนั้น) */
 const PARTS = {
-  wl:      { ttl: 3 * MIN,   swr: 15 * MIN, max: 6 * HOUR,  get: simple(`${TW}/public/waterlevel?province_code=${PROV_CODE}`, (j) => Array.isArray(j?.data) && j.data.length) },
   ddpm:    { ttl: 2 * MIN,   swr: 15 * MIN, max: 6 * HOUR,  get: simple(`${DDPM}/stations?provCode=${PROV_CODE}&limit=100`, (j) => Array.isArray(j?.data)) },
   rid:     { ttl: 1 * MIN,   swr: 10 * MIN, max: 6 * HOUR,  get: rid },
   hyd:     { ttl: 5 * MIN,   swr: 60 * MIN, max: 6 * HOUR,  get: simple(['HYD', '/stations.json'], (j) => Array.isArray(j?.stations), 25000) },
