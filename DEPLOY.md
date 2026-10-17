@@ -1,15 +1,15 @@
 # DEPLOY — waterchaidantai (One Map ชายแดนใต้)
 
-ขั้นตอน deploy: **(1) เว็บหน้าเว็บ → GitHub Pages** · **(2) ฐานข้อมูล → Supabase (schema v6–v8)** · **(3) แจ้งเตือน → Telegram + Edge Function**
+ขั้นตอน deploy: **(1) เว็บหน้าเว็บ → Cloudflare Pages** · **(2) ฐานข้อมูล → Supabase (schema v6–v8)** · **(3) แจ้งเตือน → Telegram + Edge Function**
 
 Project ref (Supabase): `tnvzeahfugmmrydtnsdv`
-Site: https://usmanwaji.github.io/waterchaidantai/
+Site: https://naraflood.com/
 
 ---
 
-## 1) เว็บหน้าเว็บ (GitHub Pages)
+## 1) เว็บหน้าเว็บ (Cloudflare Pages)
 
-หน้าเว็บทั้งหมดเป็น static — push ขึ้น branch `main` แล้ว GitHub Pages จะ build ให้อัตโนมัติ
+หน้าเว็บทั้งหมดเป็น static — push ขึ้น branch `main` แล้ว Cloudflare Pages จะ deploy ให้อัตโนมัติ (ไม่มีขั้น build)
 
 ```bash
 cd "Dashboard อุทกภัย"
@@ -18,8 +18,44 @@ git commit -m "update"
 git push origin main      # ต้องล็อกอิน GitHub (Credential Manager หรือ Personal Access Token)
 ```
 
-รอ ~1 นาที เว็บอัปเดตที่ลิงก์ด้านบน  
-PWA/Service Worker ทำงานเฉพาะบน https (GitHub Pages เป็น https อยู่แล้ว)
+รอ ~1 นาที เว็บอัปเดตที่ลิงก์ด้านบน · ดูสถานะได้ที่ dash.cloudflare.com → **Workers & Pages → naraflood → Deployments**  
+PWA/Service Worker ทำงานเฉพาะบน https (Cloudflare Pages เป็น https อยู่แล้ว)
+
+### 1.0) ตั้งค่า Cloudflare Pages ครั้งแรก (ทำครั้งเดียว)
+
+1. **สร้างโปรเจกต์** — dash.cloudflare.com → **Workers & Pages → Create → Pages → Import an existing Git repository**
+   → เชื่อม GitHub แล้วเลือก `usmanwaji/waterchaidantai`
+   - Project name: `naraflood` (ได้ลิงก์ทดสอบ `https://naraflood.pages.dev` · ถ้าชื่อซ้ำ Cloudflare จะเติมตัวอักษรต่อท้ายให้)
+   - Production branch: `main`
+   - Framework preset: **None** · Build command: **เว้นว่าง** · Build output directory: `/`
+   - กด **Save and Deploy** แล้วเปิดลิงก์ `.pages.dev` ดูว่าหน้าแรกและแผนที่ขึ้นปกติ
+2. **ไม่ให้ build branch `cam`** — โปรเจกต์ → **Settings → Builds → Branch control** → Preview branch: **Custom branches**
+   → Include: `*` · Exclude: `cam` → Save
+   ตัวดึงข้อมูล telerid push ขึ้น `cam` ทุกไม่กี่นาที ถ้าไม่กันไว้ Cloudflare จะ build ทุกครั้งจนโควตาฟรี 500 build/เดือนหมด
+   (`cam` ไม่ใช่หน้าเว็บ หน้าแผนที่อ่านไฟล์จาก raw.githubusercontent.com โดยตรง) · ไม่ต้องการลิงก์ทดสอบของ branch อื่นเลยก็เลือก **None**
+3. **ผูกโดเมน** — โปรเจกต์ → **Custom domains → Set up a custom domain** → `naraflood.com` (ใช้ www ด้วยก็เพิ่ม `www.naraflood.com` อีกตัว)
+   - DNS ของ naraflood.com อยู่ที่ Cloudflare แล้ว: Cloudflare สร้าง record ให้เอง ถ้าฟ้องว่ามี record ซ้ำ ให้ลบ A record เดิมของ GitHub (`185.199.108.153`–`185.199.111.153`) ก่อน
+   - DNS ยังอยู่ที่ผู้ให้บริการโดเมนเดิม: โดเมนหลัก (ไม่มี www) ผูกกับ Pages ได้เมื่อ DNS อยู่ที่ Cloudflare เท่านั้น
+     → dash.cloudflare.com → **Onboard a domain** → `naraflood.com` → แผน Free → ตรวจว่า record เดิมครบ (โดยเฉพาะ MX/TXT ของอีเมลถ้ามี)
+     → นำ nameserver 2 ตัวที่ Cloudflare ให้ไปใส่ที่หน้าจัดการโดเมน → รอสถานะ Active แล้วค่อยทำข้อนี้
+   - เสร็จแล้วรอ 5–30 นาที เปิด https://naraflood.com ถ้าเปิด DevTools → Network แล้ว header `server` เป็น `cloudflare` (ไม่ใช่ `GitHub.com`) แปลว่าย้ายสำเร็จ
+4. **Supabase Auth** — Authentication → URL Configuration → Redirect URLs เพิ่ม `https://naraflood.com/**`
+   Cloudflare ตัด `.html` ออกจาก URL หลังล็อกอินจึงกลับมาที่ `/route` ไม่ใช่ `/route.html` ถ้าในรายการมีแค่ชื่อเต็ม Supabase จะส่งไปที่ Site URL แทนหน้าที่กดล็อกอิน
+5. **Supabase secrets** — ให้ลิงก์ในข้อความแจ้งเตือนชี้มาที่ naraflood.com
+   ```bash
+   supabase secrets set SITE_URL=https://naraflood.com
+   supabase secrets set ADMIN_DASHBOARD_URL=https://naraflood.com/admin.html
+   ```
+6. **GitHub Pages** — เปิดทิ้งไว้ได้ ลิงก์เก่า `usmanwaji.github.io/waterchaidantai/...` จะยังส่งต่อมาที่ naraflood.com
+   (GitHub จะเตือนว่า DNS ไม่ได้ชี้มาที่ GitHub — ไม่เป็นไร) จะปิดเมื่อไหร่ก็ได้ที่ repo → **Settings → Pages**
+   ไฟล์ `CNAME` ใช้กับ GitHub Pages เท่านั้น Cloudflare ไม่อ่าน
+
+**ข้อต่างจาก GitHub Pages ที่โค้ดรองรับไว้แล้ว**
+- Cloudflare ส่ง `/map.html` ต่อไปที่ `/map` เสมอ (redirect 308) — ลิงก์ในโค้ดเขียน `.html` ตามเดิมได้ ใช้ได้ทั้งบน Cloudflare และ `node .devserver.mjs`
+  - `js/tabbar.js` กับ `js/views.js` เติม `.html` กลับเอง (แถบล่างไฮไลต์ถูกหน้า · ตัวนับผู้เข้าชมนับต่อจากยอดเดิม)
+  - `sw.js` เก็บสำเนาหน้าเว็บแบบไม่มีธง redirect ไว้ใช้ตอนออฟไลน์ (ถ้าเก็บแบบมีธง เบราว์เซอร์จะไม่ยอมเปิดหน้าตอนออฟไลน์)
+  - โค้ดใหม่ที่อ่านชื่อหน้าจาก `location.pathname` ต้องรองรับทั้ง `/map` และ `/map.html`
+- ต้องมี `404.html` เสมอ — ถ้าไม่มี Cloudflare จะส่งหน้าแรกกลับไปแทนทุก URL ที่ไม่มีอยู่จริง (สถานะ 200) ไฟล์ข้อมูลที่หายจะได้ HTML แทน error
 
 ### 1.1) Cloudflare Worker proxies (แก้ CORS ให้ API ราชการ)
 
@@ -177,7 +213,7 @@ supabase functions deploy notify-water --no-verify-jwt
 
 supabase secrets set TELEGRAM_BOT_TOKEN=<token เดียวกับข้อ 3.1/3.2>
 supabase secrets set CRON_SECRET=<สุ่มสตริงยาว ๆ เอง>
-supabase secrets set SITE_URL=https://usmanwaji.github.io/waterchaidantai
+supabase secrets set SITE_URL=https://naraflood.com
 ```
 - `--no-verify-jwt` จำเป็น เพราะฟังก์ชันถูกเรียกโดยตัวตั้งเวลา ไม่ใช่ผู้ใช้ล็อกอิน (ป้องกันด้วย `CRON_SECRET` แทน)
 - **ไม่ต้อง** ตั้ง `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` — Supabase ใส่ให้อัตโนมัติ

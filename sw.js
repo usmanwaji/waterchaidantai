@@ -5,7 +5,7 @@
  *   • ข้อมูล API (GET) → network-first แล้วเก็บชุดล่าสุดไว้ ใช้ตอนออฟไลน์ ("last good data")
  * เพิ่มเลขเวอร์ชันเมื่อแก้ไฟล์เพื่อบังคับอัปเดตแคช
  */
-const VERSION = 'oms-v88';
+const VERSION = 'oms-v89';
 const SHELL = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 
@@ -13,18 +13,27 @@ const SHELL_ASSETS = [
   'index.html','map.html','map.js?v=35','forecast.html','history.html','repeat.html',
   'sim.html','shelter.html','route.html','resources.html','admin.html',
   'check.html','alert.html','eoc.html','people.html','stats.html',
-  'js/criteria.js?v=2','js/supabase-client.js?v=3','js/auth-ui.js','js/shelters_nwt.js','js/parking_nwt.js','js/ddpm_risk_data.js','js/ffr_risk_data.js?v=2','js/onwr-nara-subdistricts.geojson','js/rivers.js?v=4','js/pwa.js','js/ui.js','js/views.js?v=3',
+  'js/criteria.js?v=2','js/supabase-client.js?v=3','js/auth-ui.js','js/shelters_nwt.js','js/parking_nwt.js','js/ddpm_risk_data.js','js/ffr_risk_data.js?v=2','js/onwr-nara-subdistricts.geojson','js/rivers.js?v=4','js/pwa.js','js/ui.js','js/views.js?v=4',
   // ต้องใส่ ?v= ให้ตรงกับที่หน้าเว็บเรียกจริง เพราะแคชอ้างอิง URL เต็มรวม query string
-  'js/tabbar.js?v=2','js/visits-widget.js?v=2','js/install.js?v=2',
+  'js/tabbar.js?v=3','js/visits-widget.js?v=2','js/install.js?v=2',
   'shared.css?v=11',
   'manifest.json','icon.svg','icon-512.png','icon-512-maskable.png'
 ];
+
+/* Cloudflare Pages ส่ง /map.html ต่อไปที่ /map (308) — คำตอบที่ผ่านการ redirect มาแล้ว
+   เบราว์เซอร์ไม่ยอมให้ใช้ตอบการนำทาง (หน้าออฟไลน์จะขึ้น error) จึงเก็บสำเนาที่ไม่มีธง redirected แทน */
+function unredirect(res) {
+  return res.redirected ? new Response(res.body, {status: res.status, statusText: res.statusText, headers: res.headers}) : res;
+}
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(SHELL);
     // เก็บทีละไฟล์ ไม่ให้ install ล้มถ้าบางไฟล์โหลดไม่ได้
-    await Promise.allSettled(SHELL_ASSETS.map(a => cache.add(a)));
+    await Promise.allSettled(SHELL_ASSETS.map(async a => {
+      const res = await fetch(a);
+      if (res.ok) await cache.put(a, unredirect(res));
+    }));
     self.skipWaiting();
   })());
 });
@@ -54,7 +63,8 @@ self.addEventListener('fetch', event => {
     event.respondWith((async () => {
       try {
         const net = await fetch(req);
-        const c = await caches.open(SHELL); c.put(req, net.clone());
+        // เก็บเฉพาะหน้าที่โหลดสำเร็จ — คำตอบแบบ redirect (/map.html → /map) ไม่เก็บ ไม่ให้ทับสำเนาที่ install เก็บไว้
+        if (net.ok) { const c = await caches.open(SHELL); c.put(req, net.clone()); }
         return net;
       } catch (e) {
         return (await caches.match(req)) || (await caches.match('index.html')) ||

@@ -5,7 +5,7 @@
  *   • ข้อมูล API (GET) → network-first แล้วเก็บชุดล่าสุดไว้ ใช้ตอนออฟไลน์ ("last good data")
  * เพิ่มเลขเวอร์ชันเมื่อแก้ไฟล์เพื่อบังคับอัปเดตแคช
  */
-const VERSION = 'oms-hatyai-v5';
+const VERSION = 'oms-hatyai-v6';
 const SHELL = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 
@@ -17,11 +17,20 @@ const SHELL_ASSETS = [
   'manifest.json','icon.svg'
 ];
 
+/* Cloudflare Pages ส่ง /map.html ต่อไปที่ /map (308) — คำตอบที่ผ่านการ redirect มาแล้ว
+   เบราว์เซอร์ไม่ยอมให้ใช้ตอบการนำทาง (หน้าออฟไลน์จะขึ้น error) จึงเก็บสำเนาที่ไม่มีธง redirected แทน */
+function unredirect(res) {
+  return res.redirected ? new Response(res.body, {status: res.status, statusText: res.statusText, headers: res.headers}) : res;
+}
+
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(SHELL);
     // เก็บทีละไฟล์ ไม่ให้ install ล้มถ้าบางไฟล์โหลดไม่ได้
-    await Promise.allSettled(SHELL_ASSETS.map(a => cache.add(a)));
+    await Promise.allSettled(SHELL_ASSETS.map(async a => {
+      const res = await fetch(a);
+      if (res.ok) await cache.put(a, unredirect(res));
+    }));
     self.skipWaiting();
   })());
 });
@@ -48,7 +57,8 @@ self.addEventListener('fetch', event => {
     event.respondWith((async () => {
       try {
         const net = await fetch(req);
-        const c = await caches.open(SHELL); c.put(req, net.clone());
+        // เก็บเฉพาะหน้าที่โหลดสำเร็จ — คำตอบแบบ redirect (/map.html → /map) ไม่เก็บ ไม่ให้ทับสำเนาที่ install เก็บไว้
+        if (net.ok) { const c = await caches.open(SHELL); c.put(req, net.clone()); }
         return net;
       } catch (e) {
         return (await caches.match(req)) || (await caches.match('index.html')) ||
