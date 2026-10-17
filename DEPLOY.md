@@ -30,18 +30,27 @@ PWA/Service Worker ทำงานเฉพาะบน https (GitHub Pages เ�
 | ไฟล์ | ชื่อ worker | ใช้กับ | ทดสอบ |
 |------|-------------|--------|--------|
 | `ddpm-proxy.worker.js` | `ddpm-proxy` | map.html — ภาพกล้อง ปภ. | `https://ddpm-proxy.<บัญชี>.workers.dev/stations/PTN07` |
-| `home-proxy.worker.js` | `home-proxy` | index.html — รวมข้อมูลหน้าแรกทุกแหล่งเป็นคำขอเดียว (ระดับน้ำ ฝน พยากรณ์ ทิศทางน้ำ เรดาร์) · ต้องผูก Service binding 3 ตัว (ด้านล่าง) | `https://home-proxy.<บัญชี>.workers.dev/` |
+| `home-proxy.worker.js` | `home-proxy` | index.html — รวมข้อมูลหน้าแรกทุกแหล่งเป็นคำขอเดียว (ระดับน้ำ ฝน พยากรณ์ ทิศทางน้ำ เรดาร์) · ต้องผูก Service binding 4 ตัว + Cron Trigger (ด้านล่าง) | `https://home-proxy.<บัญชี>.workers.dev/` |
 | `tmd-proxy.worker.js` | `tmd-proxy` | index.html — พยากรณ์ 7 วัน TMD + แผนที่ฝนคาดการณ์รายอำเภอ · forecast.html — ฝนคาดการณ์รายอำเภอ + ปุ่มเปิดหน้าแผนที่เสี่ยงภัยรายอำเภอ | `https://tmd-proxy.<บัญชี>.workers.dev/region7days` · `/riskmap` · `/riskmap-district` |
 | `hyd-proxy.worker.js` | `hyd-proxy` | map.html — ชั้น "โทรมาตร ชป.": สถานีอุทกวิทยา ชป. (hyd-app.rid.go.th/hydro8h.html) ที่ thaiwater ไม่มี เช่น X.199 · ต้องเปิด Smart Placement | `https://hyd-proxy.<บัญชี>.workers.dev/stations.json` |
 | `ews-proxy.worker.js` | `ews-proxy` | map.html — ชั้น "◆ เตือนภัย ทน.": สถานีวัดระดับน้ำของระบบเตือนภัยล่วงหน้า กรมทรัพยากรน้ำ (ews1.dwr.go.th) ในนราธิวาส 7 สถานี เช่น STN2155 บ้านไอปาโจ · STN2233 ชุมชนยะกัง | `https://ews-proxy.<บัญชี>.workers.dev/stations.json` |
 | `onwr-proxy.worker.js` | `onwr-proxy` | map.html — 4 ชั้นเรดาร์ สทนช. (เรดาร์ TMD + คาดการณ์ 3 ชม. · ฝนสะสม 3 ชม. ล่วงหน้ารายอำเภอ/ตำบล · ฝนสถานีรายชั่วโมง · สถานีเรดาร์) | `https://onwr-proxy.<บัญชี>.workers.dev/frames` |
 
-`home-proxy` เก็บผลของแต่ละแหล่งไว้ใน Cache ของ Cloudflare (ระดับน้ำ ปภ./ชป. 1–2 นาที · พยากรณ์ 15–30 นาที) แล้วตอบหน้าแรกเป็น JSON ก้อนเดียว
+`home-proxy` เก็บผลของแต่ละแหล่งไว้ใน Cache ของ Cloudflare แล้วตอบหน้าแรกเป็น JSON ก้อนเดียว
 ยกเว้นระดับน้ำ thaiwater (ตอบ 429 ให้ IP ร่วมของ Cloudflare) และพยากรณ์ open-meteo (ตอบ Worker ไม่ทัน) ที่หน้าเว็บดึงตรง
-ใช้แผนฟรีได้ทั้งหมด (ไม่ใช้ KV ไม่ใช้ Cron) · หลัง deploy ต้องผูก **Settings → Bindings → Add binding → Service binding** 3 ตัว
-ชื่อตัวแปรต้องตรง: `TELERID` → `telerid-proxy` · `HYD` → `hyd-proxy` · `TMD` → `tmd-proxy`
-(Worker เรียก Worker อื่นในบัญชีเดียวกันผ่าน URL workers.dev ไม่ได้ ได้ error 1042)
+Cron ทุก 6 นาทีดึงข้อมูลไว้ล่วงหน้า คนดูจึงเจอแคชที่สดเสมอ: ปภ. + โทรมาตร ชป. + เรดาร์ทุกรอบ · X.199 ทุก 12 นาที · กราฟ ปภ. ชั่วโมงละครั้ง
+· ฝน 3 วัน/พยากรณ์รายภาค/ฝนรายอำเภอทุก 30 นาที · เจอ 429 พัก 5 → 10 → 20 … นาที (สูงสุด 1 ชม.)
+ใช้แผนฟรีได้ทั้งหมด (ไม่ใช้ KV) · หลัง deploy ต้องตั้ง:
+- **Settings → Bindings → Add binding → Service binding** 4 ตัว ชื่อตัวแปรต้องตรง:
+  `TELERID` → `telerid-proxy` · `HYD` → `hyd-proxy` · `TMD` → `tmd-proxy` · `SELF` → `home-proxy` (ตัวเอง ใช้กับ cron)
+  (Worker เรียก Worker อื่นในบัญชีเดียวกันผ่าน URL workers.dev ไม่ได้ ได้ error 1042)
+- **Settings → Trigger events → Cron Triggers**: `*/6 * * * *`
+  Placement มีผลกับ fetch เท่านั้น cron จึงเรียก `/cron` ของตัวเองผ่าน `SELF` ให้ไปรันที่ BKK ใช้แคชชุดเดียวกับคนดู
+- **Settings → Runtime → Placement → Region**: AWS `ap-southeast-7` (ให้ทุกคำขอใช้แคชที่ BKK ชุดเดียว)
+- ตั้ง cron ของ home-proxy แล้ว ปิด Cron Trigger ของ `telerid-proxy` ได้ (home-proxy เรียก `/stations.json` ทุก 6 นาทีแทน)
+
 ตรวจ: เปิด `/home.json` สักครั้ง แล้วเปิด `/` ทุกส่วนควรมี `ageSec` และ `lastError` เป็น null · `hint` บอกว่ายังขาด binding ตัวไหน
+หลังตั้ง cron สักพัก ช่อง `cron` ต้องมี `lastRunAgoSec` ไม่เกินราว 360 และ `runsIn` เป็น `BKK`
 ถ้ายังไม่ deploy หรือส่วนไหนล่ม หน้าแรกดึงส่วนนั้นตรงจากต้นทางแบบเดิมเอง ไม่พัง
 
 `ews-proxy` ดึงรายชื่อสถานีทั้งประเทศจาก ews1.dwr.go.th (~3 MB) แล้วส่งเฉพาะสถานีวัดระดับน้ำในนราธิวาส (~2 KB) แคช 10 นาที

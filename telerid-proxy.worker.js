@@ -16,6 +16,11 @@
     ศูนย์ที่ดึงไม่ได้ (HKG/SIN …) จำไว้ 10 นาทีว่าดึงไม่ได้ แล้วอ่านจาก KV ทันที (ไม่ต้องรอ telerid หมดเวลา)
     เขียนเฉพาะเมื่อมีค่าใหม่หรือทุก 15 นาที · ภาพละไม่เกิน 1 ครั้ง / 30 นาที → ไม่เกินราว 700 ครั้ง/วัน (ฟรี 1,000)
     Cron (Settings → Triggers → Cron Triggers: ทุก 10 นาที) ให้ลองดึงเองทุก 10 นาที เผื่อไม่มีใครเปิดเว็บผ่าน BKK
+    (ไม่จำเป็นแล้วถ้าตั้ง cron ของ home-proxy: ตัวนั้นเรียก /stations.json ทุก 6 นาทีอยู่แล้ว ปิด Cron ของตัวนี้ได้
+     และตั้ง Placement → Region ไว้ที่ BKK แล้ว จึงไม่ต้องพึ่ง KV ข้ามศูนย์มากเหมือนตอนใช้ Smart Placement)
+
+  /{CODE}.detail.json ใช้กราฟจากรอบ /stations.json ล่าสุดก่อน (WebSocket ชุดเดียวกันให้มาครบทุกสถานีอยู่แล้ว)
+  ยังไม่เก่าเกิน TTL_DETAIL ตอบจากชุดนั้นเลย ไม่เปิด WebSocket ซ้ำรายสถานี (home-proxy ขอทุกสถานีทุกรอบ)
 
   วิธี deploy: dash.cloudflare.com → Workers & Pages → Create → Create Worker (ไม่ใช่ Import a repository)
               → ชื่อ telerid-proxy → Deploy → Edit code → วางไฟล์นี้ → Deploy
@@ -167,10 +172,11 @@ async function buildStations(ctx, env, colo) {
   if (!ok) return new Response('telerid gave no data', { status: 502 });   // ไม่ทับชุดดีด้วยชุดว่าง
   const camIndex = {};
   stations.forEach((x) => { if (x._cam) camIndex[x.code] = x._cam; delete x._cam; });
-  ctx.waitUntil(caches.default.put(cacheKey('cams'), new Response(JSON.stringify(camIndex), {
-    headers: { 'content-type': 'application/json', 'cache-control': `public, max-age=${STALE_MAX}`, 'x-stored': String(Date.now()) } })));
   const details = {};
   list.forEach((s, i) => { if (results[i].status === 'fulfilled' && stations[i].hasDetail) details[s.code] = detail(s, results[i].value); });
+  // path ภาพกล้อง + กราฟทุกสถานีของรอบนี้ เก็บรวมรายการเดียว (เขียนแคชครั้งเดียว ไม่เพิ่มจำนวนการเรียกต่อรอบ)
+  ctx.waitUntil(caches.default.put(cacheKey('cams'), new Response(JSON.stringify({ cams: camIndex, details }), {
+    headers: { 'content-type': 'application/json', 'cache-control': `public, max-age=${STALE_MAX}`, 'x-stored': String(Date.now()) } })));
   const levelDts = stations.map((x) => x.levelDt).filter(Boolean).sort();
   const body = {
     // updated = เวลาวัดล่าสุดของสถานีที่ส่งค่า (เปลี่ยนเฉพาะเมื่อมีค่าใหม่ → หน้าเว็บไม่ต้องวาดใหม่ทุก 2 นาที)
@@ -228,9 +234,19 @@ async function findStation(ctx, code) {
   return list.find((s) => s.code === code) || null;
 }
 
+/* กราฟของสถานีจากรอบ /stations.json ล่าสุด · เก่าเกิน TTL_DETAIL หรือไม่มี → null (ไปเปิด WebSocket ของสถานีนั้นเหมือนเดิม) */
+async function builtDetail(code) {
+  const hit = await caches.default.match(cacheKey('cams'));
+  if (!hit || (Date.now() - Number(hit.headers.get('x-stored') || 0)) / 1000 >= TTL_DETAIL) return null;
+  const j = await hit.json();
+  return (j.details && j.details[code]) || null;
+}
+
 async function detailJson(ctx, env, code) {
   if (!(await isDown())) {
     try {
+      const built = await builtDetail(code);
+      if (built) return new Response(JSON.stringify(built), { headers: { 'content-type': 'application/json; charset=utf-8' } });
       const s = await findStation(ctx, code);
       if (!s) return new Response('unknown station', { status: 404 });
       const r = await cached(ctx, 'detail:' + code, TTL_DETAIL, async () =>
@@ -264,7 +280,7 @@ async function cameraLive(ctx, code) {
     // path ภาพจากรอบ stations ล่าสุด · ไม่มีจึงถาม WebSocket ของสถานีนั้นเอง
     let cam = null;
     const idx = await caches.default.match(cacheKey('cams'));
-    if (idx) cam = (await idx.json())[code] || null;
+    if (idx) { const j = await idx.json(); cam = (j.cams || j)[code] || null; }   // j.cams = รูปแบบใหม่ (มี details) · เดิมเป็น index ตรง ๆ
     if (!cam) {
       const s = await findStation(ctx, code);
       if (!s) return new Response('unknown station', { status: 404 });
