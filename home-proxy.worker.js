@@ -283,7 +283,10 @@ async function homeJson(request, env, ctx) {
       const cold = late.some((p) => storedText(store, p) == null);
       await Promise.race([Promise.allSettled(late.map((p) => r.runs[p])), sleep(cold ? COLD_WAIT : SOFT_WAIT)]);
     }
-    ctx.waitUntil(r.done.then(saveStore).catch(() => {}));
+    // บันทึกส่วนที่เสร็จแล้วก่อน แล้วค่อยบันทึกส่วนที่เหลือเมื่อเสร็จครบ · ถ้ารอให้ครบก่อนค่อยบันทึกทีเดียว
+    // แหล่งที่ช้ามาก (hyd-app ~30 วิ) อาจทำให้งานเบื้องหลังถูกตัดเกินเวลา (waitUntil ได้ 30 วิ) ผลที่ได้มาแล้วหายหมด
+    const early = Object.keys(fresh).length ? saveStore({ ...fresh }).catch(() => {}) : Promise.resolve();
+    ctx.waitUntil(early.then(() => r.done).then(saveStore).catch(() => {}));
   }
   return new Response(bundle(store, fresh, want, Date.now()), {
     headers: { ...CORS, 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
