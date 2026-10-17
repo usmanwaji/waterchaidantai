@@ -530,13 +530,15 @@ const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>
 const thName = o => (o && typeof o==='object') ? (o.th || o.en || '') : (o || '');
 const fmt1 = v => v==null ? '…' : (+v).toLocaleString('th-TH',{maximumFractionDigits:1});
 /* ดึง JSON แบบมีเวลาจำกัด: แหล่งไหนค้างก็ไม่ลากทั้งหน้าไปด้วย (เดิมหลายตัวไม่มีหมดเวลา รอได้เป็นนาที)
-   ลองซ้ำเฉพาะเน็ตสะดุด/เซิร์ฟเวอร์ 5xx · หมดเวลาไม่ลองซ้ำ (จะรอนานขึ้นอีก) · 4xx รวม 429 ไม่ลองซ้ำ (ไม่ยิงถี่ใส่ thaiwater) */
-async function fetchJSON(url, timeout=15000, tries=2){
+   ลองซ้ำเฉพาะเน็ตสะดุด/เซิร์ฟเวอร์ 5xx · หมดเวลาไม่ลองซ้ำ (จะรอนานขึ้นอีก) · 4xx รวม 429 ไม่ลองซ้ำ (ไม่ยิงถี่ใส่ thaiwater)
+   meta (ไม่บังคับ): ใส่ headers ของคำตอบกลับไปให้ผู้เรียกอ่าน */
+async function fetchJSON(url, timeout=15000, tries=2, meta){
   for(let i=1;; i++){
     const ctrl = new AbortController(), tm = setTimeout(()=>ctrl.abort(), timeout);
     try{
       const r = await fetch(url, {signal:ctrl.signal});
       if(!r.ok) throw Object.assign(new Error('HTTP '+r.status), {status:r.status});
+      if(meta) meta.headers = r.headers;
       return await r.json();
     }catch(e){
       if(i >= tries || ctrl.signal.aborted || e.status < 500) throw e;
@@ -612,7 +614,7 @@ async function loadAll(){
     renderAll();
     document.getElementById('updated').textContent = 'อัปเดต ' + new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
   } finally { loadingAll = false; }
-  hyd.then(()=>{ renderWaterta(); renderStations(); renderDirMain(); rerenderHero(); }, ()=>{});
+  hyd.then(renderHyd, ()=>{});
   loadTrends().then(rerenderHero);   // ค่าย้อนหลัง ปภ./ชป. สำหรับทิศทางน้ำ · ไม่ขวางการแสดงผลรอบแรก
   res.push(...await Promise.allSettled([hyd]));
   if(res.some(r=>r.status==='rejected')) retryTimer = setTimeout(loadAll, RETRY_MS);
@@ -763,9 +765,19 @@ const HYD_COORDS = {
   'X.184':[6.22716,101.496948], 'X.274':[5.83916,101.892143], 'X.199':[6.35179,101.49437],
 };
 const HYD_RIVER = {'X.199':'แม่น้ำสายบุรี', 'X.184':'แม่น้ำสายบุรี'};
-async function loadHyd(){
+/* Worker ตอบ x-cache: REVALIDATING = ชุดในแคชเก่า 10–60 นาที ตอบไปก่อนแล้วกำลังดึง hyd-app ใหม่เบื้องหลัง (ราว 20–30 วิ)
+   → ดึงซ้ำอีกครั้งหลัง HYD_RECHECK_MS ให้ได้ค่าล่าสุดเลย ไม่ต้องรอรอบรีเฟรช 30 นาที (ครั้งเดียว ไม่วนซ้ำ)
+   รอบดึงซ้ำต่อท้าย &r= ให้ URL ต่างจากเดิม ไม่งั้นเบราว์เซอร์ตอบจากแคชของตัวเอง (Worker ตั้ง max-age=120) */
+const HYD_RECHECK_MS = 45*1000;
+let hydRecheck = null;
+const renderHyd = () => { renderWaterta(); renderStations(); renderDirMain(); rerenderHero(); };
+async function loadHyd(recheck){
   // ไม่ลองซ้ำ: ช้าเพราะ Worker กำลังดึง hyd-app อยู่แล้ว ลองซ้ำมีแต่รอนานขึ้น · ล้มเหลวคงชุดเดิม
-  const j = await fetchJSON(`${HYD_LIVE}/stations.json?t=${Math.floor(Date.now()/600000)}`, 30000, 1);
+  const meta = {};
+  const j = await fetchJSON(`${HYD_LIVE}/stations.json?t=${Math.floor(Date.now()/600000)}${recheck ? '&r='+Date.now() : ''}`, 30000, 1, meta);
+  clearTimeout(hydRecheck);
+  if(!recheck && meta.headers?.get('x-cache') === 'REVALIDATING')
+    hydRecheck = setTimeout(()=>loadHyd(true).then(renderHyd, ()=>{}), HYD_RECHECK_MS);
   hydAll = (j?.stations||[]).filter(d=>d.province===prov && d.level!=null).map(d=>{
     const cur = num(d.level), bank = num(d.bank), warn = bank!=null ? bank - 1 : null;
     const c = HYD_COORDS[d.code] || [null, null];
