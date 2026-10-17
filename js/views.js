@@ -1,6 +1,6 @@
 /* js/views.js · ป้ายจำนวนผู้เข้าชม มุมขวาล่างของทุกหน้า + ตัวนับกลางของเว็บ
  * ใส่ในทุกหน้า (หลัง js/supabase-client.js):
- *   <script src="js/views.js?v=3" defer></script>
+ *   <script src="js/views.js?v=4" defer></script>
  *
  * - นับผ่าน RPC track_view() ใน Supabase (supabase/schema-v10.sql)
  *   ถ้ายังไม่ได้รัน v10 จะถอยไปใช้ bump_page_view() ของ v9 ให้อัตโนมัติ
@@ -53,9 +53,11 @@
     } catch (e) { return 'direct'; }
   }
 
-  /* หน้าไหน: ตัด origin และ index.html ออก ให้ '/' กับ '/index.html' นับรวมกัน */
+  /* หน้าไหน: ตัด origin และ index.html ออก ให้ '/' กับ '/index.html' นับรวมกัน
+     Cloudflare Pages ตัด .html ออกจาก URL (/map.html → /map) จึงเติมกลับ ให้ยอดต่อเนื่องกับของเดิม */
   function currentPath() {
     var p = location.pathname.replace(/\/index\.html?$/i, '/');
+    if (/\/[^\/.]+$/.test(p)) p += '.html';
     return p || '/';
   }
 

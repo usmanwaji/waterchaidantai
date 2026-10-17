@@ -80,7 +80,9 @@
 
   function currentPage() {
     var p = location.pathname.split('/').pop();
-    return (!p || p === '') ? 'index.html' : p;
+    if (!p) return 'index.html';
+    // Cloudflare Pages ตัด .html ออกจาก URL (/map.html → /map) จึงเติมกลับให้ตรงกับ href ในแถบ
+    return p.indexOf('.') < 0 ? p + '.html' : p;
   }
 
   function link(item, here) {
