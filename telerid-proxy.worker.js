@@ -266,8 +266,11 @@ async function cameraJpg(ctx, env, code) {
     try {
       const r = await cameraLive(ctx, code);
       if (r.ok || r.status === 404) return r;   // 404 = สถานีไม่มีกล้อง (ไม่ใช่ดึงไม่ได้)
-    } catch {}
-    markDown(ctx);
+      // telerid ตอบแล้วแต่ไม่ได้ภาพ (กล้องสถานีนั้นเสีย) ≠ ต่อ telerid ไม่ได้ → ไม่ตั้งโหมด down
+      // (เดิมตั้ง ทำให้ระดับน้ำทุกสถานีไปใช้ชุด KV 10 นาที แค่เพราะมีคนกดดูกล้องที่เสียตัวเดียว) · ไปลองภาพใน KV แทน
+    } catch {
+      markDown(ctx);   // หมดเวลา/ตัดการเชื่อมต่อ = ต่อ telerid ไม่ได้จริง
+    }
   }
   const kv = env && env.TELERID_KV;
   const got = kv ? await kv.getWithMetadata('img:' + code, { type: 'arrayBuffer', cacheTtl: 300 }) : null;
