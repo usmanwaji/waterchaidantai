@@ -20,6 +20,15 @@
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link rel="dns-prefetch" href="https://hyd-proxy.newusmanwaji.workers.dev">
 <link rel="dns-prefetch" href="https://tmd-proxy.newusmanwaji.workers.dev">
+<script>
+/* เริ่มขอข้อมูลรวมของหน้าแรก (home-proxy.worker.js) ตั้งแต่อ่านหัวหน้า ไม่ต้องรอ CSS/Leaflet โหลดเสร็จ
+   สคริปต์หลักด้านล่างหยิบผลไปใช้ผ่าน homeGet() · ไม่ได้ภายใน 8 วิ → null แล้วแต่ละส่วนดึงตรงจากต้นทางแบบเดิม */
+const HOME_PROXY = 'https://home-proxy.newusmanwaji.workers.dev';
+const homeBoot = (()=>{
+  const c = new AbortController(); setTimeout(()=>c.abort(), 8000);
+  return fetch(HOME_PROXY+'/home.json', {signal:c.signal}).then(r=>r.ok ? r.json() : null).catch(()=>null);
+})();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -546,6 +555,20 @@ async function fetchJSON(url, timeout=15000, tries=2, meta){
     await new Promise(r=>setTimeout(r, 1500));
   }
 }
+/* ---------- home-proxy: ข้อมูลหน้าแรกรวมในคำขอเดียว (ดู home-proxy.worker.js) ----------
+   รอบแรกตอนเปิดหน้าทุกตัวโหลดใช้ homeBoot (เริ่มขอใน <head>) ร่วมกัน ส่วนละครั้ง · รอบต่อไปขอเฉพาะส่วนที่ใช้
+   ส่วนที่ไม่มี (Worker ยังไม่ deploy / ต้นทางล่ม / เก่าเกิน) homeData ได้ null → ตัวโหลดดึงตรงจากต้นทางแบบเดิม
+   ส่วนที่ติดธง s (Worker ตอบชุดหมดอายุไปก่อนแล้วกำลังดึงใหม่) → loadAll ขอซ้ำอีกครั้งหลัง HOME_RECHECK_MS */
+const HOME_MAIN = ['meteo','wl','rain3d','ddpm','rid','hyd','trends','thr'];
+const HOME_RECHECK_MS = 40*1000;
+const homeBootLeft = new Set([...HOME_MAIN, 'tmd', 'nowcast', 'riskmap']);
+async function homeGet(parts){
+  const boot = parts.every(p=>homeBootLeft.has(p));
+  parts.forEach(p=>homeBootLeft.delete(p));
+  const j = boot ? await homeBoot : await fetchJSON(`${HOME_PROXY}/home.json?parts=${parts.join(',')}`, 8000, 1).catch(()=>null);
+  return j?.parts || {};
+}
+const homeData = (h, p) => h[p]?.d ?? null;
 
 let prov = 'นราธิวาส';
 let amp = '';                 // '' = ทั้งจังหวัด (ใช้จุดอำเภอเมือง)
@@ -568,7 +591,7 @@ const TMD_SOUTH = ['สงขลา','สตูล','ปัตตานี','ย
 async function loadTmd(){
   const rEl = document.getElementById('tmdRegion'), wEl = document.getElementById('tmdWarn');
   try{
-    const reg = await fetchJSON(TMD_PROXY+'/region7days');
+    const reg = homeData(await homeGet(['tmd']), 'tmd') || await fetchJSON(TMD_PROXY+'/region7days');
     // ---- พยากรณ์รายภาค: ภาคใต้ฝั่งตะวันออก ----
     const se = ((reg.WeatherForecast7DaysByRegion||{}).Regions||[])
       .find(x=>x.RegionNameThai==='ภาคใต้ฝั่งตะวันออก');
@@ -596,28 +619,35 @@ async function loadTmd(){
 /* ---------- โหลดข้อมูล ---------- */
 /* ตัวโหลดแต่ละแหล่งโยน error เมื่อล้มเหลวและคงชุดเดิมไว้ (ไม่ล้างเป็นว่าง) → รอบรีเฟรชที่เน็ตสะดุดไม่ทำให้การ์ดหาย
    ค่าสถานีมีเวลาวัดของตัวเอง (dt) ฮีโร่จึงยังตัดค่าที่เก่าเกิน HERO_FRESH_H ชม. ออกเองเหมือนเดิม
-   มีแหล่งไหนล้มเหลว → ลองใหม่ใน RETRY_MS แทนการรอรอบปกติ 30 นาที */
+   มีแหล่งไหนล้มเหลว → ลองใหม่ใน RETRY_MS แทนการรอรอบปกติ 30 นาที
+   recheck = รอบขอซ้ำหลัง home-proxy ตอบชุดหมดอายุ (ขอซ้ำครั้งเดียว ไม่วน) */
 const RETRY_MS = 2*60*1000;
 let loadingAll = false, retryTimer = null;
-async function loadAll(){
+async function loadAll(recheck){
   if(loadingAll) return;   // กดรีเฟรชซ้ำ/ตัวตั้งเวลาชนกันระหว่างโหลด → ใช้รอบที่กำลังโหลดอยู่
   loadingAll = true;
   clearTimeout(retryTimer);
   loadNaraRain();   // ไม่รอ · การ์ดฝนสะสม (naramet) โหลดเองในกรอบ
-  // ไม่รอ hyd-app: hyd-proxy ตอบช้าได้ราว 30 วิ ตอนแคชใน Worker หมด เดิมทั้งหน้ารอแหล่งนี้
-  // มาถึงแล้ววาดเฉพาะส่วนที่ใช้ (X.199 ในการ์ดมาตรวัด/ทิศทางน้ำ + ฮีโร่) แบบเดียวกับ pollRid
-  const hyd = loadHyd();
-  let res = [];
+  let res = [], h = {}, hyd = Promise.resolve();
   try{
     document.getElementById('updated').innerHTML = '<span class="spin"></span>';
-    res = await Promise.allSettled([loadMeteo(prov, true), loadWater(), loadSoil(), loadDdpm(), loadRid()]);
+    h = await homeGet(HOME_MAIN);
+    // ไม่รอ hyd-app: hyd-proxy ตอบช้าได้ราว 30 วิ ตอนแคชใน Worker หมด (กรณีดึงตรง ไม่ผ่าน home-proxy)
+    // มาถึงแล้ววาดเฉพาะส่วนที่ใช้ (X.199 ในการ์ดมาตรวัด/ทิศทางน้ำ + ฮีโร่) แบบเดียวกับ pollRid
+    hyd = loadHyd(homeData(h,'hyd'));
+    res = await Promise.allSettled([loadMeteo(prov, true, homeData(h,'meteo')), loadWater(homeData(h,'wl')),
+      loadSoil(homeData(h,'rain3d')), loadDdpm(homeData(h,'ddpm')), loadRid(ridFromHome(h))]);
+    Object.assign(ddpmThr, homeData(h,'thr'));   // เกณฑ์เฝ้าระวัง ปภ. ครบทุกสถานี → ddpmNeedThr ไม่ต้องดึงเพิ่ม
+    if(homeData(h,'trends')) applyTrends(homeData(h,'trends'));
     renderAll();
     document.getElementById('updated').textContent = 'อัปเดต ' + new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
   } finally { loadingAll = false; }
   hyd.then(renderHyd, ()=>{});
-  loadTrends().then(rerenderHero);   // ค่าย้อนหลัง ปภ./ชป. สำหรับทิศทางน้ำ · ไม่ขวางการแสดงผลรอบแรก
+  // ค่าย้อนหลัง ปภ./ชป. สำหรับทิศทางน้ำ · home-proxy ไม่มีให้จึงดึงเอง ไม่ขวางการแสดงผลรอบแรก
+  if(!homeData(h,'trends')) loadTrends().then(rerenderHero);
   res.push(...await Promise.allSettled([hyd]));
   if(res.some(r=>r.status==='rejected')) retryTimer = setTimeout(loadAll, RETRY_MS);
+  else if(recheck !== true && HOME_MAIN.some(p=>h[p]?.s)) retryTimer = setTimeout(()=>loadAll(true), HOME_RECHECK_MS);
 }
 /* ---------- ค่าก่อนหน้าของ ปภ. และโทรมาตร ชป. (ทิศทางน้ำ) ----------
    ใช้แหล่งเดียวกับหน้าแผนที่ · ปภ.: กราฟรายชั่วโมงของ cctv.disaster.go.th (ผ่าน ddpm-proxy)
@@ -638,6 +668,13 @@ const ridTrends = () => ridAll.filter(trendFresh).map(s => fetchJSON(ridUrl(`${e
     const back = ok.filter(([x])=>x <= tl - 3600).pop() || ok[0];
     if(back[0] < tl){ s.prev = back[1]; s.trendCur = vl; }
   }));
+// ทิศทางน้ำที่ home-proxy คิดไว้แล้ว {ddpm|rid: {code: [ค่าก่อนหน้า, ค่าล่าสุด]}} · เกณฑ์เดียวกับ loadTrends/ridTrends
+function applyTrends(t){
+  [[ddpmAll, t.ddpm], [ridAll, t.rid]].forEach(([list, m]) => list.forEach(s=>{
+    const v = m?.[s.code];
+    if(v){ s.prev = v[0]; s.trendCur = v[1]; }
+  }));
+}
 async function loadTrends(){
   await Promise.allSettled([
     ...ddpmAll.filter(trendFresh).map(s => fetchJSON(`${DDPM_PROXY}/water-level/graph?stationCode=${encodeURIComponent(s.code)}&type=hour&isSimulatorMode=false`, 15000, 1).then(j=>{
@@ -648,9 +685,11 @@ async function loadTrends(){
   ]);
 }
 // force: ดึงใหม่แม้มีในแคช (loadAll) · ล้มเหลวคงพยากรณ์ชุดเดิมไว้ ไม่ล้างแคชก่อนโหลด
-async function loadMeteo(p, force){
+async function loadMeteo(p, force, pre){
   if(meteoCache[p] && !force) return meteoCache[p];
   const list = ampsOf(p);
+  // ชุดจาก home-proxy คิดไว้เฉพาะ 13 อำเภอนราธิวาส ลำดับเดียวกับ AMPHOES
+  if(Array.isArray(pre) && pre.length === list.length && pre[0]?.hourly) return meteoCache[p] = pre;
   const lats = list.map(a=>a[2]).join(','), lons = list.map(a=>a[3]).join(',');
   const u = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}`+
     `&hourly=precipitation,precipitation_probability,weather_code`+
@@ -661,10 +700,10 @@ async function loadMeteo(p, force){
   if(!arr[0]?.hourly) throw new Error('open-meteo: no hourly');
   return meteoCache[p] = arr;
 }
-async function loadWater(){
+async function loadWater(pre){
   // ดึงใหม่ทุกรอบ (ปุ่มรีเฟรช/ทุก 30 นาที) · ประกอบใส่ตัวแปรชั่วคราวก่อน การ์ดจะได้ไม่ว่างระหว่างโหลด
   // ดึงเฉพาะนราธิวาส (96) เหมือนหน้าแผนที่ · เดิมดึงทั้ง 5 จังหวัดทุกรอบ ทำให้ thaiwater ตอบ 429 (เรียกถี่เกิน)
-  const res = await Promise.allSettled([PROV_CODE['นราธิวาส']].map(c =>
+  const res = pre ? [{status:'fulfilled', value:pre}] : await Promise.allSettled([PROV_CODE['นราธิวาส']].map(c =>
     fetchJSON(`${API}/public/waterlevel?province_code=${c}`)));
   const next = [];
   res.forEach(r=>{
@@ -688,9 +727,9 @@ async function loadWater(){
   if(!next.length) throw new Error('thaiwater: no data');
   wlAll = FC.dedupe(next);
 }
-async function loadSoil(){
+async function loadSoil(pre){
   // ขอเฉพาะจังหวัดที่ดู · ไม่ใส่ province_code ได้ทั้งประเทศราว 3.5 MB ทุกรอบ ส่วนที่ใช้จริงไม่ถึง 50 KB
-  const j = await fetchJSON(`${API}/provinces/rain3d?province_code=${PROV_CODE[prov]}`);
+  const j = pre || await fetchJSON(`${API}/provinces/rain3d?province_code=${PROV_CODE[prov]}`);
   if(!Array.isArray(j?.data)) throw new Error('rain3d: no data');
   const next = {};
   j.data.forEach(d=>{
@@ -736,6 +775,8 @@ const fetchRid = async () => {
   j._base = useLive ? RID_LIVE : RID_CAM;
   return j;
 };
+// rid จาก home-proxy = {base, j: stations.json} → รูปเดียวกับผลของ fetchRid
+const ridFromHome = h => { const d = homeData(h,'rid'); return d?.j?.stations?.length ? Object.assign(d.j, {_base:d.base}) : undefined; };
 async function loadRid(pre){
   const j = pre || await fetchRid();   // ล้มเหลว → โยนออกไป คงชุดเดิม
   ridUpdated = j?.updated || null;
@@ -771,13 +812,13 @@ const HYD_RIVER = {'X.199':'แม่น้ำสายบุรี', 'X.184':'�
 const HYD_RECHECK_MS = 45*1000;
 let hydRecheck = null;
 const renderHyd = () => { renderWaterta(); renderStations(); renderDirMain(); rerenderHero(); };
-async function loadHyd(recheck){
+async function loadHyd(pre, recheck){
   // ไม่ลองซ้ำ: ช้าเพราะ Worker กำลังดึง hyd-app อยู่แล้ว ลองซ้ำมีแต่รอนานขึ้น · ล้มเหลวคงชุดเดิม
   const meta = {};
-  const j = await fetchJSON(`${HYD_LIVE}/stations.json?t=${Math.floor(Date.now()/600000)}${recheck ? '&r='+Date.now() : ''}`, 30000, 1, meta);
+  const j = pre || await fetchJSON(`${HYD_LIVE}/stations.json?t=${Math.floor(Date.now()/600000)}${recheck ? '&r='+Date.now() : ''}`, 30000, 1, meta);
   clearTimeout(hydRecheck);
   if(!recheck && meta.headers?.get('x-cache') === 'REVALIDATING')
-    hydRecheck = setTimeout(()=>loadHyd(true).then(renderHyd, ()=>{}), HYD_RECHECK_MS);
+    hydRecheck = setTimeout(()=>loadHyd(null, true).then(renderHyd, ()=>{}), HYD_RECHECK_MS);
   hydAll = (j?.stations||[]).filter(d=>d.province===prov && d.level!=null).map(d=>{
     const cur = num(d.level), bank = num(d.bank), warn = bank!=null ? bank - 1 : null;
     const c = HYD_COORDS[d.code] || [null, null];
@@ -800,10 +841,12 @@ const hydExtra = () => hydAll.filter(h=>!wlAll.some(w=>String(w.code||'').trim()
 async function pollRid(){
   if(document.hidden || loadingAll || !heroReady) return;
   try{
-    const j = await fetchRid();
+    const h = await homeGet(['rid','trends']);
+    const j = ridFromHome(h) || await fetchRid();
     if(!j?.updated || (j.updated === ridUpdated && j._base === ridBase) || loadingAll) return;
     await loadRid(j);
-    await Promise.allSettled(ridTrends());
+    if(homeData(h,'trends')) applyTrends(homeData(h,'trends'));
+    else await Promise.allSettled(ridTrends());
     if(loadingAll) return;   // loadAll วาดให้เองแล้ว
     renderWaterta(); renderStations(); rerenderHero();
   }catch(e){}
@@ -819,8 +862,8 @@ function ddpmNeedThr(codes){
     .then(j=>{ ddpmThr[c] = num(j?.waterThreshold?.mediumLevelThreshold); })))
     .then(()=>{ if(miss.some(c=>ddpmThr[c]!=null)) renderWaterta(); });
 }
-async function loadDdpm(){
-  const j = await fetchJSON(`${DDPM_PROXY}/stations?provCode=${PROV_CODE[prov]}&limit=100`);
+async function loadDdpm(pre){
+  const j = pre || await fetchJSON(`${DDPM_PROXY}/stations?provCode=${PROV_CODE[prov]}&limit=100`);
   if(!Array.isArray(j?.data)) throw new Error('ddpm: no data');   // คงชุดเดิม
   ddpmAll = j.data.filter(d=>d.isActive!==0 && !d.deletedAt).map(d=>{
     const cur = num(d.currentWaterLevel), bank = num(d.riverBankLevel);
@@ -1666,7 +1709,7 @@ async function loadNowcast(){
   if(!mapEl) return;
   let j;
   try{
-    j = await fetchJSON(TMD_PROXY+'/nowcast');
+    j = homeData(await homeGet(['nowcast']), 'nowcast') || await fetchJSON(TMD_PROXY+'/nowcast');
   }catch(e){ j = null; }
   const list = j?.frames || [];
   if(!list.length){
@@ -1814,7 +1857,7 @@ let distRain, distDistrictGeo, distRainDayIdx = 0, drMap, drLayer, drLabels = []
 const drDayCount = () => distRain ? Math.min(DR_MAX_DAYS, distRain.days.length) : 0;
 async function loadDistRain(){
   let j;
-  try{ j = await fetchJSON(TMD_PROXY+'/riskmap'); }
+  try{ j = homeData(await homeGet(['riskmap']), 'riskmap') || await fetchJSON(TMD_PROXY+'/riskmap'); }
   catch(e){ if(distRain) return; }   // รอบรีเฟรชล้มเหลว → คงแผนที่ชุดเดิมที่แสดงอยู่
   distRain = (j?.districts||[]).length ? j : null;
   distRainDayIdx = 0;
