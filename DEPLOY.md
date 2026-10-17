@@ -9,7 +9,8 @@ Site: https://naraflood.com/
 
 ## 1) เว็บหน้าเว็บ (Cloudflare Pages)
 
-หน้าเว็บทั้งหมดเป็น static — push ขึ้น branch `main` แล้ว Cloudflare Pages จะ deploy ให้อัตโนมัติ (ไม่มีขั้น build)
+หน้าเว็บทั้งหมดเป็น static — push ขึ้น branch `main` แล้ว GitHub Actions จะอัปโหลดขึ้น Cloudflare Pages ให้อัตโนมัติ (ไม่มีขั้น build)
+ตัว deploy อยู่ที่ `.github/workflows/cloudflare-pages.yml` — คัดเฉพาะไฟล์หน้าเว็บ (ไม่เอา `*.md`, `*.worker.js`, `supabase/`, `telerid-scraper/`, `play-store/`) แล้วส่งด้วย `wrangler pages deploy`
 
 ```bash
 cd "Dashboard อุทกภัย"
@@ -18,26 +19,26 @@ git commit -m "update"
 git push origin main      # ต้องล็อกอิน GitHub (Credential Manager หรือ Personal Access Token)
 ```
 
-รอ ~1 นาที เว็บอัปเดตที่ลิงก์ด้านบน · ดูสถานะได้ที่ dash.cloudflare.com → **Workers & Pages → naraflood → Deployments**  
+รอ ~1 นาที เว็บอัปเดตที่ลิงก์ด้านบน · ดูสถานะได้ที่ GitHub → แท็บ **Actions → Deploy to Cloudflare Pages** หรือ dash.cloudflare.com → **Workers & Pages → naraflood → Deployments**  
+deploy ซ้ำโดยไม่ต้อง push: Actions → Deploy to Cloudflare Pages → **Run workflow**  
 PWA/Service Worker ทำงานเฉพาะบน https (Cloudflare Pages เป็น https อยู่แล้ว)
 
 ### 1.0) ตั้งค่า Cloudflare Pages ครั้งแรก (ทำครั้งเดียว)
 
-1. **สร้างโปรเจกต์** — dash.cloudflare.com → **Workers & Pages → Create → Pages → Import an existing Git repository**
-   → เชื่อม GitHub แล้วเลือก `usmanwaji/waterchaidantai`
-   - Project name: `naraflood` (ได้ลิงก์ทดสอบ `https://naraflood.pages.dev` · ถ้าชื่อซ้ำ Cloudflare จะเติมตัวอักษรต่อท้ายให้)
-   - Production branch: `main`
-   - Framework preset: **None** · Build command: **เว้นว่าง** · Build output directory: `/`
-   - กด **Save and Deploy** แล้วเปิดลิงก์ `.pages.dev` ดูว่าหน้าแรกและแผนที่ขึ้นปกติ
-2. **ไม่ให้ build branch `cam`** — โปรเจกต์ → **Settings → Builds → Branch control** → Preview branch: **Custom branches**
-   → Include: `*` · Exclude: `cam` → Save
-   ตัวดึงข้อมูล telerid push ขึ้น `cam` ทุกไม่กี่นาที ถ้าไม่กันไว้ Cloudflare จะ build ทุกครั้งจนโควตาฟรี 500 build/เดือนหมด
-   (`cam` ไม่ใช่หน้าเว็บ หน้าแผนที่อ่านไฟล์จาก raw.githubusercontent.com โดยตรง) · ไม่ต้องการลิงก์ทดสอบของ branch อื่นเลยก็เลือก **None**
+1. **สร้าง API token ให้ GitHub Actions** — dash.cloudflare.com → รูปโปรไฟล์ → **My Profile → API Tokens → Create Token → Create Custom Token**
+   - Token name: `github-actions-pages`
+   - Permissions: **Account → Cloudflare Pages → Edit** (แค่สิทธิ์เดียวพอ)
+   - Account Resources: Include → บัญชีของเรา → **Continue to summary → Create Token** แล้วคัดลอก token (แสดงครั้งเดียว)
+2. **ใส่ token ใน GitHub** — repo → **Settings → Secrets and variables → Actions → New repository secret**
+   → Name: `CLOUDFLARE_API_TOKEN` · Secret: token จากข้อ 1 → Add secret
+   แล้วไปที่ **Actions → Deploy to Cloudflare Pages → Run workflow** (branch `main`)
+   - รอบแรก workflow จะสร้างโปรเจกต์ `naraflood` ให้เอง แล้ว deploy → เปิด `https://naraflood.pages.dev` ดูว่าหน้าแรกและแผนที่ขึ้นปกติ
+   - **ห้าม** กด Import an existing Git repository / Connect to Git ใน Cloudflare — จะ deploy ซ้อนกับ Actions และ build ตาม branch `cam`
+     ที่ตัวดึงข้อมูล telerid push ทุกไม่กี่นาทีจนโควตาฟรี 500 build/เดือนหมด (Actions สั่ง deploy เฉพาะ `main`)
+   - Account ID เขียนไว้ใน workflow แล้ว (`CLOUDFLARE_ACCOUNT_ID`) ไม่ใช่ความลับ ถ้าย้ายบัญชี Cloudflare ให้แก้ตรงนั้น
 3. **ผูกโดเมน** — โปรเจกต์ → **Custom domains → Set up a custom domain** → `naraflood.com` (ใช้ www ด้วยก็เพิ่ม `www.naraflood.com` อีกตัว)
-   - DNS ของ naraflood.com อยู่ที่ Cloudflare แล้ว: Cloudflare สร้าง record ให้เอง ถ้าฟ้องว่ามี record ซ้ำ ให้ลบ A record เดิมของ GitHub (`185.199.108.153`–`185.199.111.153`) ก่อน
-   - DNS ยังอยู่ที่ผู้ให้บริการโดเมนเดิม: โดเมนหลัก (ไม่มี www) ผูกกับ Pages ได้เมื่อ DNS อยู่ที่ Cloudflare เท่านั้น
-     → dash.cloudflare.com → **Onboard a domain** → `naraflood.com` → แผน Free → ตรวจว่า record เดิมครบ (โดยเฉพาะ MX/TXT ของอีเมลถ้ามี)
-     → นำ nameserver 2 ตัวที่ Cloudflare ให้ไปใส่ที่หน้าจัดการโดเมน → รอสถานะ Active แล้วค่อยทำข้อนี้
+   - DNS ของ naraflood.com อยู่ที่ Cloudflare บัญชีเดียวกันแล้ว (สถานะ Active) → Cloudflare สร้าง record ให้เอง
+     ถ้าฟ้องว่ามี record ซ้ำ ให้ไปที่ naraflood.com → **DNS → Records** ลบ A record เดิมของ GitHub (`185.199.108.153`–`185.199.111.153`) แล้วทำข้อนี้ใหม่
    - เสร็จแล้วรอ 5–30 นาที เปิด https://naraflood.com ถ้าเปิด DevTools → Network แล้ว header `server` เป็น `cloudflare` (ไม่ใช่ `GitHub.com`) แปลว่าย้ายสำเร็จ
 4. **Supabase Auth** — Authentication → URL Configuration → Redirect URLs เพิ่ม `https://naraflood.com/**`
    Cloudflare ตัด `.html` ออกจาก URL หลังล็อกอินจึงกลับมาที่ `/route` ไม่ใช่ `/route.html` ถ้าในรายการมีแค่ชื่อเต็ม Supabase จะส่งไปที่ Site URL แทนหน้าที่กดล็อกอิน
