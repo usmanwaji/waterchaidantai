@@ -33,6 +33,7 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 #btnCollapse{position:absolute;left:360px;top:50%;transform:translateY(-50%);z-index:1120;width:22px;height:56px;border:none;border-radius:0 10px 10px 0;background:var(--orange);color:#fff;cursor:pointer;font-size:13px;box-shadow:2px 0 6px rgba(0,0,0,.25);transition:left .2s}
 #btnCollapse.closed{left:0}
 #map{flex:1;min-width:0}
+#pinHint{position:absolute;left:50%;top:60px;transform:translateX(-50%);z-index:1140;background:var(--orange);color:#fff;font-weight:600;font-size:13px;padding:8px 14px;border-radius:20px;box-shadow:0 1px 6px rgba(0,0,0,.3);pointer-events:none;white-space:nowrap}
 
 .sec{padding:12px 14px;border-bottom:1px solid var(--outline)}
 .sec h3{font-size:12.5px;color:var(--navy-d);margin-bottom:8px;display:flex;align-items:center;gap:6px}
@@ -184,6 +185,7 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
 
   <button id="btnCollapse" onclick="toggleSidebar()">◀</button>
   <div id="map"></div>
+  <div id="pinHint" style="display:none"></div>
 </div>
 
 <footer>
@@ -680,7 +682,15 @@ window.togglePinMode = function(mode){
   document.getElementById('pinEndBtn').className = `pin-btn ${reportEnd?'done':''} ${currentPinMode==='end'?'active':''}`;
   
   if (gMap) gMap.setOptions({ draggableCursor: currentPinMode ? 'crosshair' : null });
+
+  const hint = document.getElementById('pinHint');
+  hint.textContent = currentPinMode === 'start' ? 'แตะบนถนนตรงจุดเริ่มต้น (A)' : currentPinMode === 'end' ? 'แตะบนถนนตรงจุดสิ้นสุด (B)' : '';
+  hint.style.display = currentPinMode ? '' : 'none';
+  // จอมือถือ: แผงด้านข้างบังแผนที่เกือบทั้งจอ แตะแล้วโดนแผงแทนแผนที่ จึงปิดแผงก่อนให้ปักหมุดได้
+  if (currentPinMode && isNarrowScreen()) document.getElementById('sidebar').classList.remove('open');
 };
+
+function isNarrowScreen(){ return window.matchMedia('(max-width:768px)').matches; }
 
 async function setReportLatLon(lat, lng){
   if (currentPinMode === 'start') {
@@ -695,8 +705,11 @@ async function setReportLatLon(lat, lng){
     } else { pinEndMarker.position = {lat, lng}; }
   }
   
+  const placed = currentPinMode;
   currentPinMode = null;
-  togglePinMode(null); // refresh buttons
+  // มือถือ: ปักจุดแรกแล้วให้แตะอีกจุดต่อได้เลย ไม่ต้องเปิดแผงกลับไปกดปุ่ม 2
+  if (isNarrowScreen() && !(reportStart && reportEnd)) togglePinMode(placed === 'start' ? 'end' : 'start');
+  else togglePinMode(null); // refresh buttons
   
   if (reportStart && reportEnd) {
     document.getElementById('reportLatLon').innerHTML = '⏳ กำลังประมวลผลเส้นทางถนน...';
@@ -729,6 +742,8 @@ async function setReportLatLon(lat, lng){
   } else {
     document.getElementById('reportLatLon').innerHTML = 'กรุณาปักหมุดให้ครบทั้งสองจุด';
   }
+  // ครบสองจุดแล้ว เปิดแผงกลับให้เห็นผลและกรอกรายละเอียดต่อ
+  if (reportStart && reportEnd && isNarrowScreen()) document.getElementById('sidebar').classList.add('open');
 }
 
 function createPinIcon(label) {
