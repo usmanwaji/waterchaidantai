@@ -75,8 +75,8 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
     <a href="index.html">หน้าแรก</a>
     <a href="stats.html">สถิติผู้เข้าชม</a>
     <a href="route.html">เส้นทาง</a>
-    <a href="resources.html">ทรัพยากร</a>
-    <a href="eoc.html">EOC</a>
+    <a style="display:none" href="resources.html">ทรัพยากร</a>
+    <a style="display:none" href="eoc.html">EOC</a>
     <a href="people.html">กลุ่มเปราะบาง</a>
   </nav>
   <div id="authBox"></div>
@@ -117,7 +117,7 @@ a,button,select,input,.chip{touch-action:manipulation;-webkit-tap-highlight-colo
 
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
-<script src="js/views.js?v=3" defer></script>
+<script src="js/views.js?v=4" defer></script>
 <script>
 'use strict';
 const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -293,7 +293,7 @@ watchAuthState({
 });
 </script>
 <script src="js/pwa.js" defer></script>
-<script src="js/tabbar.js?v=2" defer></script>
+<script src="js/tabbar.js?v=3" defer></script>
 <script src="js/install.js?v=2" defer></script>
 </body>
 </html>

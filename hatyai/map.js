@@ -63,113 +63,10 @@ th:{
   • ข้อมูลรีเฟรชอัตโนมัติทุก 10 นาที หรือกดปุ่มรีเฟรชมุมขวาบน
   <h4>แหล่งข้อมูล</h4>
   รวบรวมจาก API สาธารณะ: สสน. (thaiwater.net) · กรมชลประทาน · HII · ลิงก์ CCTV ปภ. และโทรมาตรกรมชลฯ ในหมุดกล้อง`
-},
-en:{
-  title:'🌊 One Map — Hat Yai Water Watch', sub:'Hat Yai District, Songkhla · Khlong U-Taphao basin — all agencies, one map',
-  refresh:'Refresh', loading:'Loading…', updated:'Last updated', partial:'some sources failed to load',
-  search:'🔍 Search station / river / district…', all:'All', listEmpty:'No stations match',
-  lyWL:'⚫ Water level', lyRain:'◼ Rain 24 h', lyDam:'🔻 Dams', lySea:'🌊 Sea level', lyCctv:'📷 CCTV', lyTele:'▲ RID telemetry', lyRisk:'⚠ Flash-flood risk',
-  teleSrc:'Royal Irrigation Dept', teleProj:'Irrigation project', teleView:'Open RID telemetry ↗',
-  teleWL:'Current water level', teleRain:'Rain accumulated', teleUpd:'Updated', teleNoData:'No live value yet — run telerid-scraper on a Thai-IP machine', teleMSL:'m MSL', teleMM:'mm',
-  extDdpm:'📹 DDPM CCTV ↗', extTelerid:'▲ RID telemetry ↗',
-  lyDdpm:'📹 DDPM CCTV', ddpmSrc:'DDPM disaster surveillance system', ddpmCoord:'Coordinates (lat, lon)',
-  ddpmWL:'Current water level (m)', ddpmCam:'Camera status', camOn:'🟢 Online', camOff:'🔴 Offline', ddpmTel:'Phone',
-  ddpmLow:'Low', ddpmMed:'Medium', ddpmHigh:'High — watch', ddpmCrit:'Critical',
-  ddpmOpen:'📺 View source at cctv.disaster.go.th', ddpmNewTabLbl:'Open in new tab ↗',
-  ddpmModalTitle:'📹 DDPM Disaster Surveillance (cctv.disaster.go.th)',
-  ddpmNoteTxt:'If the frame above is blank, the DDPM site blocks embedding — use "Open in new tab" instead.',
-  report:'📋 Copy situation report', copied:'Report copied — paste into LINE/documents',
-  wl_overflow:'Overflow', wl_high:'High', wl_normal:'Normal', wl_low:'Low', wl_critlow:'Critically low', wl_unknown:'No data',
-  rain_none:'No rain', rain_light:'Light rain', rain_mod:'Moderate rain', rain_heavy:'Heavy rain', rain_vheavy:'Very heavy rain',
-  dam_over:'Over capacity', dam_watch:'High — watch', dam_much:'High', dam_normal:'Normal', dam_low:'Low', nodata:'No data',
-  lv:'Water level (m MSL)', bank:'Bank level (m MSL)', diffbank:'Distance to bank (m)', flow:'Discharge (m³/s)', time:'Measured',
-  up:'▲ rising', down:'▼ falling', steady:'▬ steady', stale:'⏱ Data older than 24 h',
-  gcap:'Water level, past 3 days (red dash = bank)', gload:'Loading graph…', gfail:'Could not load graph', gnone:'No graph data',
-  full:'Full data at thaiwater.net ↗', damfull:'All dam data ↗', seafull:'Full coastal data ↗',
-  rain24:'Rain 24 h', storage:'Storage (MCM)', inflow:'Inflow (MCM/day)', outflow:'Released (MCM/day)', damlv:'Level (m MSL)', damdate:'Data date', pctcap:'% capacity',
-  seawarn:'⚠ Storm-surge warning', seanormal:'Normal', seamon:'Monitoring level (m)', seamodel:'Model run', seasrc:'HII storm-surge model',
-  cctvView:'📺 Open live view ↗', cctvNote:'More cameras:', cctvDdpm:'DDPM CCTV', cctvRid:'RID telemetry',
-  riskTitle:'Flash-flood risk, next 24 h', riskRain:'Accum. rain (mm)', riskSrc:'Source: HII',
-  bannerFF:'⚠️ <b>Flash-flood watch, next 24 h:</b>', andMore:'and more',
-  legWL:'⚫ Water level (% channel capacity)', legRain:'◼ Rain, 24 h', legOther:'🔻 Dam · 🌊 Sea · 📷 CCTV · ▲ Telemetry · ⚠ Risk',
-  legR1:'Light ≤10 mm', legR2:'Moderate 10–35 mm', legR3:'Heavy 35–90 mm', legR4:'Very heavy >90 mm',
-  src:'Sources:', note:'Trial version under improvement — suggestions/corrections: <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a>',
-  rpTitle:'📋 Water situation report — Hat Yai, Songkhla (U-Taphao basin)', rpStations:'stations', rpCrit:'⚠ Priority stations:', rpNoCrit:'✅ No overflow/high stations', rpRainMax:'🌧 Max rain 24 h:', rpDam:'🔻 Dams/reservoirs:', rpRisk:'⚠ Flash-flood risk areas:', rpSrc:'Source: thaiwater.net (HII)',
-  prov:{'สตูล':'Satun','สงขลา':'Songkhla','ปัตตานี':'Pattani','ยะลา':'Yala','นราธิวาส':'Narathiwat'},
-  help:'❓ How to use', helpTitle:'❓ How to use this map',
-  helpBody:`
-  <h4>Map symbols</h4>
-  ⚫ Circle = water-level station, coloured by % of channel capacity (green normal · yellow/brown low · blue high · <b style="color:#dc2626">blinking red = overflowing</b>)<br>
-  ◼ Square = 24-h rainfall · 🔻 dam/reservoir · 🌊 coastal sea level · 📷 CCTV · ▲ RID telemetry station · ⚠ flash-flood risk spot (HII model)
-  <h4>Using the map</h4>
-  • Click any point for details + a 3-day water-level graph (red dash = bank level)<br>
-  • Province buttons zoom & filter · search box finds stations/rivers/districts<br>
-  • Click a coloured summary card to filter by status (click again to clear)<br>
-  • Tick ☑ boxes to toggle each data layer<br>
-  • The ◀ button beside the panel hides/shows it for a full-screen map
-  <h4>Tools for officials</h4>
-  • 📋 Copy situation report = summary of critical stations/rain/dams, ready to paste into LINE<br>
-  • ⏱ yellow tag = station data older than 24 h — verify before citing<br>
-  • Data auto-refreshes every 10 minutes, or press Refresh
-  <h4>Data sources</h4>
-  Public APIs: HII (thaiwater.net) · Royal Irrigation Dept · DDPM CCTV & RID telemetry links in camera pins`
-},
-ms:{
-  title:'🌊 One Map — Paras Air Hat Yai', sub:'Daerah Hat Yai, Songkhla · Lembangan Khlong U-Taphao — semua agensi, satu peta',
-  refresh:'Muat semula', loading:'Memuatkan…', updated:'Kemas kini terakhir', partial:'sebahagian sumber gagal dimuat',
-  search:'🔍 Cari stesen / sungai / daerah…', all:'Semua', listEmpty:'Tiada stesen sepadan',
-  lyWL:'⚫ Paras air', lyRain:'◼ Hujan 24 j', lyDam:'🔻 Empangan', lySea:'🌊 Paras laut', lyCctv:'📷 CCTV', lyTele:'▲ Telemetri RID', lyRisk:'⚠ Risiko banjir kilat',
-  teleSrc:'Jabatan Pengairan', teleProj:'Projek pengairan', teleView:'Buka telemetri RID ↗',
-  teleWL:'Paras air semasa', teleRain:'Hujan terkumpul', teleUpd:'Dikemas kini', teleNoData:'Belum ada nilai langsung — jalankan telerid-scraper di mesin IP Thai', teleMSL:'m MSL', teleMM:'mm',
-  extDdpm:'📹 CCTV DDPM ↗', extTelerid:'▲ Telemetri RID ↗',
-  lyDdpm:'📹 CCTV DDPM', ddpmSrc:'Sistem pemantauan bencana DDPM', ddpmCoord:'Koordinat (lat, lon)',
-  ddpmWL:'Paras air semasa (m)', ddpmCam:'Status kamera', camOn:'🟢 Dalam talian', camOff:'🔴 Luar talian', ddpmTel:'Telefon',
-  ddpmLow:'Rendah', ddpmMed:'Sederhana', ddpmHigh:'Tinggi — berjaga', ddpmCrit:'Kritikal',
-  ddpmOpen:'📺 Lihat sumber di cctv.disaster.go.th', ddpmNewTabLbl:'Buka tab baharu ↗',
-  ddpmModalTitle:'📹 Pemantauan Bencana DDPM (cctv.disaster.go.th)',
-  ddpmNoteTxt:'Jika bingkai di atas kosong, laman DDPM menyekat pembenaman — guna "Buka tab baharu".',
-  report:'📋 Salin laporan situasi', copied:'Laporan disalin — tampal ke LINE/dokumen',
-  wl_overflow:'Melimpah tebing', wl_high:'Paras tinggi', wl_normal:'Normal', wl_low:'Paras rendah', wl_critlow:'Kritikal rendah', wl_unknown:'Tiada data',
-  rain_none:'Tiada hujan', rain_light:'Hujan ringan', rain_mod:'Hujan sederhana', rain_heavy:'Hujan lebat', rain_vheavy:'Hujan sangat lebat',
-  dam_over:'Melebihi kapasiti', dam_watch:'Tinggi — berjaga-jaga', dam_much:'Tinggi', dam_normal:'Normal', dam_low:'Rendah', nodata:'Tiada data',
-  lv:'Paras air (m MSL)', bank:'Paras tebing (m MSL)', diffbank:'Jarak ke tebing (m)', flow:'Kadar aliran (m³/s)', time:'Masa cerapan',
-  up:'▲ meningkat', down:'▼ menurun', steady:'▬ stabil', stale:'⏱ Data melebihi 24 jam',
-  gcap:'Paras air 3 hari lepas (garis merah = tebing)', gload:'Memuatkan graf…', gfail:'Graf tidak dapat dimuat', gnone:'Tiada data graf',
-  full:'Data penuh di thaiwater.net ↗', damfull:'Semua data empangan ↗', seafull:'Data pantai penuh ↗',
-  rain24:'Hujan 24 jam', storage:'Simpanan (juta m³)', inflow:'Aliran masuk (juta m³/hari)', outflow:'Dilepaskan (juta m³/hari)', damlv:'Paras (m MSL)', damdate:'Tarikh data', pctcap:'% kapasiti',
-  seawarn:'⚠ Amaran ombak besar', seanormal:'Normal', seamon:'Paras pemantauan (m)', seamodel:'Larian model', seasrc:'Model ombak HII',
-  cctvView:'📺 Buka paparan langsung ↗', cctvNote:'Kamera lain:', cctvDdpm:'CCTV DDPM', cctvRid:'Telemetri RID',
-  riskTitle:'Risiko banjir kilat, 24 jam akan datang', riskRain:'Hujan terkumpul (mm)', riskSrc:'Sumber: HII',
-  bannerFF:'⚠️ <b>Amaran banjir kilat 24 jam akan datang:</b>', andMore:'dan lain-lain',
-  legWL:'⚫ Paras air (% kapasiti sungai)', legRain:'◼ Hujan 24 jam', legOther:'🔻 Empangan · 🌊 Laut · 📷 CCTV · ▲ Telemetri · ⚠ Risiko',
-  legR1:'Ringan ≤10 mm', legR2:'Sederhana 10–35 mm', legR3:'Lebat 35–90 mm', legR4:'Sangat lebat >90 mm',
-  src:'Sumber:', note:'Versi percubaan dalam penambahbaikan — cadangan/pembetulan: <a href="mailto:newusmanwaji@gmail.com">newusmanwaji@gmail.com</a>',
-  rpTitle:'📋 Laporan situasi air — Hat Yai, Songkhla (lembangan U-Taphao)', rpStations:'stesen', rpCrit:'⚠ Stesen keutamaan:', rpNoCrit:'✅ Tiada stesen melimpah/tinggi', rpRainMax:'🌧 Hujan 24 j tertinggi:', rpDam:'🔻 Empangan:', rpRisk:'⚠ Kawasan risiko banjir kilat:', rpSrc:'Sumber: thaiwater.net (HII)',
-  prov:{'สตูล':'Satun','สงขลา':'Songkhla','ปัตตานี':'Patani','ยะลา':'Yala','นราธิวาส':'Narathiwat'},
-  help:'❓ Panduan', helpTitle:'❓ Cara guna peta ini',
-  helpBody:`
-  <h4>Simbol peta</h4>
-  ⚫ Bulatan = stesen paras air, warna ikut % kapasiti sungai (hijau normal · kuning/perang rendah · biru tinggi · <b style="color:#dc2626">merah berkelip = melimpah tebing</b>)<br>
-  ◼ Petak = hujan 24 jam · 🔻 empangan · 🌊 paras laut pantai · 📷 CCTV · ▲ stesen telemetri RID · ⚠ titik risiko banjir kilat (model HII)
-  <h4>Cara guna</h4>
-  • Klik mana-mana titik untuk butiran + graf paras air 3 hari (garis merah = paras tebing)<br>
-  • Butang wilayah = zum & tapis · kotak carian = cari stesen/sungai/daerah<br>
-  • Klik kad ringkasan berwarna untuk tapis ikut status (klik lagi untuk batal)<br>
-  • Tanda ☑ untuk buka/tutup setiap lapisan data<br>
-  • Butang ◀ di tepi panel menyorok/memapar panel untuk peta penuh
-  <h4>Alat untuk pegawai</h4>
-  • 📋 Salin laporan situasi = ringkasan stesen kritikal/hujan/empangan, sedia tampal ke LINE<br>
-  • ⏱ tag kuning = data stesen melebihi 24 jam — sahkan sebelum rujuk<br>
-  • Data dimuat semula automatik setiap 10 minit
-  <h4>Sumber data</h4>
-  API awam: HII (thaiwater.net) · Jabatan Pengairan Diraja · pautan CCTV DDPM & telemetri RID dalam pin kamera`
 }};
-let lang = 'th';
-try{ lang = localStorage.getItem('onemap_lang') || 'th'; }catch(e){}
-if(!STR[lang]) lang = 'th';
-const t = k => STR[lang][k] ?? STR.th[k] ?? k;
-const tProv = p => STR[lang].prov[p] || p;
-const locale = () => lang==='th' ? 'th-TH' : 'en-GB';
+const t = k => STR.th[k] ?? k;
+const tProv = p => STR.th.prov[p] || p;
+const locale = () => 'th-TH';
 
 /* ================= เกณฑ์สถานะ ================= */
 const WL_CLASSES = {
@@ -426,7 +323,7 @@ function wlPopup(s){
   <dl class="pp-grid">
     <dt>${t('lv')}</dt><dd>${fmt(s.msl)}${trendArrow(s)}</dd>
     <dt>${t('bank')}</dt><dd>${fmt(s.bank)}</dd>
-    <dt>${lang==='th' ? esc(s.diffText||t('diffbank')) : t('diffbank')}</dt><dd>${fmt(s.diff)}</dd>
+    <dt>${esc(s.diffText||t('diffbank'))}</dt><dd>${fmt(s.diff)}</dd>
     ${s.discharge!=null?`<dt>${t('flow')}</dt><dd>${fmt(s.discharge)}</dd>`:''}
     <dt>${t('time')}</dt><dd>${esc(s.dt)}</dd>
   </dl>
@@ -1030,9 +927,8 @@ function fallbackCopy(text,done){
   ta.select(); try{document.execCommand('copy'); done();}catch(e){} document.body.removeChild(ta);
 }
 
-/* ================= สลับภาษา ================= */
+/* ================= ข้อความบนหน้า ================= */
 function applyLang(){
-  document.documentElement.lang = lang;
   document.getElementById('hTitle').innerHTML = `${t('title')}<small id="hSub">${t('sub')}</small>`;
   document.getElementById('btnRefreshTxt').textContent = t('refresh');
   document.getElementById('search').placeholder = t('search');
@@ -1054,18 +950,6 @@ function applyLang(){
   buildLegend();
   renderSidebar();
 }
-document.querySelectorAll('.langbtn').forEach(b=>{
-  b.onclick = () => {
-    document.querySelectorAll('.langbtn').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    lang = b.dataset.lang;
-    try{ localStorage.setItem('onemap_lang', lang); }catch(e){}
-    applyLang();
-    loadBoundaries();
-    loadFlashFlood();
-  };
-});
-document.querySelectorAll('.langbtn').forEach(b=>b.classList.toggle('active', b.dataset.lang===lang));
 
 /* start */
 applyLang();

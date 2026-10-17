@@ -57,11 +57,18 @@ footer a{color:var(--st-watch);text-decoration:none}
   <h1>เช็คพื้นที่ฉัน<small>บ้านฉันเสี่ยงน้ำท่วมไหม · คำตอบในหน้าเดียว</small></h1>
   <nav class="navtab" aria-label="เมนูหลัก">
     <a href="index.html">หน้าแรก</a>
-    <a href="check.html" class="on">เช็คพื้นที่ฉัน</a>
     <a href="map.html">ระดับน้ำ</a>
-    <a href="shelter.html">ศูนย์พักพิง</a>
-    <a href="shelter.html#parking">ที่จอดรถ</a>
-    <a href="alert.html">แจ้งเตือน</a>
+    <a href="forecast.html">คาดการณ์</a>
+    <a href="history.html">ย้อนหลัง</a>
+    <a href="repeat.html">พื้นที่ท่วมซ้ำซาก</a>
+    <!-- <a href="sim.html">แบบจำลอง</a> -->
+    <a href="shelter.html">ศูนย์พักพิง/ที่จอดรถ</a>
+    <a style="display:none" href="shelter.html#parking">ที่จอดรถ</a>
+    <a href="route.html">เส้นทาง</a>
+    <a style="display:none" href="resources.html">ทรัพยากร</a>
+    <a href="check.html" class="on">เช็คพื้นที่</a>
+    <a style="display:none" href="alert.html">แจ้งเตือน</a>
+    <a style="display:none" href="eoc.html">EOC</a>
   </nav>
 </header>
 
@@ -143,7 +150,7 @@ footer a{color:var(--st-watch);text-decoration:none}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
-<script src="js/views.js?v=3" defer></script>
+<script src="js/views.js?v=4" defer></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -285,7 +292,7 @@ $('ampSel').onchange=e=>{ const v=e.target.value; if(v) run('นราธิว�
 </script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
-<script src="js/tabbar.js?v=2" defer></script>
+<script src="js/tabbar.js?v=3" defer></script>
 <script src="js/install.js?v=2" defer></script>
 </body>
 </html>

@@ -45,7 +45,7 @@
     { href: 'index.html',   label: 'สถานการณ์', icon: 'home'  },
     { href: 'map.html',     label: 'แผนที่น้ำ', icon: 'map'   },
     { href: 'check.html',   label: 'พื้นที่ฉัน', icon: 'pin'   },
-    { href: 'shelter.html', label: 'ศูนย์พักพิง', icon: 'house' }
+    { href: 'shelter.html', label: 'ศูนย์พักพิง/ที่จอดรถ', icon: 'house' }
   ];
 
   /* ที่เหลืออยู่ในแผ่น จัดกลุ่มตามคำถามที่คนถาม ไม่ใช่ตามชื่อหน่วยงาน */
@@ -55,15 +55,17 @@
       /* ปิดปุ่ม "แบบจำลอง" ไว้ก่อน — เก็บโค้ดไว้เผื่อเปิดกลับมาใช้ในอนาคต */
       // { href: 'sim.html',       label: 'แบบจำลอง',   icon: 'wave'   },
       { href: 'history.html',   label: 'ย้อนหลัง',    icon: 'clock'  },
-      { href: 'repeat.html',    label: 'พื้นที่เสี่ยง', icon: 'alert'  }
+      { href: 'repeat.html',    label: 'พื้นที่ท่วมซ้ำซาก', icon: 'alert'  }
     ]},
     { head: 'ลงมือ', items: [
-      { href: 'route.html',     label: 'เส้นทาง',     icon: 'car'    },
-      { href: 'resources.html', label: 'ทรัพยากร',   icon: 'truck'  },
-      { href: 'alert.html',     label: 'แจ้งเตือน',   icon: 'bell'   }
+      { href: 'route.html',     label: 'เส้นทาง',     icon: 'car'    }
+      /* ปิดปุ่ม "ทรัพยากร" และ "แจ้งเตือน" ไว้ก่อน — เก็บโค้ดไว้เผื่อเปิดกลับมาใช้ในอนาคต */
+      // { href: 'resources.html', label: 'ทรัพยากร',   icon: 'truck'  },
+      // { href: 'alert.html',     label: 'แจ้งเตือน',   icon: 'bell'   }
     ]},
     { head: 'สำหรับเจ้าหน้าที่', items: [
-      { href: 'eoc.html',       label: 'ศูนย์บัญชาการ', icon: 'grid'   },
+      /* ปิดปุ่ม "ศูนย์บัญชาการ" ไว้ก่อน */
+      // { href: 'eoc.html',       label: 'ศูนย์บัญชาการ', icon: 'grid'   },
       { href: 'people.html',    label: 'กลุ่มเปราะบาง', icon: 'people' },
       { href: 'admin.html',     label: 'ผู้ดูแล',      icon: 'tools'  },
       /* หน้าสถิติเปิดได้เฉพาะแอดมิน คนอื่นกดเข้าไปจะเจอหน้าให้ล็อกอินแทน
@@ -78,7 +80,9 @@
 
   function currentPage() {
     var p = location.pathname.split('/').pop();
-    return (!p || p === '') ? 'index.html' : p;
+    if (!p) return 'index.html';
+    // Cloudflare Pages ตัด .html ออกจาก URL (/map.html → /map) จึงเติมกลับให้ตรงกับ href ในแถบ
+    return p.indexOf('.') < 0 ? p + '.html' : p;
   }
 
   function link(item, here) {

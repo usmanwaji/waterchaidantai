@@ -17,7 +17,7 @@ const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET");
 // Resend's shared "onboarding@resend.dev" sender works for testing.
 const FROM_ADDRESS = Deno.env.get("FROM_ADDRESS") ?? "onboarding@resend.dev";
 const ADMIN_DASHBOARD_URL = Deno.env.get("ADMIN_DASHBOARD_URL") ??
-  "https://usmanwaji.github.io/waterchaidantai/admin.html";
+  "https://naraflood.com/admin.html";
 
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") {

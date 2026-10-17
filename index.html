@@ -11,6 +11,24 @@
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌤️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<!-- ต่อสาย (DNS+TLS) ไปแหล่งข้อมูลรอบแรกตั้งแต่อ่านหัวหน้า ไม่ต้องรอ CSS/Leaflet โหลดเสร็จจนสคริปต์ด้านล่างได้รัน
+     crossorigin: fetch() ข้ามโดเมนไม่ส่งคุกกี้ ใช้สายคนละชุดกับแบบไม่มี crossorigin -->
+<link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
+<link rel="preconnect" href="https://api-v3.thaiwater.net" crossorigin>
+<link rel="preconnect" href="https://ddpm-proxy.newusmanwaji.workers.dev" crossorigin>
+<link rel="preconnect" href="https://telerid-proxy.newusmanwaji.workers.dev" crossorigin>
+<link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
+<link rel="dns-prefetch" href="https://hyd-proxy.newusmanwaji.workers.dev">
+<link rel="dns-prefetch" href="https://tmd-proxy.newusmanwaji.workers.dev">
+<script>
+/* เริ่มขอข้อมูลรวมของหน้าแรก (home-proxy.worker.js) ตั้งแต่อ่านหัวหน้า ไม่ต้องรอ CSS/Leaflet โหลดเสร็จ
+   สคริปต์หลักด้านล่างหยิบผลไปใช้ผ่าน homeGet() · ไม่ได้ภายใน 8 วิ → null แล้วแต่ละส่วนดึงตรงจากต้นทางแบบเดิม */
+const HOME_PROXY = 'https://home-proxy.newusmanwaji.workers.dev';
+const homeBoot = (()=>{
+  const c = new AbortController(); setTimeout(()=>c.abort(), 8000);
+  return fetch(HOME_PROXY+'/home.json', {signal:c.signal}).then(r=>r.ok ? r.json() : null).catch(()=>null);
+})();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -48,10 +66,11 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 .card h2 .where{font-size:11px;color:var(--muted);font-weight:400}
 @media(max-width:768px){
   #content{grid-template-columns:1fr;padding:18px 14px 24px;gap:18px}
-  #dirCard{order:-5}
+  #dirCard{order:-6}
   /* มือถือ: ยกการ์ดเรดาร์ขึ้นบนสุดของหน้า (จอใหญ่คงลำดับเดิมใน HTML) */
-  /* มือถือ: เรียงการ์ดกรมอุตุฯ บนสุด — เรดาร์ (ตอนนี้) → ฝนระยะสั้น → คาดการณ์ (ล่วงหน้า) → ข้อมูลทางการ (เมื่อวาน) */
-  #radarCard{order:-4}
+  /* มือถือ: เรียงการ์ดฝนบนสุด — เรดาร์ (ตอนนี้) → ฝนสะสมจริง (วันนี้/เมื่อวาน) → ฝนระยะสั้น → คาดการณ์ (ล่วงหน้า) → ข้อมูลทางการ (เมื่อวาน) */
+  #radarCard{order:-5}
+  #rainObsCard{order:-4}
   #ncCard{order:-3}
   #drCard{order:-2}
   #tmdCard{order:-1}
@@ -155,6 +174,14 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .wtaEmpty{font-size:12.5px;color:var(--ink-3);padding:6px 0}
 .wtaNear{display:inline-block;font-size:10.5px;font-weight:600;color:var(--ink-2);background:var(--card-2);border:1px dashed var(--outline-strong);border-radius:99px;padding:1px 8px;margin-bottom:3px}
 
+/* ฝนสะสมวันนี้ · เมื่อวาน: หน้า naramet.pages.dev/rainfall (แผนที่ + ปุ่มวันนี้/เมื่อวาน ของต้นทาง) ไม่เอาเมนู
+   ปกติแสดงผ่าน srcdoc (ดู loadNaraRain) ความสูงตั้งตามที่กรอบรายงานมา 640 px เป็นค่าระหว่างรอ
+   โหมดถอยกลับ (data-mode=full) เป็นหน้าเต็มของต้นทาง ซึ่งตั้งความสูงแผนที่เป็น vh (= % ของความสูงกรอบ)
+   จึงต้องสูง ~820 px ขึ้นไปทั้งหน้าถึงจะพอดีกรอบ ไม่มีแถบเลื่อนซ้อน */
+#roFrame{display:block;width:100%;height:640px;border:1px solid var(--outline);border-radius:10px;background:#fff}
+#roFrame[data-mode="full"]{height:840px}
+@media(max-width:400px){#roFrame[data-mode="full"]{height:940px}}   /* จอแคบหัวข้อต้นทางตัดเป็น 3 บรรทัด (ทดสอบถึงจอกว้าง 320 px) */
+
 /* ฝนคาดการณ์รายอำเภอ 7 วัน (แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุฯ) */
 #drDays{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
 #drMap{height:340px;border-radius:10px;border:1px solid var(--outline);overflow:hidden;background:var(--card-2);font-family:'Noto Sans Thai',Tahoma,sans-serif}
@@ -206,15 +233,15 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     <a href="map.html">ระดับน้ำ</a>
     <a href="forecast.html">คาดการณ์</a>
     <a href="history.html">ย้อนหลัง</a>
-    <a href="repeat.html">พื้นที่เสี่ยง</a>
+    <a href="repeat.html">พื้นที่ท่วมซ้ำซาก</a>
     <!-- <a href="sim.html">แบบจำลอง</a> -->
-    <a href="shelter.html">ศูนย์พักพิง</a>
-    <a href="shelter.html#parking">ที่จอดรถ</a>
+    <a href="shelter.html">ศูนย์พักพิง/ที่จอดรถ</a>
+    <a style="display:none" href="shelter.html#parking">ที่จอดรถ</a>
     <a href="route.html">เส้นทาง</a>
-    <a href="resources.html">ทรัพยากร</a>
+    <a style="display:none" href="resources.html">ทรัพยากร</a>
     <a href="check.html">เช็คพื้นที่</a>
-    <a href="alert.html">แจ้งเตือน</a>
-    <a href="eoc.html">EOC</a>
+    <a style="display:none" href="alert.html">แจ้งเตือน</a>
+    <a style="display:none" href="eoc.html">EOC</a>
   </nav>
   <div id="updated">…</div>
   <button id="btnRefresh" onclick="loadAll()">รีเฟรช</button>
@@ -343,6 +370,16 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     </details>
   </div>
 
+  <!-- ฝนสะสมวันนี้ · เมื่อวาน: หน้า naramet.pages.dev/rainfall ไม่รวมเมนู (loadNaraRain ใส่ srcdoc · ไม่ได้ประมวลผลข้อมูลเอง) -->
+  <div class="card full" id="rainObsCard">
+    <h2><span class="t-desk">ปริมาณฝนสะสม วันนี้ · เมื่อวาน (สถานีอุตุนิยมวิทยานราธิวาส)</span><span class="t-mob">ฝนตกไปแล้วเท่าไหร่ ? (วันนี้ · เมื่อวาน)</span> <a class="where" href="https://naramet.pages.dev/rainfall" target="_blank" rel="noopener">เปิดหน้าเต็ม ↗</a></h2>
+    <iframe id="roFrame" sandbox="allow-scripts" title="ปริมาณฝนสะสม สามจังหวัดชายแดนใต้ วันนี้ · เมื่อวาน (naramet)" referrerpolicy="no-referrer"></iframe>
+    <details class="fold fold-note">
+    <summary>คำอธิบาย</summary>
+    <div class="note">หน้า "ปริมาณฝนสะสม" ของสถานีอุตุนิยมวิทยานราธิวาส (<a href="https://naramet.pages.dev/rainfall" target="_blank" rel="noopener">naramet.pages.dev/rainfall ↗</a>) แสดงเฉพาะส่วนปริมาณฝนสะสม ไม่รวมเมนูของต้นทาง: ฝนจากสถานีตรวจอากาศอัตโนมัติ (AWS) กรมอุตุฯ อำเภอละสถานี สามจังหวัดชายแดนใต้ พื้นสีระหว่างสถานีเป็นการประมาณค่าเชิงพื้นที่ (kriging) · กดปุ่ม <b>วันนี้</b> (ตั้งแต่ 07:00 น.) หรือ <b>เมื่อวาน</b> (สะสม 24 ชม.) ที่มุมแผนที่เพื่อสลับวัน · ข้อมูล การอัปเดต และเกณฑ์สีเป็นของต้นทาง · ถ้ากรอบว่างหรือโหลดไม่ขึ้น ให้กด "เปิดหน้าเต็ม" ที่หัวการ์ด</div>
+    </details>
+  </div>
+
   <!-- พยากรณ์ฝนรายชั่วโมง 24 ชม. (Open-Meteo ณ จุดศูนย์กลางอำเภอที่เลือก) · แถวเลื่อนแนวนอน
        ฝนรายวันดูที่การ์ดฝนรายอำเภอและแถบสรุปด้านบน -->
   <div class="card full" id="fcCard">
@@ -406,11 +443,11 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
   </div>
 
   <div class="card full">
-    <h2>มาตรวัดน้ำต้องระวังเป็นพิเศษ <span class="where" id="whereSt"></span></h2>
+    <h2>มาตรวัดน้ำต้องระวังเป็นพิเศษ (ระดับน้ำ ≥ 90% ของตลิ่ง) <span class="where" id="whereSt"></span></h2>
     <div id="stList"><span class="spin"></span></div>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
-    <div class="note">เกณฑ์เดียวกับ <a href="forecast.html">หน้าคาดการณ์</a>: ล้นตลิ่งจริง / ≥85% ของตลิ่ง / กำลังขึ้นเร็วเกินครึ่งตลิ่ง · คลิกเพื่อดูบนแผนที่</div>
+    <div class="note">มาตรวัดน้ำที่ระดับน้ำถึง 90% ของตลิ่งขึ้นไป (รวมล้นตลิ่ง) เรียงจากล้นตลิ่ง แล้วตาม % · รวมทุกแหล่งชุดเดียวกับการ์ดน้ำท่า: สสน./ชป. (thaiwater) · ปภ. · โทรมาตร ชป. · อุทกวิทยา ชป. · % ของตลิ่ง = ความลึกน้ำเทียบความลึกลำน้ำจากท้องน้ำถึงตลิ่ง (สถานี ปภ. วัดจากศูนย์ไม้วัด ใช้ ระดับ ÷ ตลิ่ง) · โทรมาตร/อุทกวิทยา ชป. รายงานเป็น ม.รทก. ไม่มีระดับท้องน้ำ คิด % ไม่ได้ จึงใช้เส้นเฝ้าระวังของ ชป. (ส่วนใหญ่ต่ำกว่าตลิ่ง 1 ม.) แทน · ไม่นับค่าที่เก่ากว่า 6 ชม. · เลือกอำเภอที่การ์ดพยากรณ์อากาศเพื่อดูเฉพาะอำเภอนั้น · คลิกเพื่อดูบนแผนที่</div>
     </details>
   </div>
 
@@ -425,20 +462,9 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     </details>
   </div>
 
-  <!-- แถวนี้จับคู่ "อำเภอที่ต้องเฝ้าระวัง" กับ "เรดาร์ฝน" ไว้ข้างกันครึ่งหน้าจอละใบ
-       อันซ้ายคืออำเภอที่ต้องจับตาในสัปดาห์นี้ อันขวาคือฝนที่กำลังตกอยู่จริงตอนนี้
+  <!-- แถวนี้จับคู่ "เรดาร์ฝน" (ฝนที่กำลังตกตอนนี้) กับ "คาดการณ์ฝนระยะสั้น" ไว้ข้างกันครึ่งหน้าจอละใบ
+       (เดิมเรดาร์คู่กับการ์ด "อำเภอที่ต้องเฝ้าระวังเป็นพิเศษ (7 วันนี้)" ซึ่งถอดออกแล้ว)
        จอแคบกว่า 768px #content เหลือคอลัมน์เดียวอยู่แล้ว จึงวางซ้อนกันเองอัตโนมัติ -->
-  <div class="card">
-    <h2>อำเภอที่ต้องเฝ้าระวังเป็นพิเศษ (7 วันนี้) <span class="where" id="whereAmp"></span></h2>
-    <div id="ampList"><span class="spin"></span> กำลังประเมิน…</div>
-    <details class="fold fold-note">
-    <summary>คำอธิบาย</summary>
-    <div class="note">ระดับความเสี่ยงตั้งต้นจาก <b>ฝนพยากรณ์</b> (Open-Meteo รายอำเภอ) ตามเกณฑ์กรมอุตุฯ: ฝนหนัก ≥35 มม./วัน · ฝนหนักมาก ≥90 มม./วัน · หรือฝนสะสม 3 วันติด ≥70/120/200 มม.<br>
-      <b>ดินอิ่มน้ำ</b> (ฝน 3 วันที่ผ่านมา สสน.) และ <b>สถานีน้ำใกล้ตลิ่ง</b> เป็นตัวยกระดับ ใช้ได้เมื่อมีฝนหนักในพยากรณ์แล้วเท่านั้น — ฝนไม่ตกจึงไม่ขึ้นสีเตือน · สถานีที่ล้นตลิ่งอยู่จริงจะขึ้นสีส้มเสมอ<br>
-      ใช้เกณฑ์ชุดเดียวกับ <a href="forecast.html">หน้าคาดการณ์</a> · คลิกชื่ออำเภอเพื่อดูพยากรณ์เฉพาะจุด</div>
-    </details>
-  </div>
-
   <div class="card" id="radarCard">
     <h2><span class="t-desk">เรดาร์ฝนนราธิวาส (กรมอุตุฯ)</span><span class="t-mob">ตอนนี้ฝนตกที่ไหน ? (เรดาร์ กรมอุตุฯ)</span> <span class="where" id="radarUpdated"></span></h2>
     <div class="fold-body">
@@ -512,6 +538,37 @@ const num = v => { const n = parseFloat(v); return isNaN(n) ? null : n; };
 const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const thName = o => (o && typeof o==='object') ? (o.th || o.en || '') : (o || '');
 const fmt1 = v => v==null ? '…' : (+v).toLocaleString('th-TH',{maximumFractionDigits:1});
+/* ดึง JSON แบบมีเวลาจำกัด: แหล่งไหนค้างก็ไม่ลากทั้งหน้าไปด้วย (เดิมหลายตัวไม่มีหมดเวลา รอได้เป็นนาที)
+   ลองซ้ำเฉพาะเน็ตสะดุด/เซิร์ฟเวอร์ 5xx · หมดเวลาไม่ลองซ้ำ (จะรอนานขึ้นอีก) · 4xx รวม 429 ไม่ลองซ้ำ (ไม่ยิงถี่ใส่ thaiwater)
+   meta (ไม่บังคับ): ใส่ headers ของคำตอบกลับไปให้ผู้เรียกอ่าน */
+async function fetchJSON(url, timeout=15000, tries=2, meta){
+  for(let i=1;; i++){
+    const ctrl = new AbortController(), tm = setTimeout(()=>ctrl.abort(), timeout);
+    try{
+      const r = await fetch(url, {signal:ctrl.signal});
+      if(!r.ok) throw Object.assign(new Error('HTTP '+r.status), {status:r.status});
+      if(meta) meta.headers = r.headers;
+      return await r.json();
+    }catch(e){
+      if(i >= tries || ctrl.signal.aborted || e.status < 500) throw e;
+    }finally{ clearTimeout(tm); }
+    await new Promise(r=>setTimeout(r, 1500));
+  }
+}
+/* ---------- home-proxy: ข้อมูลหน้าแรกรวมในคำขอเดียว (ดู home-proxy.worker.js) ----------
+   รอบแรกตอนเปิดหน้าทุกตัวโหลดใช้ homeBoot (เริ่มขอใน <head>) ร่วมกัน ส่วนละครั้ง · รอบต่อไปขอเฉพาะส่วนที่ใช้
+   ส่วนที่ไม่มี (Worker ยังไม่ deploy / ต้นทางล่ม / เก่าเกิน) homeData ได้ null → ตัวโหลดดึงตรงจากต้นทางแบบเดิม
+   ส่วนที่ติดธง s (Worker ตอบชุดหมดอายุไปก่อนแล้วกำลังดึงใหม่) → loadAll ขอซ้ำอีกครั้งหลัง HOME_RECHECK_MS */
+const HOME_MAIN = ['rain3d','ddpm','rid','hyd','trends','thr'];   // ไม่มีระดับน้ำ thaiwater และพยากรณ์ open-meteo: ดึงตรงเสมอ
+const HOME_RECHECK_MS = 40*1000;
+const homeBootLeft = new Set([...HOME_MAIN, 'tmd', 'nowcast', 'riskmap']);
+async function homeGet(parts){
+  const boot = parts.every(p=>homeBootLeft.has(p));
+  parts.forEach(p=>homeBootLeft.delete(p));
+  const j = boot ? await homeBoot : await fetchJSON(`${HOME_PROXY}/home.json?parts=${parts.join(',')}`, 8000, 1).catch(()=>null);
+  return j?.parts || {};
+}
+const homeData = (h, p) => h[p]?.d ?? null;
 
 let prov = 'นราธิวาส';
 let amp = '';                 // '' = ทั้งจังหวัด (ใช้จุดอำเภอเมือง)
@@ -534,7 +591,7 @@ const TMD_SOUTH = ['สงขลา','สตูล','ปัตตานี','ย
 async function loadTmd(){
   const rEl = document.getElementById('tmdRegion'), wEl = document.getElementById('tmdWarn');
   try{
-    const reg = await fetch(TMD_PROXY+'/region7days').then(r=>{ if(!r.ok) throw new Error('region '+r.status); return r.json(); });
+    const reg = homeData(await homeGet(['tmd']), 'tmd') || await fetchJSON(TMD_PROXY+'/region7days');
     // ---- พยากรณ์รายภาค: ภาคใต้ฝั่งตะวันออก ----
     const se = ((reg.WeatherForecast7DaysByRegion||{}).Regions||[])
       .find(x=>x.RegionNameThai==='ภาคใต้ฝั่งตะวันออก');
@@ -548,8 +605,10 @@ async function loadTmd(){
         ? `<div style="background:var(--st-danger-wash);border:1px solid var(--st-danger-wash);color:var(--st-danger);border-radius:8px;padding:6px 10px;font-size:12.5px;font-weight:600;margin-top:6px">${warn}</div>`
         : '';
     }else rEl.textContent = 'ไม่พบข้อมูลภาคใต้ฝั่งตะวันออกในรอบนี้';
+    rEl.dataset.ok = '1';
     // (ส่วนตรวจวัดรายสถานีถูกแทนด้วยแผนที่ฝนรายอำเภอด้านขวา)
   }catch(e){
+    if(rEl.dataset.ok) return;   // รอบรีเฟรชล้มเหลว → คงพยากรณ์ชุดเดิมที่แสดงอยู่
     const msg = `<div style="font-size:12px;color:var(--ink-3)">เชื่อมต่อข้อมูลกรมอุตุฯ ไม่ได้ขณะนี้ · 
       <a href="https://www.tmd.go.th/forecast/region" target="_blank" rel="noopener">เปิดพยากรณ์รายภาคที่เว็บกรมอุตุฯ ↗</a><br>
       <small>(สำหรับผู้ดูแล: ต้อง deploy tmd-proxy.worker.js บน Cloudflare ก่อน · ดูวิธีในไฟล์)</small></div>`;
@@ -558,17 +617,41 @@ async function loadTmd(){
 }
 
 /* ---------- โหลดข้อมูล ---------- */
-let loadingAll = false;
-async function loadAll(){
+/* ตัวโหลดแต่ละแหล่งโยน error เมื่อล้มเหลวและคงชุดเดิมไว้ (ไม่ล้างเป็นว่าง) → รอบรีเฟรชที่เน็ตสะดุดไม่ทำให้การ์ดหาย
+   ค่าสถานีมีเวลาวัดของตัวเอง (dt) ฮีโร่จึงยังตัดค่าที่เก่าเกิน HERO_FRESH_H ชม. ออกเองเหมือนเดิม
+   มีแหล่งไหนล้มเหลว → ลองใหม่ใน RETRY_MS แทนการรอรอบปกติ 30 นาที
+   recheck = รอบขอซ้ำหลัง home-proxy ตอบชุดหมดอายุ (ขอซ้ำครั้งเดียว ไม่วน) */
+const RETRY_MS = 2*60*1000;
+let loadingAll = false, retryTimer = null;
+async function loadAll(recheck){
+  if(loadingAll) return;   // กดรีเฟรชซ้ำ/ตัวตั้งเวลาชนกันระหว่างโหลด → ใช้รอบที่กำลังโหลดอยู่
   loadingAll = true;
+  clearTimeout(retryTimer);
+  loadNaraRain();   // ไม่รอ · การ์ดฝนสะสม (naramet) โหลดเองในกรอบ
+  let res = [], h = {}, hyd = Promise.resolve();
   try{
     document.getElementById('updated').innerHTML = '<span class="spin"></span>';
-    meteoCache = {};   // บังคับพยากรณ์ใหม่
-    await Promise.allSettled([loadMeteo(prov), loadWater(), loadSoil(), loadDdpm(), loadRid(), loadHyd()]);
+    // ดึงตรงจากเครื่องผู้ใช้ เริ่มพร้อมกันไม่ต้องรอ home-proxy (Worker ดึงสองแหล่งนี้ไม่ได้ดี ดู home-proxy.worker.js)
+    // ระดับน้ำ thaiwater: จำกัดคำขอต่อ IP · IP ร่วมของ Worker โดน 429 · พยากรณ์ open-meteo: ตอบ Worker ไม่ทัน
+    const wl = loadWater(), met = loadMeteo(prov, true);
+    [wl, met].forEach(p=>p.catch(()=>{}));   // ผลจริงอ่านใน allSettled ด้านล่าง · กัน unhandled rejection ระหว่างรอ home-proxy
+    h = await homeGet(HOME_MAIN);
+    // ไม่รอ hyd-app: hyd-proxy ตอบช้าได้ราว 30 วิ ตอนแคชใน Worker หมด (กรณีดึงตรง ไม่ผ่าน home-proxy)
+    // มาถึงแล้ววาดเฉพาะส่วนที่ใช้ (X.199 ในการ์ดมาตรวัด/ทิศทางน้ำ + ฮีโร่) แบบเดียวกับ pollRid
+    hyd = loadHyd(homeData(h,'hyd'));
+    res = await Promise.allSettled([met, wl,
+      loadSoil(homeData(h,'rain3d')), loadDdpm(homeData(h,'ddpm')), loadRid(ridFromHome(h))]);
+    Object.assign(ddpmThr, homeData(h,'thr'));   // เกณฑ์เฝ้าระวัง ปภ. ครบทุกสถานี → ddpmNeedThr ไม่ต้องดึงเพิ่ม
+    if(homeData(h,'trends')) applyTrends(homeData(h,'trends'));
     renderAll();
     document.getElementById('updated').textContent = 'อัปเดต ' + new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
   } finally { loadingAll = false; }
-  loadTrends().then(rerenderHero);   // ค่าย้อนหลัง ปภ./ชป. สำหรับทิศทางน้ำ · ไม่ขวางการแสดงผลรอบแรก
+  hyd.then(renderHyd, ()=>{});
+  // ค่าย้อนหลัง ปภ./ชป. สำหรับทิศทางน้ำ · home-proxy ไม่มีให้จึงดึงเอง ไม่ขวางการแสดงผลรอบแรก
+  if(!homeData(h,'trends')) loadTrends().then(rerenderHero);
+  res.push(...await Promise.allSettled([hyd]));
+  if(res.some(r=>r.status==='rejected')) retryTimer = setTimeout(loadAll, RETRY_MS);
+  else if(recheck !== true && HOME_MAIN.some(p=>h[p]?.s)) retryTimer = setTimeout(()=>loadAll(true), HOME_RECHECK_MS);
 }
 /* ---------- ค่าก่อนหน้าของ ปภ. และโทรมาตร ชป. (ทิศทางน้ำ) ----------
    ใช้แหล่งเดียวกับหน้าแผนที่ · ปภ.: กราฟรายชั่วโมงของ cctv.disaster.go.th (ผ่าน ddpm-proxy)
@@ -581,9 +664,7 @@ const RID_LIVE = 'https://telerid-proxy.newusmanwaji.workers.dev';
 let ridBase = RID_CAM;
 const ridUrl = (f, base = ridBase) => `${base}/${f}?t=${Math.floor(Date.now()/60000)}`;
 const trendFresh = s => s.cur!=null && s.dt && (Date.now() - s.dt) <= HERO_FRESH_H*3600e3;
-const trendSig = ms => { const c = new AbortController(); setTimeout(()=>c.abort(), ms); return c.signal; };
-const ridTrends = () => ridAll.filter(trendFresh).map(s => fetch(ridUrl(`${encodeURIComponent(s.code)}.detail.json`), {signal:trendSig(15000)})
-  .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }).then(j=>{
+const ridTrends = () => ridAll.filter(trendFresh).map(s => fetchJSON(ridUrl(`${encodeURIComponent(s.code)}.detail.json`), 15000, 1).then(j=>{
     const t = j?.wl?.t || [], v = j?.wl?.v || [];
     const ok = t.map((x,i)=>[x, num(v[i])]).filter(([x,y])=>x && y!=null && y > -9);
     if(ok.length < 2) return;
@@ -591,34 +672,41 @@ const ridTrends = () => ridAll.filter(trendFresh).map(s => fetch(ridUrl(`${encod
     const back = ok.filter(([x])=>x <= tl - 3600).pop() || ok[0];
     if(back[0] < tl){ s.prev = back[1]; s.trendCur = vl; }
   }));
+// ทิศทางน้ำที่ home-proxy คิดไว้แล้ว {ddpm|rid: {code: [ค่าก่อนหน้า, ค่าล่าสุด]}} · เกณฑ์เดียวกับ loadTrends/ridTrends
+function applyTrends(t){
+  [[ddpmAll, t.ddpm], [ridAll, t.rid]].forEach(([list, m]) => list.forEach(s=>{
+    const v = m?.[s.code];
+    if(v){ s.prev = v[0]; s.trendCur = v[1]; }
+  }));
+}
 async function loadTrends(){
-  const fresh = trendFresh, tm = trendSig;
   await Promise.allSettled([
-    ...ddpmAll.filter(fresh).map(s => fetch(`${DDPM_PROXY}/water-level/graph?stationCode=${encodeURIComponent(s.code)}&type=hour&isSimulatorMode=false`, {signal:tm(15000)})
-      .then(r=>r.json()).then(j=>{
+    ...ddpmAll.filter(trendFresh).map(s => fetchJSON(`${DDPM_PROXY}/water-level/graph?stationCode=${encodeURIComponent(s.code)}&type=hour&isSimulatorMode=false`, 15000, 1).then(j=>{
         const pts = ((j?.data ?? j)?.datasets?.[0]?.data || []).map(p=>num(p?.y)).filter(v=>v!=null);
         if(pts.length >= 2){ s.prev = pts[pts.length-2]; s.trendCur = pts[pts.length-1]; }
       })),
     ...ridTrends()
   ]);
 }
-async function loadMeteo(p){
-  if(meteoCache[p]) return meteoCache[p];
+// force: ดึงใหม่แม้มีในแคช (loadAll) · ล้มเหลวคงพยากรณ์ชุดเดิมไว้ ไม่ล้างแคชก่อนโหลด
+async function loadMeteo(p, force){
+  if(meteoCache[p] && !force) return meteoCache[p];
   const list = ampsOf(p);
   const lats = list.map(a=>a[2]).join(','), lons = list.map(a=>a[3]).join(',');
   const u = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}`+
     `&hourly=precipitation,precipitation_probability,weather_code`+
     `&daily=precipitation_sum`+
     `&forecast_days=7&timezone=Asia%2FBangkok`;
-  const j = await fetch(u).then(r=>r.json());
-  meteoCache[p] = Array.isArray(j) ? j : [j];
-  return meteoCache[p];
+  const j = await fetchJSON(u);
+  const arr = Array.isArray(j) ? j : [j];
+  if(!arr[0]?.hourly) throw new Error('open-meteo: no hourly');
+  return meteoCache[p] = arr;
 }
 async function loadWater(){
   // ดึงใหม่ทุกรอบ (ปุ่มรีเฟรช/ทุก 30 นาที) · ประกอบใส่ตัวแปรชั่วคราวก่อน การ์ดจะได้ไม่ว่างระหว่างโหลด
   // ดึงเฉพาะนราธิวาส (96) เหมือนหน้าแผนที่ · เดิมดึงทั้ง 5 จังหวัดทุกรอบ ทำให้ thaiwater ตอบ 429 (เรียกถี่เกิน)
   const res = await Promise.allSettled([PROV_CODE['นราธิวาส']].map(c =>
-    fetch(`${API}/public/waterlevel?province_code=${c}`).then(r=>r.json())));
+    fetchJSON(`${API}/public/waterlevel?province_code=${c}`)));
   const next = [];
   res.forEach(r=>{
     if(r.status!=='fulfilled' || !Array.isArray(r.value?.data)) return;
@@ -638,22 +726,24 @@ async function loadWater(){
   });
   // ใช้ตัวช่วยชุดเดียวกับหน้าคาดการณ์: เติม % ที่ขาด แล้วตัดสถานีซ้ำจากคนละหน่วยงาน
   next.forEach(s => { s.pct = FC.fillPct(s); });
-  if(next.length) wlAll = FC.dedupe(next);
+  if(!next.length) throw new Error('thaiwater: no data');
+  wlAll = FC.dedupe(next);
 }
-async function loadSoil(){
-  try{
-    const j = await fetch(`${API}/provinces/rain3d`).then(r=>r.json());
-    soilByAmp = {};
-    (j?.data||[]).forEach(d=>{
-      const p = thName(d.geocode?.province_name);
-      if(!PROV_CODE[p]) return;
-      const a = thName(d.geocode?.amphoe_name).replace(/อำเภอ/,'').trim();
-      const mm = num(d.rain_3d);
-      if(mm==null) return;
-      soilByAmp[p] = soilByAmp[p] || {};
-      if(!(a in soilByAmp[p]) || mm > soilByAmp[p][a]) soilByAmp[p][a] = mm;
-    });
-  }catch(e){ soilByAmp = {}; }
+async function loadSoil(pre){
+  // ขอเฉพาะจังหวัดที่ดู · ไม่ใส่ province_code ได้ทั้งประเทศราว 3.5 MB ทุกรอบ ส่วนที่ใช้จริงไม่ถึง 50 KB
+  const j = pre || await fetchJSON(`${API}/provinces/rain3d?province_code=${PROV_CODE[prov]}`);
+  if(!Array.isArray(j?.data)) throw new Error('rain3d: no data');
+  const next = {};
+  j.data.forEach(d=>{
+    const p = thName(d.geocode?.province_name);
+    if(!PROV_CODE[p]) return;
+    const a = thName(d.geocode?.amphoe_name).replace(/อำเภอ/,'').trim();
+    const mm = num(d.rain_3d);
+    if(mm==null) return;
+    next[p] = next[p] || {};
+    if(!(a in next[p]) || mm > next[p][a]) next[p][a] = mm;
+  });
+  soilByAmp = next;
 }
 /* สถานีวัดน้ำ ปภ. (ระบบกล้อง cctv.disaster.go.th) · นราธิวาสมี NWT01–NWT10
    API ไม่เปิด CORS จึงอ่านผ่าน ddpm-proxy (Worker ตัวเดียวกับที่ map.js ใช้ดึงภาพกล้อง)
@@ -678,7 +768,7 @@ let ridUpdated = null;
 const wtaAmpName = a => { const x = String(a||'').replace(/^อำเภอ|^อ\./,'').trim(); return x==='เมือง' ? 'เมือง'+prov : x; };
 const ridNewest = j => (j?.stations||[]).reduce((m, s) => s.levelDt && s.levelDt > m ? s.levelDt : m, '');
 const fetchRid = async () => {
-  const get = base => fetch(ridUrl('stations.json', base), {signal: trendSig(15000)}).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+  const get = base => fetchJSON(ridUrl('stations.json', base), 15000, 1);
   const [live, cam] = await Promise.allSettled([get(RID_LIVE), get(RID_CAM)]);
   const ok = r => r.status === 'fulfilled' && Array.isArray(r.value?.stations) && r.value.stations.length;
   const useLive = ok(live) && (!ok(cam) || ridNewest(live.value) >= ridNewest(cam.value));
@@ -687,26 +777,26 @@ const fetchRid = async () => {
   j._base = useLive ? RID_LIVE : RID_CAM;
   return j;
 };
+// rid จาก home-proxy = {base, j: stations.json} → รูปเดียวกับผลของ fetchRid
+const ridFromHome = h => { const d = homeData(h,'rid'); return d?.j?.stations?.length ? Object.assign(d.j, {_base:d.base}) : undefined; };
 async function loadRid(pre){
-  try{
-    const j = pre || await fetchRid();
-    ridUpdated = j?.updated || null;
-    ridBase = j?._base || RID_CAM;
-    // แสดงเฉพาะสถานีที่ส่งค่าจริง (เกณฑ์เดียวกับหน้าแผนที่: มีค่า ไม่ใช่ -9.99 และค่าไม่เก่ากว่ารอบดึงเกิน 6 ชม.)
-    const reporting = d => d.level!=null && d.level > -9 && (!d.levelDt || ((j.updated ? new Date(j.updated) : new Date()) - new Date(d.levelDt)) <= 6*3600e3);
-    ridAll = (j?.stations||[]).filter(d=>d.province===prov && reporting(d)).map(d=>{
-      let cur = num(d.level); if(cur!=null && cur <= -9) cur = null;
-      const bank = num(d.critical) ?? num(d.bank), warn = num(d.warning);
-      const r = cur==null || bank==null ? 0 : cur >= bank ? 3 : (warn!=null && cur >= warn) ? 2 : 0;
-      return {code:d.code, name:(d.name||'').trim(), amphoe:wtaAmpName(d.amphur), prov:d.province, river:'',
-        lat:num(d.lat), lng:num(d.lon), cur, bank, warn: warn!=null && bank!=null && warn < bank ? warn : null,
-        ground: cur!=null && bank!=null ? Math.max(0, Math.min(bank, cur) - 3) : null,
-        // levelDt (เวลาวัดระดับน้ำ) จาก scraper รุ่นใหม่ · dt เดิมอาจเป็นเวลาภาพกล้องที่ค้าง
-        unit:'ม.', src:'rid', dt: cur!=null && (d.levelDt || d.dt) ? new Date(d.levelDt || d.dt) : null, rank:r,
-        st: cur==null ? {l:'รอข้อมูล', c:'var(--ink-3)'} : r===3 ? {l:'ล้นตลิ่ง', c:'var(--st-danger)'}
-          : r===2 ? {l:'เฝ้าระวัง', c:'var(--st-watch)'} : {l:'ปกติ', c:'var(--st-normal)'}};
-    });
-  }catch(e){ ridAll = []; }
+  const j = pre || await fetchRid();   // ล้มเหลว → โยนออกไป คงชุดเดิม
+  ridUpdated = j?.updated || null;
+  ridBase = j?._base || RID_CAM;
+  // แสดงเฉพาะสถานีที่ส่งค่าจริง (เกณฑ์เดียวกับหน้าแผนที่: มีค่า ไม่ใช่ -9.99 และค่าไม่เก่ากว่ารอบดึงเกิน 6 ชม.)
+  const reporting = d => d.level!=null && d.level > -9 && (!d.levelDt || ((j.updated ? new Date(j.updated) : new Date()) - new Date(d.levelDt)) <= 6*3600e3);
+  ridAll = (j?.stations||[]).filter(d=>d.province===prov && reporting(d)).map(d=>{
+    let cur = num(d.level); if(cur!=null && cur <= -9) cur = null;
+    const bank = num(d.critical) ?? num(d.bank), warn = num(d.warning);
+    const r = cur==null || bank==null ? 0 : cur >= bank ? 3 : (warn!=null && cur >= warn) ? 2 : 0;
+    return {code:d.code, name:(d.name||'').trim(), amphoe:wtaAmpName(d.amphur), prov:d.province, river:'',
+      lat:num(d.lat), lng:num(d.lon), cur, bank, warn: warn!=null && bank!=null && warn < bank ? warn : null,
+      ground: cur!=null && bank!=null ? Math.max(0, Math.min(bank, cur) - 3) : null,
+      // levelDt (เวลาวัดระดับน้ำ) จาก scraper รุ่นใหม่ · dt เดิมอาจเป็นเวลาภาพกล้องที่ค้าง
+      unit:'ม.', src:'rid', dt: cur!=null && (d.levelDt || d.dt) ? new Date(d.levelDt || d.dt) : null, rank:r,
+      st: cur==null ? {l:'รอข้อมูล', c:'var(--ink-3)'} : r===3 ? {l:'ล้นตลิ่ง', c:'var(--st-danger)'}
+        : r===2 ? {l:'เฝ้าระวัง', c:'var(--st-watch)'} : {l:'ปกติ', c:'var(--st-normal)'}};
+  });
 }
 /* สถานีอุทกวิทยา ชป. (hyd-app.rid.go.th/hydro8h.html) ผ่าน Worker hyd-proxy · ชุดเดียวกับชั้น "โทรมาตร ชป." ในหน้าแผนที่
    ระดับน้ำรายชั่วโมง (ม.รทก.) + ตลิ่ง + ค่า 24 ชม. · ส่วนใหญ่ซ้ำกับ thaiwater จึงใช้ผ่าน hydExtra() ที่ตัดรหัสซ้ำออก
@@ -718,23 +808,32 @@ const HYD_COORDS = {
   'X.184':[6.22716,101.496948], 'X.274':[5.83916,101.892143], 'X.199':[6.35179,101.49437],
 };
 const HYD_RIVER = {'X.199':'แม่น้ำสายบุรี', 'X.184':'แม่น้ำสายบุรี'};
-async function loadHyd(){
-  try{
-    const j = await fetch(`${HYD_LIVE}/stations.json?t=${Math.floor(Date.now()/600000)}`, {signal: trendSig(30000)}).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
-    hydAll = (j?.stations||[]).filter(d=>d.province===prov && d.level!=null).map(d=>{
-      const cur = num(d.level), bank = num(d.bank), warn = bank!=null ? bank - 1 : null;
-      const c = HYD_COORDS[d.code] || [null, null];
-      // ค่าก่อนหน้า = ค่าที่วัดก่อนค่าล่าสุดอย่างน้อย 1 ชม. (สถานีส่งรายชั่วโมง)
-      const t = d.wl?.t || [], v = d.wl?.v || [], tl = t[t.length-1];
-      const bi = t.map((x,i)=>i).filter(i=>t[i] <= tl - 3600 && num(v[i])!=null).pop();
-      const r = cur==null || bank==null ? 0 : cur >= bank ? 3 : cur >= warn ? 2 : 0;
-      return {code:d.code, name:(d.name||'').trim(), amphoe:wtaAmpName(d.amphur), prov:d.province, river:HYD_RIVER[d.code]||'',
-        lat:c[0], lng:c[1], cur, bank, warn, prev: bi!=null ? num(v[bi]) : null,
-        ground: cur!=null && bank!=null ? Math.max(0, Math.min(bank, cur) - 3) : null,
-        unit:'ม.(รทก.)', src:'hyd', dt: d.levelDt ? new Date(d.levelDt) : null, rank:r, q: num(d.q), series: d.wl || null,
-        st: r===3 ? {l:'ล้นตลิ่ง', c:'var(--st-danger)'} : r===2 ? {l:'เฝ้าระวัง', c:'var(--st-watch)'} : {l:'ปกติ', c:'var(--st-normal)'}};
-    });
-  }catch(e){ hydAll = []; }
+/* Worker ตอบ x-cache: REVALIDATING = ชุดในแคชเก่า 10–60 นาที ตอบไปก่อนแล้วกำลังดึง hyd-app ใหม่เบื้องหลัง (ราว 20–30 วิ)
+   → ดึงซ้ำอีกครั้งหลัง HYD_RECHECK_MS ให้ได้ค่าล่าสุดเลย ไม่ต้องรอรอบรีเฟรช 30 นาที (ครั้งเดียว ไม่วนซ้ำ)
+   รอบดึงซ้ำต่อท้าย &r= ให้ URL ต่างจากเดิม ไม่งั้นเบราว์เซอร์ตอบจากแคชของตัวเอง (Worker ตั้ง max-age=120) */
+const HYD_RECHECK_MS = 45*1000;
+let hydRecheck = null;
+const renderHyd = () => { renderWaterta(); renderStations(); renderDirMain(); rerenderHero(); };
+async function loadHyd(pre, recheck){
+  // ไม่ลองซ้ำ: ช้าเพราะ Worker กำลังดึง hyd-app อยู่แล้ว ลองซ้ำมีแต่รอนานขึ้น · ล้มเหลวคงชุดเดิม
+  const meta = {};
+  const j = pre || await fetchJSON(`${HYD_LIVE}/stations.json?t=${Math.floor(Date.now()/600000)}${recheck ? '&r='+Date.now() : ''}`, 30000, 1, meta);
+  clearTimeout(hydRecheck);
+  if(!recheck && meta.headers?.get('x-cache') === 'REVALIDATING')
+    hydRecheck = setTimeout(()=>loadHyd(null, true).then(renderHyd, ()=>{}), HYD_RECHECK_MS);
+  hydAll = (j?.stations||[]).filter(d=>d.province===prov && d.level!=null).map(d=>{
+    const cur = num(d.level), bank = num(d.bank), warn = bank!=null ? bank - 1 : null;
+    const c = HYD_COORDS[d.code] || [null, null];
+    // ค่าก่อนหน้า = ค่าที่วัดก่อนค่าล่าสุดอย่างน้อย 1 ชม. (สถานีส่งรายชั่วโมง)
+    const t = d.wl?.t || [], v = d.wl?.v || [], tl = t[t.length-1];
+    const bi = t.map((x,i)=>i).filter(i=>t[i] <= tl - 3600 && num(v[i])!=null).pop();
+    const r = cur==null || bank==null ? 0 : cur >= bank ? 3 : cur >= warn ? 2 : 0;
+    return {code:d.code, name:(d.name||'').trim(), amphoe:wtaAmpName(d.amphur), prov:d.province, river:HYD_RIVER[d.code]||'',
+      lat:c[0], lng:c[1], cur, bank, warn, prev: bi!=null ? num(v[bi]) : null,
+      ground: cur!=null && bank!=null ? Math.max(0, Math.min(bank, cur) - 3) : null,
+      unit:'ม.(รทก.)', src:'hyd', dt: d.levelDt ? new Date(d.levelDt) : null, rank:r, q: num(d.q), series: d.wl || null,
+      st: r===3 ? {l:'ล้นตลิ่ง', c:'var(--st-danger)'} : r===2 ? {l:'เฝ้าระวัง', c:'var(--st-watch)'} : {l:'ปกติ', c:'var(--st-normal)'}};
+  });
 }
 // สถานี hyd-app ที่ thaiwater ไม่มี (thaiwater ล่ม → ใช้ครบทุกสถานี)
 const hydExtra = () => hydAll.filter(h=>!wlAll.some(w=>String(w.code||'').trim()===h.code));
@@ -744,13 +843,32 @@ const hydExtra = () => hydAll.filter(h=>!wlAll.some(w=>String(w.code||'').trim()
 async function pollRid(){
   if(document.hidden || loadingAll || !heroReady) return;
   try{
-    const j = await fetchRid();
+    const h = await homeGet(['rid','trends']);
+    const j = ridFromHome(h) || await fetchRid();
     if(!j?.updated || (j.updated === ridUpdated && j._base === ridBase) || loadingAll) return;
     await loadRid(j);
-    await Promise.allSettled(ridTrends());
+    if(homeData(h,'trends')) applyTrends(homeData(h,'trends'));
+    else await Promise.allSettled(ridTrends());
     if(loadingAll) return;   // loadAll วาดให้เองแล้ว
-    renderWaterta(); rerenderHero();
+    renderWaterta(); renderStations(); rerenderHero();
   }catch(e){}
+}
+/* แท็บที่เปิดค้าง: ขอทุกส่วนของ home-proxy ทุก HOME_POLL_MS แล้ววาดใหม่ · Worker ตอบจากแคช (cron ดึงต้นทางตามรอบของมันเอง)
+   จึงไม่เพิ่มภาระต้นทาง · ระดับน้ำ thaiwater / พยากรณ์ open-meteo ยังดึงตรงตามรอบ loadAll 30 นาที (ไม่ยิงถี่ใส่ต้นทาง)
+   ส่วนที่ไม่มีในคำตอบ ข้ามไป คงชุดเดิม (รอบ loadAll ถัดไปค่อยดึงตรงแทน) */
+const HOME_POLL_MS = 6*60*1000;
+async function pollHome(){
+  if(document.hidden || loadingAll || !heroReady) return;
+  const h = await homeGet(HOME_MAIN);
+  if(loadingAll) return;
+  const pre = { rain3d: homeData(h,'rain3d'), ddpm: homeData(h,'ddpm'), rid: ridFromHome(h), hyd: homeData(h,'hyd') };
+  if(!Object.values(pre).some(Boolean)) return;
+  await Promise.allSettled([pre.rain3d && loadSoil(pre.rain3d), pre.ddpm && loadDdpm(pre.ddpm), pre.rid && loadRid(pre.rid), pre.hyd && loadHyd(pre.hyd)]);
+  Object.assign(ddpmThr, homeData(h,'thr'));
+  if(homeData(h,'trends')) applyTrends(homeData(h,'trends'));
+  if(loadingAll) return;   // loadAll วาดให้เองแล้ว
+  renderAll();
+  document.getElementById('updated').textContent = 'อัปเดต ' + new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
 }
 /* เกณฑ์ "เฝ้าระวัง" ของ ปภ. (mediumLevelThreshold) มีเฉพาะในรายละเอียดรายสถานี
    โหลดเฉพาะสถานีที่แสดงอยู่ (ไม่เกิน 3) แล้ววาดใหม่ · ใช้เป็นเส้นเหลืองบนมาตรวัด */
@@ -759,27 +877,26 @@ function ddpmNeedThr(codes){
   const miss = codes.filter(c=>!(c in ddpmThr));
   if(!miss.length) return;
   miss.forEach(c=>{ ddpmThr[c] = null; });   // กันยิงซ้ำระหว่างรอ
-  Promise.allSettled(miss.map(c=>fetch(`${DDPM_PROXY}/stations/${encodeURIComponent(c)}`).then(r=>r.json())
+  Promise.allSettled(miss.map(c=>fetchJSON(`${DDPM_PROXY}/stations/${encodeURIComponent(c)}`, 15000, 1)
     .then(j=>{ ddpmThr[c] = num(j?.waterThreshold?.mediumLevelThreshold); })))
     .then(()=>{ if(miss.some(c=>ddpmThr[c]!=null)) renderWaterta(); });
 }
-async function loadDdpm(){
-  try{
-    const j = await fetch(`${DDPM_PROXY}/stations?provCode=${PROV_CODE[prov]}&limit=100`).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
-    ddpmAll = (j?.data||[]).filter(d=>d.isActive!==0 && !d.deletedAt).map(d=>{
-      const cur = num(d.currentWaterLevel), bank = num(d.riverBankLevel);
-      const lv = cur==null || d.status===0 ? null : DDPM_LV[d.waterLevelStatus];
-      return {code:d.code, name:(d.name||'').trim(), amphoe:d.amphoeName||'', prov:d.provName||prov, river:d.basin && d.basin!=='-' ? d.basin : '',
-        lat:num(d.latitude), lng:num(d.longitude), cur, bank, unit:'ม.', src:'ddpm',
-        // updatedAt ของ ปภ. เป็นเวลาไทยไม่มีโซน ("2026-10-01T14:45:01") · ถ้ามีโซนมาแล้วใช้ตามนั้น
-        dt: d.updatedAt ? new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(d.updatedAt) ? d.updatedAt : String(d.updatedAt)+'+07:00') : null,
-        lvNum: lv ? d.waterLevelStatus : 0,
-        // ไม่มีพื้นท้องน้ำ · ใช้แค่วาดมาตรวัด (ระดับ ปภ. ส่วนใหญ่วัดจากศูนย์ของไม้วัด จึงไม่ต่ำกว่า 0)
-        ground: cur!=null && bank!=null ? Math.max(0, Math.min(bank, cur) - 3) : null,
-        st: lv ? {l:lv.l, c:lv.c} : {l:'รอข้อมูล', c:'var(--ink-3)'},
-        rank: cur!=null && bank!=null && cur >= bank ? 3 : (lv ? lv.r : 0)};
-    });
-  }catch(e){ ddpmAll = []; }
+async function loadDdpm(pre){
+  const j = pre || await fetchJSON(`${DDPM_PROXY}/stations?provCode=${PROV_CODE[prov]}&limit=100`);
+  if(!Array.isArray(j?.data)) throw new Error('ddpm: no data');   // คงชุดเดิม
+  ddpmAll = j.data.filter(d=>d.isActive!==0 && !d.deletedAt).map(d=>{
+    const cur = num(d.currentWaterLevel), bank = num(d.riverBankLevel);
+    const lv = cur==null || d.status===0 ? null : DDPM_LV[d.waterLevelStatus];
+    return {code:d.code, name:(d.name||'').trim(), amphoe:d.amphoeName||'', prov:d.provName||prov, river:d.basin && d.basin!=='-' ? d.basin : '',
+      lat:num(d.latitude), lng:num(d.longitude), cur, bank, unit:'ม.', src:'ddpm',
+      // updatedAt ของ ปภ. เป็นเวลาไทยไม่มีโซน ("2026-10-01T14:45:01") · ถ้ามีโซนมาแล้วใช้ตามนั้น
+      dt: d.updatedAt ? new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(d.updatedAt) ? d.updatedAt : String(d.updatedAt)+'+07:00') : null,
+      lvNum: lv ? d.waterLevelStatus : 0,
+      // ไม่มีพื้นท้องน้ำ · ใช้แค่วาดมาตรวัด (ระดับ ปภ. ส่วนใหญ่วัดจากศูนย์ของไม้วัด จึงไม่ต่ำกว่า 0)
+      ground: cur!=null && bank!=null ? Math.max(0, Math.min(bank, cur) - 3) : null,
+      st: lv ? {l:lv.l, c:lv.c} : {l:'รอข้อมูล', c:'var(--ink-3)'},
+      rank: cur!=null && bank!=null && cur >= bank ? 3 : (lv ? lv.r : 0)};
+  });
 }
 
 /* ---------- แสดงผล ---------- */
@@ -954,7 +1071,6 @@ function dirSection(m, cur){
     <g font-size="8.5" style="paint-order:stroke;stroke:var(--card);stroke-width:3px">
       <text x="${X(.5)}" y="${(bY-3).toFixed(1)}" text-anchor="middle" fill="var(--st-danger)">ตลิ่ง ${m.bank.toFixed(2)}</text>
       <text x="${X(.5)}" y="${(wY+9).toFixed(1)}" text-anchor="middle" fill="var(--ink-2)">เฝ้าระวัง ${m.warn.toFixed(2)}</text>
-      ${cur!=null?`<text x="${X(.5)}" y="${Math.min(bot-4, y(cur)+12).toFixed(1)}" text-anchor="middle" font-weight="700" fill="var(--ink)">${cur.toFixed(2)}</text>`:''}
     </g>
     <g font-size="7.5" fill="var(--ink-3)" text-anchor="end">${ticks.map(v=>`<text x="${pl-3}" y="${(y(v)+2.5).toFixed(1)}">${v}</text>`).join('')}</g>
   </svg>`;
@@ -1160,33 +1276,65 @@ function renderRain7(met, sel){
   document.getElementById('stripRain').textContent = fmt1(sum);
   document.getElementById('stripSoil').textContent = fmt1(soil);
 }
+/* ---------- มาตรวัดน้ำต้องระวังเป็นพิเศษ: ระดับน้ำถึง 90% ของตลิ่งขึ้นไป ----------
+   รวมทุกแหล่งชุดเดียวกับการ์ดน้ำท่า (เดิมใช้แค่ thaiwater พอ thaiwater ล่มการ์ดขึ้น "โหลดไม่สำเร็จ" ทั้งที่แหล่งอื่นมีข้อมูล)
+   % ของตลิ่ง = ความลึกน้ำเทียบความลึกลำน้ำ (ระดับน้ำ − ท้องน้ำ) ÷ (ตลิ่ง − ท้องน้ำ) แบบเดียวกับ thaiwater
+   · สสน./ชป. (thaiwater): มีท้องน้ำ (ground_level) คำนวณได้ตรง (FC.fillPct)
+   · ปภ.: ระดับวัดจากศูนย์ไม้วัด (ไม่ต่ำกว่า 0) จึงใช้ ระดับ ÷ ตลิ่ง
+   · โทรมาตร ชป. (telerid) / อุทกวิทยา ชป.: ระดับเป็น ม.รทก. ไม่มีท้องน้ำ คิด % ไม่ได้ (บ้านกาวะ 19.48 / ตลิ่ง 38
+     ไม่ได้แปลว่าน้ำครึ่งตลิ่ง) จึงใช้เส้นเฝ้าระวังของ ชป. เอง (ส่วนใหญ่ต่ำกว่าตลิ่ง 1 ม.) แทน
+     ยกเว้นสถานีหลักใน WTA ที่รู้พื้นท้องน้ำ
+   ล้นตลิ่งนับทุกแหล่ง · ค่าที่เก่ากว่า WTA_STALE_H ชม. ไม่นับ · เลือกอำเภอแล้วเหลือเฉพาะอำเภอนั้น */
+const ST_PCT = 90;
+const ST_MAX = 12;
+function stWatchList(){
+  const now = Date.now();
+  const ok = s => s.cur!=null && s.bank!=null && (!amp || wtaAmpName(s.amphoe)===amp) &&
+    !(s.dt && !isNaN(s.dt) && now - s.dt > WTA_STALE_H*3600e3);
+  const out = [];
+  const add = (s, pct, warnOnly) => {
+    const over = s.cur >= s.bank && (pct==null || pct >= 100);
+    if(over || (pct!=null ? pct >= ST_PCT : warnOnly && s.warn!=null && s.cur >= s.warn))
+      out.push({name:s.name, river:s.river, amphoe:wtaAmpName(s.amphoe), tag:s.tag, over, pct, gap:s.bank - s.cur});
+  };
+  wlAll.filter(s=>s.prov===prov).forEach(s=>{
+    const x = {...s, cur:s.msl, tag:''};
+    if(ok(x)) add(x, x.pct, false);
+  });
+  ddpmAll.forEach(s=>{
+    const x = {...s, tag:'ปภ.'};
+    if(ok(x) && x.bank > 0) add(x, x.cur / x.bank * 100, false);
+  });
+  ridAll.concat(hydExtra()).forEach(s=>{
+    const x = {...s, tag:WTA_TAG[s.src]||''}, g = WTA.find(w=>w.code===s.code)?.ground;
+    if(ok(x)) add(x, g!=null && x.bank > g ? (x.cur - g) / (x.bank - g) * 100 : null, true);
+  });
+  // ล้นตลิ่งก่อน แล้วตาม % (สถานีที่ใช้เส้นเฝ้าระวังแทน % ถือเป็น 90) เสมอกันดูว่าห่างตลิ่งน้อยกว่า
+  return out.sort((a,b)=> b.over-a.over || (b.pct ?? ST_PCT) - (a.pct ?? ST_PCT) || a.gap-b.gap);
+}
 function renderStations(){
   const el = document.getElementById('stList');
-  let list = wlAll.filter(s=>s.prov===prov);
-  if(amp) list = list.filter(s=>s.amphoe.includes(amp));
-  const rising = s => s.msl!=null && s.prev!=null && (s.msl-s.prev) >= 0.03;
-  /* เกณฑ์เดียวกับหน้าคาดการณ์: ล้นตลิ่งต้องมีตลิ่งที่ถูกต้อง · ใกล้ตลิ่งคือ >= 85%
-     ของเดิมนับ >= 70% เป็น "น้ำมาก" ซึ่งเป็นระดับปกติของหลายสถานีในฤดูฝน */
-  const lvOf = s => FC.stationLevel(s);
-  const hot = list.filter(s => lvOf(s)!=='normal' || (rising(s) && (s.pct??0) >= FC.CRIT.PCT_MID))
-    .sort((a,b)=>(b.pct??0)-(a.pct??0));
+  const any = wlAll.length || ddpmAll.length || ridAll.length || hydAll.length;
+  const hot = any ? stWatchList() : [];
 
   /* แถบคำตอบด้านบนใช้จำนวนเดียวกันกับที่การ์ดนี้แสดงจริง
      ถ้าโหลดสถานีไม่สำเร็จต้องบอกว่าไม่รู้ ไม่ใช่แสดงเลข 0
      ซึ่งจะอ่านได้ว่า "ปลอดภัย" ทั้งที่ความจริงคือไม่มีข้อมูล */
   const stripSt = document.getElementById('stripSt');
-  if(stripSt) stripSt.textContent = wlAll.length ? String(hot.length) : 'ไม่มีข้อมูล';
+  if(stripSt) stripSt.textContent = any ? String(hot.length) : 'ไม่มีข้อมูล';
 
-  if(!wlAll.length){ el.innerHTML = 'โหลดข้อมูลสถานีไม่สำเร็จ'; return; }
-  if(!hot.length){ el.innerHTML = `<div style="color:var(--st-normal);font-size:12.5px">${amp?`อ.${amp}`:`จ.${prov}`} ไม่มีสถานีเข้าเกณฑ์เฝ้าระวังขณะนี้ (ทั้งหมด ${list.length} สถานี)</div>`; return; }
-  el.innerHTML = hot.slice(0,8).map(s=>{
-    const lv = lvOf(s);
-    const c = lv==='over'?'var(--st-danger)': (lv==='high'?'var(--signal)':'var(--st-watch)');
-    const t = lv==='over'?'ล้นตลิ่ง': (lv==='high'?`น้ำใกล้ตลิ่ง ${Math.round(s.pct)}%`:'กำลังขึ้น');
+  if(!any){ el.innerHTML = 'โหลดข้อมูลสถานีไม่สำเร็จ'; return; }
+  if(!hot.length){ el.innerHTML = `<div style="color:var(--st-normal);font-size:12.5px">${amp?`อ.${amp}`:`จ.${prov}`} ไม่มีมาตรวัดน้ำที่ระดับน้ำถึง ${ST_PCT}% ของตลิ่งขณะนี้</div>`; return; }
+  el.innerHTML = hot.slice(0, ST_MAX).map(s=>{
+    const c = s.over ? 'var(--st-danger)' : 'var(--st-warn)';
+    const t = s.over ? `ล้นตลิ่ง${s.gap < 0 ? ` +${(-s.gap).toFixed(2)} ม.` : ''}`
+      : s.pct!=null ? `${Math.round(s.pct)}% ของตลิ่ง`
+      : `ถึงเกณฑ์เฝ้าระวัง · ต่ำกว่าตลิ่ง ${s.gap.toFixed(2)} ม.`;
+    const sub = [s.river, s.amphoe && `อ.${s.amphoe}`, s.tag].filter(Boolean).map(esc).join(' · ');
     return `<a class="st" style="border-left-color:${c};text-decoration:none;color:inherit" href="map.html">
-      <span><span class="nm">${esc(s.name)}</span> <span class="sub">${esc(s.river)} · อ.${esc(s.amphoe)}</span></span>
+      <span><span class="nm">${esc(s.name)}</span> <span class="sub">${sub}</span></span>
       <span class="badge" style="background:${c}">${t}</span></a>`;
-  }).join('');
+  }).join('') + (hot.length > ST_MAX ? `<div class="note">และอีก ${hot.length - ST_MAX} สถานี · ดูทั้งหมดที่ <a href="map.html">หน้าแผนที่</a></div>` : '');
 }
 /* ---------- ฮีโร่ "ตอบก่อน" + การ์ดทิศทางน้ำ (v9) ----------
    ไม่ดึงข้อมูลใหม่ ใช้ wlAll (thaiwater) กับพยากรณ์ Open-Meteo ที่หน้านี้โหลดอยู่แล้ว
@@ -1345,14 +1493,14 @@ function renderHero(met, sel){
     W = s.lvl==='over' ? {t:'น้ำล้นตลิ่ง', k:'danger'}
       : s.lvl==='high' ? {t:'น้ำใกล้ตลิ่ง', k:'warn'}
       : s.lvl==='watch' ? {t:'น้ำถึงระดับเฝ้าระวัง', k:'watch'}
-      : d!=null && d >= s.thr ? {t:'น้ำกำลังขึ้น', k:'watch'}
+      : d!=null && d >= s.thr ? {t:'น้ำกำลังเพิ่มระดับ', k:'watch'}
       : d!=null && d <= -s.thr ? {t:'น้ำกำลังลด', k:'normal'}
       : {t:'น้ำยังปกติ', k:'normal'};
   } else if(!area.length) W = {t:'ยังอ่านข้อมูลน้ำไม่ได้', k:'na'};
   else if(over.length) W = {t:'มีจุดน้ำล้นตลิ่ง', k:'danger'};
   else if(high.length) W = {t:'น้ำใกล้ตลิ่ง', k:'warn'};
   else if(watch.length) W = {t:'น้ำถึงระดับเฝ้าระวัง', k:'watch'};
-  else if(rise.length > fall.length && rise.length >= 2) W = {t:'น้ำกำลังขึ้น', k:'watch'};
+  else if(rise.length > fall.length && rise.length >= 2) W = {t:'น้ำกำลังเพิ่มระดับ', k:'watch'};
   else if(fall.length > rise.length) W = {t:'น้ำกำลังลด', k:'normal'};
   else W = {t:'น้ำยังปกติ', k:'normal'};
   word.textContent = W.t; word.dataset.lv = W.k;
@@ -1466,6 +1614,7 @@ document.getElementById('heroShare').addEventListener('click', async ()=>{
 });
 function renderAmphoes(list){
   const el = document.getElementById('ampList');
+  if(!el) return;   // การ์ด "อำเภอที่ต้องเฝ้าระวังเป็นพิเศษ" ถอดออกจากหน้าแล้ว
   const mets = meteoCache[prov];
   if(!mets){ el.innerHTML = '⚠️ โหลดไม่สำเร็จ'; return; }
   /* เกณฑ์อยู่ใน js/criteria.js ชุดเดียวกับหน้าคาดการณ์
@@ -1579,7 +1728,7 @@ async function loadNowcast(){
   if(!mapEl) return;
   let j;
   try{
-    j = await fetch(TMD_PROXY+'/nowcast').then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+    j = homeData(await homeGet(['nowcast']), 'nowcast') || await fetchJSON(TMD_PROXY+'/nowcast');
   }catch(e){ j = null; }
   const list = j?.frames || [];
   if(!list.length){
@@ -1657,6 +1806,66 @@ async function loadNowcast(){
   }, true);
 })();
 
+/* ---------- ฝนสะสมวันนี้ · เมื่อวาน (naramet.pages.dev/rainfall) ----------
+   ต้องการเฉพาะเนื้อหาฝนสะสม ไม่เอาเมนูของต้นทาง แต่ iframe ข้ามโดเมนแต่ง CSS ข้างในไม่ได้ และตัดขอบบนทิ้ง
+   ก็ไม่แน่นอน (เมนูโหลดทีหลัง สูงไม่เท่ากันตามความกว้างจอ) จึงดึง HTML ของหน้านั้นมาเอง (ต้นทางเปิด CORS *)
+   แทรก <base> ให้ไฟล์ที่อ้างแบบสัมพัทธ์ (adm2.json ฯลฯ) ยังชี้ไปต้นทาง + CSS ซ่อน #navbar แล้วแสดงผ่าน srcdoc
+   กรอบเป็น sandbox="allow-scripts" ไม่มี allow-same-origin: สคริปต์ต้นทาง (รวม kriging.js@master ที่ไม่ล็อกรุ่น)
+   รันในกรอบที่ไม่ใช่โดเมนเรา จึงแตะ localStorage/การล็อกอินของเว็บนี้ไม่ได้
+   ต้นทางตั้งความสูงแผนที่เป็น vh ซึ่งในกรอบ = % ของความสูงกรอบ จึงแทนด้วยขนาดตามความกว้างกรอบ (vw)
+   แล้วให้กรอบรายงานความสูงเนื้อหาจริงกลับมาตั้งความสูง iframe พอดีทุกจอ (ไม่วนลูป เพราะเนื้อหาไม่ขึ้นกับความสูงกรอบแล้ว)
+   สคริปต์เล็กที่แทรกไว้รายงานผลกลับมา ถ้าโหลดข้อมูลไม่ขึ้นใน 30 วิ (เช่น API ไม่รับคำขอจากกรอบ sandbox)
+   หรือดึง HTML ไม่ได้ ถอยไปฝังหน้าเต็มของต้นทางตามเดิม (มีเมนู แต่ข้อมูลขึ้นแน่) */
+const NARAMET_RAIN = 'https://naramet.pages.dev/rainfall';
+const NARAMET_CSS = '<style>#navbar{display:none!important}.container.mt-3{margin-top:4px!important}'+
+  '#rainfall{height:clamp(360px,62vw,580px)!important;min-height:0!important}'+
+  // จอแคบต้นทางให้ #rainfall สูงตามเนื้อหา และ #mapCanvas เป็น flex:1 ซึ่งทำให้ความสูงตามขนาดภาพ canvas ที่สคริปต์ต้นทาง
+  // ตั้งจากความสูงกล่อง (รวมคำอธิบายสี) → สูงขึ้นทุกครั้งที่กรอบเปลี่ยนขนาด จึงต้อง flex:none ให้ height มีผลจริง
+  '@media(max-width:576px){#rainfall{height:auto!important}#mapCanvas{flex:none!important;height:clamp(320px,115vw,480px)!important}}</style>';
+const NARAMET_WATCH = '<script>(function(){var t0=Date.now(),'+
+  'H=function(){return Math.ceil(document.documentElement.getBoundingClientRect().height);},'+
+  // ต้นทางเปิดที่แท็บ "รวม 3 จังหวัด" · เราเลือกแท็บ "นราธิวาส" ให้เป็นค่าเริ่มต้น (กดครั้งเดียวหลังข้อมูลขึ้น ผู้ใช้สลับแท็บเองได้)
+  // หาปุ่มที่ข้อความตรง "นราธิวาส" พอดีและมองเห็นอยู่ (เมนูที่ซ่อนไว้ไม่นับ) เพราะไม่ได้ผูกกับ id/class ของต้นทาง
+  'P=function(){var a=document.querySelectorAll("button,a,[role=tab],.nav-link,.btn");'+
+  'for(var i=0;i<a.length;i++){if(a[i].offsetParent&&(a[i].innerText||"").trim()==="นราธิวาส"){a[i].click();return;}}},'+
+  'iv=setInterval(function(){'+
+  'var s=(document.getElementById("dataSubtitle")||{}).innerText||"";'+
+  'var ok=/ประจำวันที่/.test(s)&&!/ประมวลผล/.test(s),bad=/ผิดพลาด/.test(s)||Date.now()-t0>30000;'+
+  'if(ok||bad){clearInterval(iv);if(ok)P();parent.postMessage({naramet:ok?"ok":"fail",h:H()},"*");}},500);'+
+  'new ResizeObserver(function(){parent.postMessage({naramet:"h",h:H()},"*");}).observe(document.body);'+
+  '})();<\/script>';
+function naraRainFull(){
+  const old = document.getElementById('roFrame');
+  if(!old || old.dataset.mode==='full') return;
+  // sandbox มีผลตอนโหลดหน้าใหม่ จึงสร้างกรอบใหม่แทนการถอดแอตทริบิวต์
+  const f = document.createElement('iframe');
+  f.id = 'roFrame'; f.title = old.title; f.dataset.mode = 'full';
+  f.referrerPolicy = 'no-referrer'; f.src = NARAMET_RAIN;
+  old.replaceWith(f);
+}
+/* เรียกจาก loadAll (เปิดหน้า · ปุ่มรีเฟรช · ทุก 30 นาที) */
+async function loadNaraRain(){
+  const fr = document.getElementById('roFrame');
+  if(!fr) return;
+  // ถอยไปหน้าเต็มแล้ว: แค่โหลดใหม่ · ห้ามใส่ srcdoc ในกรอบที่ไม่มี sandbox (สคริปต์ต้นทางจะรันเป็นโดเมนเรา)
+  if(fr.dataset.mode==='full' || fr.getAttribute('sandbox')!=='allow-scripts'){ fr.src = NARAMET_RAIN; return; }
+  try{
+    let html = await fetch(NARAMET_RAIN).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); });
+    if(!/<head[^>]*>/i.test(html) || !/<\/body>/i.test(html) || !/id="dataSubtitle"/.test(html)) throw new Error('unexpected page');
+    html = html
+      .replace(/<head[^>]*>/i, m => m + `<base href="${new URL('./', NARAMET_RAIN).href}">` + NARAMET_CSS)
+      .replace(/<\/body>/i, () => NARAMET_WATCH + '</body>');
+    fr.srcdoc = html;
+  }catch(e){ naraRainFull(); }
+}
+window.addEventListener('message', e=>{
+  const fr = document.getElementById('roFrame');
+  if(!fr || fr.dataset.mode==='full' || e.source !== fr.contentWindow || !e.data?.naramet) return;
+  if(e.data.naramet === 'fail') return naraRainFull();
+  const hh = +e.data.h;
+  if(hh >= 200 && hh <= 2000) fr.style.height = (hh + fr.offsetHeight - fr.clientHeight) + 'px';   // + ขอบกรอบ
+});
+
 /* ---------- คาดการณ์ปริมาณฝนรายอำเภอ (แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุฯ ผ่าน tmd-proxy) ----------
    ข้อมูลจากแบบจำลอง NWP กรมอุตุฯ (hpc.tmd.go.th/riskmap-district) กรองเหลือเฉพาะอำเภอนราธิวาส
    ไว้แล้วที่ตัว worker (ดู /riskmap ใน tmd-proxy.worker.js) — เป็นข้อมูลรายอำเภอคนละชุดกับ
@@ -1670,10 +1879,10 @@ let distRain, distDistrictGeo, distRainDayIdx = 0, drMap, drLayer, drLabels = []
 /* ต้นทางอาจส่งมาน้อยกว่า 5 วัน จึงยึดตามจำนวนที่ได้จริง ไม่ให้ขึ้นช่องว่าง */
 const drDayCount = () => distRain ? Math.min(DR_MAX_DAYS, distRain.days.length) : 0;
 async function loadDistRain(){
-  try{
-    const j = await fetch(TMD_PROXY+'/riskmap').then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
-    distRain = (j?.districts||[]).length ? j : null;
-  }catch(e){ distRain = null; }
+  let j;
+  try{ j = homeData(await homeGet(['riskmap']), 'riskmap') || await fetchJSON(TMD_PROXY+'/riskmap'); }
+  catch(e){ if(distRain) return; }   // รอบรีเฟรชล้มเหลว → คงแผนที่ชุดเดิมที่แสดงอยู่
+  distRain = (j?.districts||[]).length ? j : null;
   distRainDayIdx = 0;
   renderDistRainDays();
   renderDistRain();
@@ -1881,7 +2090,8 @@ document.querySelectorAll('.chip[data-prov]').forEach(b=>{
     b.classList.add('on');
     prov = b.dataset.prov; amp = '';
     if(!meteoCache[prov]){
-      document.getElementById('ampList').innerHTML = '<span class="spin"></span> กำลังประเมิน…';
+      const al = document.getElementById('ampList');
+      if(al) al.innerHTML = '<span class="spin"></span> กำลังประเมิน…';
       try{ await loadMeteo(prov); }catch(e){}
     }
     renderAll();
@@ -1898,7 +2108,9 @@ loadDistRain();
 setInterval(loadTmd, 60*60*1000);
 setInterval(loadAll, 30*60*1000);
 setInterval(pollRid, 2*60*1000);
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollRid(); });
+setInterval(pollHome, HOME_POLL_MS);
+// กลับมาที่แท็บ: ขอชุดล่าสุดทั้งหมดจาก home-proxy (รวมโทรมาตร ชป.) · ระหว่างซ่อนแท็บรอบ poll ข้ามไป
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollHome(); });
 setInterval(loadRadarImg, 10*60*1000);
 setInterval(loadNowcast, 5*60*1000);
 setInterval(loadDistRain, 60*60*1000);
@@ -1906,11 +2118,11 @@ setInterval(loadDistRain, 60*60*1000);
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
-<script src="js/views.js?v=3" defer></script>
+<script src="js/views.js?v=4" defer></script>
 <script src="js/visits-widget.js?v=2" defer></script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
-<script src="js/tabbar.js?v=2" defer></script>
+<script src="js/tabbar.js?v=3" defer></script>
 <script src="js/install.js?v=2" defer></script>
 </body>
 </html>

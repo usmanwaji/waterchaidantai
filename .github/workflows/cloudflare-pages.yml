@@ -1,0 +1,61 @@
+# Deploy หน้าเว็บขึ้น Cloudflare Pages (โปรเจกต์ naraflood → https://naraflood.com)
+# ทำงานเมื่อ push ขึ้น main หรือกด Run workflow เอง (Actions → Deploy to Cloudflare Pages)
+# อัปโหลดตรงด้วย wrangler ไม่ใช้ Git integration ของ Cloudflare จึงไม่ build ตาม branch cam ที่ตัวดึงข้อมูล telerid push ทุกไม่กี่นาที
+# ต้องตั้ง secret CLOUDFLARE_API_TOKEN ก่อน (ดู DEPLOY.md ข้อ 1.0)
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# deploy ทีละรอบ ถ้ามี push ใหม่เข้ามาระหว่าง deploy ให้ยกเลิกรอบเก่า
+concurrency:
+  group: cf-pages-production
+  cancel-in-progress: true
+
+env:
+  CLOUDFLARE_ACCOUNT_ID: bc57b4aa0d1f8bdbc7fc7f0ed168bf2e
+  PROJECT: naraflood
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # คัดเฉพาะไฟล์หน้าเว็บ — เอกสาร, ซอร์ส Worker, SQL, ตัวดึงข้อมูล และไฟล์ตั้งค่า ไม่ต้องขึ้นเว็บ
+      - name: Collect site files
+        run: |
+          rsync -a ./ _site/ \
+            --exclude=.git/ --exclude=.github/ --exclude=.claude/ --exclude=_site/ \
+            --exclude=.gitignore --exclude=.devserver.mjs --exclude=CNAME \
+            --exclude='*.md' --exclude='*.worker.js' --exclude=twa-manifest.json \
+            --exclude=supabase/ --exclude=telerid-scraper/ --exclude=play-store/
+          test -f _site/index.html && test -f _site/404.html && test -f _site/.well-known/assetlinks.json
+          echo "files: $(find _site -type f | wc -l) · size: $(du -sh _site | cut -f1)"
+
+      - name: Create Pages project if missing
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if npx --yes wrangler@4 pages project list | grep -qw "$PROJECT"; then
+            echo "project $PROJECT exists"
+          else
+            npx --yes wrangler@4 pages project create "$PROJECT" --production-branch main
+          fi
+
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          npx --yes wrangler@4 pages deploy _site \
+            --project-name "$PROJECT" --branch main \
+            --commit-hash "$GITHUB_SHA" --commit-message "$(git log -1 --format=%s | head -c 300)"

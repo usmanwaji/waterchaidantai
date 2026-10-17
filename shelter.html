@@ -139,12 +139,12 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
     <a href="map.html">ระดับน้ำ</a>
     <a href="forecast.html">คาดการณ์</a>
     <a href="history.html">ย้อนหลัง</a>
-    <a href="repeat.html">พื้นที่เสี่ยง</a>
+    <a href="repeat.html">พื้นที่ท่วมซ้ำซาก</a>
     <!-- <a href="sim.html">แบบจำลอง</a> -->
-    <a href="shelter.html" class="on" id="navShelter">ศูนย์พักพิง</a>
-    <a href="shelter.html#parking" id="navPark">ที่จอดรถ</a>
+    <a href="shelter.html" class="on" id="navShelter">ศูนย์พักพิง/ที่จอดรถ</a>
+    <a style="display:none" href="shelter.html#parking" id="navPark">ที่จอดรถ</a>
     <a href="route.html">เส้นทาง</a>
-    <a href="resources.html">ทรัพยากร</a>
+    <a style="display:none" href="resources.html">ทรัพยากร</a>
   </nav>
 </header>
 
@@ -254,7 +254,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
-<script src="js/views.js?v=3" defer></script>
+<script src="js/views.js?v=4" defer></script>
 <script>
 /* ---------- ข้อมูลศูนย์พักพิง: ระบบศูนย์พักพิง ปภ. (shelter.disaster.go.th) แหล่งเดียว ----------
    ระบบนี้เผยแพร่ข้อมูลเป็นชั้น ArcGIS บน gis-portal ของ ปภ. (เปิด CORS) · ชั้น DDPM_Shelter ตัวจริงต้องใช้ token
@@ -461,8 +461,7 @@ function setPark(on){
   document.body.classList.toggle('pk-on', on);
   const b = document.getElementById('parkBtn');
   b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
-  document.getElementById('navShelter').classList.toggle('on', !on);
-  document.getElementById('navPark').classList.toggle('on', on);
+  // เมนู "ศูนย์พักพิง/ที่จอดรถ" เป็นเมนูเดียว ไฮไลต์ค้างไว้ทั้งสองโหมด
   syncHash(); render();
 }
 
@@ -633,7 +632,7 @@ loadShelters(); loadSurveyLive();
 </script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
-<script src="js/tabbar.js?v=2" defer></script>
+<script src="js/tabbar.js?v=3" defer></script>
 <script src="js/install.js?v=2" defer></script>
 </body>
 </html>
