@@ -66,6 +66,7 @@ const TIMEOUT = 12000;
 const SOFT_WAIT = 2000;       // ส่วนที่เก่าเกิน swr: รอผลใหม่ได้เท่านี้ก่อนตอบชุดเดิม
 const COLD_WAIT = 6000;       // ยังไม่มีข้อมูลเลย (เพิ่ง deploy / แคชถูกล้าง)
 const RETRY_GAP = 30e3;       // ส่วนเดียวกันสั่งดึงซ้ำใน isolate เดียวกันได้ไม่ถี่กว่านี้
+const LIMIT_GAP = 5 * 60e3;   // ต้นทางตอบ 429 (thaiwater จำกัดคำขอต่อ IP ซึ่ง Worker ใช้ IP ร่วมกับคนอื่น) → พักนานขึ้น
 const FRESH_MS = 6 * HOUR * 1000;   // ทิศทางน้ำคิดเฉพาะสถานีที่ส่งค่าใน 6 ชม. (HERO_FRESH_H ใน index.html)
 const STORE = 'https://home-proxy.cache/store-v1';
 
@@ -129,6 +130,7 @@ async function rid(env, budget) {
 /* ทิศทางน้ำ (ค่าราว 1 ชม. ก่อน) · คิดแบบเดียวกับ loadTrends/ridTrends ใน index.html
    ปภ.: 2 ค่าท้ายของกราฟรายชั่วโมง · ชป.: ค่าล่าสุดเทียบค่าล่าสุดที่วัดก่อนนั้นอย่างน้อย 1 ชม. ใน {CODE}.detail.json */
 async function trends(env, budget, dep) {
+  if (!Array.isArray(dep.ddpm?.data) && !dep.rid?.j) throw new Error('waiting for ddpm/rid station lists');
   const now = Date.now();
   const dd = (dep.ddpm?.data || []).filter((d) => d.isActive !== 0 && !d.deletedAt && num(d.currentWaterLevel) != null
     && d.updatedAt && now - ddpmTime(d.updatedAt) <= FRESH_MS).map((d) => d.code);
@@ -164,6 +166,8 @@ async function trends(env, budget, dep) {
 /* เกณฑ์ "เฝ้าระวัง" ของ ปภ. มีเฉพาะในรายละเอียดรายสถานี · แทบไม่เปลี่ยน เก็บนาน
    โควตาไม่พอดึงครบทุกสถานีในรอบนี้ → เลื่อนไปคำขอถัดไปทั้งชุด (ไม่เก็บครึ่ง ๆ กลาง ๆ) */
 async function thresholds(env, budget, dep) {
+  // ยังไม่มีรายชื่อสถานี ปภ. → ไม่เก็บชุดว่าง (ไม่งั้นค้างเป็นค่าว่างไปทั้ง ttl 12 ชม.)
+  if (!Array.isArray(dep.ddpm?.data)) throw new Error('waiting for ddpm station list');
   const codes = (dep.ddpm?.data || []).filter((d) => d.isActive !== 0 && !d.deletedAt).map((d) => d.code);
   if (codes.length > budget.left) throw new Error('subrequest budget used up (deferred)');
   const out = {};
@@ -222,7 +226,7 @@ const startedAt = {};   // ส่วนที่กำลังดึงอย�
 const ageSec = (m, now) => (m && m.t ? (now - m.t) / 1000 : Infinity);
 function due(store, p, now) {
   const m = store.meta[p], age = ageSec(m, now);
-  if (m?.et && now - m.et < RETRY_GAP) return false;   // เพิ่งล้มเหลว ไม่ยิงถี่ใส่ต้นทาง
+  if (m?.et && now - m.et < (/HTTP 429/.test(m.e) ? LIMIT_GAP : RETRY_GAP)) return false;   // เพิ่งล้มเหลว ไม่ยิงถี่ใส่ต้นทาง
   return age > PARTS[p].ttl || (m?.u && age > RETRY_GAP / 1000);
 }
 /* ดึงส่วนที่หมดอายุพร้อมกัน · fresh ได้ผลทีละส่วนเมื่อเสร็จ (คำตอบหยิบเฉพาะที่เสร็จทันไปใช้) · runs = promise รายส่วน */
