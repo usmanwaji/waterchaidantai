@@ -15,7 +15,7 @@
     ศูนย์ที่ดึง telerid ได้ (BKK) เก็บชุดล่าสุดลง KV: สถานี + กราฟทุกสถานี (key "bundle") + ภาพกล้อง (key "img:CODE")
     ศูนย์ที่ดึงไม่ได้ (HKG/SIN …) จำไว้ 10 นาทีว่าดึงไม่ได้ แล้วอ่านจาก KV ทันที (ไม่ต้องรอ telerid หมดเวลา)
     เขียนเฉพาะเมื่อมีค่าใหม่หรือทุก 15 นาที · ภาพละไม่เกิน 1 ครั้ง / 30 นาที → ไม่เกินราว 700 ครั้ง/วัน (ฟรี 1,000)
-    Cron (Settings → Triggers → Cron Triggers: ทุก 5 นาที) ให้ลองดึงเองทุก 5 นาที เผื่อไม่มีใครเปิดเว็บผ่าน BKK
+    Cron (Settings → Triggers → Cron Triggers: ทุก 10 นาที) ให้ลองดึงเองทุก 10 นาที เผื่อไม่มีใครเปิดเว็บผ่าน BKK
 
   วิธี deploy: dash.cloudflare.com → Workers & Pages → Create → Create Worker (ไม่ใช่ Import a repository)
               → ชื่อ telerid-proxy → Deploy → Edit code → วางไฟล์นี้ → Deploy
@@ -320,7 +320,7 @@ export default {
       return json({ error: String(e && e.message || e), colo, hint: 'see / for where this Worker runs' }, 502, 0);
     }
   },
-  // Cron (ทุก 5 นาที): ลองดึงเอง ถ้ารอบนี้รันในศูนย์ที่ดึงได้ จะได้เก็บชุดใหม่ลง KV แม้ไม่มีคนเปิดเว็บ
+  // Cron (ทุก 10 นาที): ลองดึงเอง ถ้ารอบนี้รันในศูนย์ที่ดึงได้ จะได้เก็บชุดใหม่ลง KV แม้ไม่มีคนเปิดเว็บ
   async scheduled(event, env, ctx) {
     ctx.waitUntil(stationsJson(ctx, env, 'cron').catch(() => {}));
   },
