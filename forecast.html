@@ -412,10 +412,22 @@ async function loadWrf(){
   }catch(e){ wrfImgs = []; }
 }
 /* ฝนสะสมรายวันคาดการณ์รายอำเภอ (แบบจำลอง NWP กรมอุตุฯ · hpc.tmd.go.th/riskmap-district)
-   ต้นทางไม่เปิด CORS และเป็นไฟล์ทั้งประเทศ ~570 KB → ผ่าน tmd-proxy ที่กรองเหลือ 13 อำเภอนราธิวาสแล้ว */
+   ต้นทางไม่เปิด CORS และเป็นไฟล์ทั้งประเทศ ~570 KB → ผ่าน tmd-proxy ที่กรองเหลือ 13 อำเภอนราธิวาสแล้ว
+   พิกัด lat/lng ของกรมอุตุฯ พาไปผิดอำเภอได้ (หน้าแรกเคยวาดฝนสุคิรินลงที่สุไหงปาดี) จึงใช้จุดกลางอำเภอ
+   จาก js/onwr-nara-districts.geojson ที่ชื่อตรงกันแทน · ชื่อไม่ตรงหรือโหลดไฟล์ไม่ได้ค่อยใช้พิกัดเดิม */
+// 'อำเภอสุไหงโก-ลก' / 'สุไหงโกลก' → 'สุไหงโกลก' · 'เมืองนราธิวาส' / 'เมือง' → 'เมือง'
+const distNameKey = s => String(s||'').replace(/^(อำเภอ|อ\.)/, '').replace(/[\s.\-]/g, '').replace(/^เมือง.*/, 'เมือง');
 async function loadDistRain(){
   try{
-    const j = await fetchJSON('https://tmd-proxy.newusmanwaji.workers.dev/riskmap', 30000);
+    const [j, g] = await Promise.all([
+      fetchJSON('https://tmd-proxy.newusmanwaji.workers.dev/riskmap', 30000),
+      fetchJSON('js/onwr-nara-districts.geojson').catch(()=>null)
+    ]);
+    const ctr = new Map((g?.features||[]).map(f=>[distNameKey(f.properties.name_th), f.properties]));
+    (j?.districts||[]).forEach(d=>{
+      const p = ctr.get(distNameKey(d.name));
+      if(p){ d.lat = p.center_lat; d.lng = p.center_lon; }
+    });
     distRain = (j?.districts||[]).length ? j : null;
   }catch(e){ distRain = null; }
 }
@@ -650,6 +662,18 @@ function ffpiCard(){
 /* ช่วงเวลาที่เลือก → จำนวนวันของฝนคาดการณ์ที่ควรแสดง (ฝนเป็นรายวัน จึงปัดขึ้นเป็นวัน) */
 const distRainDays = () => horizon <= 24 ? 1 : Math.ceil(horizon / 24);
 
+/* '18-Oct-2026' → 'วันนี้' / 'พรุ่งนี้' / '20 ต.ค.' โดยเทียบวันที่กับวันนี้ (เวลาไทย) ไม่ใช่ลำดับคอลัมน์
+   ชุดที่ได้อาจเป็นรอบเมื่อวาน (รอบใหม่ยังไม่ออก) ถ้าถือว่าคอลัมน์แรกคือวันนี้เสมอ ฝนของเมื่อวานจะขึ้นป้ายว่าวันนี้ */
+const DIST_MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DIST_TH_MON = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function distDayLabel(s, i){
+  const m = /^(\d{1,2})-([A-Za-z]{3})-(\d{4})/.exec(s||''), mon = m ? DIST_MON.indexOf(m[2]) : -1;
+  if(mon < 0) return i===0 ? 'วันนี้' : i===1 ? 'พรุ่งนี้' : (s||'').slice(0,6);
+  const now = new Date(Date.now() + 7*3600e3),
+        diff = Math.round((Date.UTC(+m[3], mon, +m[1]) - Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())) / 864e5);
+  return diff===0 ? 'วันนี้' : diff===1 ? 'พรุ่งนี้' : `${+m[1]} ${DIST_TH_MON[mon]}`;
+}
+
 /* ฝนสะสมรายวันคาดการณ์ รายอำเภอ · จำนวนวันที่แสดงตามช่วงเวลาที่เลือก
    เรียงอำเภอที่ฝนหนักสุดขึ้นก่อน เพื่อให้เห็น "พื้นที่เสี่ยง" ได้ทันทีโดยไม่ต้องไล่อ่าน */
 function distRainCard(days){
@@ -661,7 +685,7 @@ function distRainCard(days){
   const rows = distRain.districts
     .map(d => ({...d, mx: Math.max(...d.rain.slice(0, n))}))
     .sort((a,b) => b.mx - a.mx);
-  const dayLabel = i => (i===0 ? 'วันนี้' : i===1 ? 'พรุ่งนี้' : distRain.days[i].slice(0,6));
+  const dayLabel = i => distDayLabel(distRain.days[i], i);
 
   let h = `${head}<table style="width:100%;font-size:12px;border-collapse:collapse">
     <tr><th style="text-align:left;font-weight:600;color:var(--ink-3);font-size:10.5px;padding-bottom:3px">อำเภอ</th>
