@@ -192,9 +192,9 @@ create trigger on_profile_pending_notify
 
 -- ---------------------------------------------------------------------------
 -- 6) Bootstrap the first admin
---    Run this ONCE, AFTER newusmanwaji@gmail.com has signed in at least once
+--    Run this ONCE, AFTER naraflood@gmail.com has signed in at least once
 --    (so the profiles row exists). See SETUP-GUIDE.md step 7.
 -- ---------------------------------------------------------------------------
 -- update public.profiles
 --   set role = 'admin', status = 'approved', approved_at = now()
---   where email = 'newusmanwaji@gmail.com';
+--   where email = 'naraflood@gmail.com';

@@ -27,7 +27,7 @@
 1. ไปที่ https://console.cloud.google.com/ → สร้างโปรเจกต์ใหม่ (หรือใช้โปรเจกต์เดิม)
 2. เมนูซ้าย → **APIs & Services → OAuth consent screen**
    - User Type: **External**
-   - กรอกชื่อแอป เช่น "One Map ชายแดนใต้", อีเมลติดต่อ: `newusmanwaji@gmail.com`
+   - กรอกชื่อแอป เช่น "One Map ชายแดนใต้", อีเมลติดต่อ: `naraflood@gmail.com`
    - Scopes: ค่าเริ่มต้นพอ (email, profile, openid)
    - Test users: ไม่จำเป็นถ้าจะ Publish app (แนะนำกด **Publish App** เพื่อให้ทุกคนล็อกอินได้ ไม่ใช่แค่ test user)
 3. เมนูซ้าย → **APIs & Services → Credentials → + Create Credentials → OAuth client ID**
@@ -83,7 +83,7 @@ supabase login
    supabase functions deploy notify-admin
    supabase secrets set RESEND_API_KEY=re_xxxxxxxx
    supabase secrets set WEBHOOK_SECRET=<<คิดสตริงสุ่มยาว ๆ เอง เช่น 40 ตัวอักษร>>
-   supabase secrets set ADMIN_EMAIL=newusmanwaji@gmail.com
+   supabase secrets set ADMIN_EMAIL=naraflood@gmail.com
    ```
 3. จดค่า **Edge Function URL** ที่ได้ (รูปแบบ `https://xxxxxxxxxxxx.supabase.co/functions/v1/notify-admin`) และ **WEBHOOK_SECRET** ที่คุณตั้งไว้เอง
 
@@ -155,13 +155,13 @@ const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 ## 8. ตั้งตัวเองเป็นแอดมินคนแรก
 
 1. Deploy เว็บ (route.html, admin.html) ขึ้น Cloudflare Pages ตามปกติ (ดู DEPLOY.md ข้อ 1)
-2. เปิด `https://naraflood.com/route.html` แล้วกด **เข้าสู่ระบบด้วย Google** ด้วยบัญชี `newusmanwaji@gmail.com`
+2. เปิด `https://naraflood.com/route.html` แล้วกด **เข้าสู่ระบบด้วย Google** ด้วยบัญชี `naraflood@gmail.com`
    - ตอนนี้บัญชีจะถูกสร้างในสถานะ "pending" (ยังไม่มีแอดมินอนุมัติได้ เพราะยังไม่มีแอดมิน)
 3. กลับไป Supabase → SQL Editor → รันคำสั่งนี้ (แก้ให้ตรงอีเมลถ้าใช้อีเมลอื่น):
    ```sql
    update public.profiles
      set role = 'admin', status = 'approved', approved_at = now()
-     where email = 'newusmanwaji@gmail.com';
+     where email = 'naraflood@gmail.com';
    ```
 4. รีเฟรชหน้า `admin.html` → ควรเข้าหน้าผู้ดูแลระบบได้แล้ว
 
@@ -179,7 +179,7 @@ const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 - [ ] อนุมัติจาก `admin.html` แล้วกลับไปที่ `route.html` บันทึกรายงานน้ำท่วมได้
 - [ ] จุดน้ำท่วมที่บันทึกแสดงบนแผนที่และในการค้นหาเส้นทาง
 - [ ] เลือกประเภทรถต่างกัน แล้วผลลัพธ์ "ผ่านได้/ผ่านไม่ได้" เปลี่ยนตามความลึกน้ำถูกต้อง
-- [ ] (ถ้าตั้งข้อ 5) มีอีเมลแจ้งเตือนไปที่ newusmanwaji@gmail.com เมื่อมีผู้สมัครใหม่
+- [ ] (ถ้าตั้งข้อ 5) มีอีเมลแจ้งเตือนไปที่ naraflood@gmail.com เมื่อมีผู้สมัครใหม่
 
 ---
 

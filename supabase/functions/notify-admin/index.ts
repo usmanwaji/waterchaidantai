@@ -7,9 +7,9 @@
 //
 // Deploy with:
 //   supabase functions deploy notify-admin
-//   supabase secrets set RESEND_API_KEY=re_xxxxxxxx WEBHOOK_SECRET=some-long-random-string ADMIN_EMAIL=newusmanwaji@gmail.com
+//   supabase secrets set RESEND_API_KEY=re_xxxxxxxx WEBHOOK_SECRET=some-long-random-string ADMIN_EMAIL=naraflood@gmail.com
 
-const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") ?? "newusmanwaji@gmail.com";
+const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") ?? "naraflood@gmail.com";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET");
 // Change this once you have a real domain verified in Resend (Resend requires
