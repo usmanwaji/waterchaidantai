@@ -1870,8 +1870,9 @@ window.addEventListener('message', e=>{
    ข้อมูลจากแบบจำลอง NWP กรมอุตุฯ (hpc.tmd.go.th/riskmap-district) กรองเหลือเฉพาะอำเภอนราธิวาส
    ไว้แล้วที่ตัว worker (ดู /riskmap ใน tmd-proxy.worker.js) — เป็นข้อมูลรายอำเภอคนละชุดกับ
    ฝนพยากรณ์ Open-Meteo ที่ใช้ในการ์ด "อำเภอที่ต้องเฝ้าระวัง" ด้านบน
-   รหัสอำเภอจากกรมอุตุฯ กับ pcode ของ geojson (สทลากจาก OpenGISData) คนละชุดกัน จึงจับคู่
-   แต่ละอำเภอด้วยจุดศูนย์กลางที่ใกล้กันที่สุดแทน (13 อำเภอ ไม่มีจุดไหนใกล้เคียงจนสับสน) */
+   รหัสอำเภอจากกรมอุตุฯ กับ pcode ของ geojson (สกัดจาก OpenGISData) คนละชุดกัน จึงจับคู่ด้วยชื่ออำเภอ
+   (เดิมจับด้วยจุดศูนย์กลางที่ใกล้ที่สุด แต่พิกัด lat/lng ของกรมอุตุฯ พาไปผิดอำเภอได้
+    เช่น 18 ต.ค. 2026 ฝนสุคิรินไปแสดงที่สุไหงปาดี) · จุดที่ใกล้ที่สุดเหลือไว้เฉพาะชื่อที่สะกดไม่ตรงชุดไหนเลย */
 // จอใหญ่แสดง 3 วันข้างหน้า มือถือ 5 วัน ต้นทางส่งมามากกว่านั้นก็ตัดทิ้ง
 const DR_MAX_DAYS = matchMedia('(max-width:768px)').matches ? 5 : 3;
 const DR_TOP_N = 3;             // จำนวนอำเภอในอันดับฝนรวมมากที่สุด
@@ -1896,12 +1897,21 @@ function drNearestFeature(lat, lng, features, used){
   });
   return best;
 }
+/* 'อำเภอสุไหงโก-ลก' / 'สุไหงโกลก' → 'สุไหงโกลก' · 'เมืองนราธิวาส' / 'เมือง' → 'เมือง' */
+const drNameKey = s => String(s||'').replace(/^(อำเภอ|อ\.)/, '').replace(/[\s.\-]/g, '').replace(/^เมือง.*/, 'เมือง');
 function drMatch(){
   if(!distRain || distRain._matched) return;
   const feats = (distDistrictGeo?.features)||[];
+  const byName = new Map(feats.map(f=>[drNameKey(f.properties.name_th), f]));
   const used = new Set();
   distRain.districts.forEach(d=>{
-    d.feature = feats.length ? drNearestFeature(d.lat, d.lng, feats, used) : null;
+    const f = byName.get(drNameKey(d.name));
+    d.feature = f && !used.has(f) ? f : null;
+    if(d.feature) used.add(d.feature);
+  });
+  distRain.districts.forEach(d=>{
+    if(d.feature || !feats.length) return;
+    d.feature = drNearestFeature(d.lat, d.lng, feats, used);
     if(d.feature) used.add(d.feature);
   });
   distRain._matched = true;
@@ -1914,9 +1924,17 @@ function drThaiDate(s){
   const m = /^(\d{1,2})-([A-Za-z]{3})/.exec(s||'');
   return m ? `${+m[1]} ${DR_TH_MON[m[2]]||m[2]}` : (s||'').slice(0,6);
 }
+/* "วันนี้/พรุ่งนี้" ดูจากวันที่ของคอลัมน์เทียบกับวันนี้ (เวลาไทย) ไม่ใช่ลำดับคอลัมน์
+   ชุดที่ได้อาจเป็นรอบเมื่อวาน (รอบใหม่ยังไม่ออก · แคช home-proxy อายุได้ถึง 36 ชม.)
+   ถ้าถือว่าคอลัมน์แรกคือวันนี้เสมอ ฝนของเมื่อวานจะขึ้นป้ายว่าวันนี้ */
 function drDayLabel(i){
   if(!distRain) return '';
-  return i===0 ? 'วันนี้' : i===1 ? 'พรุ่งนี้' : drThaiDate(distRain.days[i]);
+  const s = distRain.days[i], m = /^(\d{1,2})-([A-Za-z]{3})-(\d{4})/.exec(s||''),
+        mon = m ? Object.keys(DR_TH_MON).indexOf(m[2]) : -1;
+  if(mon < 0) return i===0 ? 'วันนี้' : i===1 ? 'พรุ่งนี้' : drThaiDate(s);
+  const now = new Date(Date.now() + 7*3600e3),
+        diff = Math.round((Date.UTC(+m[3], mon, +m[1]) - Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())) / 864e5);
+  return diff===0 ? 'วันนี้' : diff===1 ? 'พรุ่งนี้' : drThaiDate(s);
 }
 function renderDistRainDays(){
   const el = document.getElementById('drDays');
@@ -2026,8 +2044,7 @@ function renderDistRain(){
       <th style="text-align:right;color:var(--muted);font-size:10.5px;font-weight:600">ระดับ</th></tr>`;
     rows.forEach(({d,total,peak})=>{
       const rc = FC.tmdRainClass(peak);
-      const ll = drLL(d);
-      h += `<tr style="cursor:pointer;border-top:1px solid var(--outline)" onclick="drFly(${ll[0]},${ll[1]})">
+      h += `<tr style="cursor:pointer;border-top:1px solid var(--outline)" onclick="drFly(${distRain.districts.indexOf(d)})">
         <td style="padding:3px 0">${esc(d.name)}</td>
         ${distRain.days.slice(0,n).map((_,i)=>`<td style="text-align:right;padding:3px 4px">${fmt1(drRainAt(d,i))}</td>`).join('')}
         <td style="text-align:right;padding:3px 4px;font-weight:700">${fmt1(total)}</td>
@@ -2059,8 +2076,8 @@ function drTopHtml(){
       <div style="font-size:12.5px;color:var(--st-normal)">ช่วงนี้ไม่มีอำเภอใดมีฝนคาดการณ์ — ทุกอำเภอได้ 0 มม.</div>`;
   return `<div class="drTopHead">${DR_TOP_N} อำเภอฝนรวมมากที่สุด (${n} วันข้างหน้า)</div>` +
     rows.map(({d,total,peak,peakI},i)=>{
-      const rc = FC.tmdRainClass(peak), ll = drLL(d);
-      return `<div class="amp" onclick="drFly(${ll[0]},${ll[1]})">
+      const rc = FC.tmdRainClass(peak);
+      return `<div class="amp" onclick="drFly(${distRain.districts.indexOf(d)})">
         <span class="an">${i+1}. ${esc(d.name)}</span>
         <span class="abar"><i style="width:${Math.round(total/top*100)}%;background:${rc.color}"></i></span>
         <span class="badge" style="background:${rc.color}">${rc.short}</span>
@@ -2068,8 +2085,13 @@ function drTopHtml(){
       </div>`;
     }).join('');
 }
-function drFly(lat, lon){
-  if(!drMap || lat==null || lon==null) return;
+/* รับลำดับอำเภอแทนพิกัด: ตารางกับอันดับวาดก่อนจับคู่ขอบเขตอำเภอเสร็จ (รอโหลด geojson)
+   ถ้าฝังพิกัดไว้ตอนวาด จะได้พิกัดดิบของกรมอุตุฯ ซึ่งไม่ใช่กลางอำเภอ */
+function drFly(i){
+  const d = distRain?.districts[i];
+  if(!drMap || !d) return;
+  const [lat, lon] = drLL(d);
+  if(lat==null || lon==null) return;
   const box = document.getElementById('drMap');
   if(box) window.scrollTo({top: box.getBoundingClientRect().top + window.scrollY - 70, behavior:'smooth'});
   setTimeout(()=>drMap.flyTo([lat,lon], 12, {duration:.6}), 250);
