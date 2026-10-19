@@ -170,6 +170,14 @@ header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-
 .lg{display:flex;align-items:center;gap:6px}
 .sw{width:12px;height:12px;border-radius:50%;flex:0 0 12px;border:1px solid rgba(0,0,0,.15)}
 .sw.sq{border-radius:3px}
+/* หมุดสถานีวัดฝน (หยดน้ำ สีตามเกณฑ์ thaiwater) + แถบเกณฑ์ในคำอธิบายสัญลักษณ์ */
+.mk-drop{line-height:0;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.55))}
+.mk-drop svg{display:block}
+.rlg{display:flex;gap:1px;margin:2px 0 0;min-width:196px}
+.rlg span{flex:1;text-align:center;font-size:9.5px;line-height:1.5;padding:1px 0;color:#1f2937;white-space:nowrap}
+.rlg span:nth-child(n+5){color:#fff}
+.rlg-g{margin:0 0 2px}
+.rlg-g span,.rlg-g span:nth-child(n+5){color:var(--ink-3);font-size:9px;border-top:1px solid var(--line);padding-top:1px}
 .legend .lg-tog{display:none}   /* ปุ่มพับ/กาง ใช้เฉพาะมือถือ (ดูกฎใน @media ด้านล่าง) */
 
 /* ===== Popup ===== */
@@ -384,7 +392,7 @@ footer a:hover{text-decoration:underline}
 </footer>
 
 <script src="js/rivers.js?v=4"></script>
-<script src="map.js?v=38"></script>
+<script src="map.js?v=39"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>

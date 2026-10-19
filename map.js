@@ -16,7 +16,7 @@ th:{
   title:'One Map ระดับน้ำชายแดนใต้', sub:'รวมทุกหน่วยงานในแผนที่เดียว',
   refresh:'รีเฟรช', loading:'กำลังโหลดข้อมูล…', updated:'อัปเดตล่าสุด', partial:'บางแหล่งข้อมูลโหลดไม่สำเร็จ',
   search:'ค้นหาสถานี / แม่น้ำ / อำเภอ…', all:'ทั้งหมด', listEmpty:'ไม่พบสถานีตามเงื่อนไข',
-  lyWL:'ระดับน้ำ', lyRain:'◼ ฝน 24 ชม.', lyDam:'เขื่อน', lySea:'น้ำทะเล', lyCctv:'CCTV', lyTele:'▲ โทรมาตร ชป.', lyRisk:'จุดเสี่ยงฉับพลัน', lyZone:'โซนลุ่มน้ำรายอำเภอ',
+  lyWL:'ระดับน้ำ', lyRain:'💧 ฝน 24 ชม.', lyDam:'เขื่อน', lySea:'น้ำทะเล', lyCctv:'CCTV', lyTele:'▲ โทรมาตร ชป.', lyRisk:'จุดเสี่ยงฉับพลัน', lyZone:'โซนลุ่มน้ำรายอำเภอ',
   lyEws:'◆ เตือนภัย ทน.', ewsSrc:'กรมทรัพยากรน้ำ (ระบบเตือนภัยล่วงหน้า)', ewsLv:'ระดับน้ำ (ม.)', ewsAvg:'เฉลี่ยวันนี้ (ม.)', ewsDiff:'เทียบค่าเฉลี่ย', ewsRain15:'ฝน 15 นาที (มม.)', ewsRain12:'ฝนสะสม 12 ชม. (มม.)',
   ewsSt0:'ปกติ', ewsSt1:'เฝ้าระวัง', ewsSt2:'เตรียมพร้อม', ewsSt3:'วิกฤติ', ewsBy:'เตือนจาก', ewsVill:'หมู่บ้านในพื้นที่เตือนภัย', ewsOld:'ค่าเก่า', ewsView:'เปิดระบบเตือนภัย ทน. ↗',
   ewsNote:'ระดับน้ำวัดจากศูนย์เสาวัดของสถานี (ไม่ใช่ ม.รทก.) · ระบบนี้ไม่มีระดับตลิ่ง สีหมุดตามสถานะเตือนภัยของ ทน.',
@@ -58,8 +58,9 @@ th:{
   cctvView:'เปิดดูภาพสด ↗', cctvNote:'กล้องเพิ่มเติม:', cctvDdpm:'CCTV ปภ.', cctvRid:'โทรมาตร ชป.',
   riskTitle:'จุดเสี่ยงน้ำท่วมฉับพลัน 24 ชม.', riskRain:'ฝนสะสม (มม.)', riskSrc:'ที่มา: สสน. (HII)',
   bannerFF:'<b>เฝ้าระวังน้ำท่วมฉับพลัน 24 ชม. ข้างหน้า:</b>', andMore:'และอื่น ๆ',
-  legBtn:'สัญลักษณ์', legWL:'ระดับน้ำ (% ความจุลำน้ำ)', legRain:'◼ ฝนสะสม 24 ชม.', legOther:'เขื่อน · 🌊 น้ำทะเล · 📷 CCTV · ▲ โทรมาตร · ◆ เตือนภัย ทน. · ⚠ จุดเสี่ยง',
+  legBtn:'สัญลักษณ์', legWL:'ระดับน้ำ (% ความจุลำน้ำ)', legRain:'💧 ฝนสะสม 24 ชม. (มม.) · สสน.', legOther:'เขื่อน · 🌊 น้ำทะเล · 📷 CCTV · ▲ โทรมาตร · ◆ เตือนภัย ทน. · ⚠ จุดเสี่ยง',
   legR1:'เล็กน้อย ≤10 มม.', legR2:'ปานกลาง 10-35 มม.', legR3:'หนัก 35-90 มม.', legR4:'หนักมาก >90 มม.',
+  rainStnCount:'สถานีวัดฝน', rainFull:'ดูข้อมูลฝนเต็มที่ thaiwater.net ↗',
   src:'แหล่งข้อมูล:', note:'อยู่ระหว่างการทดลองปรับปรุง หากมีข้อเสนอ/แก้ไข ติดต่อผู้พัฒนา <a href="mailto:naraflood@gmail.com">naraflood@gmail.com</a>',
   rpTitle:'รายงานสถานการณ์น้ำ จังหวัดนราธิวาส', rpStations:'สถานี', rpCrit:'สถานีเฝ้าระวังเร่งด่วน:', rpNoCrit:'ไม่มีสถานีล้นตลิ่ง/น้ำมาก', rpRainMax:'ฝนสะสม 24 ชม. สูงสุด:', rpDam:'เขื่อน/อ่างเก็บน้ำ:', rpRisk:'พื้นที่เสี่ยงน้ำท่วมฉับพลัน:', rpSrc:'ที่มา: thaiwater.net (สสน.) / HII',
   prov:{'สตูล':'สตูล','สงขลา':'สงขลา','ปัตตานี':'ปัตตานี','ยะลา':'ยะลา','นราธิวาส':'นราธิวาส'},
@@ -67,7 +68,7 @@ th:{
   helpBody:`
   <h4>สัญลักษณ์บนแผนที่</h4>
   ⚫ วงกลม = สถานีวัดระดับน้ำ สีตาม % ความจุลำน้ำ (เขียว ปกติ · เหลือง/น้ำตาล น้ำน้อย · น้ำเงิน น้ำมาก · <b style="color:#ea580c">ส้ม = ใกล้ล้นตลิ่ง (ถึง 90%)</b> · <b style="color:var(--st-danger)">แดงกะพริบ = ล้นตลิ่ง</b>)<br>
-  ◼ สี่เหลี่ยม = ฝนสะสม 24 ชม. · 🔻 เขื่อน/อ่างเก็บน้ำ · 🌊 น้ำทะเลชายฝั่ง · 📷 กล้อง CCTV · ▲ สถานีโทรมาตรกรมชลฯ · ⚠ จุดเสี่ยงน้ำท่วมฉับพลัน (จากโมเดล สสน.)
+  💧 หยดน้ำ = สถานีวัดฝน สสน. ฝนสะสม 24 ชม. (ปิดไว้ก่อน ติ๊ก "ฝน 24 ชม." เพื่อแสดง) ·🔻 เขื่อน/อ่างเก็บน้ำ · 🌊 น้ำทะเลชายฝั่ง · 📷 กล้อง CCTV · ▲ สถานีโทรมาตรกรมชลฯ · ⚠ จุดเสี่ยงน้ำท่วมฉับพลัน (จากโมเดล สสน.)
   <h4>การใช้งาน</h4>
   • คลิกจุดใดก็ได้เพื่อดูรายละเอียด + กราฟระดับน้ำ 3 วันย้อนหลัง (เส้นประแดง = ระดับตลิ่ง)<br>
   • ปุ่มจังหวัดด้านซ้าย = ซูมและกรองรายจังหวัด · ช่องค้นหา = หาสถานี/แม่น้ำ/อำเภอ<br>
@@ -130,6 +131,28 @@ function rainInfo(mm){
   if(mm<=90)  return {label:t('rain_heavy'), color:'var(--st-warn)'};
   return {label:t('rain_vheavy'), color:'var(--st-danger)'};
 }
+/* เกณฑ์สีฝน 24 ชม. แบบเดียวกับแผนที่ฝนของ thaiwater.net (สสน.) · 7 ช่วงสี 4 กลุ่ม
+   ฝนเล็กน้อย >0-10 · ฝนปานกลาง >10-35 · ฝนหนัก >35-90 · ฝนหนักมาก >90 มม. */
+const RAIN_BANDS = [
+  {max:10,       range:'>0-10',  color:'#a9d3fe', grp:'rain_light'},
+  {max:20,       range:'>10-20', color:'#a9ebb5', grp:'rain_mod'},
+  {max:35,       range:'>20-35', color:'#7cc53b', grp:'rain_mod'},
+  {max:50,       range:'>35-50', color:'#efd447', grp:'rain_heavy'},
+  {max:70,       range:'>50-70', color:'#ef8f36', grp:'rain_heavy'},
+  {max:90,       range:'>70-90', color:'#bd6a26', grp:'rain_heavy'},
+  {max:Infinity, range:'>90',    color:'#da352f', grp:'rain_vheavy'}
+];
+const RAIN_ZERO = '#9ca3af';
+const rainBand = mm => (mm==null || isNaN(mm) || mm<=0) ? null : RAIN_BANDS.find(b => mm<=b.max);
+/* หมุดรูปหยดน้ำ (ปลายแหลมชี้ขึ้น) จุดพิกัดอยู่กลางส่วนโค้งด้านล่าง */
+function dropIcon(color, size, blink){
+  const w = Math.round(size*0.78);
+  return L.divIcon({
+    className:'',
+    html:`<div class="mk-drop ${blink?'blink':''}"><svg width="${w}" height="${size}" viewBox="0 0 18 24" aria-hidden="true"><path d="M9 1.2C9 1.2 2 9.6 2 14.8a7 7 0 0 0 14 0C16 9.6 9 1.2 9 1.2z" fill="${color}" stroke="#fff" stroke-width="1.6"/></svg></div>`,
+    iconSize:[w,size], iconAnchor:[w/2, Math.round(size*0.62)], popupAnchor:[0, -Math.round(size*0.55)]
+  });
+}
 function damInfo(pct){
   if(pct==null || isNaN(pct)) return {label:t('nodata'), color:'var(--ink-3)'};
   if(pct>=100) return {label:t('dam_over'), color:'var(--st-danger)'};
@@ -186,12 +209,14 @@ setMapH(); map.on('resize', setMapH);
 map.on('popupopen', () => map.getContainer().classList.add('pp-open'));
 map.on('popupclose', () => map.getContainer().classList.remove('pp-open'));
 
-// ค่า default: แสดงเฉพาะชั้น "ระดับน้ำ" เท่านั้น ส่วนชั้นอื่น (ฝน/เขื่อน/น้ำทะเล/CCTV/โทรมาตร/จุดเสี่ยง) ผู้ใช้กดติ๊กเปิดเองทีหลัง
-const gWL=L.layerGroup().addTo(map), gRain=L.layerGroup().addTo(map),
+// ค่า default: เปิดทุกชั้น ยกเว้น "ฝน 24 ชม." (สถานีวัดฝน สสน.) ที่ปิดไว้ก่อน ผู้ใช้กดติ๊กเพื่อแสดงเอง
+// ข้อมูลฝนยังโหลดตามปกติ (ใช้ในรายงานสถานการณ์) แค่ยังไม่วางบนแผนที่ · เปิด/ปิดแล้วสร้างคำอธิบายสัญลักษณ์ใหม่
+const gWL=L.layerGroup().addTo(map), gRain=L.layerGroup(),
       gDam=L.layerGroup().addTo(map), gSea=L.layerGroup().addTo(map),
       gCctv=L.layerGroup().addTo(map), gDdpm=L.layerGroup().addTo(map), gTele=L.layerGroup().addTo(map),
       gEws=L.layerGroup().addTo(map),
       gRisk=L.layerGroup().addTo(map), gBnd=L.layerGroup().addTo(map);
+gRain.on('add remove', () => buildLegend());
 [['lyWL',gWL],['lyRain',gRain],['lyDam',gDam],['lySea',gSea],['lyCctv',gCctv],['lyDdpm',gDdpm],['lyTele',gTele],['lyEws',gEws],['lyRisk',gRisk]].forEach(([id,g])=>{
   const cb = document.getElementById(id);
   cb.checked = map.hasLayer(g);                       // สถานะติ๊กตรงกับแผนที่เสมอ
@@ -799,6 +824,14 @@ function mkIcon(cls, color, size, text, blink){
    ปุ่มอยู่ใต้เนื้อหา: กล่องชิดมุมล่าง กางแล้วโตขึ้นด้านบน ปุ่มจึงอยู่ที่เดิมให้แตะพับได้ทันที
    เก็บสถานะไว้ในตัวแปร เพราะ buildLegend ถูกเรียกสร้างใหม่ทุกครั้งที่เปิด/ปิดชั้นข้อมูลหรือเปลี่ยนภาษา */
 let legendCtl = null, legendOpen = false;
+/* แถบเกณฑ์ฝนแบบ thaiwater: แถวช่วงตัวเลข 7 สี + ชื่อกลุ่มใต้แถบ (เฉพาะตอนเปิดชั้น "ฝน 24 ชม.") */
+function rainLegendHTML(){
+  const grps = [['rain_light',1],['rain_mod',2],['rain_heavy',3],['rain_vheavy',1]];
+  return `<h4>${t('legRain')}</h4>
+    <div class="rlg">${RAIN_BANDS.map(b=>`<span style="background:${b.color}">${b.range}</span>`).join('')}</div>
+    <div class="rlg rlg-g">${grps.map(([k,n])=>`<span style="flex:${n}">${t(k)}</span>`).join('')}</div>
+    <div class="lg"><span class="sw" style="background:${RAIN_ZERO}"></span>${t('rain_none')} (0 มม.)</div>`;
+}
 function buildLegend(){
   if(legendCtl) map.removeControl(legendCtl);
   legendCtl = L.control({position:'bottomright'});
@@ -807,9 +840,7 @@ function buildLegend(){
     d.innerHTML = `<div class="lg-body">
       <h4>${t('legWL')}</h4>
       ${['overflow','near','high'].map(k=>`<div class="lg"><span class="sw" style="background:${WL_CLASSES[k].color}"></span>${wlLabel(k)} <span style="color:var(--ink-3);font-size:.9em">${WL_RANGE[k]}</span></div>`).join('')}
-      <h4>${t('legRain')}</h4>
-      <div class="lg"><span class="sw sq" style="background:#f97316"></span>${t('legR3')}</div>
-      <div class="lg"><span class="sw sq" style="background:#dc2626"></span>${t('legR4')}</div>
+      ${map.hasLayer(gRain) ? rainLegendHTML() : ''}
       ${zoneLegendHTML()}
       ${onwrLegendHTML()}
       <h4>${t('legOther')}</h4></div>
@@ -1086,27 +1117,43 @@ async function loadRain(){
   res.forEach(r => { if(r.status==='fulfilled' && Array.isArray(r.value?.data)) rows.push(...r.value.data); });
   gRain.clearLayers(); rainSpots = [];
   if(!rows.length) throw new Error('no rain data');
+  const seen = new Set();
   rows.forEach(d => {
     const st = d.station || {};
     const lat = num(st.tele_station_lat), lon = num(st.tele_station_long);
     if(lat==null || lon==null) return;
+    // เฉพาะสถานีในเขตจังหวัดนราธิวาส: รหัส/ชื่อจังหวัดจาก geocode ต้องตรง และพิกัดต้องอยู่ในกรอบจังหวัด
+    const geo = d.geocode || {};
+    const pvCode = String(geo.province_code ?? '').trim(), pvName = thName(geo.province_name).trim();
+    const inProv = pvCode ? PROVINCES.some(p=>p.code===pvCode) : (!pvName || PROV_SET.has(pvName));
+    if(!inProv || !inBbox(lat,lon)) return;
+    const key = st.id ?? `${lat},${lon}`;
+    if(seen.has(key)) return; seen.add(key);
     const mm = num(d.rain_24h);
-    if(mm==null || mm<=0) return;
-    const spot = {mm, name:thName(st.tele_station_name), amphoe:thName(d.geocode?.amphoe_name), prov:thName(d.geocode?.province_name), dt:d.rainfall_datetime||''};
-    rainSpots.push(spot);
-    const R = rainInfo(mm);
-    const size = mm>90 ? 22 : mm>35 ? 19 : 14;
-    L.marker([lat,lon], {icon: mkIcon('mk-rain', R.color, size, '', mm>90), zIndexOffset:-50})
+    if(mm==null || mm<0) return;
+    const B = rainBand(mm);
+    const color = B ? B.color : RAIN_ZERO;
+    const label = t(B ? B.grp : 'rain_none');
+    const spot = {mm, name:thName(st.tele_station_name), amphoe:thName(geo.amphoe_name), tambon:thName(geo.tumbon_name ?? geo.tambon_name), prov:pvName || PROVINCES[0].name, dt:d.rainfall_datetime||''};
+    if(mm>0) rainSpots.push(spot);
+    // ฝนมากหมุดใหญ่และอยู่ชั้นบน · ไม่มีฝน = หยดเล็กสีเทา (ยังเห็นตำแหน่งสถานีวัด)
+    const size = !B ? 14 : mm>90 ? 28 : mm>35 ? 24 : 20;
+    const ink = B && RAIN_BANDS.indexOf(B) < 4 ? '#1f2937' : '#fff';
+    L.marker([lat,lon], {icon: dropIcon(color, size, mm>90), zIndexOffset: -150 + Math.round(Math.min(mm,100)), opacity: B ? 1 : .8,
+                         title:`${spot.name} · ${fmt(mm,1)} มม.`})
       .bindPopup(()=>`
-        <div class="pp-title">◼ ${esc(spot.name)}</div>
-        <div class="pp-sub">${esc(spot.amphoe)} · ${tProv(spot.prov)} · ${esc(thName(d.agency?.agency_shortname))}</div>
-        <div class="pp-status"><span class="badge" style="background:${rainInfo(mm).color};font-size:12px;padding:3px 14px">${rainInfo(mm).label}</span></div>
+        <div class="pp-title">💧 ${esc(spot.name)}</div>
+        <div class="pp-sub">${spot.tambon?`ต.${esc(spot.tambon)} · `:''}อ.${esc(spot.amphoe)} · ${tProv(spot.prov)} · ${esc(thName(d.agency?.agency_shortname))}</div>
+        <div class="pp-status"><span class="badge" style="background:${color};color:${ink};font-size:12px;padding:3px 14px">${label}${B?` · ${B.range} มม.`:''}</span></div>
         <dl class="pp-grid">
-          <dt>${t('rain24')}</dt><dd>${fmt(mm,1)} mm</dd>
+          <dt>${t('rain24')}</dt><dd>${fmt(mm,1)} มม.</dd>
           <dt>${t('time')}</dt><dd>${esc(spot.dt)}</dd>
-        </dl>`, {maxWidth:280})
+        </dl>
+        <a class="pp-link" href="https://www.thaiwater.net/water/rain" target="_blank" rel="noopener">${t('rainFull')}</a>`, {maxWidth:280})
       .addTo(gRain);
   });
+  const lbl = document.getElementById('tRain');
+  if(lbl) lbl.textContent = `${t('lyRain')} (${seen.size})`;
 }
 
 /* ---------- 3) เขื่อน / อ่างเก็บน้ำ ---------- */
