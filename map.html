@@ -171,8 +171,13 @@ header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);-webkit-
 .sw{width:12px;height:12px;border-radius:50%;flex:0 0 12px;border:1px solid rgba(0,0,0,.15)}
 .sw.sq{border-radius:3px}
 /* หมุดสถานีวัดฝน (หยดน้ำ สีตามเกณฑ์ thaiwater) + แถบเกณฑ์ในคำอธิบายสัญลักษณ์ */
-.mk-drop{line-height:0;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.55))}
+.mk-drop{line-height:0}
+.mk-drop svg{filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.55))}
+.mk-drop{position:relative}
 .mk-drop svg{display:block}
+/* ค่าฝนสะสม 24 ชม. (มม.) ใต้หยดน้ำ · ขอบขาวให้อ่านได้บนทุกพื้นแผนที่ */
+.drop-val{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:1px;font-size:10.5px;font-weight:700;line-height:1.1;color:#1f2937;white-space:nowrap;pointer-events:none;
+  text-shadow:0 0 2px #fff,0 0 2px #fff,0 0 3px #fff,0 0 3px #fff}
 .rlg{display:flex;gap:1px;margin:2px 0 0;min-width:196px}
 .rlg span{flex:1;text-align:center;font-size:9.5px;line-height:1.5;padding:1px 0;color:#1f2937;white-space:nowrap}
 .rlg span:nth-child(n+5){color:#fff}
@@ -392,7 +397,7 @@ footer a:hover{text-decoration:underline}
 </footer>
 
 <script src="js/rivers.js?v=4"></script>
-<script src="map.js?v=40"></script>
+<script src="map.js?v=41"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
