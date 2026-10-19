@@ -144,11 +144,11 @@ const RAIN_BANDS = [
 ];
 const rainBand = mm => (mm==null || isNaN(mm) || mm<=0) ? null : RAIN_BANDS.find(b => mm<=b.max);
 /* หมุดรูปหยดน้ำ (ปลายแหลมชี้ขึ้น) จุดพิกัดอยู่กลางส่วนโค้งด้านล่าง */
-function dropIcon(color, size, blink){
+function dropIcon(color, size, blink, label){
   const w = Math.round(size*0.78);
   return L.divIcon({
     className:'',
-    html:`<div class="mk-drop ${blink?'blink':''}"><svg width="${w}" height="${size}" viewBox="0 0 18 24" aria-hidden="true"><path d="M9 1.2C9 1.2 2 9.6 2 14.8a7 7 0 0 0 14 0C16 9.6 9 1.2 9 1.2z" fill="${color}" stroke="#fff" stroke-width="1.6"/></svg></div>`,
+    html:`<div class="mk-drop"><svg class="${blink?'blink':''}" width="${w}" height="${size}" viewBox="0 0 18 24" aria-hidden="true"><path d="M9 1.2C9 1.2 2 9.6 2 14.8a7 7 0 0 0 14 0C16 9.6 9 1.2 9 1.2z" fill="${color}" stroke="#fff" stroke-width="1.6"/></svg>${label!=null?`<span class="drop-val">${label}</span>`:''}</div>`,
     iconSize:[w,size], iconAnchor:[w/2, Math.round(size*0.62)], popupAnchor:[0, -Math.round(size*0.55)]
   });
 }
@@ -1137,7 +1137,7 @@ async function loadRain(){
     // ฝนมากหมุดใหญ่และอยู่ชั้นบน · แสดงเฉพาะสถานีที่มีฝน > 0 มม.
     const size = mm>90 ? 28 : mm>35 ? 24 : 20;
     const ink = B && RAIN_BANDS.indexOf(B) < 4 ? '#1f2937' : '#fff';
-    L.marker([lat,lon], {icon: dropIcon(color, size, mm>90), zIndexOffset: -150 + Math.round(Math.min(mm,100)),
+    L.marker([lat,lon], {icon: dropIcon(color, size, mm>90, fmt(mm,1)), zIndexOffset: -150 + Math.round(Math.min(mm,100)),
                          title:`${spot.name} · ${fmt(mm,1)} มม.`})
       .bindPopup(()=>`
         <div class="pp-title">💧 ${esc(spot.name)}</div>
