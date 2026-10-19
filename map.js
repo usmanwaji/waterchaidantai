@@ -1212,6 +1212,10 @@ async function loadCctv(){
 const DDPM_PROXY = 'https://ddpm-proxy.newusmanwaji.workers.dev';
 const DDPM_URL = 'https://gis-portal.disaster.go.th/arcgis/rest/services/Map_DDPM_CCTV/DDPM_CCTV_STATION_PROD/FeatureServer/0/query?where=1%3D1&outFields=code,name,latitude,longitude,basin,agency,telephone,current_water_level,water_level_status,camera_status,updated_at&returnGeometry=false&f=json';
 const DDPM_PROV = {'ปภ.จ.นราธิวาส':'นราธิวาส'};
+/* สถานี ปภ. จังหวัดข้างเคียงที่ให้แสดงด้วย (แม่น้ำสายบุรี ต้นน้ำ→ปลายน้ำ) · เพิ่ม/ลบรหัสได้ที่นี่ที่เดียว
+   ใช้ทั้งข้อมูลสดและพิกัดสำรอง · {รหัสสถานี: จังหวัด} */
+const DDPM_EXTRA = {YLA09:'ยะลา', YLA10:'ยะลา', PTN08:'ปัตตานี', PTN09:'ปัตตานี', PTN10:'ปัตตานี'};
+const ddpmProvOf = (agency, code) => DDPM_PROV[agency] || DDPM_EXTRA[String(code||'').trim()] || null;
 /* พิกัดสำรอง (snapshot 3 ก.ค. 2569 จากระบบจริง): [code, name, lat, lon, province] */
 const DDPM_STATIONS = [
 ["NWT01","สะพานข้ามคลอง บ้านปาหนัน ม.4",6.123371,101.510153,"นราธิวาส"],
@@ -1451,16 +1455,16 @@ async function loadDdpm(){
   try{
     const g = await fetchJSON(DDPM_URL, 20000);
     const rows = (g?.features||[]).map(f=>f.attributes)
-      .filter(a => DDPM_PROV[a.agency] && num(a.latitude)!=null && num(a.longitude)!=null);
+      .filter(a => ddpmProvOf(a.agency, a.code) && num(a.latitude)!=null && num(a.longitude)!=null);
     if(!rows.length) throw new Error('empty');
     rows.forEach(a => ddpmMarker({
       code:a.code, name:String(a.name||'').trim(), lat:num(a.latitude), lon:num(a.longitude),
-      prov:DDPM_PROV[a.agency], wl:num(a.current_water_level), status:a.water_level_status,
+      prov:ddpmProvOf(a.agency, a.code), wl:num(a.current_water_level), status:a.water_level_status,
       cam:a.camera_status, tel:a.telephone||'', updated:num(a.updated_at)
     }));
   }catch(e){
     // ดึงสดไม่ได้ → ใช้พิกัดสำรอง (ไม่มีค่าระดับน้ำ)
-    DDPM_STATIONS.filter(r => PROV_SET.has(r[4]))
+    DDPM_STATIONS.filter(r => PROV_SET.has(r[4]) || DDPM_EXTRA[r[0]])
       .forEach(r => ddpmMarker({code:r[0], name:r[1], lat:r[2], lon:r[3], prov:r[4]}));
   }
 }
