@@ -53,7 +53,7 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
 #map{flex:1;min-width:0}
 
 /* ===== Summary cards ===== */
-#summary{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:10px 10px 6px}
+#summary{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:10px 10px 6px}
 .sumcard{border-radius:8px;padding:5px 2px;text-align:center;color:#fff;cursor:pointer;border:2px solid transparent;transition:transform .1s}
 .sumcard:hover{transform:translateY(-1px)}
 .sumcard.active{border-color:var(--ink)}
@@ -235,7 +235,7 @@ footer a:hover{text-decoration:underline}
   #map .legend .lg-tog{display:flex;align-items:center;gap:5px;margin-left:auto;min-height:36px;padding:0 12px;
     border:none;border-radius:18px;background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.28);
     font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}
-  #map .legend .lg-tog::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--c-overflow);box-shadow:5px 0 0 var(--c-high);margin-right:5px}
+  #map .legend .lg-tog::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--c-overflow);box-shadow:5px 0 0 #ea580c,10px 0 0 var(--c-high);margin-right:10px}
   #map .legend .lg-tog::after{content:"▴";margin-left:7px;font-size:11px;color:var(--ink-3)}
   #map .legend.open .lg-tog::after{content:"▾"}
   /* shared.css ยก .leaflet-bottom ขึ้นพ้นแถบแท็บ แต่หน้านี้ body เว้น padding-bottom ให้แถบแท็บอยู่แล้ว
@@ -384,7 +384,7 @@ footer a:hover{text-decoration:underline}
 </footer>
 
 <script src="js/rivers.js?v=4"></script>
-<script src="map.js?v=37"></script>
+<script src="map.js?v=38"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
