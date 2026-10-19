@@ -142,7 +142,6 @@ const RAIN_BANDS = [
   {max:90,       range:'>70-90', color:'#bd6a26', grp:'rain_heavy'},
   {max:Infinity, range:'>90',    color:'#da352f', grp:'rain_vheavy'}
 ];
-const RAIN_ZERO = '#9ca3af';
 const rainBand = mm => (mm==null || isNaN(mm) || mm<=0) ? null : RAIN_BANDS.find(b => mm<=b.max);
 /* หมุดรูปหยดน้ำ (ปลายแหลมชี้ขึ้น) จุดพิกัดอยู่กลางส่วนโค้งด้านล่าง */
 function dropIcon(color, size, blink){
@@ -829,8 +828,7 @@ function rainLegendHTML(){
   const grps = [['rain_light',1],['rain_mod',2],['rain_heavy',3],['rain_vheavy',1]];
   return `<h4>${t('legRain')}</h4>
     <div class="rlg">${RAIN_BANDS.map(b=>`<span style="background:${b.color}">${b.range}</span>`).join('')}</div>
-    <div class="rlg rlg-g">${grps.map(([k,n])=>`<span style="flex:${n}">${t(k)}</span>`).join('')}</div>
-    <div class="lg"><span class="sw" style="background:${RAIN_ZERO}"></span>${t('rain_none')} (0 มม.)</div>`;
+    <div class="rlg rlg-g">${grps.map(([k,n])=>`<span style="flex:${n}">${t(k)}</span>`).join('')}</div>`;
 }
 function buildLegend(){
   if(legendCtl) map.removeControl(legendCtl);
@@ -1130,16 +1128,16 @@ async function loadRain(){
     const key = st.id ?? `${lat},${lon}`;
     if(seen.has(key)) return; seen.add(key);
     const mm = num(d.rain_24h);
-    if(mm==null || mm<0) return;
+    if(mm==null || mm<=0) return;   // ไม่แสดงสถานีที่ฝน 0 มม. (แบบเดียวกับ thaiwater)
     const B = rainBand(mm);
-    const color = B ? B.color : RAIN_ZERO;
+    const color = B.color;
     const label = t(B ? B.grp : 'rain_none');
     const spot = {mm, name:thName(st.tele_station_name), amphoe:thName(geo.amphoe_name), tambon:thName(geo.tumbon_name ?? geo.tambon_name), prov:pvName || PROVINCES[0].name, dt:d.rainfall_datetime||''};
-    if(mm>0) rainSpots.push(spot);
-    // ฝนมากหมุดใหญ่และอยู่ชั้นบน · ไม่มีฝน = หยดเล็กสีเทา (ยังเห็นตำแหน่งสถานีวัด)
-    const size = !B ? 14 : mm>90 ? 28 : mm>35 ? 24 : 20;
+    rainSpots.push(spot);
+    // ฝนมากหมุดใหญ่และอยู่ชั้นบน · แสดงเฉพาะสถานีที่มีฝน > 0 มม.
+    const size = mm>90 ? 28 : mm>35 ? 24 : 20;
     const ink = B && RAIN_BANDS.indexOf(B) < 4 ? '#1f2937' : '#fff';
-    L.marker([lat,lon], {icon: dropIcon(color, size, mm>90), zIndexOffset: -150 + Math.round(Math.min(mm,100)), opacity: B ? 1 : .8,
+    L.marker([lat,lon], {icon: dropIcon(color, size, mm>90), zIndexOffset: -150 + Math.round(Math.min(mm,100)),
                          title:`${spot.name} · ${fmt(mm,1)} มม.`})
       .bindPopup(()=>`
         <div class="pp-title">💧 ${esc(spot.name)}</div>
@@ -1153,7 +1151,7 @@ async function loadRain(){
       .addTo(gRain);
   });
   const lbl = document.getElementById('tRain');
-  if(lbl) lbl.textContent = `${t('lyRain')} (${seen.size})`;
+  if(lbl) lbl.textContent = `${t('lyRain')} (${rainSpots.length})`;
 }
 
 /* ---------- 3) เขื่อน / อ่างเก็บน้ำ ---------- */
