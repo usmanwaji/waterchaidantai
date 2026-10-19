@@ -29,7 +29,7 @@ th:{
   ddpmModalTitle:'ระบบเฝ้าระวังภัยพิบัติ ปภ. (cctv.disaster.go.th)',
   ddpmNoteTxt:'หากหน้าต่างด้านบนว่างเปล่า แสดงว่าเว็บ ปภ. ไม่อนุญาตให้ฝังหน้า · กด "เปิดแท็บใหม่" แทน',
   report:'คัดลอกรายงานสถานการณ์', copied:'คัดลอกรายงานแล้ว · วางใน LINE/เอกสารได้เลย',
-  wl_overflow:'ล้นตลิ่ง', wl_high:'น้ำมาก', wl_normal:'ปกติ', wl_low:'น้ำน้อย', wl_critlow:'น้อยวิกฤต', wl_unknown:'ไม่มีข้อมูล',
+  wl_overflow:'ล้นตลิ่ง', wl_near:'ใกล้ล้นตลิ่ง', wl_high:'น้ำมาก', wl_normal:'ปกติ', wl_low:'น้ำน้อย', wl_critlow:'น้อยวิกฤต', wl_unknown:'ไม่มีข้อมูล',
   rain_none:'ไม่มีฝน', rain_light:'ฝนเล็กน้อย', rain_mod:'ฝนปานกลาง', rain_heavy:'ฝนหนัก', rain_vheavy:'ฝนหนักมาก',
   dam_over:'เกินความจุ', dam_watch:'น้ำมาก เฝ้าระวัง', dam_much:'น้ำมาก', dam_normal:'ปกติ', dam_low:'น้ำน้อย', nodata:'ไม่มีข้อมูล',
   lv:'ระดับน้ำ (ม.รทก.)', bank:'ระดับตลิ่ง (ม.รทก.)', diffbank:'ห่างจากตลิ่ง (ม.)', flow:'อัตราการไหล (ม³/วิ)', time:'เวลาวัด',
@@ -66,7 +66,7 @@ th:{
   help:'วิธีใช้', helpTitle:'วิธีใช้งานแผนที่',
   helpBody:`
   <h4>สัญลักษณ์บนแผนที่</h4>
-  ⚫ วงกลม = สถานีวัดระดับน้ำ สีตาม % ความจุลำน้ำ (เขียว ปกติ · เหลือง/น้ำตาล น้ำน้อย · น้ำเงิน น้ำมาก · <b style="color:var(--st-danger)">แดงกะพริบ = ล้นตลิ่ง</b>)<br>
+  ⚫ วงกลม = สถานีวัดระดับน้ำ สีตาม % ความจุลำน้ำ (เขียว ปกติ · เหลือง/น้ำตาล น้ำน้อย · น้ำเงิน น้ำมาก · <b style="color:#ea580c">ส้ม = ใกล้ล้นตลิ่ง (ถึง 90%)</b> · <b style="color:var(--st-danger)">แดงกะพริบ = ล้นตลิ่ง</b>)<br>
   ◼ สี่เหลี่ยม = ฝนสะสม 24 ชม. · 🔻 เขื่อน/อ่างเก็บน้ำ · 🌊 น้ำทะเลชายฝั่ง · 📷 กล้อง CCTV · ▲ สถานีโทรมาตรกรมชลฯ · ⚠ จุดเสี่ยงน้ำท่วมฉับพลัน (จากโมเดล สสน.)
   <h4>การใช้งาน</h4>
   • คลิกจุดใดก็ได้เพื่อดูรายละเอียด + กราฟระดับน้ำ 3 วันย้อนหลัง (เส้นประแดง = ระดับตลิ่ง)<br>
@@ -86,14 +86,20 @@ const tProv = p => STR.th.prov[p] || p;
 const locale = () => 'th-TH';
 
 /* ================= เกณฑ์สถานะ ================= */
+/* near = ระดับน้ำถึง 90% ของความจุลำน้ำ (ใกล้ล้นตลิ่ง) ใช้สีส้มสด #ea580c ให้ต่างจากแดงล้นตลิ่งชัด ๆ
+   น้อยวิกฤตเดิมใช้ส้มเดียวกัน จึงย้ายไปเป็นสีน้ำตาลเข้ม ไม่ให้สับสนกันบนแผนที่ */
 const WL_CLASSES = {
   overflow:{color:'var(--st-danger)', order:0},
-  high:    {color:'var(--signal)', order:1},
-  normal:  {color:'var(--st-normal)', order:2},
-  low:     {color:'var(--st-watch)', order:3},
-  critlow: {color:'var(--st-warn)', order:4},
-  unknown: {color:'var(--ink-3)', order:5}
+  near:    {color:'#ea580c', order:1},
+  high:    {color:'var(--signal)', order:2},
+  normal:  {color:'var(--st-normal)', order:3},
+  low:     {color:'var(--st-watch)', order:4},
+  critlow: {color:'#78350f', order:5},
+  unknown: {color:'var(--ink-3)', order:6}
 };
+/* ช่วง % ที่แสดงในคำอธิบายสัญลักษณ์ */
+const WL_RANGE = {overflow:'>100%', near:'90–100%', high:'70–90%'};
+const WL_URGENT = new Set(['overflow','near','high']);   // นับเป็นสถานีเฝ้าระวัง (≥70%)
 const wlLabel = cls => t('wl_'+cls);
 /* ป้ายสถานะสำหรับสถานีที่ข้อมูลเก่ากว่า 24 ชม.
    เดิมยังโชว์ "ล้นตลิ่ง 144%" สีแดงจากค่าที่วัดไว้เมื่อหลายวันก่อน ซึ่งอ่านแล้วเข้าใจผิดว่า
@@ -111,6 +117,7 @@ const wlBadge = (s, dec=1, sep=' · ') => isStale(s.dt)
 function wlClass(pct){
   if(pct==null || isNaN(pct)) return 'unknown';
   if(pct>100) return 'overflow';
+  if(pct>=90) return 'near';
   if(pct>=70) return 'high';
   if(pct>=30) return 'normal';
   if(pct>=10) return 'low';
@@ -751,11 +758,11 @@ function toggleAbnormal(){
 }
 function applyWlFilter(){
   wlStations.forEach(s=>{ const m=markersById[s.id]; if(!m) return;
-    const show=!wlFilterAbnormal || wlBucket(s)==='overflow' || wlBucket(s)==='high';
+    const show=!wlFilterAbnormal || WL_URGENT.has(wlBucket(s));
     if(show){ if(!gWL.hasLayer(m)) m.addTo(gWL); } else if(gWL.hasLayer(m)) gWL.removeLayer(m); });
 }
 function shareSnapshot(){
-  const over=wlStations.filter(s=>wlBucket(s)==='overflow'), high=wlStations.filter(s=>wlBucket(s)==='high');
+  const over=wlStations.filter(s=>wlBucket(s)==='overflow'), high=wlStations.filter(s=>wlBucket(s)==='near'||wlBucket(s)==='high');
   const top=[...over,...high].sort((a,b)=>(b.pct??-1)-(a.pct??-1)).slice(0,6);
   const W=720,H=210+top.length*28+40, c=document.createElement('canvas'); c.width=W; c.height=H;
   const x=c.getContext('2d');
@@ -799,7 +806,7 @@ function buildLegend(){
     const d = L.DomUtil.create('div','legend'+(legendOpen?' open':''));
     d.innerHTML = `<div class="lg-body">
       <h4>${t('legWL')}</h4>
-      ${['overflow','high'].map(k=>`<div class="lg"><span class="sw" style="background:${WL_CLASSES[k].color}"></span>${wlLabel(k)}</div>`).join('')}
+      ${['overflow','near','high'].map(k=>`<div class="lg"><span class="sw" style="background:${WL_CLASSES[k].color}"></span>${wlLabel(k)} <span style="color:var(--ink-3);font-size:.9em">${WL_RANGE[k]}</span></div>`).join('')}
       <h4>${t('legRain')}</h4>
       <div class="lg"><span class="sw sq" style="background:#f97316"></span>${t('legR3')}</div>
       <div class="lg"><span class="sw sq" style="background:#dc2626"></span>${t('legR4')}</div>
@@ -887,8 +894,8 @@ function drawWL(){
        ใช้สีเทา ขนาดปกติ ไม่กะพริบ และดันลงไปอยู่ชั้นล่างสุดของหมุด */
     const stale = isStale(s.dt);
     const mColor = stale ? WL_CLASSES.unknown.color : C.color;
-    const size = (!stale && (cls==='overflow'||cls==='high')) ? 22 : 16;
-    const m = L.marker([s.lat,s.lon], {icon: mkIcon('mk-wl', mColor, size, '', !stale && cls==='overflow'), zIndexOffset:(stale?0:(5-C.order))*100})
+    const size = (!stale && WL_URGENT.has(cls)) ? 22 : 16;
+    const m = L.marker([s.lat,s.lon], {icon: mkIcon('mk-wl', mColor, size, '', !stale && cls==='overflow'), zIndexOffset:(stale?0:(6-C.order))*100})
       .bindPopup(()=>wlPopup(s), {maxWidth:300});
     m._sid = s.id;
     m.addTo(gWL);
@@ -1864,7 +1871,7 @@ function renderSidebar(){
   counts.nodata = 0;
   inProv.forEach(s=>counts[wlBucket(s)]++);
 
-  document.getElementById('summary').innerHTML = ['overflow','high','normal','low','critlow'].map(k=>{
+  document.getElementById('summary').innerHTML = ['overflow','near','high','normal','low','critlow'].map(k=>{
     const C = WL_CLASSES[k];
     return `<div class="sumcard ${filterClass===k?'active':''}" style="background:${C.color}" onclick="toggleClass('${k}')">
       <b>${counts[k]}</b><span>${wlLabel(k)}</span></div>`;
@@ -1940,10 +1947,10 @@ function copyReport(){
   PROVINCES.forEach(p=>{
     const st = wlStations.filter(s=>s.prov===p.name);
     if(!st.length) return;
-    const o = st.filter(s=>wlBucket(s)==='overflow').length, h = st.filter(s=>wlBucket(s)==='high').length;
-    lines.push(`• ${tProv(p.name)}: ${wlLabel('overflow')} ${o} · ${wlLabel('high')} ${h} / ${st.length} ${t('rpStations')}`);
+    const o = st.filter(s=>wlBucket(s)==='overflow').length, n = st.filter(s=>wlBucket(s)==='near').length, h = st.filter(s=>wlBucket(s)==='high').length;
+    lines.push(`• ${tProv(p.name)}: ${wlLabel('overflow')} ${o} · ${wlLabel('near')} ${n} · ${wlLabel('high')} ${h} / ${st.length} ${t('rpStations')}`);
   });
-  const crit = wlStations.filter(s=>wlBucket(s)==='overflow'||wlBucket(s)==='high')
+  const crit = wlStations.filter(s=>WL_URGENT.has(wlBucket(s)))
     .sort((a,b)=>(b.pct??0)-(a.pct??0)).slice(0,10);
   lines.push('');
   if(crit.length){
