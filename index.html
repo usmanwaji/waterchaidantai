@@ -1809,8 +1809,9 @@ async function loadNowcast(){
 
 /* ---------- ฝนสะสมวันนี้ · เมื่อวาน (naramet.semet.uk/rainfall) ----------
    ต้องการเฉพาะเนื้อหาฝนสะสม ไม่เอาเมนูของต้นทาง แต่ iframe ข้ามโดเมนแต่ง CSS ข้างในไม่ได้ และตัดขอบบนทิ้ง
-   ก็ไม่แน่นอน (เมนูโหลดทีหลัง สูงไม่เท่ากันตามความกว้างจอ) จึงดึง HTML ของหน้านั้นมาเอง (ต้นทางเปิด CORS *)
-   แทรก <base> ให้ไฟล์ที่อ้างแบบสัมพัทธ์ (adm2.json ฯลฯ) ยังชี้ไปต้นทาง + CSS ซ่อน #navbar แล้วแสดงผ่าน srcdoc
+   ก็ไม่แน่นอน (เมนูโหลดทีหลัง สูงไม่เท่ากันตามความกว้างจอ) จึงดึง HTML ของหน้านั้นมาเอง
+   naramet.semet.uk ไม่เปิด CORS (เบราว์เซอร์ขึ้น "Failed to fetch") จึงดึงผ่าน naramet-proxy.worker.js ที่ส่งต่อทั้งโดเมน
+   แทรก <base> ชี้ไปที่ worker ให้ไฟล์ที่อ้างแบบสัมพัทธ์ (adm2.json ฯลฯ) ผ่าน worker ด้วย + CSS ซ่อน #navbar แล้วแสดงผ่าน srcdoc
    กรอบเป็น sandbox="allow-scripts" ไม่มี allow-same-origin: สคริปต์ต้นทาง (รวม kriging.js@master ที่ไม่ล็อกรุ่น)
    รันในกรอบที่ไม่ใช่โดเมนเรา จึงแตะ localStorage/การล็อกอินของเว็บนี้ไม่ได้
    ต้นทางตั้งความสูงแผนที่เป็น vh ซึ่งในกรอบ = % ของความสูงกรอบ จึงแทนด้วยขนาดตามความกว้างกรอบ (vw)
@@ -1820,6 +1821,20 @@ async function loadNowcast(){
    แต่ต้นทางย้ายจาก naramet.pages.dev (ตอนนี้ 301 ไป) มา naramet.semet.uk ซึ่งไม่ยอมให้ฝังในกรอบ
    ("refused to connect") ชี้ไปโดเมนใหม่ตรง ๆ ด้วย ไม่ให้ <base> และคำขอข้อมูลของหน้าต้องผ่าน redirect */
 const NARAMET_RAIN = 'https://naramet.semet.uk/rainfall';
+const NARAMET_PROXY = 'https://naramet-proxy.newusmanwaji.workers.dev';   // naramet-proxy.worker.js
+// ลองผ่าน worker ก่อน · worker ยังไม่ deploy หรือล่ม ลองดึงตรง (เผื่อต้นทางกลับมาเปิด CORS)
+const NARAMET_SOURCES = [NARAMET_PROXY + '/rainfall', NARAMET_RAIN];
+async function naraRainHtml(){
+  const errs = [];
+  for(const src of NARAMET_SOURCES){
+    try{
+      const r = await fetch(src);
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return { src, html: await r.text() };
+    }catch(e){ errs.push(new URL(src).hostname + ' ' + e.message); }
+  }
+  throw new Error('ดึงหน้าต้นทางไม่ได้ (CORS/เครือข่าย) ' + errs.join(' · '));
+}
 const NARAMET_CSS = '<style>#navbar{display:none!important}.container.mt-3{margin-top:4px!important}'+
   '#rainfall{height:clamp(360px,62vw,580px)!important;min-height:0!important}'+
   // จอแคบต้นทางให้ #rainfall สูงตามเนื้อหา และ #mapCanvas เป็น flex:1 ซึ่งทำให้ความสูงตามขนาดภาพ canvas ที่สคริปต์ต้นทาง
@@ -1858,12 +1873,11 @@ async function loadNaraRain(){
   // ห้ามใส่ srcdoc ในกรอบที่ไม่มี sandbox (สคริปต์ต้นทางจะรันเป็นโดเมนเรา)
   if(fr.getAttribute('sandbox')!=='allow-scripts') return;
   try{
-    let html = await fetch(NARAMET_RAIN).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); },
-      e=>{ throw new Error('ดึงหน้าต้นทางไม่ได้ (CORS/เครือข่าย) ' + e.message); });
+    let { src, html } = await naraRainHtml();
     if(!/<head[^>]*>/i.test(html) || !/<\/body>/i.test(html)) throw new Error('หน้าต้นทางไม่ใช่ HTML ที่คาดไว้');
     if(!/id="dataSubtitle"/.test(html)) throw new Error('โครงหน้าต้นทางเปลี่ยน (ไม่พบ dataSubtitle) · ' + html.length + ' ตัวอักษร');
     html = html
-      .replace(/<head[^>]*>/i, m => m + `<base href="${new URL('./', NARAMET_RAIN).href}">` + NARAMET_TRAP + NARAMET_CSS)
+      .replace(/<head[^>]*>/i, m => m + `<base href="${new URL('./', src).href}">` + NARAMET_TRAP + NARAMET_CSS)
       .replace(/<\/body>/i, () => NARAMET_WATCH + '</body>');
     naraRainFail(false);   // รอบก่อนอาจซ่อนกรอบไว้ · ต้องแสดงก่อนโหลด กรอบที่ซ่อนอยู่รายงานความสูงเป็น 0
     fr.srcdoc = html;
