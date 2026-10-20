@@ -179,6 +179,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
    โหลดไม่ขึ้น: ซ่อนกรอบ แสดง #roFail (ต้นทางไม่ยอมให้ฝังหน้าเต็มในกรอบแล้ว) */
 #roFrame{display:block;width:100%;height:640px;border:1px solid var(--outline);border-radius:10px;background:#fff}
 #roFrame[hidden],#roFail[hidden]{display:none}
+#roFailWhy{margin-top:8px;font-size:11px;color:var(--ink-3);word-break:break-all}
 #roFail{padding:28px 16px;text-align:center;font-size:13.5px;color:var(--ink-2);background:var(--card-2);border:1px dashed var(--outline-strong);border-radius:10px}
 
 /* ฝนคาดการณ์รายอำเภอ 7 วัน (แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุฯ) */
@@ -373,7 +374,7 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
   <div class="card full" id="rainObsCard">
     <h2><span class="t-desk">ปริมาณฝนสะสม วันนี้ · เมื่อวาน (สถานีอุตุนิยมวิทยานราธิวาส)</span><span class="t-mob">ฝนตกไปแล้วเท่าไหร่ ? (วันนี้ · เมื่อวาน)</span> <a class="where" href="https://naramet.semet.uk/rainfall" target="_blank" rel="noopener">เปิดหน้าเต็ม ↗</a></h2>
     <iframe id="roFrame" sandbox="allow-scripts" title="ปริมาณฝนสะสม สามจังหวัดชายแดนใต้ วันนี้ · เมื่อวาน (naramet)" referrerpolicy="no-referrer"></iframe>
-    <div id="roFail" hidden>โหลดแผนที่ปริมาณฝนสะสมในหน้านี้ไม่ขึ้น · <a href="https://naramet.semet.uk/rainfall" target="_blank" rel="noopener">เปิดหน้าเต็มของสถานีอุตุนิยมวิทยานราธิวาส ↗</a></div>
+    <div id="roFail" hidden>โหลดแผนที่ปริมาณฝนสะสมในหน้านี้ไม่ขึ้น · <a href="https://naramet.semet.uk/rainfall" target="_blank" rel="noopener">เปิดหน้าเต็มของสถานีอุตุนิยมวิทยานราธิวาส ↗</a><div id="roFailWhy"></div></div>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
     <div class="note">หน้า "ปริมาณฝนสะสม" ของสถานีอุตุนิยมวิทยานราธิวาส (<a href="https://naramet.semet.uk/rainfall" target="_blank" rel="noopener">naramet.semet.uk/rainfall ↗</a>) แสดงเฉพาะส่วนปริมาณฝนสะสม ไม่รวมเมนูของต้นทาง: ฝนจากสถานีตรวจอากาศอัตโนมัติ (AWS) กรมอุตุฯ อำเภอละสถานี สามจังหวัดชายแดนใต้ พื้นสีระหว่างสถานีเป็นการประมาณค่าเชิงพื้นที่ (kriging) · กดปุ่ม <b>วันนี้</b> (ตั้งแต่ 07:00 น.) หรือ <b>เมื่อวาน</b> (สะสม 24 ชม. ตั้งแต่เวลา 07.00 น. เมื่อวาน ถึงเวลา 07.00 น. วันนี้) ที่มุมแผนที่เพื่อสลับวัน · ข้อมูล การอัปเดต และเกณฑ์สีเป็นของต้นทาง · ถ้ากรอบว่างหรือโหลดไม่ขึ้น ให้กด "เปิดหน้าเต็ม" ที่หัวการ์ด</div>
@@ -1824,6 +1825,13 @@ const NARAMET_CSS = '<style>#navbar{display:none!important}.container.mt-3{margi
   // จอแคบต้นทางให้ #rainfall สูงตามเนื้อหา และ #mapCanvas เป็น flex:1 ซึ่งทำให้ความสูงตามขนาดภาพ canvas ที่สคริปต์ต้นทาง
   // ตั้งจากความสูงกล่อง (รวมคำอธิบายสี) → สูงขึ้นทุกครั้งที่กรอบเปลี่ยนขนาด จึงต้อง flex:none ให้ height มีผลจริง
   '@media(max-width:576px){#rainfall{height:auto!important}#mapCanvas{flex:none!important;height:clamp(320px,115vw,480px)!important}}</style>';
+// ใส่ต้น <head> ก่อนสคริปต์ต้นทาง: จดคำขอที่ล้มเหลว (fetch/XHR/ไฟล์สคริปต์) ไว้บอกสาเหตุใน #roFailWhy ตอนโหลดไม่ขึ้น
+const NARAMET_TRAP = '<script>(function(){var L=window.__nf=[],f=window.fetch,o=XMLHttpRequest.prototype.open;'+
+  'window.fetch=function(u){return f.apply(this,arguments).then(function(r){if(!r.ok)L.push(r.status+" "+r.url);return r;},'+
+  'function(e){L.push("fetch "+(u&&u.url||u)+" "+e);throw e;});};'+
+  'XMLHttpRequest.prototype.open=function(m,u){this.addEventListener("loadend",function(){if(!this.status||this.status>=400)L.push("xhr "+this.status+" "+u);});return o.apply(this,arguments);};'+
+  'addEventListener("error",function(e){var t=e.target;L.push(t&&t!==window?"load "+(t.src||t.href):"js "+e.message);},true);'+
+  'addEventListener("unhandledrejection",function(e){L.push("js "+e.reason);});})();<\/script>';
 const NARAMET_WATCH = '<script>(function(){var t0=Date.now(),'+
   'H=function(){return Math.ceil(document.documentElement.getBoundingClientRect().height);},'+
   // ต้นทางเปิดที่แท็บ "รวม 3 จังหวัด" · เราเลือกแท็บ "นราธิวาส" ให้เป็นค่าเริ่มต้น (กดครั้งเดียวหลังข้อมูลขึ้น ผู้ใช้สลับแท็บเองได้)
@@ -1833,13 +1841,15 @@ const NARAMET_WATCH = '<script>(function(){var t0=Date.now(),'+
   'iv=setInterval(function(){'+
   'var s=(document.getElementById("dataSubtitle")||{}).innerText||"";'+
   'var ok=/ประจำวันที่/.test(s)&&!/ประมวลผล/.test(s),bad=/ผิดพลาด/.test(s)||Date.now()-t0>30000;'+
-  'if(ok||bad){clearInterval(iv);if(ok)P();parent.postMessage({naramet:ok?"ok":"fail",h:H()},"*");}},500);'+
+  'if(ok||bad){clearInterval(iv);if(ok)P();'+
+  'parent.postMessage({naramet:ok?"ok":"fail",h:H(),why:(Date.now()-t0>30000?"ข้อมูลไม่ขึ้นใน 30 วิ":"ต้นทางแจ้งผิดพลาด")+" · หัวข้อ: "+(s||"(ไม่มี)").slice(0,80)+" · "+(window.__nf||[]).slice(0,4).join(" | ")},"*");}},500);'+
   'new ResizeObserver(function(){parent.postMessage({naramet:"h",h:H()},"*");}).observe(document.body);'+
   '})();<\/script>';
-function naraRainFail(on){
-  const fr = document.getElementById('roFrame'), msg = document.getElementById('roFail');
+function naraRainFail(on, why){
+  const fr = document.getElementById('roFrame'), msg = document.getElementById('roFail'), w = document.getElementById('roFailWhy');
   if(fr) fr.hidden = on;
   if(msg) msg.hidden = !on;
+  if(w) w.textContent = on && why ? 'สาเหตุ: ' + String(why).slice(0, 400) : '';   // ข้อความจากกรอบ → textContent เท่านั้น
 }
 /* เรียกจาก loadAll (เปิดหน้า · ปุ่มรีเฟรช · ทุก 30 นาที) */
 async function loadNaraRain(){
@@ -1848,19 +1858,21 @@ async function loadNaraRain(){
   // ห้ามใส่ srcdoc ในกรอบที่ไม่มี sandbox (สคริปต์ต้นทางจะรันเป็นโดเมนเรา)
   if(fr.getAttribute('sandbox')!=='allow-scripts') return;
   try{
-    let html = await fetch(NARAMET_RAIN).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); });
-    if(!/<head[^>]*>/i.test(html) || !/<\/body>/i.test(html) || !/id="dataSubtitle"/.test(html)) throw new Error('unexpected page');
+    let html = await fetch(NARAMET_RAIN).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); },
+      e=>{ throw new Error('ดึงหน้าต้นทางไม่ได้ (CORS/เครือข่าย) ' + e.message); });
+    if(!/<head[^>]*>/i.test(html) || !/<\/body>/i.test(html)) throw new Error('หน้าต้นทางไม่ใช่ HTML ที่คาดไว้');
+    if(!/id="dataSubtitle"/.test(html)) throw new Error('โครงหน้าต้นทางเปลี่ยน (ไม่พบ dataSubtitle) · ' + html.length + ' ตัวอักษร');
     html = html
-      .replace(/<head[^>]*>/i, m => m + `<base href="${new URL('./', NARAMET_RAIN).href}">` + NARAMET_CSS)
+      .replace(/<head[^>]*>/i, m => m + `<base href="${new URL('./', NARAMET_RAIN).href}">` + NARAMET_TRAP + NARAMET_CSS)
       .replace(/<\/body>/i, () => NARAMET_WATCH + '</body>');
     naraRainFail(false);   // รอบก่อนอาจซ่อนกรอบไว้ · ต้องแสดงก่อนโหลด กรอบที่ซ่อนอยู่รายงานความสูงเป็น 0
     fr.srcdoc = html;
-  }catch(e){ naraRainFail(true); }
+  }catch(e){ naraRainFail(true, e.message); }
 }
 window.addEventListener('message', e=>{
   const fr = document.getElementById('roFrame');
   if(!fr || e.source !== fr.contentWindow || !e.data?.naramet) return;
-  if(e.data.naramet === 'fail') return naraRainFail(true);
+  if(e.data.naramet === 'fail') return naraRainFail(true, e.data.why);
   const hh = +e.data.h;
   if(hh >= 200 && hh <= 2000) fr.style.height = (hh + fr.offsetHeight - fr.clientHeight) + 'px';   // + ขอบกรอบ
 });
