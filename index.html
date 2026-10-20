@@ -174,10 +174,10 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .wtaEmpty{font-size:12.5px;color:var(--ink-3);padding:6px 0}
 .wtaNear{display:inline-block;font-size:10.5px;font-weight:600;color:var(--ink-2);background:var(--card-2);border:1px dashed var(--outline-strong);border-radius:99px;padding:1px 8px;margin-bottom:3px}
 
-/* ฝนสะสมวันนี้ · เมื่อวาน: หน้า naramet.semet.uk/rainfall (แผนที่ + ปุ่มวันนี้/เมื่อวาน ของต้นทาง) ไม่เอาเมนู
-   แสดงผ่าน srcdoc (ดู loadNaraRain) ความสูงตั้งตามที่กรอบรายงานมา 640 px เป็นค่าระหว่างรอ
-   โหลดไม่ขึ้น: ซ่อนกรอบ แสดง #roFail (ต้นทางไม่ยอมให้ฝังหน้าเต็มในกรอบแล้ว) */
-#roFrame{display:block;width:100%;height:640px;border:1px solid var(--outline);border-radius:10px;background:#fff}
+/* ฝนสะสมวันนี้ · เมื่อวาน: หน้า naramet.semet.uk/rainfall ฝังผ่าน naramet-proxy (ดู loadNaraRain)
+   ต้นทางเป็นแอปที่จัดความสูงตามกรอบเอง จึงตั้งความสูงคงที่ตามจอ ไม่ปรับตามเนื้อหา (กันวนลูปกับหน่วย vh ของแอป)
+   โหลดไม่ขึ้น: ซ่อนกรอบ แสดง #roFail */
+#roFrame{display:block;width:100%;height:clamp(560px,85vh,860px);border:1px solid var(--outline);border-radius:10px;background:#fff}
 #roFrame[hidden],#roFail[hidden]{display:none}
 #roFailWhy{margin-top:8px;font-size:11px;color:var(--ink-3);word-break:break-all}
 #roFail{padding:28px 16px;text-align:center;font-size:13.5px;color:var(--ink-2);background:var(--card-2);border:1px dashed var(--outline-strong);border-radius:10px}
@@ -370,14 +370,14 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     </details>
   </div>
 
-  <!-- ฝนสะสมวันนี้ · เมื่อวาน: หน้า naramet.semet.uk/rainfall ไม่รวมเมนู (loadNaraRain ใส่ srcdoc · ไม่ได้ประมวลผลข้อมูลเอง) -->
+  <!-- ฝนสะสมวันนี้ · เมื่อวาน: หน้า naramet.semet.uk/rainfall ฝังผ่าน naramet-proxy.worker.js (loadNaraRain · ไม่ได้ประมวลผลข้อมูลเอง) -->
   <div class="card full" id="rainObsCard">
     <h2><span class="t-desk">ปริมาณฝนสะสม วันนี้ · เมื่อวาน (สถานีอุตุนิยมวิทยานราธิวาส)</span><span class="t-mob">ฝนตกไปแล้วเท่าไหร่ ? (วันนี้ · เมื่อวาน)</span> <a class="where" href="https://naramet.semet.uk/rainfall" target="_blank" rel="noopener">เปิดหน้าเต็ม ↗</a></h2>
-    <iframe id="roFrame" sandbox="allow-scripts" title="ปริมาณฝนสะสม สามจังหวัดชายแดนใต้ วันนี้ · เมื่อวาน (naramet)" referrerpolicy="no-referrer"></iframe>
+    <iframe id="roFrame" sandbox="allow-scripts allow-same-origin" title="ปริมาณฝนสะสม สามจังหวัดชายแดนใต้ วันนี้ · เมื่อวาน (naramet)" referrerpolicy="no-referrer"></iframe>
     <div id="roFail" hidden>โหลดแผนที่ปริมาณฝนสะสมในหน้านี้ไม่ขึ้น · <a href="https://naramet.semet.uk/rainfall" target="_blank" rel="noopener">เปิดหน้าเต็มของสถานีอุตุนิยมวิทยานราธิวาส ↗</a><div id="roFailWhy"></div></div>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
-    <div class="note">หน้า "ปริมาณฝนสะสม" ของสถานีอุตุนิยมวิทยานราธิวาส (<a href="https://naramet.semet.uk/rainfall" target="_blank" rel="noopener">naramet.semet.uk/rainfall ↗</a>) แสดงเฉพาะส่วนปริมาณฝนสะสม ไม่รวมเมนูของต้นทาง: ฝนจากสถานีตรวจอากาศอัตโนมัติ (AWS) กรมอุตุฯ อำเภอละสถานี สามจังหวัดชายแดนใต้ พื้นสีระหว่างสถานีเป็นการประมาณค่าเชิงพื้นที่ (kriging) · กดปุ่ม <b>วันนี้</b> (ตั้งแต่ 07:00 น.) หรือ <b>เมื่อวาน</b> (สะสม 24 ชม. ตั้งแต่เวลา 07.00 น. เมื่อวาน ถึงเวลา 07.00 น. วันนี้) ที่มุมแผนที่เพื่อสลับวัน · ข้อมูล การอัปเดต และเกณฑ์สีเป็นของต้นทาง · ถ้ากรอบว่างหรือโหลดไม่ขึ้น ให้กด "เปิดหน้าเต็ม" ที่หัวการ์ด</div>
+    <div class="note">หน้า "ปริมาณฝนสะสม" ของสถานีอุตุนิยมวิทยานราธิวาส (<a href="https://naramet.semet.uk/rainfall" target="_blank" rel="noopener">naramet.semet.uk/rainfall ↗</a>) แสดงผ่านตัวส่งต่อของเว็บนี้: ฝนจากสถานีตรวจอากาศอัตโนมัติ (AWS) กรมอุตุฯ อำเภอละสถานี สามจังหวัดชายแดนใต้ พื้นสีระหว่างสถานีเป็นการประมาณค่าเชิงพื้นที่ (kriging) · กดปุ่ม <b>วันนี้</b> (ตั้งแต่ 07:00 น.) หรือ <b>เมื่อวาน</b> (สะสม 24 ชม. ตั้งแต่เวลา 07.00 น. เมื่อวาน ถึงเวลา 07.00 น. วันนี้) เพื่อสลับวัน · ข้อมูล การอัปเดต และเกณฑ์สีเป็นของต้นทาง · ถ้ากรอบว่างหรือโหลดไม่ขึ้น ให้กด "เปิดหน้าเต็ม" ที่หัวการ์ด</div>
     </details>
   </div>
 
@@ -1808,87 +1808,37 @@ async function loadNowcast(){
 })();
 
 /* ---------- ฝนสะสมวันนี้ · เมื่อวาน (naramet.semet.uk/rainfall) ----------
-   ต้องการเฉพาะเนื้อหาฝนสะสม ไม่เอาเมนูของต้นทาง แต่ iframe ข้ามโดเมนแต่ง CSS ข้างในไม่ได้ และตัดขอบบนทิ้ง
-   ก็ไม่แน่นอน (เมนูโหลดทีหลัง สูงไม่เท่ากันตามความกว้างจอ) จึงดึง HTML ของหน้านั้นมาเอง
-   naramet.semet.uk ไม่เปิด CORS (เบราว์เซอร์ขึ้น "Failed to fetch") จึงดึงผ่าน naramet-proxy.worker.js ที่ส่งต่อทั้งโดเมน
-   แทรก <base> ชี้ไปที่ worker ให้ไฟล์ที่อ้างแบบสัมพัทธ์ (adm2.json ฯลฯ) ผ่าน worker ด้วย + CSS ซ่อน #navbar แล้วแสดงผ่าน srcdoc
-   กรอบเป็น sandbox="allow-scripts" ไม่มี allow-same-origin: สคริปต์ต้นทาง (รวม kriging.js@master ที่ไม่ล็อกรุ่น)
-   รันในกรอบที่ไม่ใช่โดเมนเรา จึงแตะ localStorage/การล็อกอินของเว็บนี้ไม่ได้
-   ต้นทางตั้งความสูงแผนที่เป็น vh ซึ่งในกรอบ = % ของความสูงกรอบ จึงแทนด้วยขนาดตามความกว้างกรอบ (vw)
-   แล้วให้กรอบรายงานความสูงเนื้อหาจริงกลับมาตั้งความสูง iframe พอดีทุกจอ (ไม่วนลูป เพราะเนื้อหาไม่ขึ้นกับความสูงกรอบแล้ว)
-   สคริปต์เล็กที่แทรกไว้รายงานผลกลับมา ถ้าโหลดข้อมูลไม่ขึ้นใน 30 วิ (เช่น API ไม่รับคำขอจากกรอบ sandbox)
-   หรือดึง HTML ไม่ได้ ซ่อนกรอบแล้วแสดงลิงก์เปิดหน้าเต็มแทน (#roFail) · เดิมถอยไปฝังหน้าเต็มของต้นทาง
-   แต่ต้นทางย้ายจาก naramet.pages.dev (ตอนนี้ 301 ไป) มา naramet.semet.uk ซึ่งไม่ยอมให้ฝังในกรอบ
-   ("refused to connect") ชี้ไปโดเมนใหม่ตรง ๆ ด้วย ไม่ให้ <base> และคำขอข้อมูลของหน้าต้องผ่าน redirect */
-const NARAMET_RAIN = 'https://naramet.semet.uk/rainfall';
-const NARAMET_PROXY = 'https://naramet-proxy.newusmanwaji.workers.dev';   // naramet-proxy.worker.js
-// ลองผ่าน worker ก่อน · worker ยังไม่ deploy หรือล่ม ลองดึงตรง (เผื่อต้นทางกลับมาเปิด CORS)
-const NARAMET_SOURCES = [NARAMET_PROXY + '/rainfall', NARAMET_RAIN];
-async function naraRainHtml(){
-  const errs = [];
-  for(const src of NARAMET_SOURCES){
-    try{
-      const r = await fetch(src);
-      if(!r.ok) throw new Error('HTTP ' + r.status);
-      return { src, html: await r.text() };
-    }catch(e){ errs.push(new URL(src).hostname + ' ' + e.message); }
-  }
-  throw new Error('ดึงหน้าต้นทางไม่ได้ (CORS/เครือข่าย) ' + errs.join(' · '));
-}
-const NARAMET_CSS = '<style>#navbar{display:none!important}.container.mt-3{margin-top:4px!important}'+
-  '#rainfall{height:clamp(360px,62vw,580px)!important;min-height:0!important}'+
-  // จอแคบต้นทางให้ #rainfall สูงตามเนื้อหา และ #mapCanvas เป็น flex:1 ซึ่งทำให้ความสูงตามขนาดภาพ canvas ที่สคริปต์ต้นทาง
-  // ตั้งจากความสูงกล่อง (รวมคำอธิบายสี) → สูงขึ้นทุกครั้งที่กรอบเปลี่ยนขนาด จึงต้อง flex:none ให้ height มีผลจริง
-  '@media(max-width:576px){#rainfall{height:auto!important}#mapCanvas{flex:none!important;height:clamp(320px,115vw,480px)!important}}</style>';
-// ใส่ต้น <head> ก่อนสคริปต์ต้นทาง: จดคำขอที่ล้มเหลว (fetch/XHR/ไฟล์สคริปต์) ไว้บอกสาเหตุใน #roFailWhy ตอนโหลดไม่ขึ้น
-const NARAMET_TRAP = '<script>(function(){var L=window.__nf=[],f=window.fetch,o=XMLHttpRequest.prototype.open;'+
-  'window.fetch=function(u){return f.apply(this,arguments).then(function(r){if(!r.ok)L.push(r.status+" "+r.url);return r;},'+
-  'function(e){L.push("fetch "+(u&&u.url||u)+" "+e);throw e;});};'+
-  'XMLHttpRequest.prototype.open=function(m,u){this.addEventListener("loadend",function(){if(!this.status||this.status>=400)L.push("xhr "+this.status+" "+u);});return o.apply(this,arguments);};'+
-  'addEventListener("error",function(e){var t=e.target;L.push(t&&t!==window?"load "+(t.src||t.href):"js "+e.message);},true);'+
-  'addEventListener("unhandledrejection",function(e){L.push("js "+e.reason);});})();<\/script>';
-const NARAMET_WATCH = '<script>(function(){var t0=Date.now(),'+
-  'H=function(){return Math.ceil(document.documentElement.getBoundingClientRect().height);},'+
-  // ต้นทางเปิดที่แท็บ "รวม 3 จังหวัด" · เราเลือกแท็บ "นราธิวาส" ให้เป็นค่าเริ่มต้น (กดครั้งเดียวหลังข้อมูลขึ้น ผู้ใช้สลับแท็บเองได้)
-  // หาปุ่มที่ข้อความตรง "นราธิวาส" พอดีและมองเห็นอยู่ (เมนูที่ซ่อนไว้ไม่นับ) เพราะไม่ได้ผูกกับ id/class ของต้นทาง
-  'P=function(){var a=document.querySelectorAll("button,a,[role=tab],.nav-link,.btn");'+
-  'for(var i=0;i<a.length;i++){if(a[i].offsetParent&&(a[i].innerText||"").trim()==="นราธิวาส"){a[i].click();return;}}},'+
-  'iv=setInterval(function(){'+
-  'var s=(document.getElementById("dataSubtitle")||{}).innerText||"";'+
-  'var ok=/ประจำวันที่/.test(s)&&!/ประมวลผล/.test(s),bad=/ผิดพลาด/.test(s)||Date.now()-t0>30000;'+
-  'if(ok||bad){clearInterval(iv);if(ok)P();'+
-  'parent.postMessage({naramet:ok?"ok":"fail",h:H(),why:(Date.now()-t0>30000?"ข้อมูลไม่ขึ้นใน 30 วิ":"ต้นทางแจ้งผิดพลาด")+" · หัวข้อ: "+(s||"(ไม่มี)").slice(0,80)+" · "+(window.__nf||[]).slice(0,4).join(" | ")},"*");}},500);'+
-  'new ResizeObserver(function(){parent.postMessage({naramet:"h",h:H()},"*");}).observe(document.body);'+
-  '})();<\/script>';
+   naramet ย้ายจาก naramet.pages.dev มา naramet.semet.uk ซึ่งไม่เปิด CORS ไม่ยอมให้ฝังในกรอบ และเปลี่ยนเป็นแอป React/Vite
+   (HTML เปล่า <div id="root"> + สคริปต์ · router ของแอปอ่าน path /rainfall จาก location)
+   เดิมดึง HTML มาใส่ srcdoc ซ่อน #navbar แต่ใน srcdoc location เป็น about:srcdoc แอปจึงไม่รู้ว่าเป็นหน้าไหน ใช้ไม่ได้แล้ว
+   ตอนนี้ฝังเป็น iframe ที่ src ชี้ไปที่ naramet-proxy.worker.js: worker ส่งต่อทั้งโดเมน ตัดหัวห้ามฝังกรอบ และแทรกสคริปต์ต้นหน้า
+   ที่รายงานกลับมาเมื่อแอปแสดงผล ซ่อนเมนูบนสุด และเลือกแท็บ "นราธิวาส" (รายละเอียดที่ EMBED ในไฟล์ worker)
+   กรอบเป็นโดเมน workers.dev ไม่ใช่โดเมนเรา allow-same-origin จึงให้แอปใช้ storage ของโดเมน worker เอง
+   แตะ localStorage/การล็อกอินของเว็บนี้ไม่ได้
+   กรอบส่ง fail (แอปไม่ขึ้นใน 25 วิ พร้อมสาเหตุ) หรือเงียบเกิน 35 วิ (worker ไม่ตอบ) ซ่อนกรอบแล้วแสดงลิงก์เปิดหน้าเต็ม (#roFail)
+   แอปขึ้นทีหลังกรอบส่ง ok ตามมา ก็แสดงกรอบอีกครั้ง */
+const NARAMET_EMBED = 'https://naramet-proxy.newusmanwaji.workers.dev/rainfall';   // naramet-proxy.worker.js
+let naraRainTimer;
 function naraRainFail(on, why){
   const fr = document.getElementById('roFrame'), msg = document.getElementById('roFail'), w = document.getElementById('roFailWhy');
   if(fr) fr.hidden = on;
   if(msg) msg.hidden = !on;
   if(w) w.textContent = on && why ? 'สาเหตุ: ' + String(why).slice(0, 400) : '';   // ข้อความจากกรอบ → textContent เท่านั้น
 }
-/* เรียกจาก loadAll (เปิดหน้า · ปุ่มรีเฟรช · ทุก 30 นาที) */
-async function loadNaraRain(){
+/* เรียกจาก loadAll (เปิดหน้า · ปุ่มรีเฟรช · ทุก 30 นาที) · ตั้ง src ซ้ำ = โหลดแอปใหม่ ได้ข้อมูลล่าสุด */
+function loadNaraRain(){
   const fr = document.getElementById('roFrame');
   if(!fr) return;
-  // ห้ามใส่ srcdoc ในกรอบที่ไม่มี sandbox (สคริปต์ต้นทางจะรันเป็นโดเมนเรา)
-  if(fr.getAttribute('sandbox')!=='allow-scripts') return;
-  try{
-    let { src, html } = await naraRainHtml();
-    if(!/<head[^>]*>/i.test(html) || !/<\/body>/i.test(html)) throw new Error('หน้าต้นทางไม่ใช่ HTML ที่คาดไว้');
-    if(!/id="dataSubtitle"/.test(html)) throw new Error('โครงหน้าต้นทางเปลี่ยน (ไม่พบ dataSubtitle) · ' + html.length + ' ตัวอักษร');
-    html = html
-      .replace(/<head[^>]*>/i, m => m + `<base href="${new URL('./', src).href}">` + NARAMET_TRAP + NARAMET_CSS)
-      .replace(/<\/body>/i, () => NARAMET_WATCH + '</body>');
-    naraRainFail(false);   // รอบก่อนอาจซ่อนกรอบไว้ · ต้องแสดงก่อนโหลด กรอบที่ซ่อนอยู่รายงานความสูงเป็น 0
-    fr.srcdoc = html;
-  }catch(e){ naraRainFail(true, e.message); }
+  naraRainFail(false);
+  clearTimeout(naraRainTimer);
+  naraRainTimer = setTimeout(() => naraRainFail(true, 'กรอบไม่ตอบใน 35 วิ (naramet-proxy ไม่ตอบ หรือหน้าต้นทางโหลดไม่ขึ้น)'), 35000);
+  fr.src = NARAMET_EMBED;
 }
 window.addEventListener('message', e=>{
   const fr = document.getElementById('roFrame');
   if(!fr || e.source !== fr.contentWindow || !e.data?.naramet) return;
-  if(e.data.naramet === 'fail') return naraRainFail(true, e.data.why);
-  const hh = +e.data.h;
-  if(hh >= 200 && hh <= 2000) fr.style.height = (hh + fr.offsetHeight - fr.clientHeight) + 'px';   // + ขอบกรอบ
+  clearTimeout(naraRainTimer);
+  naraRainFail(e.data.naramet === 'fail', e.data.why);
 });
 
 /* ---------- คาดการณ์ปริมาณฝนรายอำเภอ (แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุฯ ผ่าน tmd-proxy) ----------
