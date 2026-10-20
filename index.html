@@ -174,13 +174,12 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .wtaEmpty{font-size:12.5px;color:var(--ink-3);padding:6px 0}
 .wtaNear{display:inline-block;font-size:10.5px;font-weight:600;color:var(--ink-2);background:var(--card-2);border:1px dashed var(--outline-strong);border-radius:99px;padding:1px 8px;margin-bottom:3px}
 
-/* ฝนสะสมวันนี้ · เมื่อวาน: หน้า naramet.pages.dev/rainfall (แผนที่ + ปุ่มวันนี้/เมื่อวาน ของต้นทาง) ไม่เอาเมนู
-   ปกติแสดงผ่าน srcdoc (ดู loadNaraRain) ความสูงตั้งตามที่กรอบรายงานมา 640 px เป็นค่าระหว่างรอ
-   โหมดถอยกลับ (data-mode=full) เป็นหน้าเต็มของต้นทาง ซึ่งตั้งความสูงแผนที่เป็น vh (= % ของความสูงกรอบ)
-   จึงต้องสูง ~820 px ขึ้นไปทั้งหน้าถึงจะพอดีกรอบ ไม่มีแถบเลื่อนซ้อน */
+/* ฝนสะสมวันนี้ · เมื่อวาน: หน้า naramet.semet.uk/rainfall (แผนที่ + ปุ่มวันนี้/เมื่อวาน ของต้นทาง) ไม่เอาเมนู
+   แสดงผ่าน srcdoc (ดู loadNaraRain) ความสูงตั้งตามที่กรอบรายงานมา 640 px เป็นค่าระหว่างรอ
+   โหลดไม่ขึ้น: ซ่อนกรอบ แสดง #roFail (ต้นทางไม่ยอมให้ฝังหน้าเต็มในกรอบแล้ว) */
 #roFrame{display:block;width:100%;height:640px;border:1px solid var(--outline);border-radius:10px;background:#fff}
-#roFrame[data-mode="full"]{height:840px}
-@media(max-width:400px){#roFrame[data-mode="full"]{height:940px}}   /* จอแคบหัวข้อต้นทางตัดเป็น 3 บรรทัด (ทดสอบถึงจอกว้าง 320 px) */
+#roFrame[hidden],#roFail[hidden]{display:none}
+#roFail{padding:28px 16px;text-align:center;font-size:13.5px;color:var(--ink-2);background:var(--card-2);border:1px dashed var(--outline-strong);border-radius:10px}
 
 /* ฝนคาดการณ์รายอำเภอ 7 วัน (แผนที่เสี่ยงภัยรายอำเภอ กรมอุตุฯ) */
 #drDays{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
@@ -370,13 +369,14 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     </details>
   </div>
 
-  <!-- ฝนสะสมวันนี้ · เมื่อวาน: หน้า naramet.pages.dev/rainfall ไม่รวมเมนู (loadNaraRain ใส่ srcdoc · ไม่ได้ประมวลผลข้อมูลเอง) -->
+  <!-- ฝนสะสมวันนี้ · เมื่อวาน: หน้า naramet.semet.uk/rainfall ไม่รวมเมนู (loadNaraRain ใส่ srcdoc · ไม่ได้ประมวลผลข้อมูลเอง) -->
   <div class="card full" id="rainObsCard">
-    <h2><span class="t-desk">ปริมาณฝนสะสม วันนี้ · เมื่อวาน (สถานีอุตุนิยมวิทยานราธิวาส)</span><span class="t-mob">ฝนตกไปแล้วเท่าไหร่ ? (วันนี้ · เมื่อวาน)</span> <a class="where" href="https://naramet.pages.dev/rainfall" target="_blank" rel="noopener">เปิดหน้าเต็ม ↗</a></h2>
+    <h2><span class="t-desk">ปริมาณฝนสะสม วันนี้ · เมื่อวาน (สถานีอุตุนิยมวิทยานราธิวาส)</span><span class="t-mob">ฝนตกไปแล้วเท่าไหร่ ? (วันนี้ · เมื่อวาน)</span> <a class="where" href="https://naramet.semet.uk/rainfall" target="_blank" rel="noopener">เปิดหน้าเต็ม ↗</a></h2>
     <iframe id="roFrame" sandbox="allow-scripts" title="ปริมาณฝนสะสม สามจังหวัดชายแดนใต้ วันนี้ · เมื่อวาน (naramet)" referrerpolicy="no-referrer"></iframe>
+    <div id="roFail" hidden>โหลดแผนที่ปริมาณฝนสะสมในหน้านี้ไม่ขึ้น · <a href="https://naramet.semet.uk/rainfall" target="_blank" rel="noopener">เปิดหน้าเต็มของสถานีอุตุนิยมวิทยานราธิวาส ↗</a></div>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
-    <div class="note">หน้า "ปริมาณฝนสะสม" ของสถานีอุตุนิยมวิทยานราธิวาส (<a href="https://naramet.pages.dev/rainfall" target="_blank" rel="noopener">naramet.pages.dev/rainfall ↗</a>) แสดงเฉพาะส่วนปริมาณฝนสะสม ไม่รวมเมนูของต้นทาง: ฝนจากสถานีตรวจอากาศอัตโนมัติ (AWS) กรมอุตุฯ อำเภอละสถานี สามจังหวัดชายแดนใต้ พื้นสีระหว่างสถานีเป็นการประมาณค่าเชิงพื้นที่ (kriging) · กดปุ่ม <b>วันนี้</b> (ตั้งแต่ 07:00 น.) หรือ <b>เมื่อวาน</b> (สะสม 24 ชม. ตั้งแต่เวลา 07.00 น. เมื่อวาน ถึงเวลา 07.00 น. วันนี้) ที่มุมแผนที่เพื่อสลับวัน · ข้อมูล การอัปเดต และเกณฑ์สีเป็นของต้นทาง · ถ้ากรอบว่างหรือโหลดไม่ขึ้น ให้กด "เปิดหน้าเต็ม" ที่หัวการ์ด</div>
+    <div class="note">หน้า "ปริมาณฝนสะสม" ของสถานีอุตุนิยมวิทยานราธิวาส (<a href="https://naramet.semet.uk/rainfall" target="_blank" rel="noopener">naramet.semet.uk/rainfall ↗</a>) แสดงเฉพาะส่วนปริมาณฝนสะสม ไม่รวมเมนูของต้นทาง: ฝนจากสถานีตรวจอากาศอัตโนมัติ (AWS) กรมอุตุฯ อำเภอละสถานี สามจังหวัดชายแดนใต้ พื้นสีระหว่างสถานีเป็นการประมาณค่าเชิงพื้นที่ (kriging) · กดปุ่ม <b>วันนี้</b> (ตั้งแต่ 07:00 น.) หรือ <b>เมื่อวาน</b> (สะสม 24 ชม. ตั้งแต่เวลา 07.00 น. เมื่อวาน ถึงเวลา 07.00 น. วันนี้) ที่มุมแผนที่เพื่อสลับวัน · ข้อมูล การอัปเดต และเกณฑ์สีเป็นของต้นทาง · ถ้ากรอบว่างหรือโหลดไม่ขึ้น ให้กด "เปิดหน้าเต็ม" ที่หัวการ์ด</div>
     </details>
   </div>
 
@@ -1806,7 +1806,7 @@ async function loadNowcast(){
   }, true);
 })();
 
-/* ---------- ฝนสะสมวันนี้ · เมื่อวาน (naramet.pages.dev/rainfall) ----------
+/* ---------- ฝนสะสมวันนี้ · เมื่อวาน (naramet.semet.uk/rainfall) ----------
    ต้องการเฉพาะเนื้อหาฝนสะสม ไม่เอาเมนูของต้นทาง แต่ iframe ข้ามโดเมนแต่ง CSS ข้างในไม่ได้ และตัดขอบบนทิ้ง
    ก็ไม่แน่นอน (เมนูโหลดทีหลัง สูงไม่เท่ากันตามความกว้างจอ) จึงดึง HTML ของหน้านั้นมาเอง (ต้นทางเปิด CORS *)
    แทรก <base> ให้ไฟล์ที่อ้างแบบสัมพัทธ์ (adm2.json ฯลฯ) ยังชี้ไปต้นทาง + CSS ซ่อน #navbar แล้วแสดงผ่าน srcdoc
@@ -1815,8 +1815,10 @@ async function loadNowcast(){
    ต้นทางตั้งความสูงแผนที่เป็น vh ซึ่งในกรอบ = % ของความสูงกรอบ จึงแทนด้วยขนาดตามความกว้างกรอบ (vw)
    แล้วให้กรอบรายงานความสูงเนื้อหาจริงกลับมาตั้งความสูง iframe พอดีทุกจอ (ไม่วนลูป เพราะเนื้อหาไม่ขึ้นกับความสูงกรอบแล้ว)
    สคริปต์เล็กที่แทรกไว้รายงานผลกลับมา ถ้าโหลดข้อมูลไม่ขึ้นใน 30 วิ (เช่น API ไม่รับคำขอจากกรอบ sandbox)
-   หรือดึง HTML ไม่ได้ ถอยไปฝังหน้าเต็มของต้นทางตามเดิม (มีเมนู แต่ข้อมูลขึ้นแน่) */
-const NARAMET_RAIN = 'https://naramet.pages.dev/rainfall';
+   หรือดึง HTML ไม่ได้ ซ่อนกรอบแล้วแสดงลิงก์เปิดหน้าเต็มแทน (#roFail) · เดิมถอยไปฝังหน้าเต็มของต้นทาง
+   แต่ต้นทางย้ายจาก naramet.pages.dev (ตอนนี้ 301 ไป) มา naramet.semet.uk ซึ่งไม่ยอมให้ฝังในกรอบ
+   ("refused to connect") ชี้ไปโดเมนใหม่ตรง ๆ ด้วย ไม่ให้ <base> และคำขอข้อมูลของหน้าต้องผ่าน redirect */
+const NARAMET_RAIN = 'https://naramet.semet.uk/rainfall';
 const NARAMET_CSS = '<style>#navbar{display:none!important}.container.mt-3{margin-top:4px!important}'+
   '#rainfall{height:clamp(360px,62vw,580px)!important;min-height:0!important}'+
   // จอแคบต้นทางให้ #rainfall สูงตามเนื้อหา และ #mapCanvas เป็น flex:1 ซึ่งทำให้ความสูงตามขนาดภาพ canvas ที่สคริปต์ต้นทาง
@@ -1834,34 +1836,31 @@ const NARAMET_WATCH = '<script>(function(){var t0=Date.now(),'+
   'if(ok||bad){clearInterval(iv);if(ok)P();parent.postMessage({naramet:ok?"ok":"fail",h:H()},"*");}},500);'+
   'new ResizeObserver(function(){parent.postMessage({naramet:"h",h:H()},"*");}).observe(document.body);'+
   '})();<\/script>';
-function naraRainFull(){
-  const old = document.getElementById('roFrame');
-  if(!old || old.dataset.mode==='full') return;
-  // sandbox มีผลตอนโหลดหน้าใหม่ จึงสร้างกรอบใหม่แทนการถอดแอตทริบิวต์
-  const f = document.createElement('iframe');
-  f.id = 'roFrame'; f.title = old.title; f.dataset.mode = 'full';
-  f.referrerPolicy = 'no-referrer'; f.src = NARAMET_RAIN;
-  old.replaceWith(f);
+function naraRainFail(on){
+  const fr = document.getElementById('roFrame'), msg = document.getElementById('roFail');
+  if(fr) fr.hidden = on;
+  if(msg) msg.hidden = !on;
 }
 /* เรียกจาก loadAll (เปิดหน้า · ปุ่มรีเฟรช · ทุก 30 นาที) */
 async function loadNaraRain(){
   const fr = document.getElementById('roFrame');
   if(!fr) return;
-  // ถอยไปหน้าเต็มแล้ว: แค่โหลดใหม่ · ห้ามใส่ srcdoc ในกรอบที่ไม่มี sandbox (สคริปต์ต้นทางจะรันเป็นโดเมนเรา)
-  if(fr.dataset.mode==='full' || fr.getAttribute('sandbox')!=='allow-scripts'){ fr.src = NARAMET_RAIN; return; }
+  // ห้ามใส่ srcdoc ในกรอบที่ไม่มี sandbox (สคริปต์ต้นทางจะรันเป็นโดเมนเรา)
+  if(fr.getAttribute('sandbox')!=='allow-scripts') return;
   try{
     let html = await fetch(NARAMET_RAIN).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); });
     if(!/<head[^>]*>/i.test(html) || !/<\/body>/i.test(html) || !/id="dataSubtitle"/.test(html)) throw new Error('unexpected page');
     html = html
       .replace(/<head[^>]*>/i, m => m + `<base href="${new URL('./', NARAMET_RAIN).href}">` + NARAMET_CSS)
       .replace(/<\/body>/i, () => NARAMET_WATCH + '</body>');
+    naraRainFail(false);   // รอบก่อนอาจซ่อนกรอบไว้ · ต้องแสดงก่อนโหลด กรอบที่ซ่อนอยู่รายงานความสูงเป็น 0
     fr.srcdoc = html;
-  }catch(e){ naraRainFull(); }
+  }catch(e){ naraRainFail(true); }
 }
 window.addEventListener('message', e=>{
   const fr = document.getElementById('roFrame');
-  if(!fr || fr.dataset.mode==='full' || e.source !== fr.contentWindow || !e.data?.naramet) return;
-  if(e.data.naramet === 'fail') return naraRainFull();
+  if(!fr || e.source !== fr.contentWindow || !e.data?.naramet) return;
+  if(e.data.naramet === 'fail') return naraRainFail(true);
   const hh = +e.data.h;
   if(hh >= 200 && hh <= 2000) fr.style.height = (hh + fr.offsetHeight - fr.clientHeight) + 'px';   // + ขอบกรอบ
 });
