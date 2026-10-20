@@ -72,6 +72,7 @@ PWA/Service Worker ทำงานเฉพาะบน https (Cloudflare Pages 
 | `hyd-proxy.worker.js` | `hyd-proxy` | map.html — ชั้น "โทรมาตร ชป.": สถานีอุทกวิทยา ชป. (hyd-app.rid.go.th/hydro8h.html) ที่ thaiwater ไม่มี เช่น X.199 · ต้องเปิด Smart Placement | `https://hyd-proxy.<บัญชี>.workers.dev/stations.json` |
 | `ews-proxy.worker.js` | `ews-proxy` | map.html — ชั้น "◆ เตือนภัย ทน.": สถานีวัดระดับน้ำของระบบเตือนภัยล่วงหน้า กรมทรัพยากรน้ำ (ews1.dwr.go.th) ในนราธิวาส 7 สถานี เช่น STN2155 บ้านไอปาโจ · STN2233 ชุมชนยะกัง | `https://ews-proxy.<บัญชี>.workers.dev/stations.json` |
 | `onwr-proxy.worker.js` | `onwr-proxy` | map.html — 4 ชั้นเรดาร์ สทนช. (เรดาร์ TMD + คาดการณ์ 3 ชม. · ฝนสะสม 3 ชม. ล่วงหน้ารายอำเภอ/ตำบล · ฝนสถานีรายชั่วโมง · สถานีเรดาร์) | `https://onwr-proxy.<บัญชี>.workers.dev/frames` |
+| `naramet-proxy.worker.js` | `naramet-proxy` | index.html — การ์ด "ปริมาณฝนสะสม วันนี้ · เมื่อวาน": ส่งต่อเว็บ naramet.semet.uk (สถานีอุตุฯ นราธิวาส) ทั้งโดเมนพร้อมเปิด CORS | `https://naramet-proxy.<บัญชี>.workers.dev/rainfall` |
 | `status-dash.worker.js` | `status-dash` | ไม่ได้ใช้กับหน้าเว็บ — หน้าสถานะ Worker ทุกตัวสำหรับผู้ดูแล เปิดได้เฉพาะลิงก์ที่มีรหัสลับ · ต้องผูก Service binding 7 ตัว + secret `DASH_KEY` (ด้านล่าง) | `https://status-dash.<บัญชี>.workers.dev/<DASH_KEY>` |
 
 `home-proxy` เก็บผลของแต่ละแหล่งไว้ใน Cache ของ Cloudflare แล้วตอบหน้าแรกเป็น JSON ก้อนเดียว
@@ -115,6 +116,10 @@ ews.dwr.go.th ตัดการเชื่อมต่อจาก IP นอ�
 
 `onwr-proxy` กรองข้อมูลให้เหลือเฉพาะนราธิวาสก่อนส่ง (ต้นทาง `zones?level=subdistrict` ใหญ่ 8 MB) และแคชผล 5 นาที
 ถ้ายังไม่ deploy หน้า map จะขึ้น "โหลดข้อมูล สทนช. ไม่สำเร็จ" เฉพาะชั้นเหล่านี้ ชั้นอื่นทำงานปกติ
+
+`naramet-proxy` มีไว้เพราะ naramet ย้ายจาก naramet.pages.dev (เปิด CORS) มา naramet.semet.uk ซึ่งไม่เปิด CORS และไม่ยอมให้ฝังในกรอบ
+หน้าแรกดึงหน้า `/rainfall` ผ่าน worker แล้วใส่ `<base>` ชี้มาที่ worker ไฟล์และข้อมูลที่หน้านั้นเรียกต่อจึงผ่าน worker ทั้งหมด (แคช 2 นาที)
+ถ้ายังไม่ deploy การ์ดจะขึ้น "โหลดแผนที่ปริมาณฝนสะสมในหน้านี้ไม่ขึ้น" พร้อมลิงก์เปิดหน้าเต็ม ส่วนอื่นของหน้าแรกทำงานปกติ
 
 `tmd-proxy` เส้นทาง `/riskmap` ดึงฝนสะสมรายวันคาดการณ์รายอำเภอจาก hpc.tmd.go.th (ไฟล์ทั้งประเทศ ~570 KB)
 กรองเหลือ 13 อำเภอนราธิวาสแล้วแคช 1 ชม. → เหลือ ~2 KB · ถ้ายังไม่ deploy รอบใหม่
