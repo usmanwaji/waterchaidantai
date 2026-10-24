@@ -453,7 +453,7 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
   </div>
 
   <div class="card full">
-    <h2>สถานการณ์น้ำท่า · สถานีหลัก <span class="where" id="wtaWhere">X.199 · X.73 · X.119A</span></h2>
+    <h2>สถานการณ์น้ำท่า <span class="where" id="wtaWhere"></span></h2>
     <div id="wtaChips" role="group" aria-label="เลือกอำเภอ"></div>
     <div class="swipe-hint" id="wtaHint">ปัดไปทางซ้ายเพื่อดูสถานีถัดไป (3 สถานี)</div>
     <div id="wtaRow" class="wtaRow"><span class="spin"></span> กำลังโหลด…</div>
@@ -578,7 +578,7 @@ let wlAll = [];               // สถานีน้ำทั้ง 5 จั�
 let ddpmAll = [];             // สถานีวัดน้ำ ปภ. (cctv.disaster.go.th) ในจังหวัด
 let ridAll = [];              // โทรมาตร ชป. (telerid.rid.go.th) ในจังหวัด
 let hydAll = [];              // สถานีอุทกวิทยา ชป. (hyd-app.rid.go.th) ในจังหวัด · ใช้ผ่าน hydExtra()
-let wtaAmp = '';              // อำเภอที่เลือกในการ์ดน้ำท่า · '' = สถานีหลัก 3 สถานี
+let wtaAmp = '';              // อำเภอที่เลือกในการ์ดน้ำท่า · '' = ยังไม่เลือก (ใช้อำเภอตัวแทนจังหวัด)
 let soilByAmp = {};           // 'จังหวัด|อำเภอบางส่วน' ไม่ใช้ · เก็บรายจังหวัด: {จังหวัด: {อำเภอ: มม.}}
 
 const ampsOf = p => AMPHOES.filter(a=>a[0]===p);
@@ -802,7 +802,7 @@ async function loadRid(pre){
 /* สถานีอุทกวิทยา ชป. (hyd-app.rid.go.th/hydro8h.html) ผ่าน Worker hyd-proxy · ชุดเดียวกับชั้น "โทรมาตร ชป." ในหน้าแผนที่
    ระดับน้ำรายชั่วโมง (ม.รทก.) + ตลิ่ง + ค่า 24 ชม. · ส่วนใหญ่ซ้ำกับ thaiwater จึงใช้ผ่าน hydExtra() ที่ตัดรหัสซ้ำออก
    (ตอนนี้เหลือ X.199 บ้านท่าเรือ อ.รือเสาะ ซึ่งไม่มีในข้อมูลเปิด) · hyd-app ไม่ให้พิกัด ใช้ชุดเดียวกับ map.js
-   เส้นเฝ้าระวัง = ตลิ่ง − 1 ม. แบบเดียวกับ X.73/X.119A ในสถานีหลัก */
+   เส้นเฝ้าระวัง = ตลิ่ง − 1 ม. แบบเดียวกับ X.73/X.119A ใน WTA */
 const HYD_LIVE = 'https://hyd-proxy.newusmanwaji.workers.dev';
 const HYD_COORDS = {
   'X.73':[6.33992,101.726959], 'X.73A':[6.16992,101.713257], 'X.119':[6.07114,102.035881], 'X.119A':[6.02261,101.974892],
@@ -901,7 +901,7 @@ async function loadDdpm(pre){
 }
 
 /* ---------- แสดงผล ---------- */
-/* ---------- สถานการณ์น้ำท่า (สถานีหลัก X.199/X.73/X.119A) ---------- */
+/* ---------- สถานการณ์น้ำท่า · ค่าตั้งต้น (ตลิ่ง/เฝ้าระวัง/พื้นมาตร) ของ X.199/X.73/X.119A ---------- */
 const WTA = [
   // X.199 ไม่มีในข้อมูลเปิด · อ่านจาก hyd-app (hydAll) · ไม่รู้ท้องน้ำ ตั้งพื้นมาตรต่ำกว่าระดับต่ำที่เคยเห็น (~15.8) ราว 2 ม.
   {code:'X.199',  name:'บ้านท่าเรือ',    amphoe:'รือเสาะ',    river:'แม่น้ำสายบุรี', src:'hyd', bank:22.30, warn:21.30, ground:14},
@@ -950,23 +950,6 @@ function wtaGauge(s, cur){
     ${curLine}
     ${labelSvg}
   </svg>`;
-}
-/* สถานีหลัก 3 สถานีเดิม (ค่าตั้งต้นของการ์ด) */
-function wtaMain(){
-  return WTA.map(s0=>{
-    let s = s0, cur, st;
-    if(s0.src==='hyd'){
-      const rec = hydAll.find(h=>h.code===s0.code);
-      cur = rec ? rec.cur : null;
-      s = {...s0, bank: rec && rec.bank!=null ? rec.bank : s0.bank, dt: rec ? rec.dt : null};
-      st = wtaStatus(s, cur);
-    }else{
-      const rec = wlAll.find(w=>String(w.code).trim()===s0.code);
-      cur = rec && rec.msl!=null ? rec.msl : null;
-      st = wtaStatus(s, cur);
-    }
-    return {...s, cur, st, unit:'ม.(รทก.)'};
-  });
 }
 /* 3 สถานีที่สำคัญที่สุดในอำเภอ · สำคัญ = สถานการณ์หนักที่สุดตอนนี้
    ใช้เกณฑ์ชุดเดียวกับการ์ด "มาตรวัดน้ำต้องระวังเป็นพิเศษ" (FC.stationLevel)
@@ -1144,12 +1127,11 @@ const WTA_BASINS = [
 ];
 function renderWtaChips(){
   const el = document.getElementById('wtaChips'); if(!el) return;
-  const main = prov==='นราธิวาส' ? [['', 'สถานีหลัก']] : [];
-  if(!main.length && !wtaAmp) wtaAmp = mainAmp(prov)[1];
+  if(!wtaAmp) wtaAmp = mainAmp(prov)[1];
   const x = el.scrollLeft;   // วาดปุ่มใหม่แล้วแถวจะเด้งกลับซ้ายสุด · คืนตำแหน่งเดิมให้
   const names = ampsOf(prov).map(a=>a[1]);
   const chip = (v, l, c) => `<button type="button" class="chip${v===wtaAmp?' on':''}" data-wamp="${esc(v)}"${c?` data-basin style="--bc:${c}"`:''}>${esc(l)}</button>`;
-  let html = main.map(([v,l])=>chip(v,l)).join('');
+  let html = '';
   const used = new Set();
   WTA_BASINS.forEach(g=>{
     const list = g.amps.filter(a=>names.includes(a));
@@ -1169,20 +1151,15 @@ function renderWaterta(){
   if(wtaAmp && !ampsOf(prov).some(a=>a[1]===wtaAmp)) wtaAmp = '';
   renderWtaChips();
   const where = document.getElementById('wtaWhere'), hint = document.getElementById('wtaHint');
-  let cols, msg = '';
-  if(!wtaAmp){
-    cols = wtaMain();
-    if(where) where.textContent = 'X.199 · X.73 · X.119A';
-  }else{
-    const p = wtaPick(wtaAmp);
-    cols = p.top;
-    const noData = p.total - p.withData;
-    if(where) where.textContent = `อ.${wtaAmp} · ` + (p.withData ? `${cols.length} จาก ${p.withData} สถานีที่มีข้อมูล` : 'ไม่มีสถานีที่มีข้อมูล') + (noData ? ` · อีก ${noData} ไม่มีค่าล่าสุด` : '');
-    if(!wlAll.length && !ddpmAll.length && !ridAll.length && !hydAll.length) msg = 'โหลดข้อมูลสถานีไม่สำเร็จ';
-    else if(!cols.length) msg = p.total
-      ? `อ.${esc(wtaAmp)} มีสถานีวัดระดับน้ำ ${p.total} แห่ง แต่ขณะนี้ไม่มีค่าล่าสุดจากสถานีใดเลย`
-      : `อ.${esc(wtaAmp)} ยังไม่มีสถานีวัดระดับน้ำในเขตอำเภอ จากทุกแหล่ง (สสน./ชป./ปภ.)`;
-  }
+  let msg = '';
+  const p = wtaPick(wtaAmp);
+  let cols = p.top;
+  const noData = p.total - p.withData;
+  if(where) where.textContent = `อ.${wtaAmp} · ` + (p.withData ? `${cols.length} จาก ${p.withData} สถานีที่มีข้อมูล` : 'ไม่มีสถานีที่มีข้อมูล') + (noData ? ` · อีก ${noData} ไม่มีค่าล่าสุด` : '');
+  if(!wlAll.length && !ddpmAll.length && !ridAll.length && !hydAll.length) msg = 'โหลดข้อมูลสถานีไม่สำเร็จ';
+  else if(!cols.length) msg = p.total
+    ? `อ.${esc(wtaAmp)} มีสถานีวัดระดับน้ำ ${p.total} แห่ง แต่ขณะนี้ไม่มีค่าล่าสุดจากสถานีใดเลย`
+    : `อ.${esc(wtaAmp)} ยังไม่มีสถานีวัดระดับน้ำในเขตอำเภอ จากทุกแหล่ง (สสน./ชป./ปภ.)`;
   if(hint){ hint.hidden = cols.length < 2; hint.textContent = `ปัดไปทางซ้ายเพื่อดูสถานีถัดไป (${cols.length} สถานี)`; }
   ddpmNeedThr(cols.filter(s=>s.src==='ddpm').map(s=>s.code));
   // เกณฑ์บางสถานีสูงกว่าตลิ่งของ ปภ. เอง (เช่น NWT07) → ข้อมูลขัดกัน ไม่วาดเส้น
