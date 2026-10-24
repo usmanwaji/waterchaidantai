@@ -365,7 +365,7 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     <ul class="dir-top" id="dirTop"></ul>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
-    <div class="note">โทรมาตรหลัก 3 ลุ่มน้ำ (ด้านบน): X.184 บ้านซากอ (ลุ่มน้ำสายบุรี) · X.73 บ้านตันหยงมัส (ลุ่มน้ำบางนรา) · X.119A สะพานลันตู (ลุ่มน้ำโก-ลก) ชุดเดียวกับรายงานสถานการณ์น้ำท่าของกรมชลประทาน · ระดับตลิ่ง/เฝ้าระวังน้ำมาก และความจุลำน้ำ (ลบ.ม./วินาที) ตามรายงาน ชป. · ค่ารายชั่วโมงจากระบบอุทกวิทยา ชป. (<a href="https://hyd-app.rid.go.th/hydro8h.html" target="_blank" rel="noopener">hyd-app.rid.go.th</a>) ถ้าโหลดไม่ได้ใช้ค่าจาก thaiwater · ภาพตัดลำน้ำเป็นภาพประกอบ ไม่ใช่รูปตัดจริง · แนวโน้มเทียบกับค่าราว 1 ชม.ก่อน กราฟเล็กคือ 24 ชม.ล่าสุด<br>
+    <div class="note">โทรมาตรหลัก 3 ลุ่มน้ำ (ด้านบน): X.199 บ้านท่าเรือ อ.รือเสาะ (ลุ่มน้ำสายบุรี) · X.73 บ้านตันหยงมัส (ลุ่มน้ำบางนรา) · X.119A สะพานลันตู (ลุ่มน้ำโก-ลก) ระดับตลิ่ง/เฝ้าระวังน้ำมาก และความจุลำน้ำ (ลบ.ม./วินาที) ของ X.73, X.119A ตามรายงานสถานการณ์น้ำท่าของกรมชลประทาน · X.199 ไม่อยู่ในรายงาน เส้นเฝ้าระวัง = ตลิ่ง − 1 ม. และไม่มีค่าความจุลำน้ำ · ค่ารายชั่วโมงจากระบบอุทกวิทยา ชป. (<a href="https://hyd-app.rid.go.th/hydro8h.html" target="_blank" rel="noopener">hyd-app.rid.go.th</a>) ถ้าโหลดไม่ได้ใช้ค่าจาก thaiwater · ภาพตัดลำน้ำเป็นภาพประกอบ ไม่ใช่รูปตัดจริง · แนวโน้มเทียบกับค่าราว 1 ชม.ก่อน กราฟเล็กคือ 24 ชม.ล่าสุด<br>
     สถิติขึ้น/ลดด้านล่าง: ใช้สถานีชุดเดียวกับ <a href="map.html">หน้าแผนที่</a> ที่ส่งค่าในรอบ 6 ชม.: สสน./ชป. (thaiwater เทียบกับค่าครั้งก่อน ขึ้น/ลดตั้งแต่ 1 ซม.) · ปภ. (cctv.disaster.go.th เทียบค่ารายชั่วโมงล่าสุดกับชั่วโมงก่อน) · โทรมาตร ชป. (telerid เทียบกับค่าราว 1 ชม.ก่อน) สองแหล่งหลังนับขึ้น/ลดตั้งแต่ 2 ซม. เพราะค่ารายชั่วโมงแกว่งตามคลื่นลม · น้อยกว่าเกณฑ์นับเป็นทรงตัว · ภาพแม่น้ำด้านบนใช้สถานีที่ใกล้คุณที่สุด (หรือใกล้ศูนย์กลางอำเภอที่เลือก) · รายชื่อใต้แถบคือสถานีที่ระดับน้ำเปลี่ยนมากที่สุด</div>
     </details>
   </div>
@@ -1037,7 +1037,8 @@ const WTA_TAG = {rid:'โทรมาตร ชป.', hyd:'อุทกวิท
    bed = พื้นล่างของภาพตัด (ค่าต่ำสุดของแกนในรายงาน) ใช้วาดภาพประกอบเท่านั้น
    ค่าสด: hyd-app (hydAll · รายชั่วโมง + ปริมาณน้ำ + 24 ชม.) ถ้าไม่มีหรือเก่ากว่า ใช้ thaiwater (wlAll) */
 const DIR_MAIN = [
-  {code:'X.184',  name:'บ้านซากอ',      amphoe:'ศรีสาคร',    basin:'ลุ่มน้ำสายบุรี', bank:31.40, warn:28.00, bed:6, qmax:1638},
+  // X.199 ไม่อยู่ในรายงาน ชป. และ thaiwater: ตลิ่ง/เฝ้าระวัง (ตลิ่ง − 1 ม.) ชุดเดียวกับ WTA · ไม่รู้ความจุลำน้ำ (qmax:null) · bed ตาม ground ของ WTA
+  {code:'X.199',  name:'บ้านท่าเรือ',    amphoe:'รือเสาะ',    basin:'ลุ่มน้ำสายบุรี', bank:22.30, warn:21.30, bed:14, qmax:null},
   {code:'X.73',   name:'บ้านตันหยงมัส', amphoe:'ระแงะ',      basin:'ลุ่มน้ำบางนรา', bank:14.90, warn:13.90, bed:7, qmax:126},
   {code:'X.119A', name:'สะพานลันตู',    amphoe:'สุไหงโก-ลก', basin:'ลุ่มน้ำโก-ลก',  bank:9.30,  warn:8.30,  bed:1, qmax:313},
 ];
@@ -1100,7 +1101,8 @@ function renderDirMain(){
       ? `<div class="tr fl">● ทรงตัว (1 ชม.)</div>`
       : `<div class="tr ${diff>0?'up':'dn'}">${diff>0?'▲ ขึ้น +':'▼ ลด '}${Math.abs(diff).toFixed(2)} ม. (1 ชม.)</div>`;
     const below = cur!=null ? m.bank - cur : null;
-    const q = d.q!=null ? `<div class="q">ปริมาณน้ำ ${d.q.toLocaleString('th-TH',{maximumFractionDigits:2})} / ความจุ ${m.qmax.toLocaleString('th-TH')} ลบ.ม./วินาที (${Math.round(d.q/m.qmax*100)}%)</div>`
+    const q = m.qmax==null ? (d.q!=null ? `<div class="q">ปริมาณน้ำ ${d.q.toLocaleString('th-TH',{maximumFractionDigits:2})} ลบ.ม./วินาที</div>` : '')
+            : d.q!=null ? `<div class="q">ปริมาณน้ำ ${d.q.toLocaleString('th-TH',{maximumFractionDigits:2})} / ความจุ ${m.qmax.toLocaleString('th-TH')} ลบ.ม./วินาที (${Math.round(d.q/m.qmax*100)}%)</div>`
                         : `<div class="q">ความจุลำน้ำ ${m.qmax.toLocaleString('th-TH')} ลบ.ม./วินาที</div>`;
     return `<div class="wtaCol">
       <div class="bs">${esc(m.basin)}</div>
