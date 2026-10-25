@@ -13,7 +13,8 @@
       แคชแยกตามศูนย์ แต่คนดูในไทยเข้าศูนย์ BKK เป็นหลัก จึงใช้ชุดเดียวกัน
     · Cron ทุกนาที (ดูวิธีตั้งด้านล่าง) แต่ดึงแต่ละส่วนเฉพาะเมื่อถึงรอบของมัน (PARTS: every / at) นาทีที่ไม่มีอะไรถึงรอบจบทันที
       → คนดูเจอข้อมูลสดในแคชเสมอ ไม่ต้องรอดึง · ต้นทางถูกเรียกเป็นรอบคงที่ไม่ขึ้นกับจำนวนคนดู:
-      รายการสถานี ปภ. ทุก 5 นาที · โทรมาตร ชป. + ทิศทางน้ำ ชป. + เรดาร์ทุก 14 นาที · กราฟ ปภ. ชั่วโมงละครั้ง · X.199 ทุก 30 นาที
+      รายการสถานี ปภ. ทุก 5 นาที · โทรมาตร ชป. + ทิศทางน้ำ ชป. + เรดาร์ทุก 14 นาที · กราฟ ปภ. ชั่วโมงละครั้ง
+      X.199 (hyd-app รายชั่วโมง): ยังไม่ได้ค่าของชั่วโมงนี้ครบ ถามทุก 5 นาที · ได้ครบแล้วทุก 30 นาที
       ฝนรายอำเภอทุก 12 ชม. · ฝน 3 วันทุก 22 ชม. · พยากรณ์รายภาควันละครั้ง 14:00 · เกณฑ์ ปภ. ทุกวันที่ 15 ของเดือน
       ส่งคำขอพร้อมกันทีละไม่กี่รายการ (POOL) ไม่ยิงเป็นชุดใหญ่ กัน 429
       Placement มีผลกับ fetch เท่านั้น ไม่มีผลกับ cron → cron เรียก /cron ของตัวเองผ่าน binding SELF
@@ -24,6 +25,7 @@
 
   อายุของแต่ละส่วน (PARTS):
     every  cron ดึงให้เมื่ออายุถึงเท่านี้ · at = ดึงตามเวลาที่กำหนดแทน (วันละครั้ง/เดือนละครั้ง เวลาไทย)
+    poll   ข้อมูลรายชั่วโมง: dataAt(j) = เวลาวัดล่าสุดที่มีครบ · ยังไม่ถึงต้นชั่วโมงนี้ → cron ดึงทุก poll แทน every
     ttl  หมดอายุ → คำขอของคนดูสั่งดึงใหม่เอง (ยาวกว่า every → ถ้า cron ทำงาน ไม่ถึงตรงนี้)
          ส่วนที่ใช้ at: คนดูสั่งดึงเองเฉพาะเมื่อเลยเวลาที่กำหนดมาเกิน SCHED_GRACE แล้วยังไม่ได้ดึง (cron พลาด)
     swr  ยังไม่เก่าเกินนี้ → ตอบชุดเดิมทันที แล้วดึงใหม่เบื้องหลัง
@@ -84,6 +86,7 @@ const monthlyOn = (day) => (now) => { const d = new Date(now + ICT); const t = D
 const POOL = 3;               // คำขอไปต้นทางเดียวกันพร้อมกันได้ไม่เกินนี้ (กราฟ/รายละเอียดรายสถานี) ไม่ยิงเป็นชุดใหญ่
 const FRESH_MS = 6 * HOUR * 1000;   // ทิศทางน้ำคิดเฉพาะสถานีที่ส่งค่าใน 6 ชม. (HERO_FRESH_H ใน index.html)
 const STORE = 'https://home-proxy.cache/store-v1';
+const HOUR_MS = 3600e3;       // เวลาไทย +7 ชม. เต็ม → ต้นชั่วโมงไทยตรงกับต้นชั่วโมง UTC
 
 const CORS = {
   'access-control-allow-origin': '*',
@@ -217,12 +220,22 @@ async function thresholds(env, budget, dep) {
   return { text: JSON.stringify(out), j: out };
 }
 
+/* X.199 ฯลฯ (hyd-proxy): เวลาวัดล่าสุดที่สถานีที่ยังส่งค่าอยู่ (เงียบไม่เกิน 6 ชม. จากสถานีที่ใหม่สุด) มีครบทุกสถานี
+   กฎเดียวกับ completeAt ใน hyd-proxy · ไม่มีค่าเลย = 0 */
+function hydComplete(j) {
+  const ts = (j.stations || []).map((x) => Date.parse(x.levelDt)).filter((t) => t > 0);
+  if (!ts.length) return 0;
+  const newest = Math.max(...ts);
+  return Math.min(...ts.filter((t) => newest - t < FRESH_MS));
+}
+
 /* every/ttl/swr/max เป็นวินาที · at = ดึงตามเวลาที่กำหนด (ใช้แทน every/ttl) · after = ส่วนที่ต้องใช้ข้อมูลก่อน (ถ้ากำลังดึงใหม่ รอผลนั้น)
    trends ไม่มี every: cron คิดต่อจากรอบที่ได้โทรมาตร ชป. ใหม่ หรือเมื่อกราฟ ปภ. ถึงชั่วโมง (ดู cronRun) */
 const PARTS = {
   ddpm:    { every: 5 * MIN,   ttl: 8 * MIN,   swr: 20 * MIN,  max: 6 * HOUR,   get: simple(`${DDPM}/stations?provCode=${PROV_CODE}&limit=100`, (j) => Array.isArray(j?.data)) },
   rid:     { every: 14 * MIN,  ttl: 20 * MIN,  swr: 40 * MIN,  max: 6 * HOUR,   get: rid },
-  hyd:     { every: 30 * MIN,  ttl: 40 * MIN,  swr: 90 * MIN,  max: 6 * HOUR,   get: simple(['HYD', '/stations.json'], (j) => Array.isArray(j?.stations), 28000) },   // hyd-proxy ที่ไม่มีแคชรอ hyd-app ~25 วิ
+  hyd:     { every: 30 * MIN,  poll: 5 * MIN, dataAt: hydComplete, label: 'every 5 min until this hour is in, then 30 min',
+             ttl: 40 * MIN,  swr: 90 * MIN,  max: 6 * HOUR,   get: simple(['HYD', '/stations.json'], (j) => Array.isArray(j?.stations), 28000) },   // hyd-proxy ที่ไม่มีแคชรอ hyd-app ~25 วิ
   rain3d:  { every: 22 * HOUR, ttl: 24 * HOUR, swr: 30 * HOUR, max: 48 * HOUR,  get: simple(`${TW}/provinces/rain3d?province_code=${PROV_CODE}`, (j) => Array.isArray(j?.data)) },
   tmd:     { at: dailyAt(14), label: 'daily 14:00 ICT', swr: 48 * HOUR, max: 48 * HOUR, get: simple(['TMD', '/region7days'], (j) => !!j?.WeatherForecast7DaysByRegion) },
   nowcast: { every: 14 * MIN,  ttl: 20 * MIN,  swr: 30 * MIN,  max: 1 * HOUR,   get: simple(['TMD', '/nowcast'], (j) => Array.isArray(j?.frames) && j.frames.length) },
@@ -232,7 +245,7 @@ const PARTS = {
 };
 
 /* ---------- ที่เก็บ: Cache API รายการเดียว ----------
-   body = ข้อความของทุกส่วนต่อกัน · header x-meta = {ส่วน: {t เวลาดึง, o ตำแหน่ง, n ความยาว, u ต้นทางตอบชุดเก่า,
+   body = ข้อความของทุกส่วนต่อกัน · header x-meta = {ส่วน: {t เวลาดึง, o ตำแหน่ง, n ความยาว, u ต้นทางตอบชุดเก่า, h เวลาวัดที่มีครบ (dataAt),
           e/et ข้อผิดพลาดล่าสุด, k จำนวนครั้งที่โดน 429 ติดกัน}, _cron: ผลรอบ cron ล่าสุด}
    รายการเดียว = อ่าน/เขียนครั้งเดียวต่อคำขอ ประหยัด subrequest · ตัดส่วนที่ต้องการด้วย substr ไม่ต้องแปลง JSON */
 async function readStore() {
@@ -254,6 +267,8 @@ async function saveStore(fresh, cron) {
     const text = useNew ? f.text : storedText(cur, p);
     const m = useNew ? { t: f.t } : { t: old?.t || 0 };
     if (useNew ? f.u : old?.u) m.u = 1;
+    const h = useNew ? f.h : old?.h;
+    if (h) m.h = h;
     if (f && f.e) {
       m.e = ascii(f.e); m.et = f.t;
       if (/HTTP 429/.test(f.e)) m.k = (old?.k || 0) + 1;
@@ -281,6 +296,8 @@ function cronDue(p, m, now) {
   const def = PARTS[p];
   if (!m?.t) return true;
   if (def.at) return m.t < def.at(now);
+  // ข้อมูลรายชั่วโมงที่ยังไม่มีค่าของชั่วโมงนี้ → ถามถี่ขึ้นจนกว่าจะได้
+  if (def.poll && !(m.h >= Math.floor(now / HOUR_MS) * HOUR_MS)) return ageSec(m, now) >= def.poll - CRON_SLACK;
   return def.every ? ageSec(m, now) >= def.every - CRON_SLACK : false;
 }
 // cron = ถึงรอบ cron · ไม่ใช่ = หมดอายุสำหรับคนดู
@@ -304,7 +321,9 @@ function refresh(env, store, parts) {
       if (fresh[d]?.text != null) dep.updated.push(d);
     }
     try {
-      fresh[p] = { t: Date.now(), ...(await PARTS[p].get(env, budget, dep)) };
+      const r = await PARTS[p].get(env, budget, dep);
+      fresh[p] = { t: Date.now(), ...r };
+      if (PARTS[p].dataAt) fresh[p].h = PARTS[p].dataAt(r.j);
     } catch (e) {
       fresh[p] = { t: Date.now(), e: String(e?.message || e) };
       throw e;
@@ -399,7 +418,8 @@ async function status(request, env) {
     const m = store.meta[p] || {};
     const def = PARTS[p];
     parts[p] = { ageSec: m.t ? Math.round((now - m.t) / 1000) : null,
-      refresh: def.at ? def.label : def.every ? `every ${def.every >= HOUR ? def.every / HOUR + ' h' : def.every / MIN + ' min'}` : 'after rid (14 min) / DDPM graphs hourly',
+      refresh: def.label || (def.every ? `every ${def.every >= HOUR ? def.every / HOUR + ' h' : def.every / MIN + ' min'}` : 'after rid (14 min) / DDPM graphs hourly'),
+      ...(PARTS[p].dataAt ? { dataAt: m.h ? new Date(m.h).toISOString() : null } : {}),   // เวลาวัดล่าสุดที่มีครบ
       sizeKB: Math.round((m.n || 0) / 102.4) / 10,
       late: expired(p, m, now),   // เกินรอบแล้วยังไม่ได้ดึงใหม่ (เกณฑ์เดียวกับธง s ที่หน้าเว็บเห็น)
       upstreamStale: !!m.u, lastError: m.e || null, lastErrorAgoSec: m.et ? Math.round((now - m.et) / 1000) : null };
