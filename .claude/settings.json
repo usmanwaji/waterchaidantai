@@ -1,13 +1,20 @@
 {
+  "enabledPlugins": {
+    "pstack@pstack-claude": true,
+    "autoharness@autoharness": true
+  },
   "extraKnownMarketplaces": {
     "pstack-claude": {
       "source": {
         "source": "github",
         "repo": "michael-denyer/pstack-claude"
       }
+    },
+    "autoharness": {
+      "source": {
+        "source": "github",
+        "repo": "tigerless-labs/autoharness"
+      }
     }
-  },
-  "enabledPlugins": {
-    "pstack@pstack-claude": true
   }
 }
