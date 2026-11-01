@@ -240,12 +240,13 @@ const rowKey = r => r.shelter_code || (r.name + '|' + r.district_name + '|' + r.
    จนไม่ได้แถวใหม่ · ใช้ header ชุดเดียวกับที่หน้าเว็บส่ง (Authorization/CSRF) */
 async function paginate(ctx, captured) {
   const cands = captured.filter(c => c.method === 'GET' && c.status < 400 && shelterRows(c.body).length)
-    .sort((a, b) => shelterRows(b.body).length - shelterRows(a.body).length);
-  if (!cands.length) return [];
+    .sort((a, b) => (/provinceCode=/i.test(b.url) - /provinceCode=/i.test(a.url)) || shelterRows(b.body).length - shelterRows(a.body).length);
+  if (!cands.length) return { headers: {}, pages: [] };
   const c = cands[0];
   const headers = Object.fromEntries(Object.entries(c.headers || {})
     .filter(([k]) => !k.startsWith(':') && !['content-length', 'host', 'accept-encoding', 'connection', 'cookie'].includes(k.toLowerCase())));
   const base = new URL(c.url);
+  base.searchParams.set('provinceCode', PROV_CODE);   // นราธิวาสเท่านั้น ไม่ว่าบัญชีจะเห็นกี่จังหวัด
   const sizeKey = ['limit', 'pageSize', 'perPage', 'per_page', 'size', 'pageLimit'].find(k => base.searchParams.has(k));
   const pageKey = ['page', 'pageNumber', 'currentPage', 'pageNo', 'pageIndex'].find(k => base.searchParams.has(k)) || 'page';
   const first = base.searchParams.has(pageKey) ? Number(base.searchParams.get(pageKey)) || 0 : 1;
@@ -269,11 +270,34 @@ async function paginate(ctx, captured) {
     }
     const rows = shelterRows(body);
     const fresh = rows.filter(f => { const k = rowKey(toRow(f)); if (seen.has(k)) return false; seen.add(k); return true; });
-    log(`  หน้า ${first + i}: ${rows.length} แถว (ใหม่ ${fresh.length} · สะสม ${seen.size})`);
+    const total = body?.meta?.total ?? body?.meta?.totalItems ?? body?.meta?.totalCount;
+    log(`  หน้า ${first + i}: ${rows.length} แถว (ใหม่ ${fresh.length} · สะสม ${seen.size}${total != null ? ' / ระบบแจ้ง ' + total : ''})`);
     if (!fresh.length) break;
     bodies.push(body);
   }
-  return bodies.map(body => ({ method: 'GET', status: 200, url: c.url, body }));
+  return { headers, pages: bodies.map(body => ({ method: 'GET', status: 200, url: c.url, body })) };
+}
+
+/* ชื่อตำบล: รายการศูนย์มีแต่ subdistrictCode → ถามรายการตำบลของแต่ละอำเภอจากหลังบ้าน (endpoint แบบเดียวกับรายการอำเภอ)
+   ถ้าหลังบ้านไม่มี endpoint นี้ ใช้ชื่อตำบลจากชั้น ArcGIS สาธารณะของ ปภ. (รหัสตำบลชุดเดียวกัน) */
+const UAT_LAYER = 'https://gis-portal.disaster.go.th/arcgis/rest/services/DDPM_Shelter/DPMGISADMIN_DDPM_Shelter_UAT/FeatureServer/0/query';
+async function learnSubdistricts(ctx, headers) {
+  if (LABELS.subdistrict.size) return;
+  for (const d of LABELS.district.keys()) {
+    try {
+      const res = await ctx.request.get(`${BASE}/api/v1/administrative/subdistricts/options/list?districtCode=${encodeURIComponent(d)}`, { headers, timeout: 30000 });
+      if (!res.ok()) break;
+      learnLabels({ url: '/subdistricts/', body: await res.json() });
+    } catch { break; }
+  }
+  if (LABELS.subdistrict.size) { log(`ชื่อตำบลจากหลังบ้าน ${LABELS.subdistrict.size} ตำบล`); return; }
+  try {
+    const q = new URLSearchParams({ where: `province_code='${PROV_CODE}'`, outFields: 'subdistrict_code,subdistrict_name',
+      returnDistinctValues: 'true', returnGeometry: 'false', f: 'json' });
+    const j = await (await ctx.request.get(`${UAT_LAYER}?${q}`, { timeout: 30000 })).json();
+    (j.features || []).forEach(({ attributes: a }) => a.subdistrict_code && a.subdistrict_name && LABELS.subdistrict.set(String(a.subdistrict_code), a.subdistrict_name));
+    log(`ชื่อตำบลจากชั้น ArcGIS สาธารณะ ${LABELS.subdistrict.size} ตำบล`);
+  } catch (e) { log('หาชื่อตำบลไม่ได้:', e.message); }
 }
 
 async function main() {
@@ -317,7 +341,9 @@ async function main() {
       if (p !== START) log('  ลิงก์ในหน้านี้:', (await navLinks(page)).filter(x => /shelter/i.test(x)).slice(0, 15).join(' ') || '(ไม่มีลิงก์ shelter)');
     }
     captured.forEach(learnLabels);
-    paged = await paginate(ctx, captured);
+    const pg = await paginate(ctx, captured);
+    paged = pg.pages;
+    if (paged.length) await learnSubdistricts(ctx, pg.headers);
   } finally {
     report(captured, others, tables);
     await browser.close();
