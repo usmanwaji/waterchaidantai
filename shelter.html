@@ -74,6 +74,11 @@ footer a{color:var(--st-warn);text-decoration:none}
 .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--outline-strong)}
 .btn.sm{padding:3px 9px;font-size:11.5px}
 #nearBtn{white-space:nowrap}
+/* แสดงทั้งหมด / เฉพาะศูนย์ที่ ปภ. เปิดใช้งานอยู่ */
+.seg{display:inline-flex;border:1.5px solid var(--navy);border-radius:9px;overflow:hidden;flex-shrink:0}
+.seg button{border:none;background:#fff;color:var(--navy);font-family:inherit;font-size:13px;font-weight:600;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.seg button+button{border-left:1.5px solid var(--navy)}
+.seg button.on{background:var(--navy);color:#fff}
 /* ที่จอดรถหนีน้ำ (แบบสำรวจ อปท.) */
 #parkBtn{white-space:nowrap}
 #parkBtn.on{background:var(--pk);color:#fff;border-color:var(--pk)}
@@ -151,6 +156,10 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
 <div id="selbar">
   <span class="provlbl">จังหวัดนราธิวาส</span>
   <select id="ampSel"><option value="">ทุกอำเภอ</option></select>
+  <div class="seg" role="group" aria-label="ศูนย์พักพิงที่แสดง">
+    <button type="button" id="showAll" class="on" aria-pressed="true">ทั้งหมด</button>
+    <button type="button" id="showOpen" aria-pressed="false">🟢 เปิดอยู่</button>
+  </div>
   <input type="search" id="q" placeholder="🔎 ค้นหา ชื่อสถานที่ / ตำบล / ผู้ดูแล / เบอร์โทร / รหัส ปภ.">
   <button class="btn ghost" id="nearBtn">ใกล้ฉัน</button>
   <button class="btn ghost" id="parkBtn" aria-pressed="false">🅿️ ที่จอดรถ</button>
@@ -282,6 +291,7 @@ const HOST = (window.HOSTS_NWT || []).map((r,i)=>Object.assign({key:'hs'+i}, r))
 const hashHas = k => location.hash.slice(1).split('+').includes(k);
 let showPark = hashHas('parking'), pkMarkers = [], pkById = {};
 let showHost = hashHas('hosts'), hsMarkers = [], hsById = {};
+let onlyOpen = hashHas('open');   // ปุ่ม "ทั้งหมด / เปิดอยู่" · #open = เปิดหน้ามาแบบเฉพาะที่เปิดอยู่
 
 const SH_STATUS = {
   open: {c:'var(--st-normal)', l:'เปิดรับ'},
@@ -353,11 +363,16 @@ function initMap(){
   if (window.OMSRivers) window.OMSRivers.drawLeaflet(map);
 }
 
-function current(){
+function filtered(){   // อำเภอ + คำค้น (ยังไม่กรองสถานะเปิด) · ใช้นับยอดบนปุ่ม "เปิดอยู่"
   let rows = ALL;
   if(amp) rows = rows.filter(r=>r.amphoe===amp);
   if(q){ const s=q.toLowerCase();
     rows = rows.filter(r => [r.name,r.tambon,r.amphoe,r.village,r.care,r.phone,r.code].join(' ').toLowerCase().includes(s)); }
+  return rows;
+}
+function current(){
+  let rows = filtered();
+  if(onlyOpen) rows = rows.filter(r=>r.live);
   if(userPos){ rows = rows.slice();
     rows.forEach(r=>{ r._d = (r.lat!=null)?haversine(userPos[0],userPos[1],r.lat,r.lon):1e9; });
     rows.sort((a,b)=>a._d-b._d); }
@@ -366,6 +381,7 @@ function current(){
 
 function render(){
   const rows = current();
+  document.getElementById('showOpen').textContent = '🟢 เปิดอยู่' + (loadState==='ok' ? ' ('+filtered().filter(r=>r.live).length+')' : '');
   const cap = rows.reduce((a,r)=>a+(r.cap||0),0);
   const occ = rows.reduce((a,r)=>a+(r.live?(r.occ||0):0),0);
   const openN = rows.filter(r=>r.live).length;
@@ -466,7 +482,7 @@ function renderParkTable(rows){
   }));
 }
 function syncHash(){
-  const h = [showPark&&'parking', showHost&&'hosts'].filter(Boolean).join('+');
+  const h = [onlyOpen&&'open', showPark&&'parking', showHost&&'hosts'].filter(Boolean).join('+');
   history.replaceState(null, '', h ? '#'+h : location.pathname + location.search);
 }
 function setPark(on){
@@ -582,7 +598,9 @@ function renderTable(rows){
       <td>${facil(r.power)}</td><td>${facil(r.water)}</td><td>${r.toilet||'<span class="no">ไม่มี</span>'}</td>
       <td>${esc(r.care)||'<span class="no">ไม่มี</span>'}<div class="sub">${r.phone?`<a class="tel2" href="${telHref(r.phone)}">${esc(r.phone)}</a>`:''}</div></td>
       <td>${g}</td></tr>`;
-  }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--ink-3);padding:20px">ไม่พบศูนย์พักพิงตามเงื่อนไขที่ค้นหา</td></tr>';
+  }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--ink-3);padding:20px">'+
+    (onlyOpen && !filtered().some(r=>r.live) ? 'ขณะนี้ ปภ. ยังไม่เปิดศูนย์พักพิง'+(amp?' ใน อ.'+esc(amp):'')+(q?' ที่ตรงกับคำค้น':'')+
+      ' <button class="btn sm" onclick="setOnlyOpen(false)">ดูทั้งหมด</button>' : 'ไม่พบศูนย์พักพิงตามเงื่อนไขที่ค้นหา')+'</td></tr>';
   tb.querySelectorAll('tr[data-id]').forEach(tr=>tr.addEventListener('click',()=>{
     const m=byId[tr.dataset.id];
     if(m){ map.setView(m.getLatLng(),14,{animate:true}); m.openPopup(); document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'}); }
@@ -626,12 +644,23 @@ function renderOfficial(){
   }).join('') + `<tr><td><b>รวม</b></td><td><b>${fmt(tot.tambons)}</b></td><td><b>${fmt(tot.n)}</b></td><td><b>${fmt(tot.cap)}</b></td><td><b>${fmt(tot.toilet)}</b></td></tr>`;
 }
 
+function setOnlyOpen(on){
+  onlyOpen = on;
+  [['showAll',!on],['showOpen',on]].forEach(([id,v])=>{ const b=document.getElementById(id); b.classList.toggle('on',v); b.setAttribute('aria-pressed',v); });
+  syncHash(); render();
+}
+window.setOnlyOpen = setOnlyOpen;
+document.getElementById('showAll').addEventListener('click',()=>setOnlyOpen(false));
+document.getElementById('showOpen').addEventListener('click',()=>setOnlyOpen(true));
 document.getElementById('parkBtn').addEventListener('click',()=>setPark(!showPark));
 document.getElementById('hostBtn').addEventListener('click',()=>setHost(!showHost));
 // ลิงก์ "ที่จอดรถ" ในเมนูบนหน้านี้เปลี่ยนแค่ hash ไม่โหลดหน้าใหม่
+// อ่านทุกค่าก่อน: setPark/setHost/setOnlyOpen เขียน hash ใหม่ทันที ถ้าอ่านทีละตัวค่าหลังจะหาย
 window.addEventListener('hashchange',()=>{
-  if(hashHas('parking')!==showPark) setPark(!showPark);
-  if(hashHas('hosts')!==showHost) setHost(!showHost);
+  const park = hashHas('parking'), host = hashHas('hosts'), open = hashHas('open');
+  if(park!==showPark) setPark(park);
+  if(host!==showHost) setHost(host);
+  if(open!==onlyOpen) setOnlyOpen(open);
 });
 document.getElementById('ampSel').addEventListener('change',e=>{ amp=e.target.value; render(); });
 document.getElementById('q').addEventListener('input',e=>{ q=e.target.value.trim(); render(); });
@@ -640,6 +669,7 @@ window.loadShelters = loadShelters;
 initMap(); renderOfficial();
 if(showPark) setPark(true);
 if(showHost) setHost(true);
+if(onlyOpen) setOnlyOpen(true);
 setTimeout(()=>map.invalidateSize(),200);
 loadShelters(); loadSurveyLive();
 </script>
