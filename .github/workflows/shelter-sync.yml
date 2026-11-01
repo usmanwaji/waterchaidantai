@@ -1,0 +1,72 @@
+# ดึงข้อมูลศูนย์พักพิง จ.นราธิวาส ล่าสุดจากระบบหลังบ้าน ปภ. (shelter.disaster.go.th/backoffice) วันละ 2 รอบ
+# → เขียน data/shelters-ddpm.json ลง main → สั่ง deploy Cloudflare Pages → https://naraflood.com/shelter แสดงชุดใหม่
+# ต้องตั้ง secret 2 ตัวก่อน (Settings → Secrets and variables → Actions → New repository secret):
+#   DDPM_SHELTER_USER  ชื่อผู้ใช้ระบบศูนย์พักพิง ปภ.
+#   DDPM_SHELTER_PASS  รหัสผ่าน
+# ตารางเวลา (GitHub ใช้ UTC และอาจช้ากว่ากำหนดได้ 5-30 นาที): 23:17 UTC = 06:17 น. · 11:17 UTC = 18:17 น. เวลาไทย
+# กดรันเองได้ที่ Actions → Sync shelters from DDPM backoffice → Run workflow
+# ดึงไม่สำเร็จ/ได้ข้อมูลน้อยผิดปกติ → job ล้ม ไม่เขียนทับ หน้าเว็บใช้ชุดเดิม (หรือชั้น UAT สาธารณะถ้าชุดเดิมเก่าเกิน 3 วัน)
+name: Sync shelters from DDPM backoffice
+
+on:
+  schedule:
+    - cron: '17 23 * * *'
+    - cron: '17 11 * * *'
+  workflow_dispatch:
+    inputs:
+      extra_paths:
+        description: 'path หน้าหลังบ้านอื่นที่ต้องเปิดเพิ่ม คั่นด้วย , (เว้นว่างได้)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write   # commit data/shelters-ddpm.json
+  actions: write    # สั่งรัน cloudflare-pages.yml (push ด้วย GITHUB_TOKEN ไม่กระตุ้น workflow อื่นเอง)
+
+concurrency:
+  group: shelter-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright
+        working-directory: shelter-sync
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Fetch shelters
+        working-directory: shelter-sync
+        env:
+          DDPM_SHELTER_USER: ${{ secrets.DDPM_SHELTER_USER }}
+          DDPM_SHELTER_PASS: ${{ secrets.DDPM_SHELTER_PASS }}
+          SHELTER_EXTRA_PATHS: ${{ inputs.extra_paths || vars.SHELTER_EXTRA_PATHS }}
+        run: node sync.mjs ../data/shelters-ddpm.json
+
+      - name: Commit and deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git add data/shelters-ddpm.json
+          if git diff --cached --quiet; then echo "ไม่มีข้อมูลใหม่"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: ศูนย์พักพิง ปภ. นราธิวาส ณ $(TZ=Asia/Bangkok date '+%Y-%m-%d %H:%M')"
+          pushed=
+          for i in 1 2 3 4; do
+            git pull --rebase origin main && git push origin HEAD:main && { pushed=1; break; }
+            sleep $((2 ** i))
+          done
+          test -n "$pushed" || { echo "push ไม่สำเร็จ"; exit 1; }
+          gh workflow run cloudflare-pages.yml --ref main
