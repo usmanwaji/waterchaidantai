@@ -38,7 +38,7 @@ jobs:
             --exclude=.git/ --exclude=.github/ --exclude=.claude/ --exclude=_site/ \
             --exclude=.gitignore --exclude=.devserver.mjs --exclude=CNAME \
             --exclude='*.md' --exclude='*.worker.js' --exclude=twa-manifest.json \
-            --exclude=supabase/ --exclude=telerid-scraper/ --exclude=play-store/
+            --exclude=supabase/ --exclude=telerid-scraper/ --exclude=shelter-sync/ --exclude=play-store/
           test -f _site/index.html && test -f _site/404.html && test -f _site/.well-known/assetlinks.json
           echo "files: $(find _site -type f | wc -l) · size: $(du -sh _site | cut -f1)"
 

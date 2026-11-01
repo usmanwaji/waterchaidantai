@@ -260,14 +260,19 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
    ระบบนี้เผยแพร่ข้อมูลเป็นชั้น ArcGIS บน gis-portal ของ ปภ. (เปิด CORS) · ชั้น DDPM_Shelter ตัวจริงต้องใช้ token
    จึงใช้ชั้น _UAT ที่เปิดสาธารณะ (โครงสร้างเดียวกัน อัปเดตสถานะเปิดศูนย์/ยอดผู้พักพิงต่อเนื่อง) · กรองเฉพาะนราธิวาส (96)
    แสดงทุกระเบียนตามต้นทาง ไม่ตัดแถวที่ดูซ้ำ เพื่อให้ยอดรวมตรงกับระบบ ปภ.
-   sw.js เก็บชุดล่าสุดไว้ใช้ตอนออฟไลน์ (network-first สำหรับ disaster.go.th) */
+   sw.js เก็บชุดล่าสุดไว้ใช้ตอนออฟไลน์ (network-first สำหรับ disaster.go.th)
+   ชั้น _UAT ไม่อัปเดตตามระบบจริงเสมอไป → ใช้ data/shelters-ddpm.json ก่อน: ชุดที่ .github/workflows/shelter-sync.yml
+   ดึงจากระบบหลังบ้าน ปภ. (shelter.disaster.go.th/backoffice) วันละ 2 รอบ · ฟิลด์ชุดเดียวกับชั้น ArcGIS
+   ไม่มีไฟล์/ว่าง/เก่าเกิน SNAP_MAX_AGE → ใช้ชั้น _UAT ตามเดิม */
+const DDPM_SNAPSHOT_URL = 'data/shelters-ddpm.json';
+const SNAP_MAX_AGE = 3*24*3600e3;
 const DDPM_SHELTER_URL = 'https://gis-portal.disaster.go.th/arcgis/rest/services/DDPM_Shelter/DPMGISADMIN_DDPM_Shelter_UAT/FeatureServer/0/query?' + new URLSearchParams({
   where: "province_code='96' AND deleted_at IS NULL",
   outFields: 'shelter_code,name,district_name,subdistrict_name,address_detail,lat,lng,capacity,current_residents,is_active,coordinator_name,coordinator_phone,facility_items,restroom_count,updated_at',
   orderByFields: 'district_name,subdistrict_name,name',
   returnGeometry: 'false', f: 'json'
 });
-let ALL = [], loadState = 'loading', lastUpdated = null;   // loadState: loading | ok | fail
+let ALL = [], loadState = 'loading', lastUpdated = null, snapAt = null;   // loadState: loading | ok | fail · snapAt = เวลาที่ดึงจากหลังบ้าน ปภ. (null = ใช้ชั้น UAT)
 let amp = '', q = '';
 let map, markers = [], byId = {}, userMarker = null, userPos = null;
 // ที่จอดรถหนีน้ำ: แบบสำรวจ อปท. (js/parking_nwt.js) · เปิด/ปิดด้วยปุ่ม "ที่จอดรถ" หรือเข้าหน้าด้วย #parking
@@ -295,7 +300,13 @@ function haversine(a,b,c,d){ const R=6371,r=x=>x*Math.PI/180; const dLa=r(c-a),d
 async function loadShelters(){
   loadState = 'loading'; render();
   try{
-    const j = await fetch(DDPM_SHELTER_URL).then(r=>r.json());
+    let j = null; snapAt = null;
+    try{
+      const sj = await fetch(DDPM_SNAPSHOT_URL, {cache:'no-cache'}).then(r=>r.ok?r.json():null);
+      const at = sj && Date.parse(sj.fetched_at);
+      if(sj && Array.isArray(sj.features) && sj.features.length && Date.now()-at < SNAP_MAX_AGE){ j = sj; snapAt = at; }
+    }catch(e){}
+    if(!j) j = await fetch(DDPM_SHELTER_URL).then(r=>r.json());
     if(!Array.isArray(j.features)) throw new Error('no features');
     lastUpdated = null;
     ALL = j.features.map(({attributes:a})=>{
@@ -369,7 +380,8 @@ function render(){
   renderMap(rows); renderTable(rows); renderParkTable(currentPark()); renderHostTable(currentHost());
   const noGeo = rows.filter(r=>r.lat==null).length;
   const when = lastUpdated ? ' · ข้อมูล ณ '+new Date(lastUpdated).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Bangkok'}) : '';
-  document.getElementById('mapNote').textContent = 'ที่มา: ระบบศูนย์พักพิง ปภ. (shelter.disaster.go.th)' + when +
+  const via = snapAt ? ' · อัปเดตอัตโนมัติวันละ 2 รอบ (ดึงล่าสุด '+new Date(snapAt).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Bangkok'})+')' : '';
+  document.getElementById('mapNote').textContent = 'ที่มา: ระบบศูนย์พักพิง ปภ. (shelter.disaster.go.th)' + when + via +
     (ok && noGeo>0 ? ' · '+noGeo+' แห่งยังไม่มีพิกัดในระบบ ปภ. (แสดงเฉพาะในตาราง)' : '');
 }
 

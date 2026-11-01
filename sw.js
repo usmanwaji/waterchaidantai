@@ -5,7 +5,7 @@
  *   • ข้อมูล API (GET) → network-first แล้วเก็บชุดล่าสุดไว้ ใช้ตอนออฟไลน์ ("last good data")
  * เพิ่มเลขเวอร์ชันเมื่อแก้ไฟล์เพื่อบังคับอัปเดตแคช
  */
-const VERSION = 'oms-v96';
+const VERSION = 'oms-v97';
 const SHELL = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 
@@ -75,7 +75,8 @@ self.addEventListener('fetch', event => {
   }
 
   // ข้อมูล API → network-first เก็บชุดล่าสุด
-  if (isApiGet(url.href)) {
+  // data/*.json ในโดเมนเดียวกัน (เช่น ศูนย์พักพิงที่ดึงจาก ปภ. วันละ 2 รอบ) → network-first เหมือน API ไม่ให้เห็นชุดเก่าจากแคชก่อน
+  if (isApiGet(url.href) || (url.origin === self.location.origin && url.pathname.startsWith('/data/'))) {
     event.respondWith((async () => {
       try {
         const net = await fetch(req);

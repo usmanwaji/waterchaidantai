@@ -1,0 +1,13 @@
+{
+  "name": "shelter-sync",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Login to shelter.disaster.go.th backoffice and snapshot Narathiwat shelters into data/shelters-ddpm.json",
+  "scripts": {
+    "sync": "node sync.mjs ../data/shelters-ddpm.json"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0"
+  }
+}
