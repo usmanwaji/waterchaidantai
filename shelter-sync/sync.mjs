@@ -40,6 +40,8 @@ const ALIAS = {
   province_name: ['provincename', 'provincenameth', 'province'],
   district_name: ['districtname', 'districtnameth', 'amphoe', 'amphoename', 'amphurname', 'amphurnameth', 'district'],
   subdistrict_name: ['subdistrictname', 'subdistrictnameth', 'tambon', 'tambonname', 'tambonnameth', 'subdistrict'],
+  district_code: ['districtcode', 'amphoecode', 'amphurcode'],
+  subdistrict_code: ['subdistrictcode', 'tamboncode'],
   address_detail: ['addressdetail', 'address'],
   lat: ['lat', 'latitude', 'locationlat', 'geometrylat'],
   lng: ['lng', 'lon', 'long', 'longitude', 'locationlng', 'locationlon', 'geometrylng'],
@@ -106,6 +108,14 @@ function facilities(v) {
 const cleanAmp = s => { s = String(s || '').replace(/^(อำเภอ|อ\.)\s*/, '').trim(); return s === 'เมือง' ? 'เมืองนราธิวาส' : s; };
 const cleanTam = s => String(s || '').replace(/^(ตำบล|ต\.)\s*/, '').trim();
 
+// รหัสอำเภอ/ตำบล → ชื่อ จากรายการตัวเลือกที่หน้าหลังบ้านโหลด (/administrative/districts/options …) ใช้เมื่อรายการศูนย์มีแต่รหัส
+const LABELS = { district: new Map(), subdistrict: new Map() };
+function learnLabels(c) {
+  const kind = /\/subdistricts\//i.test(c.url) ? 'subdistrict' : /\/districts\//i.test(c.url) ? 'district' : null;
+  if (!kind) return;
+  for (const { arr } of arrays(c.body)) for (const o of arr) if (o.value != null && o.label) LABELS[kind].set(String(o.value), String(o.label));
+}
+
 function toRow(f) {
   const lat = num(pick(f, 'lat')), lng = num(pick(f, 'lng'));
   const geo = lat != null && lng != null && lat !== 0 && lng !== 0;
@@ -114,8 +124,9 @@ function toRow(f) {
     name: String(pick(f, 'name') || '').trim(),
     province_code: pick(f, 'province_code') != null ? String(pick(f, 'province_code')) : null,
     province_name: pick(f, 'province_name') != null ? String(pick(f, 'province_name')) : null,
-    district_name: cleanAmp(pick(f, 'district_name')),
-    subdistrict_name: cleanTam(pick(f, 'subdistrict_name')),
+    district_name: cleanAmp(pick(f, 'district_name') ?? LABELS.district.get(String(pick(f, 'district_code')))),
+    subdistrict_name: cleanTam(pick(f, 'subdistrict_name') ?? LABELS.subdistrict.get(String(pick(f, 'subdistrict_code')))),
+    district_code: pick(f, 'district_code') != null ? String(pick(f, 'district_code')) : null,
     address_detail: pick(f, 'address_detail') ?? '',
     lat: geo ? lat : null, lng: geo ? lng : null,
     capacity: num(pick(f, 'capacity')),
@@ -130,6 +141,7 @@ function toRow(f) {
   };
 }
 function inNara(r) {
+  if (r.province_code == null && r.district_code) return String(r.district_code).startsWith(PROV_CODE);
   if (r.province_code) return r.province_code.replace(/^0+/, '').startsWith(PROV_CODE);
   if (r.province_name) return r.province_name.includes(PROV_NAME);
   return NARA_DISTRICTS.includes(r.district_name);
@@ -206,17 +218,80 @@ async function tablesOn(page) {
   }))).catch(() => []);
 }
 
+// ลิงก์ในเมนูหลังบ้าน (path เท่านั้น) · ใช้หาหน้ารายการศูนย์พักพิงเอง
+async function navLinks(page) {
+  return page.evaluate(() => [...new Set([...document.querySelectorAll('a[href]')]
+    .map(a => { try { const u = new URL(a.getAttribute('href'), location.href); return u.origin === location.origin ? u.pathname : null; } catch { return null; } })
+    .filter(Boolean))]).catch(() => []);
+}
+const isListPage = p => /shelter/i.test(p) && !/(new|create|add|edit)(\/|$)/i.test(p) && !/\/\d+(\/|$)|[0-9a-f]{8}-[0-9a-f]{4}/i.test(p);
+
+function shelterRows(body) {
+  let best = [];
+  for (const { arr } of arrays(body)) {
+    const like = arr.map(o => flat(o)).filter(isShelterLike);
+    if (like.length >= Math.max(1, arr.length * 0.6) && like.length > best.length) best = like;
+  }
+  return best;
+}
+const rowKey = r => r.shelter_code || (r.name + '|' + r.district_name + '|' + r.subdistrict_name);
+
+/* หน้ารายการในหลังบ้านมักแบ่งหน้า (เช่น ทีละ 10-20 แถว) → ยิง endpoint เดิมซ้ำด้วย session เดิม เพิ่มขนาดหน้าแล้วไล่ทีละหน้า
+   จนไม่ได้แถวใหม่ · ใช้ header ชุดเดียวกับที่หน้าเว็บส่ง (Authorization/CSRF) */
+async function paginate(ctx, captured) {
+  const cands = captured.filter(c => c.method === 'GET' && c.status < 400 && shelterRows(c.body).length)
+    .sort((a, b) => shelterRows(b.body).length - shelterRows(a.body).length);
+  if (!cands.length) return [];
+  const c = cands[0];
+  const headers = Object.fromEntries(Object.entries(c.headers || {})
+    .filter(([k]) => !k.startsWith(':') && !['content-length', 'host', 'accept-encoding', 'connection', 'cookie'].includes(k.toLowerCase())));
+  const base = new URL(c.url);
+  const sizeKey = ['limit', 'pageSize', 'perPage', 'per_page', 'size', 'pageLimit'].find(k => base.searchParams.has(k));
+  const pageKey = ['page', 'pageNumber', 'currentPage', 'pageNo', 'pageIndex'].find(k => base.searchParams.has(k)) || 'page';
+  const first = base.searchParams.has(pageKey) ? Number(base.searchParams.get(pageKey)) || 0 : 1;
+  log(`ไล่หน้า: ${urlBrief(c.url)} (ขนาดหน้า: ${sizeKey || 'ไม่มี'} · เลขหน้า: ${pageKey})`);
+  const seen = new Set(), bodies = [];
+  async function get(n, size) {
+    const u = new URL(base);
+    u.searchParams.set(pageKey, String(n));
+    if (sizeKey && size) u.searchParams.set(sizeKey, String(size));
+    const res = await ctx.request.get(u.href, { headers, timeout: 60000 });
+    if (!res.ok()) throw new Error(`HTTP ${res.status()}`);
+    return res.json();
+  }
+  let size = sizeKey ? 100 : null;
+  for (let i = 0; i < 200; i++) {
+    let body;
+    try { body = await get(first + i, size); }
+    catch (e) {
+      if (i === 0 && size) { size = null; i = -1; log('  ขอทีละ 100 แถวไม่ได้ (' + e.message + ') → ใช้ขนาดหน้าเดิม'); continue; }
+      log(`  หน้า ${first + i}: ${e.message} → หยุด`); break;
+    }
+    const rows = shelterRows(body);
+    const fresh = rows.filter(f => { const k = rowKey(toRow(f)); if (seen.has(k)) return false; seen.add(k); return true; });
+    log(`  หน้า ${first + i}: ${rows.length} แถว (ใหม่ ${fresh.length} · สะสม ${seen.size})`);
+    if (!fresh.length) break;
+    bodies.push(body);
+  }
+  return bodies.map(body => ({ method: 'GET', status: 200, url: c.url, body }));
+}
+
 async function main() {
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ locale: 'th-TH', timezoneId: 'Asia/Bangkok', viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
   const captured = [], others = [], tables = [];
+  let paged = [];
   page.on('response', async res => {
     const req = res.request();
     if (!['xhr', 'fetch'].includes(req.resourceType())) return;
     const ct = res.headers()['content-type'] || '';
     if (!/json/i.test(ct)) { others.push({ method: req.method(), status: res.status(), url: res.url(), ct }); return; }
-    try { captured.push({ method: req.method(), status: res.status(), url: res.url(), body: await res.json() }); }
+    try {
+      const body = await res.json();
+      const headers = await req.allHeaders().catch(() => req.headers());
+      captured.push({ method: req.method(), status: res.status(), url: res.url(), body, headers });
+    }
     catch { /* body ว่าง/redirect */ }
   });
 
@@ -226,7 +301,10 @@ async function main() {
     await settle(page);
     const didLogin = await login(page);
     log(didLogin ? 'ล็อกอินสำเร็จ' : 'ไม่เจอฟอร์มล็อกอิน (เข้าได้เลย)');
-    const visit = [START, ...EXTRA];
+    const links = await navLinks(page);
+    log('ลิงก์ในหน้าหลังบ้าน:', links.join(' ') || '(ไม่พบ)');
+    const auto = links.filter(isListPage).slice(0, 4);
+    const visit = [...new Set([START, ...EXTRA, ...(auto.length ? auto : ['/backoffice/shelters', '/backoffice/shelter'])])];
     for (const p of visit) {
       if (p !== START || !page.url().includes(START)) {
         log('เปิด', BASE + p);
@@ -236,7 +314,10 @@ async function main() {
       await scrollAll(page);
       await settle(page, 2000);
       (await tablesOn(page)).forEach(t => tables.push({ page: new URL(page.url()).pathname, ...t }));
+      if (p !== START) log('  ลิงก์ในหน้านี้:', (await navLinks(page)).filter(x => /shelter/i.test(x)).slice(0, 15).join(' ') || '(ไม่มีลิงก์ shelter)');
     }
+    captured.forEach(learnLabels);
+    paged = await paginate(ctx, captured);
   } finally {
     report(captured, others, tables);
     await browser.close();
@@ -244,7 +325,7 @@ async function main() {
 
   // รวมทุก array ที่ดูเป็นรายการศูนย์พักพิง · ศูนย์เดียวกันจากหลายคำตอบ → รวมฟิลด์ (ค่าที่ไม่ว่างชนะ)
   const byKey = new Map();
-  for (const c of captured) {
+  for (const c of [...captured, ...paged]) {
     if (c.status >= 400) continue;
     for (const { arr } of arrays(c.body)) {
       const flats = arr.map(o => flat(o));
@@ -252,7 +333,7 @@ async function main() {
       if (like.length < Math.max(1, arr.length * 0.6)) continue;
       for (const f of like) {
         const r = toRow(f);
-        const k = r.shelter_code || (r.name + '|' + r.district_name + '|' + r.subdistrict_name);
+        const k = rowKey(r);
         const prev = byKey.get(k) || {};
         for (const [kk, v] of Object.entries(r)) if (v != null && v !== '' && !(kk in prev && prev[kk] != null && prev[kk] !== '')) prev[kk] = v;
         byKey.set(k, prev);
@@ -266,7 +347,7 @@ async function main() {
   log(`พบรายการคล้ายศูนย์พักพิง ${all.length} แถว · นราธิวาส ${rows.length} แถว · เปิดอยู่ ${rows.filter(r => r.is_active).length} แห่ง · ` +
     `ผู้พักพิงรวม ${rows.reduce((s, r) => s + (r.is_active ? r.current_residents || 0 : 0), 0)} คน`);
 
-  if (!rows.length) throw new Error('ไม่พบรายการศูนย์พักพิงนราธิวาสในข้อมูลที่หน้า dashboard โหลด · ดูรายงานด้านบนแล้วปรับ SHELTER_EXTRA_PATHS/สคริปต์');
+  if (!rows.length) throw new Error('ไม่พบรายการศูนย์พักพิงนราธิวาสในข้อมูลที่หน้าหลังบ้านโหลด · ดูรายงานด้านบนแล้วปรับ SHELTER_EXTRA_PATHS/สคริปต์');
   let prevN = 0;
   try { prevN = (JSON.parse(await readFile(OUT, 'utf8')).features || []).length; } catch { /* ยังไม่มีไฟล์ */ }
   if (prevN && rows.length < prevN * MIN_KEEP)
@@ -277,7 +358,7 @@ async function main() {
     province_code: PROV_CODE,
     fetched_at: new Date().toISOString(),
     count: rows.length,
-    features: rows.map(({ deleted_at, ...a }) => ({ attributes: a })),
+    features: rows.map(({ deleted_at, district_code, ...a }) => ({ attributes: a })),
   };
   await mkdir(dirname(OUT), { recursive: true });
   await writeFile(OUT, JSON.stringify(out) + '\n');
