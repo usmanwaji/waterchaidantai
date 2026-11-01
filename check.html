@@ -166,9 +166,20 @@ const AMP_CENTER_NARA={'เมืองนราธิวาส':[6.4297,101.813
   'ยี่งอ':[6.4217,101.7041],'ระแงะ':[6.2238,101.7138],'รือเสาะ':[6.3792,101.5171],'ศรีสาคร':[6.1906,101.5017],
   'แว้ง':[5.8877,101.8733],'สุคิริน':[5.91,101.7221],'สุไหงโก-ลก':[6.073,101.99],'สุไหงปาดี':[6.1298,101.9017],
   'จะแนะ':[6.0404,101.614],'เจาะไอร้อง':[6.2149,101.8411]};
-/* ศูนย์พักพิง: ระบบศูนย์พักพิง ปภ. (shelter.disaster.go.th) แหล่งเดียวกับ shelter.html
-   ชั้น ArcGIS สาธารณะของ ปภ. (DDPM_Shelter_UAT) · is_active=1 = ปภ. เปิดศูนย์แล้ว */
+/* ศูนย์พักพิง: ระบบศูนย์พักพิง ปภ. (shelter.disaster.go.th) แหล่งเดียวกับ shelter.html · is_active=1 = ปภ. เปิดศูนย์แล้ว
+   นราธิวาส: ใช้ data/shelters-ddpm.json ที่ .github/workflows/shelter-sync.yml ดึงจากระบบหลังบ้าน ปภ. วันละ 2 รอบ (ฟิลด์ชุดเดียวกับชั้น ArcGIS)
+   จังหวัดอื่น หรือไฟล์ไม่มี/เก่าเกิน 3 วัน: ชั้น ArcGIS สาธารณะของ ปภ. (DDPM_Shelter_UAT) ตามเดิม */
 const DDPM_SHELTER_Q='https://gis-portal.disaster.go.th/arcgis/rest/services/DDPM_Shelter/DPMGISADMIN_DDPM_Shelter_UAT/FeatureServer/0/query';
+const DDPM_SNAPSHOT_URL='data/shelters-ddpm.json', SNAP_PROV='96', SNAP_MAX_AGE=3*24*3600e3;
+async function snapshotFeatures(code){
+  if(code!==SNAP_PROV) return null;
+  try{
+    const j=await fetch(DDPM_SNAPSHOT_URL,{cache:'no-cache'}).then(r=>r.ok?r.json():null);
+    if(!j || j.province_code!==code || !Array.isArray(j.features) || !j.features.length) return null;
+    if(!(Date.now()-Date.parse(j.fetched_at) < SNAP_MAX_AGE)) return null;
+    return j.features.filter(({attributes:a})=>a.is_active===1 && a.lat!=null && a.lng!=null);
+  }catch(e){ return null; }
+}
 function haversine(a,b,c,d){ const R=6371,r=x=>x*Math.PI/180; const dLa=r(c-a),dLo=r(d-b);
   const s=Math.sin(dLa/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(s)); }
 
@@ -221,13 +232,17 @@ async function getStation(prov, pos){
 async function getShelter(prov, pos){
   const code=PROV_CODE[prov]; if(!code) return null;
   try{
-    const j=await fetch(DDPM_SHELTER_Q+'?'+new URLSearchParams({
-      where:`province_code='${code}' AND is_active=1 AND deleted_at IS NULL AND lat IS NOT NULL AND lng IS NOT NULL`,
-      outFields:'name,district_name,lat,lng,capacity,current_residents,coordinator_phone',
-      returnGeometry:'false', f:'json'})).then(r=>r.json());
-    if(!Array.isArray(j.features)) return null;
+    let feats=await snapshotFeatures(code);
+    if(!feats){
+      const j=await fetch(DDPM_SHELTER_Q+'?'+new URLSearchParams({
+        where:`province_code='${code}' AND is_active=1 AND deleted_at IS NULL AND lat IS NOT NULL AND lng IS NOT NULL`,
+        outFields:'name,district_name,lat,lng,capacity,current_residents,coordinator_phone',
+        returnGeometry:'false', f:'json'})).then(r=>r.json());
+      if(!Array.isArray(j.features)) return null;
+      feats=j.features;
+    }
     // เต็มแล้ว (ยอดผู้พักพิงถึงความจุ) ไม่นับเป็นที่เปิดรับ
-    let rows=j.features.map(({attributes:a})=>({name:a.name, amphoe:a.district_name, lat:a.lat, lon:a.lng,
+    let rows=feats.map(({attributes:a})=>({name:a.name, amphoe:a.district_name, lat:a.lat, lon:a.lng,
       capacity:a.capacity>0?a.capacity:null, occupancy:a.current_residents||0, contact_phone:a.coordinator_phone}))
       .filter(r=>r.capacity==null || r.occupancy<r.capacity);
     if(!rows.length) return {none:true};
