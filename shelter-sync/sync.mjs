@@ -116,9 +116,31 @@ function learnLabels(c) {
   for (const { arr } of arrays(c.body)) for (const o of arr) if (o.value != null && o.label) LABELS[kind].set(String(o.value), String(o.label));
 }
 
+/* พิกัดที่กรอกผิดในระบบ ปภ. เช่น ลองจิจูด 101698758 (ลืมจุดทศนิยม) → ลองใส่จุดหลังหลักหน่วยของจังหวัด (6.x / 101.x)
+   ถ้ายังอยู่นอกกรอบภาคใต้ตอนล่าง (กรอบเดียวกับ shelter.html) → ไม่ใช้พิกัด (แสดงเฉพาะในตาราง) ไม่ให้แผนที่ซูมออกทั้งโลก
+   กรอบหลวมกว่าเขตจังหวัดโดยตั้งใจ: จุดที่ปักเลยเขตไปนิดหน่อยยังแสดงบนแผนที่ได้ ตัดเฉพาะค่าที่เป็นไปไม่ได้ */
+const BOX = { lat: [5, 8.5], lng: [99, 103] };
+const coordFix = { fixed: new Set(), dropped: new Set() };   // รหัสศูนย์ (toRow ถูกเรียกหลายรอบต่อแถว)
+function fixCoord(v, intDigits, [lo, hi], code) {
+  if (v == null) return null;
+  if (v >= lo && v <= hi) return v;
+  const d = String(Math.trunc(Math.abs(v)));
+  if (d.length > intDigits) {
+    const f = Number(d.slice(0, intDigits) + '.' + d.slice(intDigits));
+    if (f >= lo && f <= hi) { coordFix.fixed.add(code); return f; }
+  }
+  return undefined;   // ผิดและซ่อมไม่ได้
+}
+
 function toRow(f) {
-  const lat = num(pick(f, 'lat')), lng = num(pick(f, 'lng'));
-  const geo = lat != null && lng != null && lat !== 0 && lng !== 0;
+  let lat = num(pick(f, 'lat')), lng = num(pick(f, 'lng'));
+  if (lat === 0 || lng === 0) lat = lng = null;
+  if (lat != null && lng != null) {
+    const code = String(pick(f, 'shelter_code') ?? pick(f, 'name'));
+    lat = fixCoord(lat, 1, BOX.lat, code); lng = fixCoord(lng, 3, BOX.lng, code);
+    if (lat === undefined || lng === undefined) { coordFix.dropped.add(code); lat = lng = null; }
+  }
+  const geo = lat != null && lng != null;
   return {
     shelter_code: String(pick(f, 'shelter_code') ?? ''),
     name: String(pick(f, 'name') || '').trim(),
@@ -370,6 +392,9 @@ async function main() {
   const rows = all.filter(r => !r.deleted_at && inNara(r))
     .sort((a, b) => (a.district_name || '').localeCompare(b.district_name || '', 'th') ||
       (a.subdistrict_name || '').localeCompare(b.subdistrict_name || '', 'th') || a.name.localeCompare(b.name, 'th'));
+  if (coordFix.fixed.size || coordFix.dropped.size)
+    log(`พิกัดผิดในระบบ ปภ.: ซ่อมจุดทศนิยมได้ ${coordFix.fixed.size} แห่ง (${[...coordFix.fixed].join(', ')}) · ` +
+      `ใช้ไม่ได้ ${coordFix.dropped.size} แห่ง (${[...coordFix.dropped].join(', ')}) แสดงเฉพาะในตาราง`);
   log(`พบรายการคล้ายศูนย์พักพิง ${all.length} แถว · นราธิวาส ${rows.length} แถว · เปิดอยู่ ${rows.filter(r => r.is_active).length} แห่ง · ` +
     `ผู้พักพิงรวม ${rows.reduce((s, r) => s + (r.is_active ? r.current_residents || 0 : 0), 0)} คน`);
 

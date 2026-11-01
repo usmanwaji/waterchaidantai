@@ -311,7 +311,8 @@ async function loadShelters(){
     lastUpdated = null;
     ALL = j.features.map(({attributes:a})=>{
       let fac = []; try{ fac = JSON.parse(a.facility_items||'[]'); }catch(e){}
-      const geo = a.lat!=null && a.lng!=null;   // บางแถวมีแค่ lat
+      // บางแถวมีแค่ lat · พิกัดที่กรอกผิด (เช่น 101698758 ลืมจุดทศนิยม) อยู่นอกภาคใต้ → ไม่วางบนแผนที่ ไม่ให้แผนที่ซูมออกทั้งโลก
+      const geo = a.lat!=null && a.lng!=null && a.lat>5 && a.lat<8.5 && a.lng>99 && a.lng<103;
       const cap = a.capacity>0 ? a.capacity : null, occ = a.current_residents||0;
       if(a.updated_at && (!lastUpdated || a.updated_at>lastUpdated)) lastUpdated = a.updated_at;
       return { key:a.shelter_code, code:a.shelter_code, name:String(a.name||'').trim(),
