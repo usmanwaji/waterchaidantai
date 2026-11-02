@@ -1,7 +1,8 @@
 {
   "enabledPlugins": {
     "pstack@pstack-claude": true,
-    "autoharness@autoharness": true
+    "autoharness@autoharness": true,
+    "hyperframes@hyperframes": true
   },
   "extraKnownMarketplaces": {
     "pstack-claude": {
@@ -14,6 +15,12 @@
       "source": {
         "source": "github",
         "repo": "tigerless-labs/autoharness"
+      }
+    },
+    "hyperframes": {
+      "source": {
+        "source": "github",
+        "repo": "heygen-com/hyperframes"
       }
     }
   }
