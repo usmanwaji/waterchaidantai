@@ -176,9 +176,9 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
   <div id="map"></div>
   <aside id="side">
     <div id="ffrPanel" hidden>
-      <div class="disc">⛰️ <b>คาดการณ์หมู่บ้านเสี่ยงภัยน้ำหลากดินถล่ม 36 ชม.</b> จ.นราธิวาส<br>ช่วงเวลา <b id="ffrPeriod"></b><br>ค่า FFR (Flash Flood Risk) ยิ่งสูงยิ่งเสี่ยง · ตารางต้นทางไม่มีพิกัดหมู่บ้าน แผนที่จึง<b>ระบายสีทั้งตำบล</b>ตามหมู่บ้านที่เสี่ยงที่สุด ตัวเลขบนแผนที่คือจำนวนหมู่บ้านเสี่ยงในตำบลนั้น · <b>แตะตำบล</b>เพื่อดูรายชื่อหมู่บ้าน</div>
+      <div class="disc">⛰️ <b>คาดการณ์หมู่บ้านเสี่ยงภัยน้ำหลากดินถล่ม 36 ชม.</b> จ.นราธิวาส<br>ช่วงเวลา <b id="ffrPeriod"></b><span id="ffrUpd"></span><br>ค่า FFR (Flash Flood Risk) ยิ่งสูงยิ่งเสี่ยง · ตารางต้นทางไม่มีพิกัดหมู่บ้าน แผนที่จึง<b>ระบายสีทั้งตำบล</b>ตามหมู่บ้านที่เสี่ยงที่สุด ตัวเลขบนแผนที่คือจำนวนหมู่บ้านเสี่ยงในตำบลนั้น · <b>แตะตำบล</b>เพื่อดูรายชื่อหมู่บ้าน</div>
       <div class="ffr-filt">
-        <select id="ffrLevel" aria-label="ระดับความเสี่ยง"><option value="">ทุกระดับ</option><option value="high">เสี่ยงสูง</option><option value="low">เสี่ยงต่ำ</option></select>
+        <select id="ffrLevel" aria-label="ระดับความเสี่ยง"><option value="">ทุกระดับ</option></select>
         <select id="ffrAmp" aria-label="อำเภอ"><option value="">ทุกอำเภอ</option></select>
       </div>
       <div class="card"><h3>สรุปตามอำเภอ</h3><div id="ffrStats"><span class="spin"></span> กำลังโหลด…</div></div>
@@ -742,21 +742,48 @@ rdModal.addEventListener('click', e=>{ if(e.target === rdModal) rdClose(); });
 document.addEventListener('keydown', e=>{ if(e.key === 'Escape') rdClose(); });
 
 /* ---------- ความเสี่ยงดินโคลนถล่ม: คาดการณ์หมู่บ้านเสี่ยงน้ำหลากดินถล่ม (FFR 36 ชม.) ----------
-   ข้อมูลอยู่ใน js/ffr_risk_data.js · ตารางไม่มีพิกัดหมู่บ้าน → จับคู่ อำเภอ+ตำบล
+   ข้อมูล: ชุดล่าสุดที่เจ้าหน้าที่อัปโหลดผ่าน ffr-upload.html (Supabase ffr_current · schema-v12)
+   ยังไม่เคยอัปโหลด/โหลดไม่ได้ ใช้ js/ffr_risk_data.js · ตารางไม่มีพิกัดหมู่บ้าน → จับคู่ อำเภอ+ตำบล
    กับขอบเขตตำบลใน js/onwr-nara-subdistricts.geojson แล้วระบายสีทั้งตำบล
    ระหว่างเปิดชั้นนี้ ซ่อนหมุดสถานีวัดน้ำ/คำอธิบายเดิม เพื่อไม่ให้ทับกัน */
 const FFR_LV = {
-  high: {name:'เสี่ยงสูง',     color:'#dc2626', rank:3},
-  mid:  {name:'เสี่ยงปานกลาง', color:'#f97316', rank:2},
-  low:  {name:'เสี่ยงต่ำ',     color:'#eab308', rank:1}
+  high: {name:'เสี่ยงสูง',     short:'สูง',  color:'#dc2626', rank:3},
+  mid:  {name:'เสี่ยงปานกลาง', short:'กลาง', color:'#f97316', rank:2},
+  low:  {name:'เสี่ยงต่ำ',     short:'ต่ำ',  color:'#eab308', rank:1}
 };
-const ffrRows = (typeof FFR_RISK !== 'undefined' ? FFR_RISK.rows : [])
-  .map(([ap, tb, ban, ffr, lv], i) => ({i, ap, tb, ban, ffr, lv}));
+const ffrRowsOf = rows => rows.filter(r => Array.isArray(r) && r.length >= 5 && isFinite(r[3]))
+  .map(([ap, tb, ban, ffr, lv], i) => ({i, ap, tb, ban, ffr:+ffr, lv}));
+let ffrRows = ffrRowsOf(typeof FFR_RISK !== 'undefined' ? FFR_RISK.rows : []);
+let ffrPeriodText = (typeof FFR_RISK !== 'undefined' && FFR_RISK.period) || '-', ffrUpdText = '';
 const ffrKey = (ap, tb) => ap + '|' + tb;
 const ffrLayer = L.layerGroup(), ffrByKey = {};
-let ffrOn = false, ffrGeo, ffrLegend = null;
+let ffrOn = false, ffrGeo, ffrLegend = null, ffrLive = null;
+// ระดับที่มีในชุดข้อมูล (สูง → ต่ำ) ใช้กับคำอธิบาย ตัวกรอง และสรุปตามอำเภอ
+const ffrLevels = () => ['high','mid','low'].filter(lv => ffrRows.some(r => r.lv === lv));
 
 function ffrLvTag(lv){ return `<span class="ffr-lv ${esc(lv)}">${(FFR_LV[lv] || FFR_LV.low).name}</span>`; }
+
+// โหลดครั้งแรกที่เปิดชั้นนี้ · ช้าเกิน 6 วินาทีใช้ไฟล์ในเว็บไปก่อน
+// supabase-client.js อยู่ท้ายหน้า ลิงก์ #ffr เรียกก่อนสคริปต์นั้นทำงาน จึงรอ DOMContentLoaded
+function ffrLoadLive(){
+  if (!ffrLive) ffrLive = (async () => {
+    if (document.readyState === 'loading') await new Promise(r => document.addEventListener('DOMContentLoaded', r, {once:true}));
+    if (typeof sb === 'undefined') return;
+    try {
+      const {data, error} = await Promise.race([
+        sb.from('ffr_current').select('period,rows,uploaded_at').maybeSingle(),
+        new Promise(r => setTimeout(() => r({error:'timeout'}), 6000))
+      ]);
+      if (error || !data || !Array.isArray(data.rows)) return;
+      const rows = ffrRowsOf(data.rows);
+      if (!rows.length) return;
+      ffrRows = rows;
+      ffrPeriodText = data.period || '-';
+      ffrUpdText = ' (อัปเดต ' + new Date(data.uploaded_at).toLocaleString('th-TH', {dateStyle:'medium', timeStyle:'short', timeZone:'Asia/Bangkok'}) + ' น.)';
+    } catch (e) {}
+  })();
+  return ffrLive;
+}
 
 async function ffrToggle(on){
   if (on === ffrOn) return;
@@ -769,21 +796,26 @@ async function ffrToggle(on){
   document.getElementById('conf').hidden = on;
   document.querySelectorAll('.hbtn').forEach(x => x.classList.toggle('on', !on && +x.dataset.h === horizon));
   if (!on) {
-    map.removeLayer(ffrLayer); map.removeControl(ffrLegend);
+    map.removeLayer(ffrLayer); if (ffrLegend) map.removeControl(ffrLegend);
     map.addLayer(gMk); legend.addTo(map);
     if (location.hash === '#ffr') history.replaceState(null, '', location.pathname + location.search);
     return;
   }
   map.removeLayer(gMk); map.removeControl(legend);
+  await ffrLoadLive();
+  if (!ffrOn) return;
   if (!ffrLegend) {
     ffrLegend = L.control({position:'bottomleft'});
     ffrLegend.onAdd = () => {
       const d = L.DomUtil.create('div','legend');
-      d.innerHTML = `<b style="font-size:11.5px">ความเสี่ยงดินโคลนถล่ม (FFR)</b>` + ['high','low'].map(k =>
+      d.innerHTML = `<b style="font-size:11.5px">ความเสี่ยงดินโคลนถล่ม (FFR)</b>` + ffrLevels().map(k =>
         `<div class="lg"><span class="sw" style="background:${FFR_LV[k].color};border-radius:3px"></span>${FFR_LV[k].name}</div>`).join('');
       return d;
     };
-    document.getElementById('ffrPeriod').textContent = (typeof FFR_RISK !== 'undefined' && FFR_RISK.period) || '-';
+    document.getElementById('ffrPeriod').textContent = ffrPeriodText;
+    document.getElementById('ffrUpd').textContent = ffrUpdText;
+    const lvSel = document.getElementById('ffrLevel');
+    ffrLevels().forEach(lv => lvSel.insertAdjacentHTML('beforeend', `<option value="${lv}">${FFR_LV[lv].name}</option>`));
     const ampSel = document.getElementById('ffrAmp');
     [...new Set(ffrRows.map(r => r.ap))].sort((a,b) => a.localeCompare(b,'th')).forEach(ap =>
       ampSel.insertAdjacentHTML('beforeend', `<option value="${esc(ap)}">${esc(ap)}</option>`));
@@ -853,10 +885,13 @@ function ffrRenderStats(rows){
     const o = by.get(r.ap); o[r.lv] = (o[r.lv] || 0) + 1; o.tb.add(r.tb);
   });
   const n = lv => rows.filter(r => r.lv === lv).length;
-  const curAmp = document.getElementById('ffrAmp').value;
-  el.innerHTML = `<div style="font-size:12px;margin-bottom:6px">${ffrLvTag('high')} <b>${n('high')}</b> หมู่บ้าน &nbsp; ${ffrLvTag('low')} <b>${n('low')}</b> หมู่บ้าน</div>` +
-    [...by.entries()].sort((a,b) => b[1].high - a[1].high || (b[1].high + b[1].low) - (a[1].high + a[1].low)).map(([ap, o]) =>
-      `<div class="ffr-amp${ap === curAmp ? ' on' : ''}" onclick="ffrGoAmp('${esc(ap)}')"><span>อ.${esc(ap)} <small style="color:var(--ink-3)">${o.tb.size} ตำบล</small></span><span>${o.high ? `<span class="badge" style="background:${FFR_LV.high.color}">สูง ${o.high}</span>` : ''} ${o.low ? `<span class="badge" style="background:${FFR_LV.low.color};color:#713f12">ต่ำ ${o.low}</span>` : ''}</span></div>`
+  const curAmp = document.getElementById('ffrAmp').value, lvs = ffrLevels();
+  const total = o => o.high + o.mid + o.low;
+  // ชื่ออำเภอส่งผ่าน data-ap (esc กัน ") ไม่ฝังในโค้ด onclick เพราะชื่อมาจากไฟล์ที่อัปโหลดได้
+  el.innerHTML = `<div style="font-size:12px;margin-bottom:6px">${lvs.map(lv => `${ffrLvTag(lv)} <b>${n(lv)}</b> หมู่บ้าน`).join(' &nbsp; ')}</div>` +
+    [...by.entries()].sort((a,b) => b[1].high - a[1].high || b[1].mid - a[1].mid || total(b[1]) - total(a[1])).map(([ap, o]) =>
+      `<div class="ffr-amp${ap === curAmp ? ' on' : ''}" data-ap="${esc(ap)}" onclick="ffrGoAmp(this.dataset.ap)"><span>อ.${esc(ap)} <small style="color:var(--ink-3)">${o.tb.size} ตำบล</small></span><span>${lvs.filter(lv => o[lv]).map(lv =>
+        `<span class="badge" style="background:${FFR_LV[lv].color}${lv === 'low' ? ';color:#713f12' : ''}">${FFR_LV[lv].short} ${o[lv]}</span>`).join(' ')}</span></div>`
     ).join('') + '<div style="font-size:10.5px;color:var(--ink-3);margin-top:3px">แตะอำเภอเพื่อกรองและซูม</div>';
 }
 

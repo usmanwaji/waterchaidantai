@@ -12,8 +12,13 @@
 
 /* ---------- ข้อความ ---------- */
 // ฟอนต์ใน PDF ที่ export จาก Excel ทำ "ำ" แตกเป็น " า"/" ำ" และไม้เอกหลุดหลัง ใ/ไ
+// PDF จากเบราว์เซอร์/ฟอนต์ Tahoma: "ำ" ออกมาเป็น "ํา" (นิคหิต+า) และวรรณยุกต์เหนือสระบน (เสี่ยง) ออกมาเป็น \u0000
+// \u0000 ที่เดาได้แน่นอนเติมกลับ (น?ำ = น้ำ · ที? = ที่) ที่เหลือเดาไม่ได้ ตัดทิ้ง
+const PDF_TONE = [[/นํ\u0000า/g, 'น้ำ'], [/ที\u0000/g, 'ที่']];
+const pdfTone = s => PDF_TONE.reduce((a, [re, to]) => a.replace(re, to), String(s == null ? '' : s));
 function fixThai(s) {
-  return String(s == null ? '' : s)
+  return pdfTone(s)
+    .replace(/\u0000/g, '').replace(/ํา/g, 'ำ')
     .replace(/\s+[าำ]/g, 'ำ')
     .replace(/ไม\s+มี/g, 'ไม่มี').replace(/ใหญ\s*(?=บ้าน)/g, 'ใหญ่')
     .replace(/([\u0E31\u0E34-\u0E3A\u0E47-\u0E4E])\1+/g, '$1')   // สระ/วรรณยุกต์ซ้อนซ้ำ
@@ -112,7 +117,8 @@ function tableFromSheet(aoa) {
  * pages = [[{str, x, y, w}, ...], ...] (y เพิ่มขึ้นด้านบน ตาม PDF)
  * แบ่งบรรทัดตาม y → รวมข้อความที่ชิดกันเป็นก้อน → หาบรรทัดหัวตาราง แล้วใช้ "ขอบขวาของหัวแต่ละคอลัมน์" เป็นเส้นแบ่ง
  * (หัวตารางจัดกึ่งกลาง ข้อมูลชิดซ้าย/ขวา: ข้อมูลเริ่มก่อนขอบขวาของหัวคอลัมน์ตัวเองเสมอ)
- * บรรทัดที่ไม่มีเลขลำดับ = ข้อความที่ตัดบรรทัดในเซลล์ → ต่อเข้าแถวที่ y ใกล้ที่สุด */
+ * บรรทัดที่ไม่มีเลขลำดับ = ข้อความที่ตัดบรรทัดในเซลล์ → ต่อเข้าแถวที่ y ใกล้ที่สุด
+ * score/minScore: ตัวให้คะแนนบรรทัดหัวตาราง (ไฟล์ชนิดอื่น เช่น js/ffr-import.js ส่งของตัวเองมา) */
 function pdfLines(items) {
   const its = items.filter(t => t.str && t.str.trim()).sort((a, b) => b.y - a.y || a.x - b.x);
   const lines = [];
@@ -134,13 +140,13 @@ function pdfLines(items) {
   });
   return lines.sort((a, b) => b.y - a.y);
 }
-function tableFromPdfPages(pages) {
+function tableFromPdfPages(pages, score = headerScore, minScore = 4) {
   let cols = null, hdrText = null;
   const out = [];
   pages.forEach(items => {
     const lines = pdfLines(items);
     let start = 0;
-    const hi = lines.findIndex(l => headerScore(l.chunks.map(c => c.str)) >= 4);
+    const hi = lines.findIndex(l => score(l.chunks.map(c => c.str)) >= minScore);
     if (hi >= 0) {
       // บรรทัดหัวตาราง + บรรทัดหัวที่ต่อลงมา (จนกว่าจะเจอบรรทัดข้อมูลที่ขึ้นต้นด้วยเลขลำดับ)
       const hl = [lines[hi]];
@@ -344,6 +350,6 @@ function toRecords(table, geo, kind) {
   return { kind, rows: out, warn, columns: Object.fromEntries(Object.entries(cm).map(([f, ix]) => [f, ix.map(i => hdr[i])])) };
 }
 
-const API = { fixThai, house, tel, parseCoord, utmToLatLon, tableFromSheet, tableFromPdfPages, splitHeader, mapColumns, detectKind, buildGeo, toRecords };
+const API = { fixThai, pdfTone, key, house, tel, parseCoord, utmToLatLon, tableFromSheet, pdfLines, tableFromPdfPages, splitHeader, mapColumns, detectKind, buildGeo, toRecords };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.SurveyImport = API;
 })(typeof window !== 'undefined' ? window : globalThis);
