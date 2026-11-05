@@ -51,7 +51,7 @@
   /* ที่เหลืออยู่ในแผ่น จัดกลุ่มตามคำถามที่คนถาม ไม่ใช่ตามชื่อหน่วยงาน */
   var SHEET = [
     { head: 'คาดการณ์และย้อนหลัง', items: [
-      { href: 'forecast.html',  label: 'คาดการณ์',   icon: 'cloud'  },
+      { href: 'forecast.html',  label: 'คาดการณ์พื้นที่เสี่ยง', icon: 'cloud'  },
       /* ปิดปุ่ม "แบบจำลอง" ไว้ก่อน — เก็บโค้ดไว้เผื่อเปิดกลับมาใช้ในอนาคต */
       // { href: 'sim.html',       label: 'แบบจำลอง',   icon: 'wave'   },
       { href: 'history.html',   label: 'ย้อนหลัง',    icon: 'clock'  },
