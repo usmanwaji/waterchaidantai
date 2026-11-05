@@ -5,7 +5,7 @@
  * แถวที่ได้ = [อำเภอ, ตำบล, บ้าน, ค่า FFR, ระดับ] รูปแบบเดียวกับ js/ffr_risk_data.js
  *   • อำเภอ/ตำบล สะกดตามขอบเขตตำบล js/onwr-nara-subdistricts.geojson เพื่อให้ forecast.html ระบายสีตำบลได้
  *     ชื่อที่หาไม่เจอยังนำเข้า (ขึ้นในรายชื่อ แต่ไม่ระบายสีบนแผนที่) และแจ้งเตือนในตัวอย่าง
- *   • ระดับ: จากคอลัมน์ระดับความเสี่ยง (สูง/ปานกลาง/ต่ำ · แดง/ส้ม/เหลือง) · ไม่มีหรืออ่านไม่ออก ใช้ค่า FFR (≥ FFR_HIGH = สูง)
+ *   • ระดับ: จากคอลัมน์ระดับความเสี่ยง (สูง/ปานกลาง/ต่ำ · แดง/ส้ม/เหลือง) · ไม่มีหรืออ่านไม่ออก ใช้ค่า FFR (FFR_HIGH / FFR_MID)
  *   • มีคอลัมน์จังหวัด: เก็บเฉพาะนราธิวาส · อำเภอ/ตำบลที่ผสานเซลล์ (ว่างในแถวถัดไป) ใช้ค่าของแถวก่อนหน้า
  */
 (function (root) {
@@ -14,8 +14,9 @@ const SI = root.SurveyImport || require('./survey-import.js');
 const { fixThai, key } = SI;
 const blank = s => { s = fixThai(s); return s === '' || /^[-–—]+$/.test(s); };
 
-// ไม่มีคอลัมน์ระดับ: ค่า FFR ตั้งแต่เท่านี้ = เสี่ยงสูง (ชุด 11 ต.ค. 69: เสี่ยงสูง 0.41–0.76 · เสี่ยงต่ำ 0.06–0.17)
-const FFR_HIGH = 0.3;
+// ไม่มีคอลัมน์ระดับ: แบ่งจากค่า FFR ให้ตรงกับตารางจริงที่เคยได้
+// (11 ต.ค. 69: สูง 0.41–0.76 · ต่ำ 0.06–0.17 · 4 พ.ย. 69: สูง 0.43–0.46 · ปานกลาง 0.30 · ต่ำ 0.11)
+const FFR_HIGH = 0.4, FFR_MID = 0.2;
 
 /* ---------- หัวตาราง (เทียบด้วย key(): ไม่มีวรรณยุกต์/ช่องว่าง และ ำ → า) ----------
  * ลำดับสำคัญ: ค่า FFR ก่อนระดับ ("ค่าความเสี่ยง" กับ "ระดับความเสี่ยง") · ตำบลก่อนอำเภอ (subdistrict มีคำว่า district)
@@ -90,13 +91,24 @@ function level(v) {
   if (/ต่?ำ|เหลือง|น้อย|เฝ้าระวัง|low|yellow/.test(s)) return 'low';
   return null;
 }
-const THAI_MONTH = /(\d{1,2})\s*(ม\.?ค\.?|ก\.?พ\.?|มี\.?ค\.?|เม\.?ย\.?|พ\.?ค\.?|มิ\.?ย\.?|ก\.?ค\.?|ส\.?ค\.?|ก\.?ย\.?|ต\.?ค\.?|พ\.?ย\.?|ธ\.?ค\.?|มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*\d{2,4}/;
-// ช่วงเวลาคาดการณ์จากข้อความหัวเอกสาร: บรรทัดแรกที่มีวันที่ (ชอบบรรทัดที่มี 2 วันที่ = ช่วง) ตัดตั้งแต่วันที่แรก
+const THAI_MONTH = /(\d{1,2})\s*(ม\.?ค\.?|ก\.?พ\.?|มี\.?ค\.?|เม\.?ย\.?|พ\.?ค\.?|มิ\.?ย\.?|ก\.?ค\.?|ส\.?ค\.?|ก\.?ย\.?|ต\.?ค\.?|พ\.?ย\.?|ธ\.?ค\.?|มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*(\d{2,4})/;
+// วันที่ + เวลา (ถ้ามี) เช่น "4 พฤศจิกายน 2569 เวลา 12.00น." / "11 ต.ค. 2569 12.00 น."
+const THAI_DATETIME = new RegExp(THAI_MONTH.source + '(?:\\s*(?:เวลา)?\\s*(\\d{1,2})[.:](\\d{2})\\s*(?:น\\.?)?)?', 'g');
+const MON_ABBR = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const MON_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+function fmtDate([, d, m, y, hh, mm]) {
+  const i = MON_FULL.includes(m) ? MON_FULL.indexOf(m) : MON_ABBR.findIndex(a => a.replace(/\./g, '') === m.replace(/\./g, ''));
+  return `${+d} ${i >= 0 ? MON_ABBR[i] : m} ${y.length === 2 ? '25' + y : y}` + (hh != null ? ` ${hh.padStart(2, '0')}.${mm} น.` : '');
+}
+// ช่วงเวลาคาดการณ์จากข้อความหัวเอกสาร: บรรทัดแรกที่มีวันที่ (ชอบบรรทัดที่มี 2 วันที่ = ช่วง)
+// 2 วันที่ → เขียนแบบเดียวกับ js/ffr_risk_data.js: "4 พ.ย. 2569 12.00 น. – 6 พ.ย. 2569 00.00 น." · ไม่งั้นตัดข้อความตั้งแต่วันที่แรก
 function guessPeriod(lines) {
   const ls = (lines || []).map(fixThai).filter(l => THAI_MONTH.test(l));
   const two = ls.find(l => (l.match(new RegExp(THAI_MONTH.source, 'g')) || []).length >= 2);
   const l = two || ls[0];
   if (!l) return '';
+  const ds = [...l.matchAll(THAI_DATETIME)];
+  if (ds.length >= 2) return fmtDate(ds[0]) + ' – ' + fmtDate(ds[1]);
   return l.slice(l.search(THAI_MONTH)).slice(0, 150).trim();
 }
 
@@ -134,7 +146,7 @@ function toRows(table, geo) {
     if (ffr == null || ffr < 0 || ffr > 100) { warn.push(`แถว ${n} (บ.${ban}): ค่า FFR "${fixThai(get(r, 'ffr'))}" อ่านไม่ได้ — ไม่นำเข้า`); return; }
     if (/\u0000/.test(SI.pdfTone(get(r, 'ban')))) lossy.push(ban);   // วรรณยุกต์ที่ PDF ถอดไม่ออกและเดาไม่ได้ (fixThai ตัดทิ้ง) ชื่ออาจสะกดไม่ครบ
     let lv = level(get(r, 'lv'));
-    if (!lv) { lv = ffr >= FFR_HIGH ? 'high' : 'low'; inferred++; }
+    if (!lv) { lv = ffr >= FFR_HIGH ? 'high' : ffr >= FFR_MID ? 'mid' : 'low'; inferred++; }
     let a = geo.amphoe(ctx.amp);
     const tm = geo.tambon(a, ctx.tam);
     if (tm) a = tm.a;
@@ -145,7 +157,7 @@ function toRows(table, geo) {
   });
   if (lossy.length) warn.unshift(`${lossy.length} ชื่อหมู่บ้านมีวรรณยุกต์ที่อ่านจาก PDF ไม่ออก (ตัดออกแล้ว) เช่น ${lossy.slice(0, 5).map(b => 'บ.' + b).join(', ')} — ตรวจการสะกด หรือใช้ไฟล์ Excel แทน`);
   if (otherPv) warn.unshift(`ข้าม ${otherPv} แถวของจังหวัดอื่น (เก็บเฉพาะนราธิวาส)`);
-  if (inferred) warn.unshift(`${inferred} แถวไม่มีระดับความเสี่ยงที่อ่านได้ — กำหนดจากค่า FFR (≥ ${FFR_HIGH} = เสี่ยงสูง ต่ำกว่านั้น = เสี่ยงต่ำ) ตรวจให้ตรงกับต้นฉบับ`);
+  if (inferred) warn.unshift(`${inferred} แถวไม่มีระดับความเสี่ยงที่อ่านได้ — กำหนดจากค่า FFR (≥ ${FFR_HIGH} = เสี่ยงสูง · ≥ ${FFR_MID} = เสี่ยงปานกลาง · ต่ำกว่านั้น = เสี่ยงต่ำ) ตรวจให้ตรงกับต้นฉบับ`);
   unmatched.forEach((c, k) => warn.unshift(`ไม่พบ ${k} ในขอบเขตตำบล (${c} หมู่บ้าน) — ขึ้นในรายชื่อแต่ไม่ระบายสีบนแผนที่ ตรวจการสะกด`));
   return {
     rows: out, warn, period: guessPeriod(above), unmatched: unmatched.size, inferred,
@@ -160,6 +172,6 @@ function tableFromPdfPages(pages) {
   return { table, lines };
 }
 
-const API = { FFR_HIGH, level, ffrValue, guessPeriod, headerScore, mapColumns, splitHeader, toRows, tableFromPdfPages };
+const API = { FFR_HIGH, FFR_MID, level, ffrValue, guessPeriod, headerScore, mapColumns, splitHeader, toRows, tableFromPdfPages };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.FfrImport = API;
 })(typeof window !== 'undefined' ? window : globalThis);
