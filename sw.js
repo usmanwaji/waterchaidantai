@@ -5,7 +5,7 @@
  *   • ข้อมูล API (GET) → network-first แล้วเก็บชุดล่าสุดไว้ ใช้ตอนออฟไลน์ ("last good data")
  * เพิ่มเลขเวอร์ชันเมื่อแก้ไฟล์เพื่อบังคับอัปเดตแคช
  */
-const VERSION = 'oms-v100';
+const VERSION = 'oms-v101';
 const SHELL = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 
@@ -15,7 +15,7 @@ const SHELL_ASSETS = [
   'check.html','alert.html','eoc.html','people.html','stats.html',
   'js/criteria.js?v=2','js/supabase-client.js?v=3','js/auth-ui.js','js/shelters_nwt.js','js/parking_nwt.js','js/hosts_nwt.js','js/ddpm_risk_data.js','js/ffr_risk_data.js?v=2','js/onwr-nara-subdistricts.geojson','js/rivers.js?v=4','js/leaflet-heat.js','js/pwa.js','js/ui.js','js/views.js?v=4',
   // ต้องใส่ ?v= ให้ตรงกับที่หน้าเว็บเรียกจริง เพราะแคชอ้างอิง URL เต็มรวม query string
-  'js/tabbar.js?v=3','js/visits-widget.js?v=2','js/install.js?v=2',
+  'js/tabbar.js?v=4','js/visits-widget.js?v=2','js/install.js?v=2',
   'shared.css?v=11',
   'manifest.json','icon.svg','icon-512.png','icon-512-maskable.png'
 ];

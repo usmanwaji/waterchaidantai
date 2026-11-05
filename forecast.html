@@ -94,7 +94,7 @@ footer a{color:var(--st-warn);text-decoration:none}
 .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line-mid);border-top-color:var(--orange);border-radius:50%;animation:spin 1s linear infinite;vertical-align:-2px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ปุ่ม + ชั้นข้อมูลความเสี่ยงดินโคลนถล่ม (FFR 36 ชม. กรมทรัพยากรน้ำ) */
+/* ปุ่ม + ชั้นข้อมูลความเสี่ยงน้ำป่าไหลหลากและดินโคลนถล่ม (FFR 36 ชม. กรมทรัพยากรน้ำ) */
 #btnFfr{padding:7px 14px;border:1.5px solid var(--outline-strong);background:#fff;color:var(--navy-d);font-family:inherit;font-size:13px;font-weight:700;border-radius:10px;cursor:pointer}
 #btnFfr:hover{border-color:var(--orange);color:var(--orange)}
 #btnFfr.on{background:#dc2626;border-color:#dc2626;color:#fff}
@@ -148,7 +148,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
   <nav class="navtab" aria-label="เมนูหลัก">
     <a href="index.html">หน้าแรก</a>
     <a href="map.html">ระดับน้ำ</a>
-    <a href="forecast.html" class="on">คาดการณ์</a>
+    <a href="forecast.html" class="on">คาดการณ์พื้นที่เสี่ยง</a>
     <a href="history.html">ย้อนหลัง</a>
     <a href="repeat.html">พื้นที่ท่วมซ้ำซาก</a>
     <!-- <a href="sim.html">แบบจำลอง</a> -->
@@ -168,7 +168,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
   <button class="hbtn" data-h="48">+48 ชม.</button>
   <button class="hbtn" data-h="72">+72 ชม.</button>
   <button type="button" id="btnDistRain">คาดการณ์ปริมาณฝนรายอำเภอ</button>
-  <button type="button" id="btnFfr" aria-pressed="false">ความเสี่ยงดินโคลนถล่ม</button>
+  <button type="button" id="btnFfr" aria-pressed="false">ความเสี่ยงน้ำป่าไหลหลากและดินโคลนถล่ม</button>
   <span id="conf"></span>
 </div>
 
@@ -741,7 +741,7 @@ document.getElementById('rdClose').addEventListener('click', rdClose);
 rdModal.addEventListener('click', e=>{ if(e.target === rdModal) rdClose(); });
 document.addEventListener('keydown', e=>{ if(e.key === 'Escape') rdClose(); });
 
-/* ---------- ความเสี่ยงดินโคลนถล่ม: คาดการณ์หมู่บ้านเสี่ยงน้ำหลากดินถล่ม (FFR 36 ชม.) ----------
+/* ---------- ความเสี่ยงน้ำป่าไหลหลากและดินโคลนถล่ม: คาดการณ์หมู่บ้านเสี่ยงน้ำหลากดินถล่ม (FFR 36 ชม.) ----------
    ข้อมูล: ชุดล่าสุดที่เจ้าหน้าที่อัปโหลดผ่าน admin-upload.html (Supabase ffr_current · schema-v12)
    ยังไม่เคยอัปโหลด/โหลดไม่ได้ ใช้ js/ffr_risk_data.js · ตารางไม่มีพิกัดหมู่บ้าน → จับคู่ อำเภอ+ตำบล
    กับขอบเขตตำบลใน js/onwr-nara-subdistricts.geojson แล้วระบายสีทั้งตำบล
@@ -808,7 +808,7 @@ async function ffrToggle(on){
     ffrLegend = L.control({position:'bottomleft'});
     ffrLegend.onAdd = () => {
       const d = L.DomUtil.create('div','legend');
-      d.innerHTML = `<b style="font-size:11.5px">ความเสี่ยงดินโคลนถล่ม (FFR)</b>` + ffrLevels().map(k =>
+      d.innerHTML = `<b style="font-size:11.5px">ความเสี่ยงน้ำป่าไหลหลากและดินโคลนถล่ม (FFR)</b>` + ffrLevels().map(k =>
         `<div class="lg"><span class="sw" style="background:${FFR_LV[k].color};border-radius:3px"></span>${FFR_LV[k].name}</div>`).join('');
       return d;
     };
@@ -925,7 +925,7 @@ document.getElementById('ffrAmp').addEventListener('change', () => ffrRender(tru
 
 loadBoundaries();
 loadAll();
-// ลิงก์ตรง: forecast.html#ffr เปิดชั้นความเสี่ยงดินโคลนถล่มทันที
+// ลิงก์ตรง: forecast.html#ffr เปิดชั้นความเสี่ยงน้ำป่าไหลหลากและดินโคลนถล่มทันที
 if (location.hash === '#ffr') ffrToggle(true);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -934,7 +934,7 @@ if (location.hash === '#ffr') ffrToggle(true);
 <script src="js/views.js?v=4" defer></script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
-<script src="js/tabbar.js?v=3" defer></script>
+<script src="js/tabbar.js?v=4" defer></script>
 <script src="js/install.js?v=2" defer></script>
 </body>
 </html>
