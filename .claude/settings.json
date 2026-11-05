@@ -2,7 +2,8 @@
   "enabledPlugins": {
     "pstack@pstack-claude": true,
     "autoharness@autoharness": true,
-    "hyperframes@hyperframes": true
+    "hyperframes@hyperframes": true,
+    "ffmpeg-skill@ffmpeg-skill": true
   },
   "extraKnownMarketplaces": {
     "pstack-claude": {
@@ -21,6 +22,12 @@
       "source": {
         "source": "github",
         "repo": "heygen-com/hyperframes"
+      }
+    },
+    "ffmpeg-skill": {
+      "source": {
+        "source": "github",
+        "repo": "kajisho5/ffmpeg-skill"
       }
     }
   }
