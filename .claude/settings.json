@@ -1,13 +1,34 @@
 {
+  "enabledPlugins": {
+    "pstack@pstack-claude": true,
+    "autoharness@autoharness": true,
+    "hyperframes@hyperframes": true,
+    "ffmpeg-skill@ffmpeg-skill": true
+  },
   "extraKnownMarketplaces": {
     "pstack-claude": {
       "source": {
         "source": "github",
         "repo": "michael-denyer/pstack-claude"
       }
+    },
+    "autoharness": {
+      "source": {
+        "source": "github",
+        "repo": "tigerless-labs/autoharness"
+      }
+    },
+    "hyperframes": {
+      "source": {
+        "source": "github",
+        "repo": "heygen-com/hyperframes"
+      }
+    },
+    "ffmpeg-skill": {
+      "source": {
+        "source": "github",
+        "repo": "kajisho5/ffmpeg-skill"
+      }
     }
-  },
-  "enabledPlugins": {
-    "pstack@pstack-claude": true
   }
 }
