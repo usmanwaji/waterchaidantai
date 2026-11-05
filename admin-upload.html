@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- หน้าสำหรับเจ้าหน้าที่: ไม่มีลิงก์จากหน้าไหนในเว็บ และไม่ให้เครื่องมือค้นหาเก็บ · เข้าใช้ด้วยรหัสผ่าน (ตรวจที่ Supabase · schema-v12) -->
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<title>Admin Upload · ความเสี่ยงดินโคลนถล่ม</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛰️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="shared.css?v=11">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans Thai','Noto Sans Thai',Tahoma,sans-serif;font-size:14px}
+main{max-width:1000px;margin:0 auto;padding:16px 16px 40px}
+h1{font-size:19px;margin:4px 0 2px}
+h2{font-size:15px;margin:0 0 10px}
+.sub{color:var(--ink-3);font-size:12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:5px;background:var(--signal);color:#fff;border:none;font:inherit;font-size:13px;font-weight:700;padding:7px 14px;border-radius:8px;cursor:pointer;text-decoration:none}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line-mid)}
+.btn.sm{padding:3px 9px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.drop{display:block;border:2px dashed var(--line-mid);border-radius:12px;padding:22px;text-align:center;cursor:pointer;background:var(--paper-2)}
+.drop.over{border-color:var(--signal);background:#fff}
+.drop b{font-size:15px}
+.msg{padding:10px 12px;border-radius:9px;margin-top:10px;font-size:13px}
+.msg.err{background:#fde8e8;color:#8a1c1c}
+.msg.ok{background:#e3f6ee;color:#0b5e45}
+.msg.info{background:var(--paper-2);color:var(--ink-2)}
+.warn{color:#8a4b00;font-size:12.5px;margin:4px 0 0 18px;padding:0}
+.stats{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:8px}
+.stats b{font-size:18px}
+#map{height:360px;border-radius:10px;margin:8px 0}
+.tblwrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:9px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--card-2);position:sticky;top:0}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.cur{font-size:11px;font-weight:700;color:#0b5e45}
+input[type=text],input[type=password]{font:inherit;padding:7px 10px;border:1px solid var(--line-mid);border-radius:8px;min-width:260px;flex:1}
+select{font:inherit;padding:6px 8px;border:1px solid var(--line-mid);border-radius:8px}
+label.fld{display:block;font-weight:700;font-size:13px;margin:4px 0}
+.lv{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap}
+.lv.high{background:#dc2626;color:#fff}
+.lv.mid{background:#f97316;color:#fff}
+.lv.low{background:#fde68a;color:#713f12}
+.hide{display:none!important}
+#login{max-width:440px}
+@media(max-width:600px){input[type=text],input[type=password]{min-width:0}}
+</style>
+</head>
+<body>
+<main>
+  <h1>⛰️ Admin Upload · ความเสี่ยงดินโคลนถล่ม</h1>
+  <div class="sub">สำหรับเจ้าหน้าที่ · อัปเดต <b>ตารางคาดการณ์หมู่บ้านเสี่ยงภัยน้ำหลากดินถล่ม 36 ชม.</b> (กรมทรัพยากรน้ำ) บนหน้า <a href="forecast.html#ffr" target="_blank" rel="noopener">คาดการณ์น้ำท่วม → ความเสี่ยงดินโคลนถล่ม</a></div>
+
+  <div id="gate" class="msg info">กำลังตรวจสอบ…</div>
+
+  <form id="login" class="card hide" autocomplete="on">
+    <h2>🔒 ใส่รหัสผ่านเพื่อเข้าใช้</h2>
+    <div class="row">
+      <input type="password" id="pw" autocomplete="current-password" placeholder="รหัสผ่าน" aria-label="รหัสผ่าน" required>
+      <button class="btn" id="loginBtn" type="submit">เข้าสู่ระบบ</button>
+    </div>
+    <div id="loginMsg"></div>
+  </form>
+
+  <div id="app" class="hide">
+    <div class="card">
+      <h2>สถานะข้อมูลบนเว็บตอนนี้</h2>
+      <div id="status" class="sub">…</div>
+    </div>
+
+    <div class="card">
+      <h2>1. เลือกไฟล์</h2>
+      <label class="drop" id="drop">
+        <input type="file" id="file" accept=".xlsx,.xls,.csv,.pdf" hidden>
+        <b>แตะเพื่อเลือกไฟล์ หรือลากไฟล์มาวาง</b>
+        <div class="sub">Excel (.xlsx .xls) · CSV · PDF ที่ export จาก Excel — Excel แม่นยำกว่า PDF (PDF บางไฟล์สระ/วรรณยุกต์เพี้ยน)</div>
+        <div class="sub">ตารางต้องมีหัวคอลัมน์ <b>อำเภอ · ตำบล · หมู่บ้าน · ค่า FFR</b> และ <b>ระดับความเสี่ยง</b> (ถ้ามีคอลัมน์จังหวัด ระบบเก็บเฉพาะนราธิวาส)</div>
+      </label>
+      <div class="row hide" id="sheetRow" style="margin-top:8px"><span>แผ่นงาน:</span><select id="sheetSel"></select></div>
+      <div id="parseMsg"></div>
+      <div class="sub" style="margin-top:8px">ไฟล์จะถูกอ่านในเครื่องนี้ก่อน แสดงตัวอย่างให้ตรวจ แล้วจึงเผยแพร่เมื่อกดยืนยัน · การเผยแพร่ <b>แทนที่ข้อมูลทั้งชุด</b> (ย้อนกลับได้จากประวัติด้านล่าง)</div>
+    </div>
+
+    <div class="card hide" id="preview">
+      <h2>2. ตรวจตัวอย่าง</h2>
+      <label class="fld" for="period">ช่วงเวลาคาดการณ์ (แสดงบนหน้าเว็บ)</label>
+      <div class="row"><input type="text" id="period" maxlength="200" placeholder="เช่น 11 ต.ค. 2569 12.00 น. – 13 ต.ค. 2569 00.00 น."></div>
+      <div class="sub" id="periodHint" style="margin-top:3px"></div>
+      <div class="stats" id="pvStats" style="margin-top:12px"></div>
+      <div class="sub" id="pvCols"></div>
+      <ul class="warn" id="pvWarn"></ul>
+      <div id="map"></div>
+      <div class="tblwrap"><table><thead><tr><th>บ้าน</th><th>ตำบล / อำเภอ</th><th style="text-align:right">FFR</th><th>ระดับ</th></tr></thead><tbody id="pvBody"></tbody></table></div>
+      <div class="row" style="margin-top:12px">
+        <input type="text" id="note" maxlength="300" placeholder="หมายเหตุ (ไม่บังคับ) เช่น ชื่อผู้อัปโหลด หรือที่มาของไฟล์">
+        <button class="btn" id="publish" type="button">3. เผยแพร่ขึ้นเว็บ</button>
+      </div>
+      <div id="pubMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>ประวัติการอัปโหลด</h2>
+      <div class="row" style="margin-bottom:8px">
+        <button class="btn ghost sm" id="builtin" type="button">กลับไปใช้ข้อมูลเดิมที่ติดมากับเว็บ</button>
+      </div>
+      <div class="tblwrap"><table><thead><tr><th>เวลา</th><th>ช่วงเวลาคาดการณ์</th><th>ไฟล์ / หมายเหตุ</th><th>หมู่บ้าน</th><th></th></tr></thead><tbody id="histBody"></tbody></table></div>
+    </div>
+
+    <div class="sub" style="margin-top:14px">ห้ามบอกรหัสผ่านต่อ · <a href="#" id="logout">ออกจากระบบ</a></div>
+  </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-client.js?v=3"></script>
+<script src="js/ffr_risk_data.js?v=2"></script>
+<script src="js/survey-import.js"></script>
+<script src="js/ffr-import.js"></script>
+<script>
+'use strict';
+const XLSX_URL = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+const PDFJS_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.min.mjs';
+const PDFJS_WORKER = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.worker.min.mjs';
+const LV = {high:{name:'เสี่ยงสูง',color:'#dc2626',rank:3}, mid:{name:'เสี่ยงปานกลาง',color:'#f97316',rank:2}, low:{name:'เสี่ยงต่ำ',color:'#eab308',rank:1}};
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const fmt = n => Number(n||0).toLocaleString('th-TH');
+const when = t => new Date(t).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Bangkok'});
+const lvTag = lv => `<span class="lv ${esc(lv)}">${(LV[lv]||LV.low).name}</span>`;
+const setMsg = (el, cls, text) => { el.className = 'msg '+cls; el.textContent = text; };
+
+/* ---------- เข้าสู่ระบบ: รหัสผ่านตรวจที่ Supabase (ffr_login) ได้ token อายุ 12 ชม. เก็บไว้เฉพาะแท็บนี้ ---------- */
+const TOKEN_SS = 'naraflood.ffrToken';
+let TOKEN = null;
+try{ TOKEN = sessionStorage.getItem(TOKEN_SS); }catch(e){}
+const LOGIN_MSG = {
+  wrong: 'รหัสผ่านไม่ถูกต้อง',
+  locked: 'ลองรหัสผิดหลายครั้งเกินไป ระบบปิดการเข้าสู่ระบบชั่วคราว ลองใหม่ในอีก 15 นาที',
+  no_password: 'ผู้ดูแลยังไม่ได้ตั้งรหัสผ่าน (DEPLOY.md ข้อ 2.2)'
+};
+const noSchema = e => /ffr_\w+|does not exist|could not find the function/i.test(e?.message||'');
+function setToken(t){ TOKEN = t; try{ t ? sessionStorage.setItem(TOKEN_SS, t) : sessionStorage.removeItem(TOKEN_SS); }catch(e){} }
+
+function showLogin(text){
+  $('gate').classList.add('hide'); $('app').classList.add('hide'); $('login').classList.remove('hide');
+  if(text) setMsg($('loginMsg'), 'err', text); else $('loginMsg').innerHTML = '';
+  $('pw').focus();
+}
+async function gate(){
+  if(typeof sb==='undefined'){ setMsg($('gate'), 'err', 'เชื่อมต่อฐานข้อมูลไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วโหลดหน้าใหม่'); return; }
+  if(TOKEN){
+    const {data, error} = await sb.rpc('ffr_session_ok', {p_token: TOKEN});
+    if(!error && data){ enter(); return; }
+    setToken(null);
+  }
+  showLogin();
+}
+async function login(e){
+  e.preventDefault();
+  const pw = $('pw').value;
+  if(!pw) return;
+  const b = $('loginBtn'); b.disabled = true; b.textContent = 'กำลังตรวจสอบ…';
+  const {data, error} = await sb.rpc('ffr_login', {p_password: pw});
+  b.disabled = false; b.textContent = 'เข้าสู่ระบบ';
+  if(error){ setMsg($('loginMsg'), 'err', noSchema(error) ? 'ฐานข้อมูลยังไม่ได้ติดตั้งระบบอัปโหลด (ผู้ดูแลต้องรัน supabase/schema-v12.sql)' : 'เข้าสู่ระบบไม่สำเร็จ: '+error.message); return; }
+  if(!data?.ok){ setMsg($('loginMsg'), 'err', LOGIN_MSG[data?.reason] || 'เข้าสู่ระบบไม่สำเร็จ'); $('pw').select(); return; }
+  $('pw').value = '';
+  setToken(data.token);
+  enter();
+}
+function enter(){
+  $('gate').classList.add('hide'); $('login').classList.add('hide'); $('app').classList.remove('hide');
+  loadStatus(); loadHistory();
+  if(RESULT) $('pubMsg').innerHTML = '';
+}
+// token หมดอายุระหว่างใช้งาน: ให้ใส่รหัสใหม่ ไฟล์ที่อ่านไว้ยังอยู่ กดเผยแพร่ต่อได้
+function expired(error){
+  if(error?.code !== '28000' && !/session expired/i.test(error?.message||'')) return false;
+  setToken(null); showLogin('หมดเวลาการใช้งาน กรุณาใส่รหัสผ่านอีกครั้ง');
+  return true;
+}
+
+async function loadStatus(){
+  const {data, error} = await sb.from('ffr_current').select('period,row_count,source_name,uploaded_at').maybeSingle();
+  const builtin = typeof FFR_RISK !== 'undefined' ? FFR_RISK : null;
+  $('status').innerHTML = (!error && data)
+    ? `ใช้ชุดที่อัปโหลด: <b>${fmt(data.row_count)} หมู่บ้าน</b> · ช่วง <b>${esc(data.period)}</b><br>จากไฟล์ “${esc(data.source_name)}” · อัปเดต ${when(data.uploaded_at)}`
+    : `ใช้ข้อมูลเดิมที่ติดมากับเว็บ (js/ffr_risk_data.js)`+(builtin ? ` · ${fmt(builtin.rows.length)} หมู่บ้าน · ช่วง <b>${esc(builtin.period)}</b>` : '');
+}
+
+/* ---------- ข้อมูลภูมิศาสตร์ (โหลดครั้งแรกที่ใช้) ---------- */
+let GEO = null, SUB = null;
+function loadScript(src){ return new Promise((ok,bad)=>{ const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=()=>bad(new Error('โหลด '+src+' ไม่สำเร็จ')); document.head.appendChild(s); }); }
+async function geo(){
+  if(GEO) return GEO;
+  const [sub, dist] = await Promise.all(['js/onwr-nara-subdistricts.geojson','js/onwr-nara-districts.geojson'].map(u=>fetch(u).then(r=>{ if(!r.ok) throw new Error('โหลด '+u+' ไม่สำเร็จ'); return r.json(); })));
+  SUB = sub;
+  return GEO = SurveyImport.buildGeo([], sub, dist);
+}
+
+/* ---------- อ่านไฟล์ ---------- */
+let WB = null, FILE = null, RESULT = null;
+async function readPdf(buf){
+  const pdfjs = await import(PDFJS_URL);
+  pdfjs.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+  const doc = await pdfjs.getDocument({data: buf, isEvalSupported: false}).promise;
+  const pages = [];
+  for(let i=1;i<=doc.numPages;i++){
+    const tc = await (await doc.getPage(i)).getTextContent();
+    pages.push(tc.items.map(t=>({str:t.str, x:t.transform[4], y:t.transform[5], w:t.width})));
+  }
+  return FfrImport.tableFromPdfPages(pages);
+}
+async function handleFile(f){
+  FILE = f; WB = null; RESULT = null;
+  $('preview').classList.add('hide'); $('sheetRow').classList.add('hide'); $('pubMsg').innerHTML='';
+  setMsg($('parseMsg'), 'info', 'กำลังอ่าน “'+f.name+'”…');
+  try{
+    const buf = await f.arrayBuffer();
+    if(/\.pdf$/i.test(f.name)){
+      const [{table, lines}, g] = await Promise.all([readPdf(buf), geo()]);
+      const res = FfrImport.toRows(table, g);
+      if(!res.period) res.period = FfrImport.guessPeriod(lines);
+      show(res);
+    }else{
+      if(typeof XLSX==='undefined') await loadScript(XLSX_URL);
+      WB = XLSX.read(buf, {cellDates:true});
+      const sel = $('sheetSel');
+      sel.innerHTML = WB.SheetNames.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join('');
+      $('sheetRow').classList.toggle('hide', WB.SheetNames.length<2);
+      // เลือกแผ่นงานแรกที่อ่านหัวตารางได้
+      const g = await geo(); let err = null;
+      for(let i=0;i<WB.SheetNames.length;i++){
+        try{ const r = parseSheet(i, g); sel.value=i; show(r); return; }catch(e){ err = err || e; }
+      }
+      throw err;
+    }
+  }catch(e){ setMsg($('parseMsg'), 'err', 'อ่านไฟล์ไม่สำเร็จ: '+e.message); }
+}
+function parseSheet(i, g){
+  const name = WB.SheetNames[i];
+  const res = FfrImport.toRows(SurveyImport.tableFromSheet(XLSX.utils.sheet_to_json(WB.Sheets[name], {header:1, raw:true, defval:''})), g);
+  if(!res.period) res.period = FfrImport.guessPeriod([name, FILE.name.replace(/\.\w+$/, '')]);
+  return res;
+}
+
+/* ---------- ตัวอย่าง ---------- */
+let map, layer;
+function show(res){
+  RESULT = res;
+  const R = res.rows;
+  if(!R.length){ setMsg($('parseMsg'), 'err', 'อ่าน “'+FILE.name+'” แล้วไม่พบหมู่บ้านของ จ.นราธิวาส'+(res.warn.length ? ' · '+res.warn[0] : '')); return; }
+  setMsg($('parseMsg'), 'ok', 'อ่าน “'+FILE.name+'” ได้ '+fmt(R.length)+' หมู่บ้าน ตรวจตัวอย่างด้านล่างก่อนเผยแพร่');
+  $('preview').classList.remove('hide');
+  $('period').value = res.period || '';
+  $('periodHint').textContent = res.period ? 'อ่านจากหัวเอกสาร ตรวจให้ตรงกับต้นฉบับ แก้ไขได้' : 'หาช่วงเวลาในไฟล์ไม่พบ กรุณาพิมพ์เอง (จำเป็น)';
+  const n = lv => R.filter(r=>r[4]===lv).length;
+  const tambons = new Set(R.map(r=>r[0]+'|'+r[1])).size, amps = new Set(R.map(r=>r[0])).size;
+  $('pvStats').innerHTML = `<span><b>${fmt(R.length)}</b> หมู่บ้าน</span>`+
+    ['high','mid','low'].filter(lv=>n(lv)).map(lv=>`<span>${lvTag(lv)} <b>${fmt(n(lv))}</b></span>`).join('')+
+    `<span><b>${fmt(tambons)}</b> ตำบล · <b>${fmt(amps)}</b> อำเภอ</span>`+
+    (res.unmatched ? `<span style="color:#8a4b00">ไม่พบบนแผนที่ <b>${fmt(res.unmatched)}</b> ตำบล</span>` : '');
+  $('pvCols').innerHTML = 'คอลัมน์ที่จับคู่ได้: '+Object.entries(res.columns).map(([f,h])=>`<b>${({n:'ลำดับ',pv:'จังหวัด',amp:'อำเภอ',tam:'ตำบล',ban:'หมู่บ้าน',mu:'หมู่ที่',ffr:'ค่า FFR',lv:'ระดับ'})[f]||f}</b> ← “${esc(h.join('”, “'))}”`).join(' · ');
+  const W = res.warn;
+  $('pvWarn').innerHTML = W.slice(0,40).map(w=>`<li>${esc(w)}</li>`).join('') + (W.length>40 ? `<li>…และอีก ${fmt(W.length-40)} รายการ</li>` : '');
+  $('pvBody').innerHTML = R.slice().sort((a,b)=>b[3]-a[3]).map(r=>
+    `<tr><td>${esc(r[2])}</td><td>ต.${esc(r[1]||'-')} <span class="sub">อ.${esc(r[0]||'-')}</span></td><td class="num">${r[3].toFixed(2)}</td><td>${lvTag(r[4])}</td></tr>`).join('');
+  drawMap(R);
+  $('publish').disabled = false;
+}
+// ระบายสีทั้งตำบลตามหมู่บ้านที่เสี่ยงที่สุด แบบเดียวกับหน้า forecast.html
+function drawMap(R){
+  if(!map){ map = L.map('map').setView([6.25,101.75],9);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(map); }
+  if(layer) map.removeLayer(layer);
+  const groups = new Map();
+  R.forEach(r=>{ const k = r[0]+'|'+r[1]; if(!groups.has(k)) groups.set(k, []); groups.get(k).push(r); });
+  const rk = r => LV[r[4]]?.rank || 0;
+  const hit = L.featureGroup();
+  layer = L.featureGroup();
+  (SUB?.features||[]).forEach(f=>{
+    const p = f.properties, g = groups.get(p.district_th+'|'+p.name_th);
+    if(!g){ layer.addLayer(L.geoJSON(f,{style:{color:'#94a3b8',weight:.6,fill:false},interactive:false})); return; }
+    const top = g.reduce((a,b)=>rk(b)>rk(a) || (rk(b)===rk(a) && b[3]>a[3]) ? b : a);
+    const c = (LV[top[4]]||LV.low).color;
+    hit.addLayer(L.geoJSON(f,{style:{color:c,weight:1.5,fillColor:c,fillOpacity:.15+Math.min(top[3],1)*.45}})
+      .bindTooltip(`ต.${esc(p.name_th)} อ.${esc(p.district_th)} · ${g.length} หมู่บ้าน · FFR สูงสุด ${top[3].toFixed(2)}`,{sticky:true}));
+  });
+  layer.addLayer(hit); layer.addTo(map);
+  setTimeout(()=>{ map.invalidateSize(); if(hit.getLayers().length) map.fitBounds(hit.getBounds(),{padding:[20,20]}); },50);
+}
+
+/* ---------- เผยแพร่ / ประวัติ ---------- */
+async function publish(){
+  if(!RESULT || !RESULT.rows.length) return;
+  const period = $('period').value.trim();
+  if(period.length < 4){ setMsg($('pubMsg'), 'err', 'กรุณาใส่ช่วงเวลาคาดการณ์ก่อนเผยแพร่'); $('period').focus(); return; }
+  if(!confirm(`เผยแพร่ความเสี่ยงดินโคลนถล่ม ${RESULT.rows.length} หมู่บ้าน (ช่วง ${period}) จาก “${FILE.name}” แทนข้อมูลชุดเดิมบนเว็บ?`)) return;
+  const b = $('publish'); b.disabled = true; b.textContent = 'กำลังเผยแพร่…';
+  const {data, error} = await sb.rpc('ffr_publish', {p_token:TOKEN, p_period:period, p_rows:RESULT.rows, p_source:FILE.name, p_note:$('note').value.trim()||null});
+  b.disabled = false; b.textContent = '3. เผยแพร่ขึ้นเว็บ';
+  if(error){ if(!expired(error)) setMsg($('pubMsg'), 'err', 'เผยแพร่ไม่สำเร็จ: '+error.message); return; }
+  $('pubMsg').className = 'msg ok';
+  $('pubMsg').innerHTML = `เผยแพร่แล้ว (เวอร์ชัน #${data}) · <a href="forecast.html#ffr" target="_blank" rel="noopener">เปิดดูบนหน้าคาดการณ์น้ำท่วม</a> (ผู้ใช้จะเห็นข้อมูลใหม่เมื่อโหลดหน้า)`;
+  loadStatus(); loadHistory();
+}
+async function loadHistory(){
+  const tb = $('histBody');
+  const {data, error} = await sb.rpc('ffr_history', {p_token:TOKEN});
+  if(error){ if(!expired(error)) tb.innerHTML = `<tr><td colspan="5">${esc(error.message)}</td></tr>`; return; }
+  tb.innerHTML = (data||[]).map(v=>`<tr><td style="white-space:nowrap">${when(v.uploaded_at)}</td><td>${esc(v.period)}</td><td>${esc(v.source_name)}<div class="sub">${esc(v.note||'')}</div></td>`+
+    `<td class="num">${fmt(v.row_count)}</td><td>${v.is_current?'<span class="cur">ใช้งานอยู่</span>':`<button class="btn ghost sm" data-v="${v.id}">ใช้เวอร์ชันนี้</button>`}</td></tr>`).join('')
+    || '<tr><td colspan="5" class="sub">ยังไม่เคยอัปโหลด — หน้าเว็บใช้ข้อมูลที่ติดมากับเว็บ</td></tr>';
+  tb.querySelectorAll('button[data-v]').forEach(b=>b.addEventListener('click', async ()=>{
+    if(!confirm('ย้อนกลับไปใช้เวอร์ชันนี้บนเว็บ?')) return;
+    const {error} = await sb.rpc('ffr_rollback', {p_token:TOKEN, p_version_id:+b.dataset.v});
+    if(error){ if(!expired(error)) alert('ไม่สำเร็จ: '+error.message); return; }
+    loadStatus(); loadHistory();
+  }));
+}
+
+$('login').addEventListener('submit', login);
+$('file').addEventListener('change', e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); e.target.value=''; });
+const drop = $('drop');
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e=>{ const f = e.dataTransfer.files[0]; if(f) handleFile(f); });
+$('sheetSel').addEventListener('change', async e=>{
+  try{ show(parseSheet(+e.target.value, await geo())); }catch(err){ $('preview').classList.add('hide'); setMsg($('parseMsg'), 'err', 'แผ่นงานนี้อ่านไม่ได้: '+err.message); }
+});
+$('publish').addEventListener('click', publish);
+$('builtin').addEventListener('click', async ()=>{
+  if(!confirm('ให้หน้าเว็บกลับไปใช้ข้อมูลความเสี่ยงดินโคลนถล่มที่ติดมากับเว็บ (js/ffr_risk_data.js)? ประวัติการอัปโหลดยังอยู่ เลือกใช้ใหม่ได้')) return;
+  const {error} = await sb.rpc('ffr_use_builtin', {p_token:TOKEN});
+  if(error){ if(!expired(error)) alert('ไม่สำเร็จ: '+error.message); return; }
+  loadStatus(); loadHistory();
+});
+$('logout').addEventListener('click', async e=>{
+  e.preventDefault();
+  if(TOKEN) await sb.rpc('ffr_logout', {p_token:TOKEN});
+  setToken(null); RESULT = null; $('preview').classList.add('hide'); $('parseMsg').innerHTML = '';
+  showLogin();
+});
+gate();
+</script>
+</body>
+</html>
