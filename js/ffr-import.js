@@ -1,4 +1,4 @@
-/* js/ffr-import.js — แปลงตารางคาดการณ์หมู่บ้านเสี่ยงภัยน้ำหลากดินถล่ม (Excel / PDF) เป็นแถว FFR สำหรับ ffr-upload.html
+/* js/ffr-import.js — แปลงตารางคาดการณ์หมู่บ้านเสี่ยงภัยน้ำหลากดินถล่ม (Excel / PDF) เป็นแถว FFR สำหรับ admin-upload.html
  * ใช้ตัวอ่านตารางและตัวเทียบชื่ออำเภอ/ตำบลของ js/survey-import.js (โหลดก่อนไฟล์นี้)
  * ใช้ได้ทั้งในเบราว์เซอร์ (window.FfrImport) และ node (require) เพื่อทดสอบ
  *

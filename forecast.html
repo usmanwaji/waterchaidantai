@@ -742,7 +742,7 @@ rdModal.addEventListener('click', e=>{ if(e.target === rdModal) rdClose(); });
 document.addEventListener('keydown', e=>{ if(e.key === 'Escape') rdClose(); });
 
 /* ---------- ความเสี่ยงดินโคลนถล่ม: คาดการณ์หมู่บ้านเสี่ยงน้ำหลากดินถล่ม (FFR 36 ชม.) ----------
-   ข้อมูล: ชุดล่าสุดที่เจ้าหน้าที่อัปโหลดผ่าน ffr-upload.html (Supabase ffr_current · schema-v12)
+   ข้อมูล: ชุดล่าสุดที่เจ้าหน้าที่อัปโหลดผ่าน admin-upload.html (Supabase ffr_current · schema-v12)
    ยังไม่เคยอัปโหลด/โหลดไม่ได้ ใช้ js/ffr_risk_data.js · ตารางไม่มีพิกัดหมู่บ้าน → จับคู่ อำเภอ+ตำบล
    กับขอบเขตตำบลใน js/onwr-nara-subdistricts.geojson แล้วระบายสีทั้งตำบล
    ระหว่างเปิดชั้นนี้ ซ่อนหมุดสถานีวัดน้ำ/คำอธิบายเดิม เพื่อไม่ให้ทับกัน */
