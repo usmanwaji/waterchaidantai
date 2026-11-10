@@ -7,3 +7,6 @@ node_modules/
 
 # แคช/สถานะของ wrangler ตอน deploy Cloudflare Worker (เฉพาะเครื่อง)
 .wrangler/
+
+# AutoHarness per-session runtime state
+.claude/autoharness/
