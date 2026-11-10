@@ -54,18 +54,18 @@
     '#visitCard .vc-v small{font-size:12px;font-weight:400;color:var(--ink-3)}' +
     '#visitCard .vc-sub{font-size:11.5px;color:var(--ink-3);line-height:1.4;margin-top:2px}' +
     '#visitCard .vc-delta{font-size:11px;font-weight:600}' +
-    '#visitCard .vc-delta.up{color:var(--signal)}' +
+    '#visitCard .vc-delta.up{color:var(--data)}' +
     '#visitCard .vc-delta.down{color:var(--ink-3)}' +
     /* กราฟแท่ง 30 วัน: แท่งบางแต่ยังกดโดนได้ และมีพื้นจาง ๆ บอกวันที่ไม่มีคนเข้า */
     '#visitCard .vc-chart{display:flex;align-items:flex-end;gap:2px;height:64px;' +
       'padding:0 1px;border-bottom:1px solid var(--line)}' +
-    '#visitCard .vc-bar{flex:1 1 0;min-width:0;background:var(--signal-wash);' +
+    '#visitCard .vc-bar{flex:1 1 0;min-width:0;background:var(--data-wash);' +
       'border-radius:2px 2px 0 0;position:relative;height:100%;display:flex;align-items:flex-end}' +
-    '#visitCard .vc-bar i{display:block;width:100%;background:var(--signal);' +
+    '#visitCard .vc-bar i{display:block;width:100%;background:var(--data);' +
       'border-radius:2px 2px 0 0;min-height:2px}' +
     /* วันนี้เข้มกว่าวันอื่นหนึ่งขั้น ไม่ใช้เหลืองของตรา ปภ.
        เหลืองในระบบนี้แปลว่า "เฝ้าระวัง" เอามาแปะบนตัวเลขผู้เข้าชมไม่ได้ */
-    '#visitCard .vc-bar.today i{background:var(--signal-deep)}' +
+    '#visitCard .vc-bar.today i{background:var(--data-deep)}' +
     '#visitCard .vc-axis{display:flex;justify-content:space-between;' +
       'font-size:10.5px;color:var(--ink-3);margin-top:4px}' +
     '@media(max-width:520px){' +

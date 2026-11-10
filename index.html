@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#eef0f6">
+<meta name="theme-color" content="#f1f1ec">
 <title>ภาพรวมอากาศ & สถานการณ์น้ำ จังหวัดนราธิวาส · naraflood</title>
 <meta name="description" content="หน้าแรก: พยากรณ์อากาศ 24 ชม. รายวัน 7 วัน ปริมาณฝน มาตรวัดน้ำและอำเภอที่ต้องเฝ้าระวัง จังหวัดนราธิวาส เลือกดูรายอำเภอได้">
 <meta property="og:title" content="ภาพรวมอากาศ & สถานการณ์น้ำ จังหวัดนราธิวาส · naraflood.com">
@@ -29,7 +29,7 @@ const homeBoot = (()=>{
   return fetch(HOME_PROXY+'/home.json', {signal:c.signal}).then(r=>r.ok ? r.json() : null).catch(()=>null);
 })();
 </script>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -93,9 +93,9 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 /* แถวรายชั่วโมง */
 #hourRow{display:flex;gap:6px;overflow-x:auto;padding:6px 0 4px;-webkit-overflow-scrolling:touch}
 .hr{flex:0 0 62px;text-align:center;background:var(--card);border:1px solid var(--card-2);border-radius:10px;padding:6px 2px;font-size:11px}
-.hr.rain{background:var(--signal-wash);border-color:var(--signal-wash)}
+.hr.rain{background:var(--data-wash);border-color:var(--data-wash)}
 .hr .ic{font-size:19px;line-height:1.3}
-.hr .mm{color:var(--signal);font-weight:600;font-size:10.5px}
+.hr .mm{color:var(--data);font-weight:600;font-size:10.5px}
 .hr .pp{color:var(--ink-3);font-size:10px}
 /* หัวข้อย่อยเหนือแถวรายชั่วโมง */
 .fcLabel{font-size:11.5px;font-weight:700;color:var(--ink-3);margin-top:10px}
@@ -220,7 +220,7 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
 .hchip[data-lv="na"]{color:var(--ink-3)}
 
 </style>
-<link rel="stylesheet" href="shared.css?v=11">
+<link rel="stylesheet" href="shared.css?v=13">
 </head>
 <body>
 
@@ -245,6 +245,7 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
   </nav>
   <div id="updated">…</div>
   <button id="btnRefresh" onclick="loadAll()">รีเฟรช</button>
+  <a id="btnEoc" href="https://eoc.naraflood.com/" target="_blank" rel="noopener" title="ระบบปฏิบัติการอุทกภัย (EOC)">EOC</a>
 </header>
 
 <!-- ฮีโร่ "ตอบก่อน" (v9): ประโยคเดียวบอกว่าน้ำตอนนี้เป็นยังไง แล้วตามด้วยที่มา
@@ -924,14 +925,14 @@ function wtaGauge(s, cur){
   const y=v=>padT+(H-padT-padB)*(1-(Math.max(lo,Math.min(top,v))-lo)/(top-lo));
   const bx=left, bw=W-left-right, bBot=H-padB;
   const bankY=y(s.bank), warnY=hasWarn?y(s.warn):null, curY=cur!=null?y(cur):null;
-  const water = cur!=null ? `<rect x="${bx}" y="${curY}" width="${bw}" height="${(bBot-curY).toFixed(1)}" fill="var(--signal)" opacity="0.5"/>` : '';
+  const water = cur!=null ? `<rect x="${bx}" y="${curY}" width="${bw}" height="${(bBot-curY).toFixed(1)}" fill="var(--data)" opacity="0.5"/>` : '';
   /* ป้ายตัวเลขข้างมาตร: ถ้าค่าใกล้กันจนทับ ดันตัวล่างลงทีละ 9 หน่วย */
   const labels = [[bankY, `ตลิ่ง ${s.bank.toFixed(2)}`, 'var(--st-danger)']];
   if(hasWarn) labels.push([warnY, `เฝ้าระวัง ${s.warn.toFixed(2)}`, 'var(--st-watch)']);
-  if(cur!=null) labels.push([curY, cur.toFixed(2), 'var(--signal)']);
+  if(cur!=null) labels.push([curY, cur.toFixed(2), 'var(--data)']);
   labels.sort((p,q)=>p[0]-q[0]).forEach((l,i,arr)=>{ if(i && l[0]-arr[i-1][0] < 9) l[0] = arr[i-1][0] + 9; });
   const labelSvg = labels.map(([ly,t,c])=>`<text x="${bx+bw+3}" y="${(ly+3).toFixed(1)}" font-size="8.5" fill="${c}">${t}</text>`).join('');
-  const curLine = cur!=null ? `<line x1="${bx}" y1="${curY}" x2="${bx+bw}" y2="${curY}" stroke="var(--signal)" stroke-width="1.5"/>` : '';
+  const curLine = cur!=null ? `<line x1="${bx}" y1="${curY}" x2="${bx+bw}" y2="${curY}" stroke="var(--data)" stroke-width="1.5"/>` : '';
   const sideBar = hasWarn
     ? `<rect x="${bx-6}" y="${y(top)}" width="5" height="${(bankY-y(top)).toFixed(1)}" fill="var(--st-danger)"/>
     <rect x="${bx-6}" y="${bankY}" width="5" height="${(warnY-bankY).toFixed(1)}" fill="var(--st-watch)"/>
@@ -1069,8 +1070,8 @@ function dirSpark(m, series){
   const X=i=>p+(W-2*p)*i/(pts.length-1), Y=y=>p+(H-2*p)*(1-(y-lo)/(hi-lo));
   const d=pts.map(([,y],i)=>`${i?'L':'M'}${X(i).toFixed(1)},${Y(y).toFixed(1)}`).join('');
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:220px;display:block;margin:4px auto 0" aria-label="ระดับน้ำ 24 ชม.">
-    <path d="${d}" fill="none" stroke="var(--signal)" stroke-width="1.6"/>
-    <circle cx="${X(pts.length-1).toFixed(1)}" cy="${Y(ys[ys.length-1]).toFixed(1)}" r="2.4" fill="var(--signal)"/>
+    <path d="${d}" fill="none" stroke="var(--data)" stroke-width="1.6"/>
+    <circle cx="${X(pts.length-1).toFixed(1)}" cy="${Y(ys[ys.length-1]).toFixed(1)}" r="2.4" fill="var(--data)"/>
   </svg><div class="sub">24 ชม. · ต่ำสุด ${Math.min(...ys).toFixed(2)} · สูงสุด ${Math.max(...ys).toFixed(2)}</div>`;
 }
 function renderDirMain(){
@@ -1477,9 +1478,9 @@ function renderHero(met, sel){
       : d!=null && d <= -s.thr ? {t:'น้ำกำลังลด', k:'normal'}
       : {t:'น้ำยังปกติ', k:'normal'};
   } else if(!area.length) W = {t:'ยังอ่านข้อมูลน้ำไม่ได้', k:'na'};
-  else if(over.length) W = {t:'มีจุดน้ำล้นตลิ่ง', k:'danger'};
-  else if(high.length) W = {t:'น้ำใกล้ตลิ่ง', k:'warn'};
-  else if(watch.length) W = {t:'น้ำถึงระดับเฝ้าระวัง', k:'watch'};
+  else if(over.length) W = {t:`น้ำล้นตลิ่ง ${over.length} สถานี`, k:'danger'};
+  else if(high.length) W = {t:`น้ำใกล้ตลิ่ง ${high.length} สถานี`, k:'warn'};
+  else if(watch.length) W = {t:`น้ำถึงระดับเฝ้าระวัง ${watch.length} สถานี`, k:'watch'};
   else if(rise.length > fall.length && rise.length >= 2) W = {t:'น้ำกำลังเพิ่มระดับ', k:'watch'};
   else if(fall.length > rise.length) W = {t:'น้ำกำลังลด', k:'normal'};
   else W = {t:'น้ำยังปกติ', k:'normal'};
@@ -2095,7 +2096,7 @@ setInterval(loadDistRain, 60*60*1000);
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
 <script src="js/views.js?v=4" defer></script>
-<script src="js/visits-widget.js?v=2" defer></script>
+<script src="js/visits-widget.js?v=3" defer></script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/tabbar.js?v=4" defer></script>
