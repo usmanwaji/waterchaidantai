@@ -218,6 +218,11 @@ footer a{color:var(--orange-warm);text-decoration:none}
 button.hchip{font-family:inherit;cursor:pointer}
 button.hchip:hover{border-color:var(--signal);color:var(--signal)}
 .hchip[data-lv="na"]{color:var(--ink-3)}
+/* ต่อท้ายหัวข้อ "น้ำกำลังเพิ่มระดับ": ยังต่ำหรือสูงกว่าตลิ่งเท่าไหร่ */
+.hero-fb{display:block;margin-top:var(--s1,4px);font-size:.6em;line-height:1.35;font-weight:600;color:var(--ink-2)}
+.hero-fb:empty{display:none}
+.hero-fb b{color:var(--ink);font-weight:700}
+.hero-fb[data-over] b{color:var(--st-danger)}
 
 </style>
 <link rel="stylesheet" href="shared.css?v=15">
@@ -253,7 +258,7 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
 <section class="hero" id="hero" aria-labelledby="heroH">
   <div class="hero-in">
     <div class="hero-live" id="heroLive" data-stale><span class="live-dot"></span><span id="heroLiveTxt">กำลังอ่านข้อมูลสด…</span></div>
-    <h2 class="hero-h" id="heroH" aria-live="polite"><span style="white-space:nowrap"><span id="heroPlace">นราธิวาส</span>ตอนนี้</span> <span class="hero-word" id="heroWord" data-lv="na">กำลังตรวจสอบ</span></h2>
+    <h2 class="hero-h" id="heroH" aria-live="polite"><span style="white-space:nowrap"><span id="heroPlace">นราธิวาส</span>ตอนนี้</span> <span class="hero-word" id="heroWord" data-lv="na">กำลังตรวจสอบ</span><span class="hero-fb" id="heroFb"></span></h2>
     <p class="hero-sub" id="heroSub">กำลังรวบรวมระดับน้ำจากสถานีวัดน้ำของ สสน. กรมชลประทาน และ ปภ.</p>
     <div class="hero-cta">
       <a class="cta-main" href="map.html"><span>เปิดแผนที่ระดับน้ำ</span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></i></a>
@@ -1485,6 +1490,21 @@ function renderHero(met, sel){
   else if(fall.length > rise.length) W = {t:'น้ำกำลังลด', k:'normal'};
   else W = {t:'น้ำยังปกติ', k:'normal'};
   word.textContent = W.t; word.dataset.lv = W.k;
+  /* น้ำกำลังเพิ่มระดับ → บอกต่อว่ายังต่ำ/สูงกว่าตลิ่งเท่าไหร่
+     ใกล้คุณ: สถานีใกล้สุด · ทั้งพื้นที่: สถานีที่กำลังขึ้นและใกล้ตลิ่งที่สุด */
+  const fbEl = document.getElementById('heroFb');
+  let fbS = null;
+  if(W.t === 'น้ำกำลังเพิ่มระดับ'){
+    fbS = useNear ? nearest
+        : rise.filter(s=>fbOf(s)!=null).sort((a,b)=>fbOf(a)-fbOf(b))[0] || null;
+  }
+  const fbV = fbS ? fbOf(fbS) : null;
+  if(fbV==null){ fbEl.textContent = ''; fbEl.removeAttribute('data-over'); }
+  else{
+    fbEl.innerHTML = (useNear ? '' : `${esc(fbS.name)} `) +
+      (fbV >= 0 ? `ยังต่ำกว่าตลิ่ง <b>${fbV.toFixed(2)} ม.</b>` : `สูงกว่าตลิ่ง <b>${(-fbV).toFixed(2)} ม.</b>`);
+    if(fbV < 0) fbEl.setAttribute('data-over',''); else fbEl.removeAttribute('data-over');
+  }
 
   const sum = met?.daily ? met.daily.precipitation_sum.reduce((a,b)=>a+(b||0),0) : null;
   const R = sum!=null ? heroRainLv(sum) : null;
