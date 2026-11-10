@@ -1484,6 +1484,8 @@ function renderHero(met, sel){
   else if(rise.length > fall.length && rise.length >= 2) W = {t:'น้ำกำลังเพิ่มระดับ', k:'watch'};
   else if(fall.length > rise.length) W = {t:'น้ำกำลังลด', k:'normal'};
   else W = {t:'น้ำยังปกติ', k:'normal'};
+  /* ใกล้คุณ: หัวข้อบอกระดับน้ำเทียบตลิ่งของสถานีใกล้สุดแทนคำบรรยาย (สียังตามระดับ/แนวโน้มเดิม) */
+  if(useNear) W.t = fbText(nearest);
   word.textContent = W.t; word.dataset.lv = W.k;
 
   const sum = met?.daily ? met.daily.precipitation_sum.reduce((a,b)=>a+(b||0),0) : null;
@@ -1491,7 +1493,7 @@ function renderHero(met, sel){
   let s1;
   if(useNear){
     const s = nearest;
-    s1 = `สถานีที่ใกล้คุณที่สุด <b>${esc(s.name)}</b> (${s.src}) ห่าง ${fmtKm(s.km)} · ระดับน้ำ<b>${fbText(s)}</b>` +
+    s1 = `สถานีที่ใกล้คุณที่สุด <b>${esc(s.name)}</b> (${s.src}) ห่าง ${fmtKm(s.km)}` +
          (s.stText ? ` · ${esc(s.stText)}` : '');
   } else if(!area.length){
     s1 = 'เชื่อมต่อสถานีวัดน้ำไม่ได้ขณะนี้ (สสน. · ปภ. · ชป.) ลองกดรีเฟรชอีกครั้ง';
