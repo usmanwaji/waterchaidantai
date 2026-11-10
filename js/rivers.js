@@ -70,8 +70,8 @@
     if (!R || !R.length) return;
     if (!map.getPane('rivers')) { map.createPane('rivers'); map.getPane('rivers').style.zIndex = 260; }
     R.forEach(line => {
-      L.polyline(line, { pane: 'rivers', color: 'var(--signal-deep)', weight: 6, opacity: 0.5,  lineJoin: 'round', lineCap: 'round', interactive: false }).addTo(map);
-      L.polyline(line, { pane: 'rivers', color: 'var(--signal)', weight: 3, opacity: 0.95, lineJoin: 'round', lineCap: 'round', interactive: false }).addTo(map);
+      L.polyline(line, { pane: 'rivers', color: 'var(--data-deep)', weight: 6, opacity: 0.5,  lineJoin: 'round', lineCap: 'round', interactive: false }).addTo(map);
+      L.polyline(line, { pane: 'rivers', color: 'var(--data)', weight: 3, opacity: 0.95, lineJoin: 'round', lineCap: 'round', interactive: false }).addTo(map);
     });
   }
 
@@ -81,8 +81,8 @@
     if (!R || !R.length) return;
     R.forEach(line => {
       const path = line.map(p => ({ lat: p[0], lng: p[1] }));
-      new google.maps.Polyline({ map: gmap, path, strokeColor: 'var(--signal-deep)', strokeOpacity: 0.5,  strokeWeight: 7, clickable: false, zIndex: 1 });
-      new google.maps.Polyline({ map: gmap, path, strokeColor: 'var(--signal)', strokeOpacity: 0.95, strokeWeight: 3.5, clickable: false, zIndex: 2 });
+      new google.maps.Polyline({ map: gmap, path, strokeColor: 'var(--data-deep)', strokeOpacity: 0.5,  strokeWeight: 7, clickable: false, zIndex: 1 });
+      new google.maps.Polyline({ map: gmap, path, strokeColor: 'var(--data)', strokeOpacity: 0.95, strokeWeight: 3.5, clickable: false, zIndex: 2 });
     });
   }
 

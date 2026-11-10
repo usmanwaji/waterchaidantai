@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#eef0f6">
+<meta name="theme-color" content="#f1f1ec">
 <title>ศูนย์พักพิงชั่วคราว จังหวัดนราธิวาส · naraflood</title>
 <meta name="description" content="แผนที่และรายชื่อศูนย์พักพิงชั่วคราวรองรับผู้อพยพจากอุทกภัย จังหวัดนราธิวาส เลือกดูรายอำเภอ พร้อมพิกัด ผู้ดูแล เบอร์ติดต่อ ความจุ และสถานะเปิดศูนย์ จากระบบศูนย์พักพิง ปภ.">
 <meta property="og:title" content="ศูนย์พักพิงชั่วคราว จังหวัดนราธิวาส · naraflood.com">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--pk:#1d5fd1;--hs:#0f8a6b;--bg:var(--paper-2);--ink:var(--ink);--muted:var(--ink-3);--orange:var(--st-warn);--orange-d:var(--st-warn);--navy:var(--signal);--navy-d:var(--signal-deep);--peach:var(--paper-2)}
@@ -82,7 +82,7 @@ footer a{color:var(--st-warn);text-decoration:none}
 /* ที่จอดรถหนีน้ำ (แบบสำรวจ อปท.) */
 #parkBtn{white-space:nowrap}
 #parkBtn.on{background:var(--pk);color:#fff;border-color:var(--pk)}
-.pkic{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:var(--pk);color:#fff;font:700 13px/1 'IBM Plex Sans',sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.pkic{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:var(--pk);color:#fff;font:700 13px/1 var(--ui);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
 .pkic.approx{background:#fff;color:var(--pk);border:2px dashed var(--pk)}
 .mlegend .pkic{display:inline-flex;width:16px;height:16px;font-size:10px;border-width:1.5px;vertical-align:-3px;margin-right:3px;box-shadow:none}
 #pkLegend,#parkCard{display:none}
@@ -133,7 +133,7 @@ th{background:var(--card-2)}
 footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-warm)}
 
 </style>
-<link rel="stylesheet" href="shared.css?v=11">
+<link rel="stylesheet" href="shared.css?v=13">
 </head>
 <body>
 
@@ -180,7 +180,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
       <span><i class="dot" style="background:var(--st-danger)"></i>เต็ม</span>
       <span style="margin-left:8px"><b>ยังไม่เปิด (สีตามความจุ):</b></span>
       <span><i class="dot" style="background:var(--st-normal)"></i>≥300</span>
-      <span><i class="dot" style="background:var(--signal)"></i>100-299</span>
+      <span><i class="dot" style="background:var(--data)"></i>100-299</span>
       <span><i class="dot" style="background:var(--st-warn)"></i>&lt;100</span>
       <span><i class="dot" style="background:var(--ink-3)"></i>ไม่ระบุ</span>
     </div>
@@ -257,7 +257,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="js/rivers.js?v=4"></script>
+<script src="js/rivers.js?v=5"></script>
 <script src="js/parking_nwt.js"></script>
 <script src="js/hosts_nwt.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -298,7 +298,7 @@ const SH_STATUS = {
   full: {c:'var(--st-danger)', l:'เต็ม'}
 };
 
-function capColor(c){ if(c==null) return 'var(--ink-3)'; if(c>=300) return 'var(--st-normal)'; if(c>=100) return 'var(--signal)'; return 'var(--st-warn)'; }
+function capColor(c){ if(c==null) return 'var(--ink-3)'; if(c>=300) return 'var(--st-normal)'; if(c>=100) return 'var(--data)'; return 'var(--st-warn)'; }
 function capRadius(c){ if(c==null) return 6; return Math.max(5, Math.min(16, 5 + Math.sqrt(c)/2.6)); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
 const fmt = n => (n==null?'…':Number(n).toLocaleString('th-TH'));
@@ -613,7 +613,7 @@ document.getElementById('nearBtn').addEventListener('click',()=>{
   navigator.geolocation.getCurrentPosition(pos=>{
     userPos=[pos.coords.latitude,pos.coords.longitude]; btn.textContent='📍 ใกล้ฉัน';
     if(userMarker) map.removeLayer(userMarker);
-    userMarker=L.circleMarker(userPos,{radius:8,color:'var(--signal)',weight:3,fillColor:'var(--signal)',fillOpacity:.9}).addTo(map).bindPopup('ตำแหน่งของคุณ');
+    userMarker=L.circleMarker(userPos,{radius:8,color:'var(--data)',weight:3,fillColor:'var(--data)',fillOpacity:.9}).addTo(map).bindPopup('ตำแหน่งของคุณ');
     render(); map.setView(userPos,12,{animate:true});
   }, err=>{ btn.textContent='📍 ใกล้ฉัน'; alert('ไม่สามารถหาตำแหน่งได้: '+err.message); }, {enableHighAccuracy:true,timeout:10000});
 });

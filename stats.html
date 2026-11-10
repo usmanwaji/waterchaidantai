@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#eef0f6">
+<meta name="theme-color" content="#f1f1ec">
 <title>สถิติผู้เข้าชม | naraflood</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{--bg:var(--paper);--ink:var(--ink);--muted:var(--ink-3);--elevated:var(--card);--outline:var(--line);--outline-strong:var(--line-mid);--orange:var(--signal);--orange-d:var(--signal-hover);--shell:rgba(0,0,0,.72)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%}
-body{font-family:'IBM Plex Sans Thai','IBM Plex Sans',Tahoma,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+body{font-family:var(--ui);background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
 header{background:var(--shell);backdrop-filter:blur(12px) saturate(1.2);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:100}
 header h1{font-size:17px;font-weight:700}
 header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
@@ -46,14 +46,14 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
 .kpi .v{font-size:25px;font-weight:600;line-height:1.2;margin-top:2px}
 .kpi .v small{font-size:12px;font-weight:400;color:var(--muted);margin-left:4px}
 .dlt{font-size:11px;font-weight:600}
-.dlt.up{color:var(--signal)}
+.dlt.up{color:var(--data)}
 .dlt.down{color:var(--muted)}
 
 /* กราฟรายวัน: แท่งจาง = จำนวนครั้ง แท่งเข้ม = จำนวนคน */
 .chart{display:flex;align-items:flex-end;gap:2px;height:150px;border-bottom:1px solid var(--outline);padding:0 1px}
 .cbar{flex:1 1 0;min-width:0;height:100%;display:flex;align-items:flex-end;position:relative}
-.cbar .bg{position:absolute;left:0;right:0;bottom:0;background:var(--signal-wash);border-radius:3px 3px 0 0}
-.cbar .fg{position:relative;width:100%;background:var(--signal);border-radius:3px 3px 0 0;min-height:2px}
+.cbar .bg{position:absolute;left:0;right:0;bottom:0;background:var(--data-wash);border-radius:3px 3px 0 0}
+.cbar .fg{position:relative;width:100%;background:var(--data);border-radius:3px 3px 0 0;min-height:2px}
 /* เสาร์-อาทิตย์ทำเครื่องหมายที่เส้นฐาน ไม่ใช่เปลี่ยนสีพื้นแท่ง
    เพราะพื้นจาง ๆ สองเฉดที่ต่างกันไม่ถึงขั้นความสว่างเดียวมองไม่เห็นบนจอกลางแดด */
 .cbar.wk::after{content:"";position:absolute;left:1px;right:1px;bottom:-3px;height:3px;background:var(--line-mid);border-radius:2px}
@@ -69,12 +69,12 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.85}
 .row .nb{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .row .nb em{font-style:normal;color:var(--muted);font-weight:400;font-size:11.5px;margin-left:5px}
 .row .track{grid-column:1/-1;height:6px;background:var(--card-2);border-radius:4px;overflow:hidden}
-.row .track i{display:block;height:100%;background:var(--signal);border-radius:4px}
+.row .track i{display:block;height:100%;background:var(--data);border-radius:4px}
 .empty{color:var(--muted);font-size:12.5px;padding:8px 0}
 
 /* ชั่วโมงในรอบวัน */
 .hours{display:flex;align-items:flex-end;gap:2px;height:90px;border-bottom:1px solid var(--outline)}
-.hbar{flex:1 1 0;background:var(--signal);border-radius:2px 2px 0 0;min-height:2px}
+.hbar{flex:1 1 0;background:var(--data);border-radius:2px 2px 0 0;min-height:2px}
 .hax{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:4px}
 
 .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -95,7 +95,7 @@ a,button,.chip{touch-action:manipulation;-webkit-tap-highlight-color:rgba(28,50,
   .kpi .v{font-size:21px}
 }
 </style>
-<link rel="stylesheet" href="shared.css?v=11">
+<link rel="stylesheet" href="shared.css?v=13">
 </head>
 <body>
 
@@ -238,8 +238,8 @@ function renderChart(rows) {
     `<div class="axis"><span>${rows.length ? esc(dayLabel(rows[0].day, true)) : ''}</span>` +
     `<span>สูงสุด ${fmt(max)} ครั้ง/วัน</span>` +
     `<span>${rows.length ? esc(dayLabel(rows[rows.length - 1].day, true)) : ''}</span></div>` +
-    `<div class="legend"><span><i style="background:var(--signal)"></i>ผู้เข้าชม (คน)</span>` +
-    `<span><i style="background:var(--signal-wash)"></i>เปิดหน้าเว็บ (ครั้ง)</span>` +
+    `<div class="legend"><span><i style="background:var(--data)"></i>ผู้เข้าชม (คน)</span>` +
+    `<span><i style="background:var(--data-wash)"></i>เปิดหน้าเว็บ (ครั้ง)</span>` +
     `<span><i class="rule" style="background:var(--line-mid)"></i>เสาร์–อาทิตย์</span></div>`;
 }
 

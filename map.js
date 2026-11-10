@@ -92,7 +92,7 @@ const locale = () => 'th-TH';
 const WL_CLASSES = {
   overflow:{color:'var(--st-danger)', order:0},
   near:    {color:'#ea580c', order:1},
-  high:    {color:'var(--signal)', order:2},
+  high:    {color:'var(--data)', order:2},
   normal:  {color:'var(--st-normal)', order:3},
   low:     {color:'var(--st-watch)', order:4},
   critlow: {color:'#78350f', order:5},
@@ -127,7 +127,7 @@ function wlClass(pct){
 function rainInfo(mm){
   if(mm==null || isNaN(mm) || mm<=0) return {label:t('rain_none'), color:'var(--ink-3)'};
   if(mm<=10)  return {label:t('rain_light'), color:'var(--st-normal)'};
-  if(mm<=35)  return {label:t('rain_mod'), color:'var(--signal)'};
+  if(mm<=35)  return {label:t('rain_mod'), color:'var(--data)'};
   if(mm<=90)  return {label:t('rain_heavy'), color:'var(--st-warn)'};
   return {label:t('rain_vheavy'), color:'var(--st-danger)'};
 }
@@ -156,7 +156,7 @@ function damInfo(pct){
   if(pct==null || isNaN(pct)) return {label:t('nodata'), color:'var(--ink-3)'};
   if(pct>=100) return {label:t('dam_over'), color:'var(--st-danger)'};
   if(pct>=80)  return {label:t('dam_watch'), color:'var(--st-warn)'};
-  if(pct>=50)  return {label:t('dam_much'), color:'var(--signal)'};
+  if(pct>=50)  return {label:t('dam_much'), color:'var(--data)'};
   if(pct>=30)  return {label:t('dam_normal'), color:'var(--st-normal)'};
   return {label:t('dam_low'), color:'var(--st-watch)'};
 }
@@ -565,7 +565,7 @@ function onwrRainPopup(s){
     const h = v==null ? 0 : Math.max(2, Math.round(28*v/mx));
     const lbl = hours[i] ? new Date(hours[i]).toLocaleTimeString(locale(), {hour:'2-digit', minute:'2-digit', timeZone:'Asia/Bangkok'}) : '';
     return `<div style="flex:1;text-align:center;min-width:0">
-      <div style="height:30px;display:flex;align-items:flex-end;justify-content:center"><div style="width:70%;height:${h}px;background:${v==null?'var(--outline)':'var(--signal)'};border-radius:2px 2px 0 0"></div></div>
+      <div style="height:30px;display:flex;align-items:flex-end;justify-content:center"><div style="width:70%;height:${h}px;background:${v==null?'var(--outline)':'var(--data)'};border-radius:2px 2px 0 0"></div></div>
       <div style="font-size:9px;color:var(--muted)">${lbl}</div><div style="font-size:9.5px;font-weight:600">${onwrNum(v)}</div></div>`;
   }).join('');
   const obs = s[f.obs];
@@ -770,7 +770,7 @@ function locateMe(){
   navigator.geolocation.getCurrentPosition(p=>{
     b.textContent='📍'; const ll=[p.coords.latitude,p.coords.longitude];
     if(meMarker) map.removeLayer(meMarker);
-    meMarker=L.circleMarker(ll,{radius:9,color:'var(--signal)',weight:3,fillColor:'var(--signal)',fillOpacity:.9}).addTo(map).bindPopup('ตำแหน่งของคุณ').openPopup();
+    meMarker=L.circleMarker(ll,{radius:9,color:'var(--data)',weight:3,fillColor:'var(--data)',fillOpacity:.9}).addTo(map).bindPopup('ตำแหน่งของคุณ').openPopup();
     map.setView(ll,12,{animate:true});
   }, e=>{ b.textContent='📍'; alert('หาตำแหน่งไม่ได้: '+e.message); }, {enableHighAccuracy:true,timeout:10000});
 }
@@ -1214,7 +1214,7 @@ async function loadSea(){
     const lat = num(d.lat), lon = num(d.lon);
     if(!inBbox(lat,lon)) return;   // เฉพาะชายฝั่งนราธิวาส
     const warn = d.warning?.level === 1;
-    const color = warn ? 'var(--st-danger)' : 'var(--signal)';
+    const color = warn ? 'var(--st-danger)' : 'var(--data)';
     L.marker([lat,lon], {icon: mkIcon('mk-sea', color, 20, '~', warn), zIndexOffset:150})
       .bindPopup(()=>`
         <div class="pp-title">${esc(d.name_TH||d.name_EN)}</div>
@@ -1448,12 +1448,12 @@ function ddpmWLChart(g, d){
        onpointermove="ddpmChartHover(event,this)" onpointerdown="ddpmChartHover(event,this)" onpointerleave="ddpmChartLeave(this)"
        style="width:100%;display:block;background:var(--card);border:1px solid var(--line);border-radius:6px;touch-action:pan-y">
     ${zones}${bankLine}
-    <path d="${line}" fill="none" stroke="var(--signal)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="${X(last.i).toFixed(1)}" cy="${Y(last.y).toFixed(1)}" r="4" fill="var(--signal)" stroke="var(--card)" stroke-width="2"/>
+    <path d="${line}" fill="none" stroke="var(--data)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${X(last.i).toFixed(1)}" cy="${Y(last.y).toFixed(1)}" r="4" fill="var(--data)" stroke="var(--card)" stroke-width="2"/>
     ${yt(hi-pad)}${yt(lo+pad)}${xt(0,'start')}${xt(Math.floor((n-1)/2),'middle')}${xt(n-1,'end')}
     <g class="hv" style="display:none;pointer-events:none">
       <line y1="${pt}" y2="${H-pb}" stroke="var(--ink-3)" stroke-width="1"/>
-      <circle r="4" fill="var(--card)" stroke="var(--signal)" stroke-width="2"/>
+      <circle r="4" fill="var(--card)" stroke="var(--data)" stroke-width="2"/>
       <text y="${pt+9}" font-size="10" font-weight="600" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke"></text>
     </g>
   </svg>${key}
@@ -1569,7 +1569,7 @@ async function loadTelerid(pre){
       const wlOk = teleReporting(d, j.updated);
       if(!wlOk && !teleOnline(d, j.updated)) return;
       n++;
-      const mk = L.marker([lat,lon], {icon: mkIcon('mk-tele', wlOk ? 'var(--signal)' : 'var(--ink-3)', 18, '▲', false), zIndexOffset: wlOk ? 80 : 70})
+      const mk = L.marker([lat,lon], {icon: mkIcon('mk-tele', wlOk ? 'var(--data)' : 'var(--ink-3)', 18, '▲', false), zIndexOffset: wlOk ? 80 : 70})
         .bindPopup(()=>{
           // เวลาที่สถานีวัดค่า/ถ่ายภาพจริง (dt) · ไม่มีจึงใช้เวลาที่ scraper ส่งขึ้น
           const at = d.levelDt || d.dt || j.updated;
@@ -1674,7 +1674,7 @@ function renderHyd(){
     // ค่าวัดเก่ากว่า 6 ชม. → หมุดสีเทา (สถานีอาจหยุดส่ง)
     const old = d.levelDt && (Date.now() - new Date(d.levelDt)) > 6*3600e3;
     const over = d.bank!=null && d.level >= d.bank;
-    const color = old ? 'var(--ink-3)' : over ? 'var(--st-danger)' : 'var(--signal)';
+    const color = old ? 'var(--ink-3)' : over ? 'var(--st-danger)' : 'var(--data)';
     const pts = d.wl && Array.isArray(d.wl.v) ? d.wl.v : [];
     const prev3 = pts.length > 3 ? pts[pts.length-4] : null;
     const diff3 = prev3!=null ? d.level - prev3 : null;
@@ -1779,10 +1779,10 @@ function teleWLChart(det){
   const gl=(y,c)=> (y!=null&&y>=ymin&&y<=ymax)?`<line x1="${pl}" y1="${Y(y).toFixed(1)}" x2="${W-pr}" y2="${Y(y).toFixed(1)}" stroke="${c}" stroke-width="1" stroke-dasharray="3 2"/>`:'';
   const yt=y=>`<text x="${pl-4}" y="${(Y(y)+3).toFixed(1)}" font-size="9" fill="var(--ink-3)" text-anchor="end">${y.toFixed(2)}</text>`;
   const last=pts[pts.length-1].y;
-  return `<div style="font-size:11px;color:var(--ink-2);margin:6px 0 2px">${det.wlLabel||'ระดับน้ำ 48 ชม.'} <b style="color:var(--signal)">${last.toFixed(2)} ม.</b></div>
+  return `<div style="font-size:11px;color:var(--ink-2);margin:6px 0 2px">${det.wlLabel||'ระดับน้ำ 48 ชม.'} <b style="color:var(--data)">${last.toFixed(2)} ม.</b></div>
   <svg viewBox="0 0 ${W} ${H}" style="width:100%;background:var(--card);border:1px solid var(--line);border-radius:6px">
     ${gl(warn,'var(--st-watch)')}${gl(crit,'var(--st-danger)')}
-    <path d="${line}" fill="none" stroke="var(--signal)" stroke-width="1.6"/>
+    <path d="${line}" fill="none" stroke="var(--data)" stroke-width="1.6"/>
     ${yt(ymax)}${yt(ymin)}
   </svg>`;
 }
@@ -1794,9 +1794,9 @@ function teleRainChart(det){
   const bw=(W-pl-pr)/n;
   const X=i=> pl+bw*i;
   const Y=y=> pt+(H-pt-pb)*(1-y/ymax);
-  const bars=v.map((y,i)=> y>0?`<rect x="${X(i).toFixed(1)}" y="${Y(y).toFixed(1)}" width="${Math.max(0.8,bw-0.4).toFixed(1)}" height="${(H-pb-Y(y)).toFixed(1)}" fill="var(--signal)"/>`:'').join('');
+  const bars=v.map((y,i)=> y>0?`<rect x="${X(i).toFixed(1)}" y="${Y(y).toFixed(1)}" width="${Math.max(0.8,bw-0.4).toFixed(1)}" height="${(H-pb-Y(y)).toFixed(1)}" fill="var(--data)"/>`:'').join('');
   const sum24=v.slice(-96).reduce((a,b)=>a+b,0);
-  return `<div style="font-size:11px;color:var(--ink-2);margin:6px 0 2px">ฝนสะสม 24 ชม. <b style="color:var(--signal)">${sum24.toFixed(1)} มม.</b></div>
+  return `<div style="font-size:11px;color:var(--ink-2);margin:6px 0 2px">ฝนสะสม 24 ชม. <b style="color:var(--data)">${sum24.toFixed(1)} มม.</b></div>
   <svg viewBox="0 0 ${W} ${H}" style="width:100%;background:var(--card);border:1px solid var(--line);border-radius:6px">
     <text x="${pl-4}" y="${pt+6}" font-size="9" fill="var(--ink-3)" text-anchor="end">${ymax.toFixed(0)}</text>
     ${bars}
@@ -1819,11 +1819,11 @@ function teleCrossSection(det){
   const water=(level!=null&&level>ymin)?`<rect x="${pl}" y="${Y(level).toFixed(1)}" width="${(W-pl-pr).toFixed(1)}" height="${(H-pb-Y(level)).toFixed(1)}" fill="#7dd3fc" opacity="0.7"/>`:'';
   const hl=(y,c,lbl)=> (y!=null&&y>=ymin&&y<=ymax)?`<line x1="${pl}" y1="${Y(y).toFixed(1)}" x2="${W-pr}" y2="${Y(y).toFixed(1)}" stroke="${c}" stroke-width="1" stroke-dasharray="3 2"/><text x="${W-pr}" y="${(Y(y)-2).toFixed(1)}" font-size="8" fill="${c}" text-anchor="end">${lbl}</text>`:'';
   return `<div style="font-size:11px;color:var(--ink-2);margin:6px 0 2px">ภาพตัดลำน้ำ</div>
-  <svg viewBox="0 0 ${W} ${H}" style="width:100%;background:var(--signal-wash);border:1px solid var(--line);border-radius:6px">
+  <svg viewBox="0 0 ${W} ${H}" style="width:100%;background:var(--data-wash);border:1px solid var(--line);border-radius:6px">
     ${water}
     <path d="${earth}" fill="#d6c7a8" stroke="#a1885a" stroke-width="1"/>
     ${hl(crit,'var(--st-danger)','วิกฤต')}${hl(warn,'var(--st-watch)','เฝ้าระวัง')}
-    ${(level!=null&&level>=ymin&&level<=ymax)?`<line x1="${pl}" y1="${Y(level).toFixed(1)}" x2="${W-pr}" y2="${Y(level).toFixed(1)}" stroke="var(--signal)" stroke-width="1.5"/><text x="${pl}" y="${(Y(level)-2).toFixed(1)}" font-size="8" fill="var(--signal)">น้ำ ${level.toFixed(2)}</text>`:''}
+    ${(level!=null&&level>=ymin&&level<=ymax)?`<line x1="${pl}" y1="${Y(level).toFixed(1)}" x2="${W-pr}" y2="${Y(level).toFixed(1)}" stroke="var(--data)" stroke-width="1.5"/><text x="${pl}" y="${(Y(level)-2).toFixed(1)}" font-size="8" fill="var(--data)">น้ำ ${level.toFixed(2)}</text>`:''}
   </svg>`;
 }
 

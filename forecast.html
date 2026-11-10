@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#eef0f6">
+<meta name="theme-color" content="#f1f1ec">
 <title>คาดการณ์น้ำท่วม | One Map ระดับน้ำชายแดนใต้</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛈️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="js/rivers.js?v=4"></script>
+<script src="js/rivers.js?v=5"></script>
 <style>
 :root{
   --bg:var(--paper-2); --panel:#fff; --ink:var(--ink); --muted:var(--ink-3);
@@ -98,7 +98,7 @@ footer a{color:var(--st-warn);text-decoration:none}
 #btnFfr{padding:7px 14px;border:1.5px solid var(--outline-strong);background:#fff;color:var(--navy-d);font-family:inherit;font-size:13px;font-weight:700;border-radius:10px;cursor:pointer}
 #btnFfr:hover{border-color:var(--orange);color:var(--orange)}
 #btnFfr.on{background:#dc2626;border-color:#dc2626;color:#fff}
-.ffr-badge{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;color:#fff;font:700 12px/1 'IBM Plex Sans',sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.ffr-badge{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;color:#fff;font:700 12px/1 var(--ui);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
 .ffr-lv{display:inline-block;padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:600;white-space:nowrap}
 .ffr-lv.high{background:#dc2626;color:#fff}
 .ffr-lv.mid{background:#f97316;color:#fff}
@@ -139,7 +139,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
   #side{padding:8px}
 }
 </style>
-<link rel="stylesheet" href="shared.css?v=11">
+<link rel="stylesheet" href="shared.css?v=13">
 </head>
 <body>
 
@@ -159,6 +159,7 @@ footer{background:var(--navy-d);color:var(--ink-3)}footer a{color:var(--orange-w
   </nav>
   <div id="updated">กำลังโหลด…</div>
   <button id="btnRefresh" onclick="loadAll()">รีเฟรช</button>
+  <a id="btnEoc" href="https://eoc.naraflood.com/" target="_blank" rel="noopener" title="ระบบปฏิบัติการอุทกภัย (EOC)">EOC</a>
 </header>
 
 <div id="horizons">
@@ -250,7 +251,7 @@ const CLS = {
   risk: {label:'คาดถึงตลิ่งในช่วงนี้', color:'var(--st-warn)', order:1},
   watch:{label:'น้ำมาก เฝ้าระวัง',    color:'var(--st-watch)', order:2},
   ok:   {label:'ทรงตัว/ปกติ',        color:'var(--st-normal)', order:3},
-  down: {label:'กำลังลด',            color:'var(--signal)', order:4},
+  down: {label:'กำลังลด',            color:'var(--data)', order:4},
   na:   {label:'ข้อมูลไม่พอ/ล้าสมัย', color:'var(--ink-3)', order:5}
 };
 

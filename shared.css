@@ -32,60 +32,60 @@
   /* ---------- พื้นผิว: สว่างอมน้ำเงินจาง ไม่มีขาวล้วน ----------
      ไล่ตามแดชบอร์ดอ้างอิง พื้นแอปสว่างเกือบขาวแต่มีสีแบรนด์เจือ
      การ์ดยกขึ้นมาเป็นขาวกว่าพื้น แล้วให้เงานุ่มทำหน้าที่แยกชั้นแทนเส้นขอบหนา */
-  /* v9 "สายน้ำ": พื้นเทาฟ้าอมหมอกแบบท้องฟ้าหลังฝน แทนเทาม่วงเดิม
-     การ์ดเป็นขาวอมฟ้า ยกด้วยเงานุ่มและ "ขอบสองชั้น" (วงแหวนโปร่งรอบการ์ด) */
-  --paper:#eef0f6;        /* พื้นหน้า (v9.5: เทาอมคราม) */
-  --paper-2:#e2e6f0;      /* พื้นยุบ ใช้กับแถบเครื่องมือ */
-  --card:#fcfcff;         /* การ์ดยกขึ้น ขาวแต่ยังมีอุณหภูมิ */
-  --card-2:#f2f4fa;       /* การ์ดซ้อนในการ์ด */
-  --glass:rgba(252,252,255,.78);       /* หัวเว็บและแถบล่างแบบกระจกฝ้า */
-  --glass-line:rgba(255,255,255,.75);
-  --bezel:rgba(16,58,82,.055);         /* วงแหวนนอกของการ์ด (ขอบชั้นนอก) */
-  --sky:#dde3f3;                       /* แสงฟ้าจาง ๆ ด้านบนของหน้า */
+  /* v10 ชุดเดียวกับ eoc.naraflood.com: พื้นเทาหินอุ่น การ์ดขาว หมึกเกือบดำ
+     ค่าคัดมาจาก token ของ EOC ตรง ๆ (mist, wash, surface, edge, line, muted)
+     สองเว็บเป็นของจังหวัดเดียวกัน คนที่ใช้ทั้งคู่ต้องรู้สึกว่าเป็นระบบเดียว */
+  --paper:#f1f1ec;        /* พื้นหน้า = EOC mist */
+  --paper-2:#e8e8e2;      /* พื้นยุบ ใช้กับแถบเครื่องมือ = EOC wash */
+  --card:#ffffff;         /* การ์ดยกขึ้น = EOC surface */
+  --card-2:#f7f7f3;       /* การ์ดซ้อนในการ์ด */
+  --bezel:rgba(23,26,31,.05);          /* วงแหวนนอกของการ์ด (ขอบชั้นนอก) */
+  --sky:#f8f8f5;                       /* แสงจาง ๆ ด้านบนของหน้า */
 
   /* ---------- เส้น 3 ระดับ เพื่อให้ขอบสื่อลำดับชั้นได้ ไม่ใช่แค่มีขอบ ----------
      ค่าถูกเลือกให้ห่างจากค่าพื้นผิวทุกตัวพอที่จะมองเห็นจริง
      เส้นผมที่สว่างใกล้พื้นภายใน 2 ขั้นความสว่างจะมองไม่เห็นบนจอกลางแดด */
-  --line:#dde1ec;
-  --line-mid:#bcc3d6;
-  --line-strong:#7d86a0;
+  --line:#ebebe5;
+  --line-mid:#d9d9d2;
+  --line-strong:#8b8e94;
 
-  /* ---------- หมึก: กรมท่าเกือบดำ ไม่ใช่ดำล้วน ---------- */
-  --ink:#171d33;
-  --ink-2:#424a66;
-  /* วัดจากพิกเซลที่เรนเดอร์จริงแล้วต้องได้อย่างน้อย 4.5:1 บนการ์ด
-     ค่าที่อ่อนกว่านี้ (#727a96) วัดได้ 4.18:1 ซึ่งตกเกณฑ์
+  /* ---------- หมึก: เทาถ่านเกือบดำ ไม่ใช่ดำล้วน (EOC ink) ---------- */
+  --ink:#171a1f;
+  --ink-2:#3a3f47;
+  /* ต้องได้อย่างน้อย 4.5:1 ทั้งบนการ์ดขาวและบนพื้น --paper
      ตัวนี้คือสีของ .note และป้ายใต้ตัวเลข ซึ่งเป็นข้อความที่คนอ่านกลางแดดจริง */
-  --ink-3:#5f6783;
+  --ink-3:#5f636a;
 
-  /* ---------- signal: สีทำงานของเว็บ น้ำเงินกรมท่าจากตราสัญลักษณ์ ปภ. ----------
-     สีมาจากของที่หน่วยงานเป็นเจ้าของอยู่แล้ว ไม่ใช่สีที่เลือกให้ตามใจ
-     ทั้งมือและตัวอักษร DDPM บนตราเป็นน้ำเงินกรมท่าบนพื้นเหลือง
-
-     ในแดชบอร์ดอ้างอิง ส้มถูกใช้เป็นสีเมนูที่เลือกอยู่และปุ่มหลัก
-     แต่เว็บนี้เป็นเว็บเตือนภัย ส้มมีความหมายว่า "เตือนภัย" อยู่แล้ว
+  /* ---------- signal: สีทำงานของเว็บ (ปุ่ม แท็บ ชิป ลิงก์ โฟกัส) ----------
+     เว็บนี้เป็นเว็บเตือนภัย ส้มมีความหมายว่า "เตือนภัย" อยู่แล้ว
      ถ้าเอาไปแปะบนเมนู ตาคนจะชินกับส้มบนของที่ไม่มีความหมาย
      แล้ววันที่มีอำเภอเสี่ยงระดับส้มจริง สีจะหมดแรงเตือน
-     น้ำเงินจึงเป็นสีหลักเดี่ยว และส้มถูกคืนให้ระบบเตือนภัยใช้อย่างเดียว */
-  /* v9: สีทำงานเปลี่ยนจากกรมท่าเป็น "น้ำเงินสายน้ำ" อมเขียวหัวเป็ด
-     เข้ากับพื้นฟ้าหมอก และยังห่างจากเขียว/เหลือง/ส้ม/แดงของสถานการณ์พอ
-     กรมท่าของตรา ปภ. ยังอยู่ ย้ายไปเป็น --ddpm ใช้กับเครื่องหมายบนหัวเว็บ */
-  --signal:#2c4fb4;
-  --signal-hover:#223f93;
-  --signal-deep:#16285e;
-  --signal-wash:#e5eafa;
-  --signal-ink:#fbfcff;
-  --ddpm:#1c3282;
+     v10: สีทำงานเป็นหมึกเกือบดำแบบ EOC (accent = ink) ปุ่มหลักและแท็บที่เลือก
+     จึงเป็นก้อนดำ ห่างจากเขียว/เหลือง/ส้ม/แดงของสถานการณ์ที่สุดเท่าที่ทำได้ */
+  --signal:#171a1f;
+  --signal-hover:#3a3f47;
+  --signal-deep:#0d0f12;
+  --signal-wash:#e8e8e2;
+  --signal-ink:#ffffff;
 
-  /* ---------- เหลืองของตรา ปภ. ----------
-     กฎเหล็ก: เหลืองสดนี้ใช้ได้เฉพาะเป็นของประดับ chrome และเฉพาะเมื่อวาง
-     บนพื้นน้ำเงินเท่านั้น (เส้นคาดใต้หัวเว็บ ขีดบอกแท็บที่เลือก แถบจับของแผ่น)
-     ห้ามใช้กับข้อมูล ตัวเลข หรือสถานะเด็ดขาด เพราะเหลืองในระบบนี้
-     มีความหมายว่า "เฝ้าระวัง" อยู่แล้ว (--st-watch) ถ้าปนกันเมื่อไร
-     ผู้ใช้จะแยกไม่ออกว่าเหลืองตรงหน้าคือยี่ห้อหรือคือคำเตือน
-     บนพื้นน้ำเงิน #1c3282 เหลืองนี้วัดได้ราว 8.5:1 จึงอ่านออกชัด */
-  --brand-yellow:#ffd400;
-  --brand-yellow-dim:#e0ba00;
+  /* ---------- --data: สีของเครื่องหมายข้อมูลที่ไม่มีระดับภัย ----------
+     แม่น้ำ กราฟระดับน้ำ แท่งฝน หมุดสถานี จุดตำแหน่งของคุณ กราฟจำนวน
+     แยกจาก --signal เพราะ --signal เป็นสี chrome (ตอนนี้ดำ) ถ้าข้อมูลยังผูกกับ
+     --signal แม่น้ำบนแผนที่จะกลายเป็นเส้นดำ น้ำเงินชุดนี้คือ map-blue ของ EOC
+     ห้ามใช้กับปุ่มหรือแท็บ และห้ามใช้แทนระดับภัย (--st-*) */
+  --data:#2d6aa3;
+  --data-deep:#1d4a75;
+  --data-wash:#e1ebf5;
+
+  /* ---------- เหลืองแบรนด์ (EOC primary) ----------
+     กฎเหล็ก: เหลืองนี้ใช้ได้สองที่เท่านั้น คือกระเบื้องเครื่องหมายบนหัวเว็บ
+     และ "ที่ที่คุณอยู่" ในเมนู (แท็บบน แถบล่าง แผ่นเพิ่มเติม) แบบเดียวกับ EOC
+     และต้องมีหมึกเข้มอยู่บนเหลืองเสมอ ห้ามใช้กับข้อมูล ตัวเลข หรือสถานะเด็ดขาด
+     เพราะเหลืองในระบบนี้มีความหมายว่า "เฝ้าระวัง" อยู่แล้ว (--st-watch)
+     ชิปเฝ้าระวังเป็นเหลืองซีดตัวหนังสือน้ำตาล เหลืองเมนูเป็นเหลืองสดตัวหนังสือดำ
+     และอยู่แต่ในเมนู สองอย่างนี้จึงไม่ปนกัน */
+  --brand-yellow:#ffc533;
+  --brand-yellow-dim:#f5b70f;
 
   /* ---------- ไวยากรณ์สถานการณ์ สงวนไว้ใช้กับระดับภัยเท่านั้น ----------
      base = ตัวหนังสือและไอคอน  wash = พื้นชิป
@@ -95,20 +95,22 @@
   --st-warn:#c2410c;     --st-warn-wash:#ffedd5;
   --st-danger:#be123c;   --st-danger-wash:#ffe4e6;
 
-  /* ---------- ยกระดับ: เงานุ่มกระจายกว้างแบบภาพอ้างอิง ----------
-     การ์ดในภาพแทบไม่มีเส้นขอบ ใช้เงาบาง ๆ ที่ฟุ้งกว้างแยกชั้นแทน
-     วงแหวน 1px ยังอยู่เพื่อให้ขอบไม่หายไปเลยบนจอกลางแดด */
-  --lift-1:0 1px 2px rgba(28,40,90,.05),0 10px 26px -16px rgba(28,40,90,.28);
-  --lift-2:0 2px 4px rgba(28,40,90,.06),0 16px 36px -18px rgba(28,40,90,.36);
-  --lift-3:0 24px 60px -18px rgba(28,40,90,.42);
-  --inset-hi:inset 0 1px 0 rgba(255,255,255,.95);
+  /* ---------- ยกระดับ: แบนแบบ EOC ----------
+     ของที่วางนิ่ง (การ์ด หัวเว็บ ป้าย) ไม่มีเงา แยกชั้นด้วยการ์ดขาวบนพื้นเทาหิน
+     เงาสงวนไว้ให้ของที่ลอยทับเนื้อหาจริง (แถบล่าง ปุ่มลอย แผ่นเมนู)
+     --lift-1 กับ --inset-hi ยังเป็นเงาโปร่งใส ไม่ใช่ none เพราะถูกใช้ในรายการ
+     box-shadow ที่มีจุลภาค ถ้าเป็น none ทั้งบรรทัดจะใช้ไม่ได้ */
+  --lift-1:0 0 #0000;
+  --lift-2:0 2px 4px rgba(23,26,31,.05),0 14px 32px -18px rgba(23,26,31,.26);
+  --lift-3:0 24px 60px -18px rgba(23,26,31,.34);
+  --inset-hi:0 0 #0000;
 
   /* ---------- รัศมีตามบทบาท ไม่ใช่ตามขนาด ----------
      ถามว่า "นี่คือ control หรือ sheet" ตอบได้ทันที
      ถามว่า "นี่คือ md หรือ lg" ต้องเดา
-     มนขึ้นกว่าเดิมตามภาพอ้างอิงที่การ์ดมนราว 16px และปุ่มมนราว 12px */
+     ตาม EOC: เมนูและช่องกรอกมน 12px การ์ดมน 24px */
   --r-control:12px;
-  --r-media:18px;
+  --r-media:24px;
   --r-sheet:24px;
   --r-commit:999px;
 
@@ -136,10 +138,11 @@
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
 
   /* ---------- ตัวอักษร ----------
-     IBM Plex Sans Thai พาทั้งไทยและละตินมาด้วยกัน จึงไม่เจอกับดัก
-     ที่ Noto Sans Thai ไม่มี glyph ละติน แล้ว "AI" ตกไป fallback จนอ่านเป็น "Al"
-     และเป็นหน้าที่ออกแบบมาสำหรับ UI ข้อมูลโดยตรง ไม่ใช่หน้าตกแต่ง */
-  --ui:'IBM Plex Sans Thai','IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+     Anuphan ตัวเดียวกับ eoc.naraflood.com ไทยแบบไม่มีหัว อ่านง่ายบนจอเล็ก
+     และมี glyph ละตินในตัว จึงไม่เจอกับดักที่ Noto Sans Thai ไม่มีละติน
+     แล้ว "AI" ตกไป fallback จนอ่านเป็น "Al"
+     ทุกหน้าต้องโหลด Anuphan จาก Google Fonts ในแท็ก <link> ของตัวเอง */
+  --ui:'Anuphan','Noto Sans Thai','Leelawadee UI',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --lh-thai:1.65;
   --lh-tight:1.25;
 
@@ -171,10 +174,7 @@
   --navy-d:var(--ink);
   --peach:var(--paper-2);
 
-  /* หัวเว็บเป็นน้ำเงินกรมท่าของตรา ปภ. คาดด้วยเส้นเหลืองของตราด้านล่าง
-     คู่สีน้ำเงินบนเหลืองคือตัวตราเอง และการวางเหลืองไว้บนน้ำเงินทำให้
-     เหลืองอยู่ในที่ที่อ่านออกชัดโดยไม่ไปปนกับความหมาย "เฝ้าระวัง" */
-  --shell:var(--glass);
+  --shell:var(--card);
 
   --success:var(--st-normal);
   --warning:var(--st-watch);
@@ -193,7 +193,7 @@
   --c-watch:var(--st-watch);     --c-low:var(--st-watch);
   --c-critlow:var(--st-warn);
   --c-ok:var(--st-normal);       --c-normal:var(--st-normal);
-  --c-high:var(--signal);        --c-down:var(--signal);
+  --c-high:var(--data);          --c-down:var(--data);
   --c-na:var(--ink-3);           --c-unknown:var(--ink-3);
   --ok:var(--st-normal);
   --warn:var(--st-watch);
@@ -227,33 +227,35 @@ h1,h2,h3{line-height:var(--lh-tight)}
 a{color:var(--signal)}
 a:hover{color:var(--signal-hover)}
 
+/* leaflet.css ตั้ง Helvetica ให้แผนที่ และบางหน้าตั้ง Noto ให้ป๊อปอัปเอง
+   ไฟล์นี้โหลดทีหลังจึงดึงทั้งคู่กลับมาเป็นตัวอักษรของเว็บ */
+.leaflet-container,.leaflet-popup-content{font-family:var(--ui)}
+
 /* =========================================================================
    3. Chrome: หัวเว็บ แถบเมนู แถบเลือกพื้นที่
-   v9: หัวเว็บเป็น "แคปซูลกระจกฝ้า" ลอยห่างขอบจอ แทนแถบทึบเต็มความกว้าง
-   เนื้อหาเลื่อนลอดใต้แล้วเห็นจาง ๆ ผ่านกระจก หน้าจึงดูโปร่ง ไม่หนักหัว
+   หัวเว็บเป็นแคปซูลลอยห่างขอบจอ แทนแถบทึบเต็มความกว้าง
+   v10: พื้นขาวทึบมีเส้นขอบบาง แบบหัวเว็บของ EOC แทนกระจกฝ้า
+   backdrop-filter:none ต้องมี เพราะบล็อก <style> ของหลายหน้ายังตั้ง blur ไว้
    ========================================================================= */
 header{
   top:var(--s2);
   margin:var(--s2) var(--s2) 0;
-  background:var(--glass);
-  backdrop-filter:blur(18px) saturate(1.5);
-  -webkit-backdrop-filter:blur(18px) saturate(1.5);
-  border:1px solid var(--glass-line);
+  background:var(--card);
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+  border:1px solid var(--line);
   border-radius:var(--r-sheet);
-  border-bottom:2px solid var(--brand-yellow);
-  box-shadow:var(--lift-1),var(--inset-hi);
+  box-shadow:none;
   color:var(--ink);
   min-height:56px;
 }
-/* เครื่องหมายเว็บหน้าชื่อหน้า: สี่เหลี่ยมมนกรมท่าของตรา ปภ. มีคลื่นเหลืองข้างใน
-   เป็นที่เดียวที่กรมท่ากับเหลืองของตราปรากฏคู่กัน และเหลืองอยู่บนกรมท่าเสมอ
-   จึงไม่มีทางถูกอ่านเป็นสีเตือนภัย "เฝ้าระวัง" */
+/* เครื่องหมายเว็บหน้าชื่อหน้า: กระเบื้องเหลืองมีคลื่นสีหมึก แบบเดียวกับโลโก้ของ EOC
+   เหลืองอยู่คู่กับหมึกเข้มเสมอ จึงไม่ถูกอ่านเป็นสีเตือนภัย "เฝ้าระวัง" */
 header>h1::before{
   content:"";position:absolute;left:0;top:50%;margin-top:-17px;width:34px;height:34px;border-radius:11px;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Cpath d='M7 15.5c2.2-2 4.4-2 6.6 0s4.4 2 6.6 0 4.4-2 6.6 0' fill='none' stroke='%23ffd400' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M7 21.5c2.2-2 4.4-2 6.6 0s4.4 2 6.6 0 4.4-2 6.6 0' fill='none' stroke='%23ffffff' stroke-opacity='.75' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='24.5' cy='9.5' r='2.4' fill='%23ffd400'/%3E%3C/svg%3E") center/100% no-repeat,
-    linear-gradient(160deg,#2a4aa8,var(--ddpm));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 10px -4px rgba(28,50,130,.55);
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Cpath d='M7 15.5c2.2-2 4.4-2 6.6 0s4.4 2 6.6 0 4.4-2 6.6 0' fill='none' stroke='%23171a1f' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M7 21.5c2.2-2 4.4-2 6.6 0s4.4 2 6.6 0 4.4-2 6.6 0' fill='none' stroke='%23171a1f' stroke-opacity='.45' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='24.5' cy='9.5' r='2.4' fill='%23171a1f'/%3E%3C/svg%3E") center/100% no-repeat,
+    var(--brand-yellow);
+  box-shadow:inset 0 0 0 1px rgba(23,26,31,.06);
 }
 header>h1{position:relative;padding-left:46px;min-height:34px;display:block;padding-top:5px;padding-bottom:3px;
   font-weight:700;letter-spacing:0;color:var(--ink)}
@@ -262,27 +264,28 @@ header>h1:has(small){padding-top:0;padding-bottom:0}
 #updated{color:var(--ink-3)}
 
 .navtab{
-  background:rgba(16,58,82,.045);
+  background:rgba(23,26,31,.045);
   border:1px solid transparent;
   border-radius:var(--r-commit);
   padding:4px;
 }
-.navtab a{color:var(--ink-2);border-radius:var(--r-commit);font-weight:500}
-.navtab a:hover{color:var(--ink);background:rgba(255,255,255,.85)}
-/* แท็บที่เลือกอยู่ยกขึ้นเป็นเม็ดขาวมีเงา เหมือนปุ่มสวิตช์ที่ถูกกด
-   ไม่ใช้สีเต็มใบ เพราะบนแถบโปร่ง สีทึบก้อนเดียวจะแย่งสายตาจากเนื้อหา */
-.navtab a.on{background:var(--ddpm);color:#fff;font-weight:700;
-  box-shadow:inset 0 -3px 0 var(--brand-yellow)}
-.navtab a.on:hover{background:var(--ddpm);color:#fff}
+.navtab a{color:var(--ink);border-radius:var(--r-commit);font-weight:500}
+.navtab a:hover{color:var(--ink);background:var(--paper-2)}
+/* แท็บที่เลือกเป็นเม็ดเหลืองตัวหนังสือดำ แบบเมนูที่เลือกของ EOC */
+.navtab a.on,.navtab a.on:hover{background:var(--brand-yellow);color:var(--ink);font-weight:600}
 
 #btnRefresh{
   background:var(--signal);color:var(--signal-ink);
   border-radius:var(--r-control);font-weight:600;padding-left:16px;padding-right:16px;
-  box-shadow:0 6px 14px -8px rgba(44,79,180,.8);
   transition:background .15s var(--ease),transform .15s var(--ease);
 }
 #btnRefresh:hover{background:var(--signal-hover);color:var(--signal-ink)}
 #btnRefresh:active{transform:scale(.96)}
+/* ลิงก์ไประบบ EOC วางข้างปุ่มรีเฟรช เป็นปุ่มรองขอบบาง ไม่แย่งน้ำหนักจากปุ่มหลัก */
+#btnEoc{display:inline-flex;align-items:center;flex:none;padding:6px 14px;border-radius:var(--r-control);
+  background:var(--card);color:var(--ink);border:1px solid var(--line-mid);
+  font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
+#btnEoc:hover{background:var(--paper-2);color:var(--ink)}
 header #btnHelp{background:var(--card);color:var(--signal);border:1px solid var(--line-mid);border-radius:var(--r-commit)}
 header #btnHelp:hover{background:var(--signal-wash)}
 header #authBox{color:var(--ink-2)}
@@ -302,7 +305,7 @@ header .auth-out:hover{color:var(--signal)}
 }
 .chip:hover{border-color:var(--signal);color:var(--signal)}
 .chip.on{background:var(--signal);border-color:var(--signal);color:var(--signal-ink);font-weight:600;
-  box-shadow:0 6px 14px -8px rgba(44,79,180,.7)}
+}
 /* ป้ายชื่อจังหวัดเป็นข้อความนิ่ง กดไม่ได้ ไม่ใช่ปุ่ม จึงต้องเงียบ */
 .provlbl{
   background:var(--paper-2);color:var(--ink-2);
@@ -313,15 +316,14 @@ header .auth-out:hover{color:var(--signal)}
 
 /* =========================================================================
    4. การ์ดและเนื้อหา
-   v9: "ขอบสองชั้น" แกนในขาว + วงแหวนโปร่งรอบนอก ทำด้วยเงาล้วน
-   จึงไม่ต้องแก้ markup ของหน้าไหน และไม่กินพื้นที่จริงในเลย์เอาต์
+   v10: การ์ดขาวมน 24px ไม่มีเส้นขอบไม่มีเงา แบบการ์ดของ EOC
+   ขาวบนพื้นเทาหินแยกชั้นได้เอง ขอบโปร่งใส 1px คงไว้ให้ขนาดการ์ดเท่าเดิม
    ========================================================================= */
 .card{
   background:var(--card);
-  border:1px solid var(--glass-line);
+  border:1px solid transparent;
   border-radius:var(--r-media);
-  border:1px solid var(--line);
-  box-shadow:var(--lift-1),var(--inset-hi);
+  box-shadow:none;
 }
 .card h2{color:var(--ink);font-weight:700}
 .card h2 .where{color:var(--ink-3);font-weight:400}
@@ -334,7 +336,7 @@ footer a{color:var(--signal)}
 .hbtn,.rchip{background:var(--card);color:var(--ink-2);border:1px solid var(--line-mid);border-radius:var(--r-control)}
 .hbtn:hover,.rchip:hover{border-color:var(--signal);color:var(--signal)}
 .hbtn.on,.rchip.on{background:var(--signal);border-color:var(--signal);color:var(--signal-ink);
-  box-shadow:0 6px 14px -8px rgba(44,79,180,.7)}
+}
 #ncPlay{border-radius:50%;border:1px solid var(--line-mid);background:var(--card);color:var(--signal)}
 #ncSlider{accent-color:var(--signal)}
 .btn{border-radius:var(--r-commit)}
@@ -487,18 +489,16 @@ footer a{color:var(--signal)}
   height:var(--tabbar-h);
   padding:0 4px;
   display:grid;grid-auto-flow:column;grid-auto-columns:1fr;align-items:center;
-  background:var(--glass);
-  backdrop-filter:blur(18px) saturate(1.5);
-  -webkit-backdrop-filter:blur(18px) saturate(1.5);
-  border:1px solid var(--glass-line);
+  background:var(--card);
+  border:1px solid var(--line);
   border-radius:var(--r-sheet);
-  box-shadow:var(--lift-2),var(--inset-hi);
+  box-shadow:var(--lift-2);
 }
 .tabbar a,.tabbar button{
   display:grid;place-items:center;gap:1px;
   min-height:48px;padding:var(--s1) 2px;
   font-family:inherit;font-size:11px;font-weight:500;line-height:1.3;
-  color:var(--ink-3);text-decoration:none;
+  color:var(--ink-2);text-decoration:none;
   background:none;border:none;cursor:pointer;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
@@ -507,8 +507,8 @@ footer a{color:var(--signal)}
   stroke-linecap:round;stroke-linejoin:round;display:block;
   box-sizing:content-box;padding:2px 12px;border-radius:var(--r-commit);
   transition:background .2s var(--ease)}
-.tabbar a[aria-current="page"]{color:var(--signal-deep);font-weight:700;position:relative}
-.tabbar a[aria-current="page"] svg{background:var(--signal-wash);color:var(--signal)}
+.tabbar a[aria-current="page"]{color:var(--ink);font-weight:600;position:relative}
+.tabbar a[aria-current="page"] svg{background:var(--brand-yellow);color:var(--ink)}
 .tabbar a:active,.tabbar button:active{transform:scale(.94)}
 .tabbar a,.tabbar button{transition:color .15s var(--ease),transform .06s var(--ease)}
 
@@ -548,7 +548,7 @@ body{padding-bottom:calc(var(--tabbar-h) + var(--dock-gap) * 2 + env(safe-area-i
   header>h1{width:300px;overflow:hidden;text-overflow:ellipsis}
   header>h1 small{overflow:hidden;text-overflow:ellipsis}
   header .navtab a{font-size:12px;padding:5px 11px}
-  header #updated,header #btnRefresh,header #authUi,header #authBox,header #btnHelp{flex:none;white-space:nowrap}
+  header #updated,header #btnRefresh,header #btnEoc,header #authUi,header #authBox,header #btnHelp{flex:none;white-space:nowrap}
 }
 /* จอคอมไม่ต้องมีแถบล่าง เมนูบนอ่านได้สบายอยู่แล้ว */
 @media(min-width:769px){
@@ -580,7 +580,7 @@ body{padding-bottom:calc(var(--tabbar-h) + var(--dock-gap) * 2 + env(safe-area-i
 .sheet{
   position:fixed;inset:auto var(--dock-gap) var(--dock-gap) var(--dock-gap);z-index:var(--z-sheet);
   background:var(--card);
-  border:1px solid var(--glass-line);
+  border:1px solid var(--line);
   border-radius:var(--r-sheet);
   box-shadow:var(--lift-3);
   padding:var(--s3) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom));
@@ -598,7 +598,7 @@ body{padding-bottom:calc(var(--tabbar-h) + var(--dock-gap) * 2 + env(safe-area-i
   background:var(--card-2);color:var(--ink);
   font-size:12px;font-weight:500;line-height:1.35;text-align:center;text-decoration:none;
 }
-.sheet-grid a[aria-current="page"]{border-color:var(--signal);background:var(--signal-wash);color:var(--signal);font-weight:600}
+.sheet-grid a[aria-current="page"]{border-color:var(--brand-yellow);background:var(--brand-yellow);color:var(--ink);font-weight:600}
 .sheet-grid svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;
   stroke-linecap:round;stroke-linejoin:round}
 @media(min-width:769px){.sheet,.sheet-scrim{display:none}}
@@ -875,7 +875,7 @@ body.has-install-fab .leaflet-bottom.leaflet-left{
 .hero-live{
   display:inline-flex;align-items:center;gap:var(--s2);
   padding:6px 14px 6px 12px;border-radius:var(--r-commit);
-  background:var(--glass);border:1px solid var(--glass-line);
+  background:var(--card);border:1px solid var(--line);
   box-shadow:var(--lift-1),var(--inset-hi);
   font-size:13px;color:var(--ink-2);
 }
@@ -912,10 +912,10 @@ body.has-install-fab .leaflet-bottom.leaflet-left{
 .cta-main{
   display:inline-flex;align-items:center;gap:var(--s4);
   padding:0 18px 0 20px;min-height:48px;border-radius:var(--r-control);
-  background:linear-gradient(180deg,#3a5fc6,var(--signal));color:var(--signal-ink);
+  background:var(--signal);color:var(--signal-ink);
   font-size:16px;font-weight:700;text-decoration:none;
-  box-shadow:0 12px 24px -12px rgba(44,79,180,.85),inset 0 1px 0 rgba(255,255,255,.25);
-  transition:transform .2s var(--ease),box-shadow .2s var(--ease);
+  box-shadow:none;
+  transition:transform .2s var(--ease);
 }
 .cta-main:hover{color:var(--signal-ink);transform:translateY(-1px)}
 .cta-main:active{transform:scale(.97)}
@@ -941,7 +941,6 @@ body.has-install-fab .leaflet-bottom.leaflet-left{
   flex:none;display:inline-flex;align-items:center;gap:7px;
   padding:6px 14px 6px 11px;border-radius:var(--r-control);
   background:var(--card);border:1px solid var(--line);
-  box-shadow:0 1px 2px rgba(16,58,82,.05);
   font-size:13.5px;font-weight:500;color:var(--ink);text-decoration:none;white-space:nowrap;
   transition:border-color .15s var(--ease),transform .15s var(--ease);
 }
@@ -986,8 +985,7 @@ a.hchip:active{transform:scale(.97)}
   position:absolute;right:var(--s4);top:16px;
   line-height:1.2;text-align:center;pointer-events:none;
   padding:6px 14px 8px;border-radius:18px;
-  background:var(--glass);border:1px solid var(--glass-line);
-  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  background:var(--card);border:1px solid var(--line);
   box-shadow:var(--lift-1);
 }
 .hero-gauge b{display:block;font-size:30px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}

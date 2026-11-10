@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#eef0f6">
+<meta name="theme-color" content="#f1f1ec">
 <title>แผนที่สถานการณ์น้ำ | One Map ชายแดนใต้</title>
 <meta name="description" content="แผนที่รวมข้อมูลน้ำจังหวัดนราธิวาส: ระดับน้ำ ฝน 24 ชม. เรดาร์ฝน เขื่อน น้ำทะเล CCTV ปภ. โทรมาตรกรมชลฯ และจุดเสี่ยงน้ำท่วมฉับพลัน · อัปเดตอัตโนมัติจากหน่วยงานรัฐ">
 <meta property="og:title" content="One Map ระดับน้ำชายแดนใต้ · waterchaidantai.com">
@@ -12,7 +12,7 @@
 <meta property="og:url" content="https://waterchaidantai.com">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌊</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -276,7 +276,7 @@ footer a:hover{text-decoration:underline}
 
 @supports(height:100dvh){html,body{height:100dvh}}
 </style>
-<link rel="stylesheet" href="shared.css?v=11">
+<link rel="stylesheet" href="shared.css?v=13">
 </head>
 <body>
 
@@ -300,6 +300,7 @@ footer a:hover{text-decoration:underline}
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
     <span id="btnRefreshTxt">รีเฟรช</span>
   </button>
+  <a id="btnEoc" href="https://eoc.naraflood.com/" target="_blank" rel="noopener" title="ระบบปฏิบัติการอุทกภัย (EOC)">EOC</a>
 </header>
 
 <div id="banner"></div>
@@ -396,8 +397,8 @@ footer a:hover{text-decoration:underline}
   <span id="fNote" style="margin-left:auto">อยู่ระหว่างการทดลองปรับปรุง หากมีข้อเสนอ/แก้ไข ติดต่อผู้พัฒนา <a href="mailto:naraflood@gmail.com">naraflood@gmail.com</a></span>
 </footer>
 
-<script src="js/rivers.js?v=4"></script>
-<script src="map.js?v=41"></script>
+<script src="js/rivers.js?v=5"></script>
+<script src="map.js?v=42"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
 <script src="js/auth-ui.js"></script>
