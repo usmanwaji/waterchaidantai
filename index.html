@@ -218,6 +218,8 @@ footer a{color:var(--orange-warm);text-decoration:none}
 button.hchip{font-family:inherit;cursor:pointer}
 button.hchip:hover{border-color:var(--signal);color:var(--signal)}
 .hchip[data-lv="na"]{color:var(--ink-3)}
+/* ระดับน้ำเทียบตลิ่งในประโยคใต้หัวข้อ ใช้สีและแถบไฮไลต์เดียวกับหัวข้อ (.hero-word) */
+.hero-sub .hero-fb{font-weight:700;margin:0 .1em}
 
 </style>
 <link rel="stylesheet" href="shared.css?v=15">
@@ -1491,7 +1493,7 @@ function renderHero(met, sel){
   let s1;
   if(useNear){
     const s = nearest;
-    s1 = `สถานีที่ใกล้คุณที่สุด <b>${esc(s.name)}</b> (${s.src}) ห่าง ${fmtKm(s.km)} · ระดับน้ำ<b>${fbText(s)}</b>` +
+    s1 = `สถานีที่ใกล้คุณที่สุด <b>${esc(s.name)}</b> (${s.src}) ห่าง ${fmtKm(s.km)} · ระดับน้ำ<span class="hero-word hero-fb" data-lv="${W.k}">${fbText(s)}</span>` +
          (s.stText ? ` · ${esc(s.stText)}` : '');
   } else if(!area.length){
     s1 = 'เชื่อมต่อสถานีวัดน้ำไม่ได้ขณะนี้ (สสน. · ปภ. · ชป.) ลองกดรีเฟรชอีกครั้ง';
