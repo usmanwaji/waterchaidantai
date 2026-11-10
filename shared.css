@@ -606,8 +606,26 @@ body{padding-bottom:calc(var(--tabbar-h) + var(--dock-gap) * 2 + env(safe-area-i
 /* ---------- ขอความช่วยเหลือ (js/tabbar.js) ----------
    แดงของสถานะ "อันตราย" ใช้ตรงนี้ได้เพราะความหมายตรงกัน: ปุ่มนี้คือทางออกตอนอันตรายจริง
    ใช้แค่สีตัวหนังสือกับขอบ ไม่ทาทึบ ไม่ให้แย่งน้ำหนักจากแท็บที่เลือกอยู่ */
-.navtab a.help-link{color:var(--st-danger);font-weight:600}
-.navtab a.help-link:hover{background:var(--st-danger-wash);color:var(--st-danger)}
+#btnSos{display:inline-flex;align-items:center;gap:5px;flex:none;padding:6px 12px;
+  border-radius:var(--r-control);background:var(--st-danger);color:#fff;
+  font-size:13px;font-weight:600;line-height:1.2;text-decoration:none;white-space:nowrap}
+#btnSos:hover{background:#9f1239;color:#fff}
+#btnSos .sos-short{display:none}
+#btnSos svg{width:15px;height:15px;flex:none;stroke:currentColor;fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+/* มือถือหัวเว็บแคบ เหลือแค่ไอคอนโทรศัพท์กับคำสั้น ๆ ให้ชื่อหน้ายังพออ่าน */
+@media(max-width:768px){
+  #btnSos{padding:6px 10px;font-size:12.5px}
+  #btnSos .sos-long{display:none}
+  #btnSos .sos-short{display:inline}
+}
+/* จอแคบมาก (360-400px) เหลือไอคอนโทรศัพท์อย่างเดียว ชื่อหน้าจะได้ไม่ถูกบีบจนอ่านไม่ออก
+   ปุ่มแดงรูปโทรศัพท์ยังสื่อความได้ และมี aria-label ให้โปรแกรมอ่านหน้าจอ */
+@media(max-width:400px){
+  #btnSos{padding:6px 9px}
+  #btnSos .sos-short{display:none}
+  #btnSos svg{width:17px;height:17px}
+}
 .sheet-help{
   display:flex;align-items:center;gap:var(--s3);
   margin-bottom:var(--s4);padding:var(--s3) var(--s4);min-height:60px;

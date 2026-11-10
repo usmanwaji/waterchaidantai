@@ -173,12 +173,16 @@
     var openHelp = buildHelp();
     var HELP_LINK = '<a href="#help" role="button" aria-haspopup="dialog" aria-controls="helpSheet" class="help-link">';
 
-    /* จอคอม: ต่อท้ายแถบเมนูบน ใส่ด้วย JS ที่เดียวแทนการแก้ทุกหน้า */
-    var top = document.querySelector('header .navtab');
-    if (top) {
-      top.insertAdjacentHTML('beforeend', HELP_LINK + 'ขอความช่วยเหลือ</a>');
-      // js/ui.js วัดว่าเมนูเลื่อนได้ไหมไปแล้ว ให้วัดใหม่หลังเติมปุ่ม
-      window.dispatchEvent(new Event('resize'));
+    /* ปุ่มแดงเล็กบนหัวเว็บ เห็นได้ทุกหน้าทุกขนาดจอโดยไม่ต้องเปิดเมนู
+       วางต่อจากแถบเมนู (มือถือแถบเมนูถูกซ่อน ปุ่มจึงอยู่ถัดชื่อหน้า)
+       ใส่ด้วย JS ที่เดียวแทนการแก้ทุกหน้า */
+    var head = document.querySelector('header');
+    if (head) {
+      var anchor = head.querySelector('.navtab') || head.querySelector('h1');
+      var html = HELP_LINK.replace('class="help-link"', 'class="help-link" id="btnSos" title="ขอความช่วยเหลือ: โทร 1784 หรือแอปพ้นภัย" aria-label="ขอความช่วยเหลือ"') +
+        svg('phone') + '<span class="sos-long">ขอความช่วยเหลือ</span><span class="sos-short">ช่วยเหลือ</span></a>';
+      if (anchor) anchor.insertAdjacentHTML('afterend', html);
+      else head.insertAdjacentHTML('afterbegin', html);
     }
     var here = currentPage();
 
