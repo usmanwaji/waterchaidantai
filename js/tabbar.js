@@ -36,7 +36,21 @@
     people: '<circle cx="9" cy="8.2" r="3.2"/><path d="M3.4 19.4c0-3.1 2.5-5.2 5.6-5.2s5.6 2.1 5.6 5.2"/><path d="M16.4 5.4a3 3 0 0 1 0 5.7"/><path d="M17.6 14.6c2 .6 3.4 2.3 3.4 4.8"/>',
     tools:  '<path d="M14.4 6.6a3.9 3.9 0 0 1 5.2 5.1l-8.3 8.3a2 2 0 0 1-2.8-2.8z"/><path d="M4.6 4.6l3.6 3.6"/><path d="M3.4 9.4h5"/>',
     layers: '<path d="M12 3.4 3 8l9 4.6L21 8z"/><path d="M3 12.6 12 17.2l9-4.6"/><path d="M3 17.2 12 21.8l9-4.6"/>',
-    chart:  '<path d="M3.6 20.4h16.8"/><rect x="5.2" y="12.4" width="3.4" height="6"/><rect x="10.3" y="8.2" width="3.4" height="10.2"/><rect x="15.4" y="4.4" width="3.4" height="14"/>'
+    chart:  '<path d="M3.6 20.4h16.8"/><rect x="5.2" y="12.4" width="3.4" height="6"/><rect x="10.3" y="8.2" width="3.4" height="10.2"/><rect x="15.4" y="4.4" width="3.4" height="14"/>',
+    buoy:   '<circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="3.6"/><path d="M6.1 6.1l3.4 3.4"/><path d="M14.5 14.5l3.4 3.4"/><path d="M17.9 6.1l-3.4 3.4"/><path d="M9.5 14.5l-3.4 3.4"/>',
+    phone:  '<path d="M6.6 3.6h2.9l1.5 4.1-2 1.4a11.4 11.4 0 0 0 5.9 5.9l1.4-2 4.1 1.5v2.9a1.9 1.9 0 0 1-2 1.9A15.8 15.8 0 0 1 4.6 5.6a1.9 1.9 0 0 1 2-2z"/>',
+    app:    '<rect x="6.4" y="2.8" width="11.2" height="18.4" rx="2.2"/><path d="M10.6 18h2.8"/><path d="M12 7.4v5.2"/><path d="M9.4 10h5.2"/>'
+  };
+
+  /* ---------- ขอความช่วยเหลือ ----------
+     สองทางเท่านั้น: โทรหาคน หรือเปิดแอปที่ส่งพิกัดให้ทีมช่วยเหลือ
+     ตอนน้ำกำลังขึ้นคนไม่มีเวลาอ่านรายชื่อเบอร์ยาว ๆ ตัวเลือกยิ่งน้อยยิ่งกดเร็ว
+     แอปพ้นภัยของสภากาชาดไทยไม่มีลิงก์เปิดแอปตรง ๆ ที่ใช้ได้ทุกเครื่อง
+     จึงส่งไปหน้าแอปในสโตร์ ซึ่งมีปุ่ม "เปิด" ถ้าติดตั้งไว้แล้ว และ "ติดตั้ง" ถ้ายังไม่มี */
+  var HELP = {
+    tel: '1784',
+    play: 'https://play.google.com/store/apps/details?id=th.co.mm.phonphai',
+    ios: 'https://apps.apple.com/th/app/phonphai/id1434801222'
   };
 
   /* แถบล่าง: ห้าปลายทางที่คนใช้จริงตอนน้ำกำลังมา
@@ -91,8 +105,85 @@
            '<span>' + item.label + '</span></a>';
   }
 
+  function platform() {
+    var ua = navigator.userAgent || '';
+    if (/android/i.test(ua)) return 'android';
+    // iPadOS บอกตัวเองว่าเป็น Mac จึงดูจากจอสัมผัสด้วย
+    if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'ios';
+    return 'other';
+  }
+
+  /* แผ่นเลือกช่องทางขอความช่วยเหลือ ใช้ได้ทุกความกว้างจอ
+     (คนละตัวกับ .sheet ของเมนูเพิ่มเติม ซึ่งถูกซ่อนบนจอคอม) */
+  function buildHelp() {
+    var os = platform();
+    var appHref = os === 'ios' ? HELP.ios : HELP.play;
+    /* จอคอมเปิดแอปไม่ได้ ให้ลิงก์ทั้งสองสโตร์ไว้ส่งต่อให้โทรศัพท์ */
+    var stores = os === 'other'
+      ? '<span class="help-stores">ดาวน์โหลด: <a href="' + HELP.play + '" target="_blank" rel="noopener">Google Play</a> · ' +
+        '<a href="' + HELP.ios + '" target="_blank" rel="noopener">App Store</a></span>'
+      : '';
+
+    var scrim = document.createElement('div');
+    scrim.className = 'help-scrim';
+
+    var sheet = document.createElement('div');
+    sheet.className = 'help-sheet';
+    sheet.id = 'helpSheet';
+    sheet.setAttribute('role', 'dialog');
+    sheet.setAttribute('aria-modal', 'true');
+    sheet.setAttribute('aria-labelledby', 'helpSheetH');
+    sheet.innerHTML =
+      '<div class="sheet-grab" aria-hidden="true"></div>' +
+      '<h2 id="helpSheetH">ขอความช่วยเหลือ</h2>' +
+      '<p class="help-lead">เลือกช่องทางที่สะดวก</p>' +
+      '<a class="help-opt help-call" href="tel:' + HELP.tel + '">' + svg('phone') +
+        '<span><b>โทร ' + HELP.tel + '</b><small>สายด่วนนิรภัย ปภ. ตลอด 24 ชั่วโมง</small></span></a>' +
+      '<a class="help-opt" href="' + appHref + '" target="_blank" rel="noopener">' + svg('app') +
+        '<span><b>เปิดแอป พ้นภัย</b><small>แจ้งขอความช่วยเหลือพร้อมพิกัด · สภากาชาดไทย' +
+        (os === 'other' ? '' : '<br>ยังไม่มีแอป จะพาไปหน้าติดตั้ง') + '</small></span></a>' +
+      stores +
+      '<button type="button" class="install-btn ghost help-close">ปิด</button>';
+
+    document.body.appendChild(scrim);
+    document.body.appendChild(sheet);
+
+    var opener = null;
+    function open(from) {
+      opener = from || document.activeElement;
+      scrim.classList.add('show');
+      sheet.classList.add('show');
+      sheet.querySelector('.help-opt').focus();
+    }
+    function close() {
+      scrim.classList.remove('show');
+      sheet.classList.remove('show');
+      if (opener && opener.focus) opener.focus();
+    }
+    scrim.addEventListener('click', close);
+    sheet.querySelector('.help-close').addEventListener('click', close);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && sheet.classList.contains('show')) close();
+    });
+    return open;
+  }
+
   function build() {
     if (document.querySelector('.tabbar')) return;
+    var openHelp = buildHelp();
+    var HELP_LINK = '<a href="#help" role="button" aria-haspopup="dialog" aria-controls="helpSheet" class="help-link">';
+
+    /* ปุ่มแดงเล็กบนหัวเว็บ เห็นได้ทุกหน้าทุกขนาดจอโดยไม่ต้องเปิดเมนู
+       วางต่อจากแถบเมนู (มือถือแถบเมนูถูกซ่อน ปุ่มจึงอยู่ถัดชื่อหน้า)
+       ใส่ด้วย JS ที่เดียวแทนการแก้ทุกหน้า */
+    var head = document.querySelector('header');
+    if (head) {
+      var anchor = head.querySelector('.navtab') || head.querySelector('h1');
+      var html = HELP_LINK.replace('class="help-link"', 'class="help-link" id="btnSos" title="ขอความช่วยเหลือ: โทร 1784 หรือแอปพ้นภัย" aria-label="ขอความช่วยเหลือ"') +
+        svg('phone') + '<span class="sos-long">ขอความช่วยเหลือ</span><span class="sos-short">ช่วยเหลือ</span></a>';
+      if (anchor) anchor.insertAdjacentHTML('afterend', html);
+      else head.insertAdjacentHTML('afterbegin', html);
+    }
     var here = currentPage();
 
     /* หน้าไหนที่ไม่ได้อยู่ในแถบล่าง ให้ปุ่มเพิ่มเติมติดสถานะไว้แทน
@@ -118,6 +209,9 @@
     sheet.setAttribute('aria-modal', 'true');
     sheet.setAttribute('aria-label', 'เมนูเพิ่มเติม');
     sheet.innerHTML = '<div class="sheet-grab" aria-hidden="true"></div>' +
+      /* มือถือ: อยู่บนสุดของแผ่น เพราะเป็นของเดียวในแผ่นที่คนเปิดตอนฉุกเฉิน */
+      HELP_LINK.replace('class="help-link"', 'class="help-link sheet-help"') + svg('buoy') +
+        '<span>ขอความช่วยเหลือ<small>โทร 1784 หรือแอปพ้นภัย</small></span></a>' +
       SHEET.map(function (g) {
         return '<h3>' + g.head + '</h3><div class="sheet-grid">' +
                g.items.map(function (i) { return link(i, here); }).join('') + '</div>';
@@ -147,6 +241,17 @@
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && sheet.classList.contains('show')) { close(); btn.focus(); }
     });
+
+    Array.prototype.forEach.call(document.querySelectorAll('.help-link'), function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        var fromSheet = sheet.contains(a);
+        if (fromSheet) close();
+        openHelp(fromSheet ? btn : a);
+      });
+    });
+    // ลิงก์ตรง เช่น index.html#help เปิดแผ่นให้ทันที
+    if (location.hash === '#help') openHelp();
 
     /* ปัดลงเพื่อปิด เป็นท่าที่เดาไม่ได้ถ้าไม่บอก แต่แถบจับด้านบนของแผ่น
        ทำหน้าที่บอกอยู่แล้ว และการแตะฉากหลังก็ปิดได้เหมือนกัน */
