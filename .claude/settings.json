@@ -4,7 +4,8 @@
     "autoharness@autoharness": true,
     "hyperframes@hyperframes": true,
     "ffmpeg-skill@ffmpeg-skill": true,
-    "superpowers@anthropic-plugin-directory": true
+    "superpowers@anthropic-plugin-directory": true,
+    "egm@egm": true
   },
   "extraKnownMarketplaces": {
     "pstack-claude": {
@@ -29,6 +30,12 @@
       "source": {
         "source": "github",
         "repo": "kajisho5/ffmpeg-skill"
+      }
+    },
+    "egm": {
+      "source": {
+        "source": "github",
+        "repo": "google/elephant-goldfish-model"
       }
     }
   }
