@@ -180,7 +180,7 @@
     if (head) {
       var anchor = head.querySelector('.navtab') || head.querySelector('h1');
       var html = HELP_LINK.replace('class="help-link"', 'class="help-link" id="btnSos" title="ขอความช่วยเหลือ: โทร 1784 หรือแอปพ้นภัย" aria-label="ขอความช่วยเหลือ"') +
-        svg('phone') + '<span class="sos-long">ขอความช่วยเหลือ</span><span class="sos-short">ช่วยเหลือ</span></a>';
+        '<b class="sos-mark" aria-hidden="true">SOS</b><span class="sos-long">ขอความช่วยเหลือ</span><span class="sos-short">ช่วยเหลือ</span></a>';
       if (anchor) anchor.insertAdjacentHTML('afterend', html);
       else head.insertAdjacentHTML('afterbegin', html);
     }
