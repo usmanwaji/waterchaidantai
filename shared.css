@@ -133,6 +133,7 @@
   /* ปุ่มติดตั้งแอปลอยเหนือแถบล่าง ของมุมล่างซ้ายอื่น (คำอธิบายสีของแผนที่)
      ต้องหลบด้วยตัวเลขเดียวกันนี้ ไม่ใช่ตัวเลขที่กะเอาแยกกันคนละที่ */
   --install-fab-h:44px;
+  --sos-fab-h:44px;
 
   /* ---------- ระยะ ฐาน 4px ---------- */
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
@@ -606,21 +607,35 @@ body{padding-bottom:calc(var(--tabbar-h) + var(--dock-gap) * 2 + env(safe-area-i
 /* ---------- ขอความช่วยเหลือ (js/tabbar.js) ----------
    แดงของสถานะ "อันตราย" ใช้ตรงนี้ได้เพราะความหมายตรงกัน: ปุ่มนี้คือทางออกตอนอันตรายจริง
    ใช้แค่สีตัวหนังสือกับขอบ ไม่ทาทึบ ไม่ให้แย่งน้ำหนักจากแท็บที่เลือกอยู่ */
-#btnSos{display:inline-flex;align-items:center;gap:5px;flex:none;padding:6px 12px;
-  border-radius:var(--r-control);background:var(--st-danger);color:#fff;
-  font-size:13px;font-weight:600;line-height:1.2;text-decoration:none;white-space:nowrap}
-#btnSos:hover{background:#9f1239;color:#fff}
-#btnSos .sos-short{display:none}
-/* เครื่องหมาย SOS: เม็ดขาวตัวแดงในปุ่มแดง อ่านออกทุกภาษา ไม่ต้องรู้ภาษาไทยก็เข้าใจ */
-#btnSos .sos-mark{flex:none;padding:1px 5px;border-radius:5px;background:#fff;color:var(--st-danger);
-  font-size:11px;font-weight:800;line-height:1.35;letter-spacing:.06em}
-/* มือถือหัวเว็บแคบ ปุ่มเหลือแค่คำว่า SOS ตัวขาวบนแดง ให้ชื่อหน้ายังพออ่าน
-   กว้างพอ ๆ กับไอคอนโทรศัพท์เดิม หัวเว็บจึงไม่ตกบรรทัด (มี aria-label ให้โปรแกรมอ่านหน้าจอ) */
-@media(max-width:768px){
-  #btnSos{padding:6px 8px}
-  #btnSos .sos-long,#btnSos .sos-short{display:none}
-  #btnSos .sos-mark{padding:0;background:none;color:#fff;font-size:12.5px;letter-spacing:.04em}
+/* ปุ่ม SOS ลอยมุมขวาล่าง (คู่กับปุ่มติดตั้งแอปที่ลอยมุมซ้ายล่าง)
+   มือถืออยู่เหนือแถบแท็บ ไม่คร่อมแถบ ไม่งั้นกดแท็บขวาสุด "เพิ่มเติม" พลาด */
+#btnSos{
+  position:fixed;z-index:var(--z-fab);
+  right:var(--s3);
+  right:max(var(--s3),env(safe-area-inset-right));
+  bottom:calc(var(--tabbar-h) + var(--s3));
+  bottom:calc(var(--tabbar-h) + var(--dock-gap) + env(safe-area-inset-bottom) + var(--s3));
+  display:inline-flex;align-items:center;gap:var(--s2);
+  height:var(--sos-fab-h);padding:0 var(--s4) 0 var(--s3);
+  border-radius:var(--r-commit);background:var(--st-danger);color:#fff;
+  font-size:14px;font-weight:700;line-height:1;text-decoration:none;white-space:nowrap;
+  box-shadow:var(--lift-2);
+  transition:background .15s var(--ease),transform .06s var(--ease);
 }
+#btnSos:hover{background:#9f1239;color:#fff}
+#btnSos:active{transform:scale(.96)}
+/* เครื่องหมาย SOS: เม็ดขาวตัวแดงในปุ่มแดง อ่านออกทุกภาษา ไม่ต้องรู้ภาษาไทยก็เข้าใจ */
+#btnSos .sos-mark{flex:none;padding:3px 7px;border-radius:7px;background:#fff;color:var(--st-danger);
+  font-size:12.5px;font-weight:800;line-height:1.2;letter-spacing:.06em}
+@media(min-width:769px){
+  #btnSos{bottom:var(--s4);bottom:calc(var(--s4) + env(safe-area-inset-bottom))}
+}
+/* จอแคบมาก เหลือแค่ SOS ไม่ให้ชนปุ่มติดตั้งแอปที่มุมซ้าย (มี aria-label ให้โปรแกรมอ่านหน้าจอ) */
+@media(max-width:400px){
+  #btnSos{padding:0 var(--s3)}
+  #btnSos .sos-long{display:none}
+}
+@media print{#btnSos{display:none!important}}
 .sheet-help{
   display:flex;align-items:center;gap:var(--s3);
   margin-bottom:var(--s4);padding:var(--s3) var(--s4);min-height:60px;

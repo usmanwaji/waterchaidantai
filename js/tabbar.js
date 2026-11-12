@@ -168,22 +168,42 @@
     return open;
   }
 
+  /* คำอธิบายสีและมาตราส่วนของ Leaflet บางหน้าอยู่มุมขวาล่าง ตรงกับปุ่ม SOS
+     ยกเฉพาะกล่องที่ปุ่มทับจริง และยกเท่าที่ทับ (วัดก่อน แบบเดียวกับที่ js/install.js ทำกับมุมซ้าย)
+     เพราะแผนที่บางหน้าไม่ได้อยู่ชิดขอบล่างของจอ ถ้ายกทุกหน้าจะดันของในแผนที่เพี้ยน
+     แผนที่สร้างตัวควบคุมช้ากว่าหน้า จึงวัดซ้ำหลังโหลดเสร็จและตอนเปลี่ยนขนาดจอ */
+  function liftMapControls() {
+    function check() {
+      var fab = document.getElementById('btnSos');
+      if (!fab) return;
+      var f = fab.getBoundingClientRect();
+      Array.prototype.forEach.call(document.querySelectorAll('.leaflet-bottom.leaflet-right'), function (el) {
+        el.style.marginBottom = '';
+        if (!el.children.length) return;
+        var r = el.getBoundingClientRect();
+        var gap = 8;
+        var hit = r.left < f.right && r.right > f.left && r.top < f.bottom && r.bottom > f.top - gap;
+        /* ตั้งเป็นค่าในบรรทัด เพราะบางหน้า (map.html) ตั้ง margin ของมุมนี้เองด้วยตัวเลือกที่แรงกว่า */
+        if (hit) el.style.marginBottom = (parseFloat(getComputedStyle(el).marginBottom) || 0) + (r.bottom - f.top + gap) + 'px';
+      });
+    }
+    window.addEventListener('load', function () { check(); setTimeout(check, 1500); });
+    window.addEventListener('resize', check);
+    setTimeout(check, 600);
+  }
+
   function build() {
     if (document.querySelector('.tabbar')) return;
     var openHelp = buildHelp();
     var HELP_LINK = '<a href="#help" role="button" aria-haspopup="dialog" aria-controls="helpSheet" class="help-link">';
 
-    /* ปุ่มแดงเล็กบนหัวเว็บ เห็นได้ทุกหน้าทุกขนาดจอโดยไม่ต้องเปิดเมนู
-       วางต่อจากแถบเมนู (มือถือแถบเมนูถูกซ่อน ปุ่มจึงอยู่ถัดชื่อหน้า)
-       ใส่ด้วย JS ที่เดียวแทนการแก้ทุกหน้า */
-    var head = document.querySelector('header');
-    if (head) {
-      var anchor = head.querySelector('.navtab') || head.querySelector('h1');
-      var html = HELP_LINK.replace('class="help-link"', 'class="help-link" id="btnSos" title="ขอความช่วยเหลือ: โทร 1784 หรือแอปพ้นภัย" aria-label="ขอความช่วยเหลือ"') +
-        '<b class="sos-mark" aria-hidden="true">SOS</b><span class="sos-long">ขอความช่วยเหลือ</span><span class="sos-short">ช่วยเหลือ</span></a>';
-      if (anchor) anchor.insertAdjacentHTML('afterend', html);
-      else head.insertAdjacentHTML('afterbegin', html);
-    }
+    /* ปุ่ม SOS ลอยมุมขวาล่าง เห็นได้ทุกหน้าทุกขนาดจอโดยไม่ต้องเปิดเมนู
+       ใส่ด้วย JS ที่เดียวแทนการแก้ทุกหน้า
+       มุมซ้ายล่างเป็นของปุ่มติดตั้งแอป (js/install.js) สองปุ่มจึงไม่ทับกัน */
+    document.body.insertAdjacentHTML('beforeend',
+      HELP_LINK.replace('class="help-link"', 'class="help-link" id="btnSos" title="ขอความช่วยเหลือ: โทร 1784 หรือแอปพ้นภัย" aria-label="ขอความช่วยเหลือ"') +
+      '<b class="sos-mark" aria-hidden="true">SOS</b><span class="sos-long">ขอความช่วยเหลือ</span></a>');
+    liftMapControls();
     var here = currentPage();
 
     /* หน้าไหนที่ไม่ได้อยู่ในแถบล่าง ให้ปุ่มเพิ่มเติมติดสถานะไว้แทน
