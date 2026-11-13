@@ -39,18 +39,21 @@
     chart:  '<path d="M3.6 20.4h16.8"/><rect x="5.2" y="12.4" width="3.4" height="6"/><rect x="10.3" y="8.2" width="3.4" height="10.2"/><rect x="15.4" y="4.4" width="3.4" height="14"/>',
     buoy:   '<circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="3.6"/><path d="M6.1 6.1l3.4 3.4"/><path d="M14.5 14.5l3.4 3.4"/><path d="M17.9 6.1l-3.4 3.4"/><path d="M9.5 14.5l-3.4 3.4"/>',
     phone:  '<path d="M6.6 3.6h2.9l1.5 4.1-2 1.4a11.4 11.4 0 0 0 5.9 5.9l1.4-2 4.1 1.5v2.9a1.9 1.9 0 0 1-2 1.9A15.8 15.8 0 0 1 4.6 5.6a1.9 1.9 0 0 1 2-2z"/>',
+    globe:  '<circle cx="12" cy="12" r="8.6"/><path d="M3.4 12h17.2"/><path d="M12 3.4c2.4 2.4 3.6 5.3 3.6 8.6s-1.2 6.2-3.6 8.6c-2.4-2.4-3.6-5.3-3.6-8.6s1.2-6.2 3.6-8.6z"/>',
     app:    '<rect x="6.4" y="2.8" width="11.2" height="18.4" rx="2.2"/><path d="M10.6 18h2.8"/><path d="M12 7.4v5.2"/><path d="M9.4 10h5.2"/>'
   };
 
   /* ---------- ขอความช่วยเหลือ ----------
-     สองทางเท่านั้น: โทรหาคน หรือเปิดแอปที่ส่งพิกัดให้ทีมช่วยเหลือ
+     สามทาง: โทรหาคน เปิดแอปพ้นภัย หรือเปิดยามยาก
      ตอนน้ำกำลังขึ้นคนไม่มีเวลาอ่านรายชื่อเบอร์ยาว ๆ ตัวเลือกยิ่งน้อยยิ่งกดเร็ว
      แอปพ้นภัยของสภากาชาดไทยไม่มีลิงก์เปิดแอปตรง ๆ ที่ใช้ได้ทุกเครื่อง
      จึงส่งไปหน้าแอปในสโตร์ ซึ่งมีปุ่ม "เปิด" ถ้าติดตั้งไว้แล้ว และ "ติดตั้ง" ถ้ายังไม่มี */
   var HELP = {
     tel: '1784',
     play: 'https://play.google.com/store/apps/details?id=th.co.mm.phonphai',
-    ios: 'https://apps.apple.com/th/app/phonphai/id1434801222'
+    ios: 'https://apps.apple.com/th/app/phonphai/id1434801222',
+    /* ยามยาก ใช้ลิงก์เว็บเดียวกันทุกเครื่อง ไม่แยกตามสโตร์ */
+    yamyak: 'https://yamyak.app/'
   };
 
   /* แถบล่าง: ห้าปลายทางที่คนใช้จริงตอนน้ำกำลังมา
@@ -143,6 +146,8 @@
         '<span><b>เปิดแอป พ้นภัย</b><small>แจ้งขอความช่วยเหลือพร้อมพิกัด · สภากาชาดไทย' +
         (os === 'other' ? '' : '<br>ยังไม่มีแอป จะพาไปหน้าติดตั้ง') + '</small></span></a>' +
       stores +
+      '<a class="help-opt" href="' + HELP.yamyak + '" target="_blank" rel="noopener">' + svg('globe') +
+        '<span><b>เปิดแอป ยามยาก</b><small>yamyak.app</small></span></a>' +
       '<button type="button" class="install-btn ghost help-close">ปิด</button>';
 
     document.body.appendChild(scrim);
@@ -201,7 +206,7 @@
        ใส่ด้วย JS ที่เดียวแทนการแก้ทุกหน้า
        มุมซ้ายล่างเป็นของปุ่มติดตั้งแอป (js/install.js) สองปุ่มจึงไม่ทับกัน */
     document.body.insertAdjacentHTML('beforeend',
-      HELP_LINK.replace('class="help-link"', 'class="help-link" id="btnSos" title="ขอความช่วยเหลือ: โทร 1784 หรือแอปพ้นภัย" aria-label="ขอความช่วยเหลือ"') +
+      HELP_LINK.replace('class="help-link"', 'class="help-link" id="btnSos" title="ขอความช่วยเหลือ: โทร 1784 แอปพ้นภัย หรือยามยาก" aria-label="ขอความช่วยเหลือ"') +
       '<b class="sos-mark" aria-hidden="true">SOS</b><span class="sos-long">ขอความช่วยเหลือ</span></a>');
     liftMapControls();
     var here = currentPage();
@@ -231,7 +236,7 @@
     sheet.innerHTML = '<div class="sheet-grab" aria-hidden="true"></div>' +
       /* มือถือ: อยู่บนสุดของแผ่น เพราะเป็นของเดียวในแผ่นที่คนเปิดตอนฉุกเฉิน */
       HELP_LINK.replace('class="help-link"', 'class="help-link sheet-help"') + svg('buoy') +
-        '<span>ขอความช่วยเหลือ<small>โทร 1784 หรือแอปพ้นภัย</small></span></a>' +
+        '<span>ขอความช่วยเหลือ<small>โทร 1784 · แอปพ้นภัย · ยามยาก</small></span></a>' +
       SHEET.map(function (g) {
         return '<h3>' + g.head + '</h3><div class="sheet-grid">' +
                g.items.map(function (i) { return link(i, here); }).join('') + '</div>';
