@@ -192,7 +192,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
 </footer>
 
 <script src="js/supabase-client.js?v=3"></script>
-<script src="js/auth-ui.js"></script>
+<script src="js/auth-ui.js?v=3"></script>
 <script src="js/views.js?v=4" defer></script>
 <script>
 'use strict';
@@ -756,7 +756,10 @@ function createPinIcon(label) {
 
 function renderAuthHeader(state, profile){
   const el = document.getElementById('authBox');
-  if (state==='signedout') el.innerHTML = `<button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button>`;
+  /* หน้านี้หน้าเดียวที่ยังมีปุ่มล็อกอินบนหัวเว็บ เพราะต้องล็อกอินก่อนรายงานจุดน้ำท่วม
+     หน้าอื่นปิดไว้ใน js/auth-ui.js (SHOW_LOGIN) ปุ่มของ auth-ui จึงไม่ซ้ำกับปุ่มนี้ */
+  const SHOW_HEADER_LOGIN = true;
+  if (state==='signedout') el.innerHTML = SHOW_HEADER_LOGIN ? `<button onclick="signInWithGoogle()">เข้าสู่ระบบด้วย Google</button>` : '';
   else if (state==='pending') el.innerHTML = `<span class="pill" style="background:var(--st-watch-wash);color:var(--st-warn)">รออนุมัติ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
   else if (state==='rejected') el.innerHTML = `<span class="pill" style="background:var(--st-danger-wash);color:var(--st-danger)">ถูกปฏิเสธ</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;
   else el.innerHTML = `<span class="pill" style="background:var(--st-normal-wash);color:var(--st-normal)">${esc(profile.full_name||profile.email)}${profile.role==='admin'?' · แอดมิน':''}</span><button onclick="signOut()" style="background:rgba(255,255,255,.2)">ออกจากระบบ</button>`;

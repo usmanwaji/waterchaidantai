@@ -7,6 +7,13 @@
  */
 'use strict';
 (function () {
+  /* ปิดปุ่ม "เข้าสู่ระบบด้วย Google" บนหัวเว็บไว้ก่อน (คนทั่วไปไม่ต้องล็อกอิน)
+     ระบบล็อกอินยังอยู่ครบ: หน้าเจ้าหน้าที่ (admin, people, stats) มีปุ่มล็อกอินของตัวเอง
+     หน้าเส้นทาง (route.html) มีปุ่มล็อกอินบนหัวเว็บของตัวเอง (SHOW_HEADER_LOGIN) ซึ่งยังเปิดอยู่
+     และคนที่ล็อกอินอยู่แล้วยังเห็นชื่อกับปุ่มออกจากระบบบนหัวเว็บตามเดิม
+     จะเปิดปุ่มกลับมาทุกหน้า เปลี่ยนเป็น true */
+  var SHOW_LOGIN = false;
+
   // SDK/ไคลเอนต์โหลดไม่สำเร็จ (เช่น ออฟไลน์) · ไม่ต้องแสดงปุ่ม อย่าทำหน้าพัง
   if (!window.supabase || typeof sb === 'undefined' || typeof watchAuthState !== 'function') return;
 
@@ -41,6 +48,7 @@
   }
 
   function showLogin() {
+    if (!SHOW_LOGIN) { wrap.innerHTML = ''; return; }
     wrap.innerHTML = '<button type="button" class="auth-btn" title="เข้าสู่ระบบด้วย Google">' + G +
       '<span class="auth-txt">เข้าสู่ระบบ</span></button>';
     wrap.querySelector('.auth-btn').addEventListener('click', function () {
