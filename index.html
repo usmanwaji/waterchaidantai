@@ -156,6 +156,8 @@ footer a{color:var(--orange-warm);text-decoration:none}
 #ncWindy{display:block;width:100%;height:340px;border:1px solid var(--outline);border-radius:10px;background:var(--card-2)}
 @media(max-width:768px){#ncWindy{height:min(440px,62vh)}}
 .ncAltNote{font-size:11.5px;color:var(--ink-2);margin-top:6px}
+/* ยามยาก: ฝังแอปไว้ท้ายหน้า ความสูงคงที่ เนื้อหาเกินให้เลื่อนในกรอบเอง ไม่ดันหน้าให้ยาว */
+#yamyakFrame{display:block;width:100%;max-width:480px;margin:0 auto;height:min(520px,70vh);border:1px solid var(--outline);border-radius:10px;background:var(--card-2)}
 
 /* สถานการณ์น้ำท่า (telemeter gauges) */
 .wtaRow{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-around;align-items:flex-start}
@@ -518,6 +520,17 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
 
   <!-- ผู้เข้าชมเว็บไซต์ · js/visits-widget.js เติมเนื้อหาให้ และซ่อนการ์ดทั้งใบถ้าอ่านยอดไม่ได้ -->
   <div class="card full" id="visitCard" hidden></div>
+
+  <!-- ขอความช่วยเหลือผ่านแอปยามยาก (yamyak.app) · ฝังตัวแอปจริงใน iframe กรอกได้ในหน้านี้เลย
+       loading="lazy" เพราะอยู่ล่างสุด ผู้ใช้ที่ไม่เลื่อนลงมาจะไม่โหลดแอปเลย
+       allow: ตำแหน่ง (ส่งพิกัดให้เจ้าหน้าที่) · กล้อง (แนบรูป) · สแกนหน้า/ลายนิ้วมือ (เข้าใช้งาน) -->
+  <div class="card full" id="yamyakCard">
+    <h2>ขอความช่วยเหลือ (แอปยามยาก) <a class="where" href="https://yamyak.app/" target="_blank" rel="noopener">เปิดเต็มจอ ↗</a></h2>
+    <iframe id="yamyakFrame" src="https://yamyak.app/" title="กรอกข้อมูลขอความช่วยเหลือผ่านแอปยามยาก" loading="lazy"
+      allow="geolocation; camera; publickey-credentials-get; publickey-credentials-create; clipboard-write"
+      referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    <div class="ncAltNote">ใส่เบอร์มือถือแล้วแจ้งเรื่องได้เลย เจ้าหน้าที่จะติดต่อกลับทางเบอร์นั้น · เลื่อนในกรอบเพื่อดูส่วนที่เหลือ · เหตุด่วนถึงชีวิตโทร <a href="tel:1784">1784</a></div>
+  </div>
 </div>
 
 <footer>
