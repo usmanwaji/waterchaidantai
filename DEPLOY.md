@@ -1,6 +1,6 @@
 # DEPLOY — waterchaidantai (One Map ชายแดนใต้)
 
-ขั้นตอน deploy: **(1) เว็บหน้าเว็บ → Cloudflare Pages** · **(2) ฐานข้อมูล → Supabase (schema v6–v8)** · **(3) แจ้งเตือน → Telegram + Edge Function**
+ขั้นตอน deploy: **(1) เว็บหน้าเว็บ → Cloudflare Pages** · **(2) ฐานข้อมูล → Supabase (schema v6–v8)** · **(3) แจ้งเตือน → Telegram + Edge Function** · **(4) LINE OA → Edge Function `line-webhook` + rich menu**
 
 Project ref (Supabase): `tnvzeahfugmmrydtnsdv`
 Site: https://naraflood.com/
@@ -297,6 +297,65 @@ curl -X POST 'https://tnvzeahfugmmrydtnsdv.supabase.co/functions/v1/notify-water
 (ถ้า `fired` ขึ้นแต่ข้อความไม่เข้า ให้ดู log ของฟังก์ชันใน Supabase — จะมีเหตุผลจาก Telegram เช่น chat id ผิด หรือผู้ใช้บล็อกบอท)
 
 > `cooldown_min` (ค่าเริ่มต้น 180 นาที) กันสแปม — ตอนทดสอบถ้าอยากให้ยิงซ้ำทันที ให้ลบแถวล่าสุดใน `alert_log` ของกฎนั้น
+
+---
+
+## 4) LINE OA (Edge Function `line-webhook` + rich menu)
+
+> แบบเต็มอยู่ที่ `LINE-OA-PLAN.md` · LINE OA แผนฟรี **ตอบเมื่อผู้ใช้ถาม** (Reply ไม่นับโควตา)
+> ส่วนการเตือนอัตโนมัติถึงทุกคนยังเป็น Telegram (ข้อ 3) เพราะแผนฟรีส่งข้อความที่เราเป็นฝ่ายส่งก่อนได้ราว 300 ข้อความ/เดือน
+> โค้ดฝั่งบอทอยู่ที่ `supabase/functions/line-webhook/` (ตรรกะใน `core.mjs`) · rich menu อยู่ที่ `line-oa/`
+
+### 4.1 สร้างบัญชีและ channel (ทำในเบราว์เซอร์ ต้องล็อกอิน LINE ของผู้ดูแล)
+1. เปิด https://manager.line.biz → **สร้างบัญชี LINE Official Account**
+   ชื่อ `NaraFlood เตือนน้ำนราธิวาส` · ประเภทธุรกิจ: หน่วยงานรัฐ/สาธารณประโยชน์ · แผน **ฟรี (Communication)**
+2. ในบัญชีที่สร้าง → **ตั้งค่า (Settings) → Messaging API → เปิดใช้งาน Messaging API** → สร้าง Provider ใหม่ชื่อ `naraflood`
+3. **ตั้งค่า → การตอบกลับ (Response settings)**
+   - แชท (Chat): **ปิด** · ข้อความทักทาย (Greeting): **ปิด** · ข้อความตอบกลับอัตโนมัติ (Auto-response): **ปิด** · Webhook: **เปิด**
+   - ปิดข้อความทักทายเพราะ `line-webhook` ส่งข้อความต้อนรับเองตอนเพิ่มเพื่อน (ไม่งั้นผู้ใช้ได้สองข้อความ)
+4. **ตั้งค่า → ตั้งค่าบัญชี** → "อนุญาตให้เข้าร่วมกลุ่ม": **ปิด** (บอทยังไม่ตอบในกลุ่ม · Push เข้ากลุ่มนับโควตาตามจำนวนสมาชิก)
+5. เปิด https://developers.line.biz/console → Provider `naraflood` → channel ของบัญชีนี้
+   - แท็บ **Basic settings** → คัดลอก **Channel secret**
+   - แท็บ **Messaging API** → ล่างสุด **Channel access token (long-lived) → Issue** → คัดลอก
+   - **อย่าใส่สองค่านี้ลงไฟล์ใดใน repo** (repo เป็นสาธารณะ)
+
+### 4.2 ตั้ง secrets + deploy (Supabase)
+```bash
+supabase functions deploy line-webhook --no-verify-jwt
+supabase secrets set LINE_CHANNEL_SECRET=<Channel secret>  LINE_CHANNEL_ACCESS_TOKEN=<long-lived token>
+```
+หรือทำในหน้าเว็บ: Supabase Dashboard → **Edge Functions → Secrets** เพิ่มสองชื่อข้างบน
+- `--no-verify-jwt` จำเป็น (LINE ไม่ส่ง JWT ของ Supabase · ป้องกันด้วยลายเซ็น `X-Line-Signature` แทน)
+- ยังไม่ตั้ง secrets → ฟังก์ชันตอบ 200 เงียบ ๆ ไม่พัง · `SITE_URL` ใช้ตัวเดียวกับข้อ 3
+
+### 4.3 ผูก Webhook + ติดตั้ง rich menu (จากเครื่องที่มี Node 22)
+```bash
+export LINE_CHANNEL_ACCESS_TOKEN=<long-lived token>    # เฉพาะในหน้าต่าง terminal นี้ ไม่ต้องเก็บลงไฟล์
+node line-oa/setup-richmenu.mjs --dry-run              # ตรวจ richmenu.json + รูป
+node line-oa/setup-richmenu.mjs --info --webhook       # ดู Basic ID + ตั้ง Webhook URL แล้วทดสอบ
+node line-oa/setup-richmenu.mjs                        # สร้าง/อัปโหลด/ตั้ง rich menu เป็นค่าเริ่มต้น
+```
+- `--webhook` ตั้ง URL เป็น `https://tnvzeahfugmmrydtnsdv.supabase.co/functions/v1/line-webhook` แล้วสั่ง LINE ทดสอบ ต้องขึ้น `✓ ทดสอบ webhook: HTTP 200`
+  ทำเองในคอนโซลก็ได้: แท็บ Messaging API → Webhook URL → วาง URL → **Verify** → เปิด **Use webhook** · ปิด **Webhook redelivery**
+  ถ้าสคริปต์บอกว่า "เปิดใช้: false" ต้องเปิด **Use webhook** ในคอนโซลเอง
+- แก้รูปเมนู: แก้ `line-oa/richmenu.html` → `node line-oa/render-richmenu.mjs` (ต้องมี playwright) → รัน `setup-richmenu.mjs` ใหม่ (ลบเมนูเก่าให้เอง)
+- นำ Basic ID (`@xxxxxxx`) ที่ได้จาก `--info` ไปใส่ `const LINE_OA_ID` ใน `alert.html` แล้ว push → การ์ด "ถามสถานการณ์น้ำผ่าน LINE" จะแสดง
+
+### 4.4 ทดสอบกับบัญชีจริง
+1. ปุ่ม Verify ในคอนโซล (หรือ `--webhook`) ได้ Success
+2. เพิ่มเพื่อน → ได้ข้อความต้อนรับ **1 ข้อความ** และเห็นเมนู 6 ปุ่ม
+3. กดปุ่มเมนูครบ 6 ปุ่ม · ส่งตำแหน่ง · พิมพ์ `สถานการณ์น้ำ` `ศูนย์พักพิง` `ฝน` `เตือน` `ช่วยเหลือ` `สถานะ` `หยุด`
+4. เปิด `map.html` `shelter.html` `check.html` จากเมนูในมือถือ ดูว่าแผนที่และการขอตำแหน่งทำงานในเบราว์เซอร์ของ LINE
+   (ถ้าขอตำแหน่งไม่ได้ ให้เติม `?openExternalBrowser=1` ท้าย URL ของหน้านั้นใน `line-oa/richmenu.json` แล้วรันสคริปต์ใหม่)
+5. ยิง POST ปลอม ต้องได้ 401:
+   `curl -i -X POST https://tnvzeahfugmmrydtnsdv.supabase.co/functions/v1/line-webhook -H 'x-line-signature: x' -d '{"events":[]}'`
+6. คำตอบไม่มา → Supabase → Edge Functions → line-webhook → **Logs** (`line reply failed 401` = token ผิด/หมดอายุ)
+
+ทดสอบตรรกะบอทบนเครื่อง (ไม่ต้องมี LINE): `node --test line-oa/test/*.test.mjs`
+
+### 4.5 แจ้งเตือนผ่าน LINE ให้ "ผู้ส่งต่อ" (เฟส 3 — ยังไม่ได้ทำ)
+พิมพ์ `สถานะ` ในแชทแล้วได้รหัส `U…` ใช้ตั้งกฎ `line:U…` ในหน้า alert.html ได้แล้ว แต่ `notify-water` ยังส่งเฉพาะ `telegram:`
+กฎ `line:` จะเริ่มส่งจริงเมื่อทำเฟส 3 ใน `LINE-OA-PLAN.md` ข้อ 8 (มีตัวคุมโควตา 300/เดือน)
 
 ---
 

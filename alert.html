@@ -70,7 +70,17 @@ footer a{color:var(--st-watch);text-decoration:none}
 </header>
 
 <div id="content">
-  <!-- ประชาชน -->
+  <!-- ประชาชน: LINE OA (ถามแล้วตอบ) · ซ่อนอยู่จนกว่าจะตั้งค่า LINE_OA_ID ในสคริปต์ด้านล่าง -->
+  <div class="card hide" id="lineCard">
+    <h2>ถามสถานการณ์น้ำผ่าน LINE</h2>
+    <p>เพิ่มเพื่อน <b>LINE NaraFlood</b> แล้วแตะเมนูได้ทันที: สรุประดับน้ำทั้งจังหวัด · ส่งตำแหน่งเพื่อดูสถานีน้ำและศูนย์พักพิงใกล้คุณพร้อมลิงก์นำทาง · เปิดแผนที่น้ำ/พยากรณ์ฝน · ปุ่มโทร 1784</p>
+    <div class="row" style="margin-top:10px">
+      <a class="btn" id="lineLink" href="#" target="_blank" rel="noopener">เพิ่มเพื่อนใน LINE</a>
+      <span class="muted" id="lineHint"></span>
+    </div>
+    <p class="muted" style="margin-top:10px">LINE นี้ <b>ตอบเมื่อคุณถาม</b> · ถ้าต้องการให้ <b>เตือนอัตโนมัติ</b> เมื่อน้ำใกล้ล้นตลิ่ง ใช้บอท Telegram ด้านล่าง (ฟรี ไม่จำกัดจำนวนข้อความ) · เปิดลิงก์บนคอมพิวเตอร์จะเห็น QR ให้สแกนด้วยมือถือ</p>
+  </div>
+
   <div class="card">
     <h2>รับแจ้งเตือนระดับน้ำ จ.นราธิวาส</h2>
     <p>เมื่อสถานีน้ำแห่งใดในจังหวัดระดับสูงถึงเกณฑ์ที่เลือก ระบบจะส่งข้อความเข้า <b>Telegram</b> ให้ทันที · ไม่ต้องเปิดเว็บเฝ้าเอง เหมาะเวลาน้ำมาตอนกลางคืน · <b>สมัครเองได้ทันทีในแชท ไม่ต้องรอเจ้าหน้าที่</b></p>
@@ -83,7 +93,7 @@ footer a{color:var(--st-watch);text-decoration:none}
     </div>
     <p class="muted" style="margin-top:10px"><b>กลุ่มของอำเภอ/อปท.:</b> เชิญบอทเข้ากลุ่ม Telegram ของหน่วยงาน แล้วให้สมาชิกคนใดคนหนึ่งพิมพ์ <code>/start</code> ในกลุ่มแล้วเลือกระดับเหมือนกัน ทุกคนในกลุ่มจะได้รับเตือนพร้อมกัน</p>
     <p class="muted"><b>ต้องการเฝ้าเฉพาะสถานีเดียว</b> (ไม่ใช่ทั้งจังหวัด): พิมพ์ <code>/status</code> ในบอทเพื่อดู chat id ของคุณ แล้วแจ้งเจ้าหน้าที่ให้ตั้งกฎเฉพาะทางในส่วน "จัดการกติกาแจ้งเตือน" ด้านล่าง</p>
-    <p class="muted">ใช้ Telegram เพราะส่งข้อความได้ไม่จำกัดและไม่มีค่าใช้จ่าย ต่างจาก LINE OA ที่จำกัดโควตาต่อเดือน (LINE Notify ปิดบริการไปแล้ว มี.ค. 2025)</p>
+    <p class="muted">แบ่งหน้าที่กัน: <b>LINE = ถามแล้วตอบทันที</b> · <b>Telegram = เตือนอัตโนมัติไม่จำกัด</b> เพราะ LINE OA แผนฟรีส่งข้อความที่ระบบเป็นฝ่ายส่งก่อนได้เพียงราว 300 ข้อความต่อเดือน (LINE Notify ปิดบริการไปแล้ว มี.ค. 2025)</p>
   </div>
 
   <!-- สมาชิก: จัดการกติกา -->
@@ -104,7 +114,7 @@ footer a{color:var(--st-watch);text-decoration:none}
       <div class="row" style="margin-top:8px">
         <select id="fMetric"><option value="wl_pct_bank">% ของตลิ่ง</option><option value="rain_24h">ฝน 24 ชม. (มม.)</option></select>
         <input id="fThreshold" type="number" placeholder="เกณฑ์ เช่น 80" style="width:120px">
-        <input id="fChannel" placeholder="ช่องทาง เช่น telegram:123456789 หรือ telegram:-1001234567890 (กลุ่ม)" style="flex:1;min-width:180px">
+        <input id="fChannel" placeholder="ช่องทาง เช่น telegram:123456789 · telegram:-1001234567890 (กลุ่ม) · line:Uxxxxxxxx (LINE รายคน ใช้โควตา 300/เดือน)" style="flex:1;min-width:180px">
         <input id="fCooldown" type="number" value="180" title="cooldown (นาที)" style="width:90px">
       </div>
       <div class="row" style="margin-top:8px">
@@ -139,6 +149,9 @@ footer a{color:var(--st-watch);text-decoration:none}
    ต้องเป็นบอทตัวเดียวกับ TELEGRAM_BOT_TOKEN ที่ตั้งไว้ใน Supabase secrets
    ปล่อยว่างไว้ = ปุ่มจะขึ้นว่ายังไม่ได้ตั้งค่า แทนที่จะพาไปลิงก์เสีย */
 const TG_BOT = 'NaraFloodbot';
+/* Basic ID ของ LINE OA (เช่น '@123abcde' · ดูได้จาก node line-oa/setup-richmenu.mjs --info หรือ LINE OA Manager)
+   ปล่อยว่างไว้ = ซ่อนการ์ด LINE ทั้งใบ ไม่พาไปลิงก์เสีย (ดู DEPLOY.md ข้อ 4) */
+const LINE_OA_ID = '';
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const STATUS = {enabled:{c:'var(--st-normal)',l:'เปิด'}, disabled:{c:'var(--ink-3)',l:'ปิด'}};
@@ -191,6 +204,14 @@ async function saveRule(){
 }
 
 /* ปุ่มเปิดบอท · ถ้ายังไม่ตั้งชื่อบอท อย่าปล่อยให้กดแล้วไปหน้าเสีย ให้บอกตรง ๆ ว่ายังไม่ได้ตั้งค่า */
+(function initLineLink(){
+  const id = String(LINE_OA_ID||'').trim();
+  if(!id) return;                          // ยังไม่ได้ตั้งค่า → การ์ดซ่อนอยู่ตามเดิม
+  const at = id.startsWith('@') ? id : '@' + id;
+  $('lineLink').href = 'https://line.me/R/ti/p/' + encodeURIComponent(at);
+  $('lineHint').textContent = at;
+  $('lineCard').classList.remove('hide');
+})();
 (function initBotLink(){
   const a = $('tgLink'), hint = $('tgHint');
   if(!a) return;

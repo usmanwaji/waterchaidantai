@@ -1,0 +1,20 @@
+{
+  "size": { "width": 2500, "height": 1686 },
+  "selected": true,
+  "name": "naraflood-main",
+  "chatBarText": "เมนูน้ำท่วม",
+  "areas": [
+    { "bounds": { "x": 0,    "y": 0,   "width": 833, "height": 843 },
+      "action": { "type": "message", "label": "สถานการณ์น้ำ", "text": "สถานการณ์น้ำ" } },
+    { "bounds": { "x": 833,  "y": 0,   "width": 833, "height": 843 },
+      "action": { "type": "uri", "label": "ใกล้ฉัน", "uri": "https://line.me/R/nv/location/" } },
+    { "bounds": { "x": 1666, "y": 0,   "width": 834, "height": 843 },
+      "action": { "type": "uri", "label": "แผนที่น้ำ", "uri": "https://naraflood.com/map.html" } },
+    { "bounds": { "x": 0,    "y": 843, "width": 833, "height": 843 },
+      "action": { "type": "uri", "label": "ศูนย์พักพิง", "uri": "https://naraflood.com/shelter.html" } },
+    { "bounds": { "x": 833,  "y": 843, "width": 833, "height": 843 },
+      "action": { "type": "uri", "label": "คาดการณ์ฝน", "uri": "https://naraflood.com/forecast.html" } },
+    { "bounds": { "x": 1666, "y": 843, "width": 834, "height": 843 },
+      "action": { "type": "uri", "label": "โทร 1784", "uri": "tel:1784" } }
+  ]
+}
