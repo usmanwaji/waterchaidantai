@@ -181,6 +181,8 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .hlpBtn:hover{filter:brightness(1.1);color:#fff}
 .hlpBtn.hlpCallBtn{background:var(--st-danger);font-size:20px;min-height:56px}
 .hlpBtn[hidden]{display:none}
+/* Windy อยู่ในกรอบโดเมนอื่น ปรับความเร็วปุ่ม ▶ ไม่ได้ (ไม่มีพารามิเตอร์ใน embed) จึงบอกให้ลากแถบเวลาเอง */
+.ncAltTip{font-size:12px;line-height:1.5;color:var(--ink-2);border-left:3px solid var(--navy);padding:2px 0 2px 8px;margin-bottom:8px}
 
 /* สถานการณ์น้ำท่า (telemeter gauges) */
 .wtaRow{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-around;align-items:flex-start}
@@ -532,8 +534,9 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     </div>
     <div id="ncAlt" hidden>
       <!-- ใส่ src ตอนต้องใช้เท่านั้น (ncApplyMode) · ผู้ใช้ส่วนใหญ่จะไม่โหลด Windy เลย -->
+      <div class="ncAltTip">ปุ่ม ▶ ของ Windy เล่นเร็วและปรับความเร็วไม่ได้ · <b>ลากแถบเวลาใต้แผนที่ช้า ๆ</b> แทน จะเห็นกลุ่มฝนเคลื่อนตามจังหวะที่ต้องการ</div>
       <iframe id="ncWindy" title="พยากรณ์ฝนรายชั่วโมงจากแบบจำลอง ECMWF (Windy)" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-      <div class="ncAltNote">พยากรณ์ฝนจากแบบจำลอง ECMWF ผ่าน <a href="https://www.windy.com/?rain,6.10,101.73,8" target="_blank" rel="noopener">Windy ↗</a> · ไม่ใช่ภาพเรดาร์ · เลื่อนแถบเวลาใต้แผนที่เพื่อดูชั่วโมงถัดไป</div>
+      <div class="ncAltNote">พยากรณ์ฝนจากแบบจำลอง ECMWF ผ่าน <a href="https://www.windy.com/?rain,6.10,101.73,8" target="_blank" rel="noopener">Windy ↗</a> · ไม่ใช่ภาพเรดาร์ · ดูได้ล่วงหน้าหลายวัน</div>
     </div>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
