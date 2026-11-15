@@ -15,7 +15,7 @@ test("rich menu layout follows the plan", () => {
   assert.deepEqual(actions.map((a) => a.type), ["message", "uri", "uri", "uri", "uri", "uri"]);
   assert.equal(actions[0].text, "สถานการณ์น้ำ");
   assert.equal(actions[1].uri, "https://line.me/R/nv/location/");
-  assert.equal(actions[5].uri, "tel:1784");
+  assert.equal(actions[5].uri, "https://naraflood.com/");
 });
 
 test("validation catches overlap, gaps, long labels, wrong image size", () => {

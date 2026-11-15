@@ -26,7 +26,7 @@
     },
     {
       "bounds": { "x": 1667, "y": 843, "width": 833, "height": 843 },
-      "action": { "type": "uri", "label": "ขอความช่วยเหลือ 1784", "uri": "tel:1784" }
+      "action": { "type": "uri", "label": "เว็บ NaraFlood", "uri": "https://naraflood.com/" }
     }
   ]
 }
