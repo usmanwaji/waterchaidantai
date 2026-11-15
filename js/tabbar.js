@@ -91,6 +91,10 @@
     ]}
   ];
 
+  /* LINE OA ของ naraflood.com (ตอบเมื่อผู้ใช้ถาม · DEPLOY.md ข้อ 4) */
+  var LINE_OA = '@192olpfc';
+  var LINE_BUBBLE = 'M12 3.2c-5.5 0-10 3.6-10 8 0 4 3.5 7.3 8.3 7.9.3.1.8.2.9.5.1.3.1.7 0 .9l-.1.9c0 .3-.2 1 .9.5 1.1-.5 5.9-3.5 8.1-6 1.5-1.6 2.2-3.3 2.2-4.7 0-4.4-4.5-8-10.3-8z';
+
   function svg(name) {
     return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (ICON[name] || ICON.layers) + '</svg>';
   }
@@ -179,9 +183,16 @@
      แผนที่สร้างตัวควบคุมช้ากว่าหน้า จึงวัดซ้ำหลังโหลดเสร็จและตอนเปลี่ยนขนาดจอ */
   function liftMapControls() {
     function check() {
-      var fab = document.getElementById('btnSos');
-      if (!fab) return;
-      var f = fab.getBoundingClientRect();
+      /* ปุ่มลอยมุมขวาล่างมีสองปุ่มซ้อนกัน (SOS บน · LINE ล่าง) วัดเป็นกล่องเดียวที่ครอบทั้งคู่ */
+      var fabs = ['btnSos', 'btnLineOa'].map(function (id) { return document.getElementById(id); })
+        .filter(Boolean).map(function (el) { return el.getBoundingClientRect(); });
+      if (!fabs.length) return;
+      var f = {
+        left: Math.min.apply(null, fabs.map(function (r) { return r.left; })),
+        right: Math.max.apply(null, fabs.map(function (r) { return r.right; })),
+        top: Math.min.apply(null, fabs.map(function (r) { return r.top; })),
+        bottom: Math.max.apply(null, fabs.map(function (r) { return r.bottom; }))
+      };
       Array.prototype.forEach.call(document.querySelectorAll('.leaflet-bottom.leaflet-right'), function (el) {
         el.style.marginBottom = '';
         if (!el.children.length) return;
@@ -207,7 +218,12 @@
        มุมซ้ายล่างเป็นของปุ่มติดตั้งแอป (js/install.js) สองปุ่มจึงไม่ทับกัน */
     document.body.insertAdjacentHTML('beforeend',
       HELP_LINK.replace('class="help-link"', 'class="help-link" id="btnSos" title="ขอความช่วยเหลือ: โทร 1784 แอปพ้นภัย หรือยามยาก" aria-label="ขอความช่วยเหลือ"') +
-      '<b class="sos-mark" aria-hidden="true">SOS</b><span class="sos-long">ขอความช่วยเหลือ</span></a>');
+      '<b class="sos-mark" aria-hidden="true">SOS</b><span class="sos-long">ขอความช่วยเหลือ</span></a>' +
+      /* ปุ่มแชท LINE ลอยใต้ปุ่ม SOS: ถามระดับน้ำ ศูนย์พักพิงใกล้ตัว ผ่านบอทของ NaraFlood */
+      '<a id="btnLineOa" href="https://line.me/R/ti/p/' + encodeURIComponent(LINE_OA) + '" target="_blank" rel="noopener"' +
+        ' title="แชทกับ NaraFlood ทาง LINE ' + LINE_OA + '" aria-label="แชทกับ NaraFlood ทาง LINE ' + LINE_OA + '">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + LINE_BUBBLE + '"/></svg>' +
+        '<span class="line-long">แชท LINE</span></a>');
     liftMapControls();
     var here = currentPage();
 
