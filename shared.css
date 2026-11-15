@@ -134,6 +134,7 @@
      ต้องหลบด้วยตัวเลขเดียวกันนี้ ไม่ใช่ตัวเลขที่กะเอาแยกกันคนละที่ */
   --install-fab-h:44px;
   --sos-fab-h:44px;
+  --line-fab-h:40px;  /* ปุ่มแชท LINE ใต้ปุ่ม SOS · ปุ่ม SOS ยกขึ้นด้วยตัวเลขนี้ */
 
   /* ---------- ระยะ ฐาน 4px ---------- */
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
@@ -613,8 +614,8 @@ body{padding-bottom:calc(var(--tabbar-h) + var(--dock-gap) * 2 + env(safe-area-i
   position:fixed;z-index:var(--z-fab);
   right:var(--s3);
   right:max(var(--s3),env(safe-area-inset-right));
-  bottom:calc(var(--tabbar-h) + var(--s3));
-  bottom:calc(var(--tabbar-h) + var(--dock-gap) + env(safe-area-inset-bottom) + var(--s3));
+  bottom:calc(var(--tabbar-h) + var(--s3) + var(--line-fab-h) + var(--s2));
+  bottom:calc(var(--tabbar-h) + var(--dock-gap) + env(safe-area-inset-bottom) + var(--s3) + var(--line-fab-h) + var(--s2));
   display:inline-flex;align-items:center;gap:var(--s2);
   height:var(--sos-fab-h);padding:0 var(--s4) 0 var(--s3);
   border-radius:var(--r-commit);background:var(--st-danger);color:#fff;
@@ -628,14 +629,39 @@ body{padding-bottom:calc(var(--tabbar-h) + var(--dock-gap) * 2 + env(safe-area-i
 #btnSos .sos-mark{flex:none;padding:3px 7px;border-radius:7px;background:#fff;color:var(--st-danger);
   font-size:12.5px;font-weight:800;line-height:1.2;letter-spacing:.06em}
 @media(min-width:769px){
-  #btnSos{bottom:var(--s4);bottom:calc(var(--s4) + env(safe-area-inset-bottom))}
+  #btnSos{bottom:calc(var(--s4) + var(--line-fab-h) + var(--s2));
+    bottom:calc(var(--s4) + env(safe-area-inset-bottom) + var(--line-fab-h) + var(--s2))}
+}
+/* ปุ่มแชท LINE ลอยใต้ปุ่ม SOS ชิดขวาเท่ากัน · เขียว LINE เป็นสีแบรนด์ คนเห็นแล้วรู้ว่ากดไปแชท
+   เตี้ยกว่าปุ่ม SOS เล็กน้อย SOS ยังเป็นปุ่มหลักของมุมนี้ */
+#btnLineOa{
+  position:fixed;z-index:var(--z-fab);
+  right:var(--s3);
+  right:max(var(--s3),env(safe-area-inset-right));
+  bottom:calc(var(--tabbar-h) + var(--s3));
+  bottom:calc(var(--tabbar-h) + var(--dock-gap) + env(safe-area-inset-bottom) + var(--s3));
+  display:inline-flex;align-items:center;gap:6px;
+  height:var(--line-fab-h);padding:0 var(--s4) 0 var(--s3);
+  border-radius:var(--r-commit);background:#06c755;color:#fff;
+  font-size:13.5px;font-weight:700;line-height:1;text-decoration:none;white-space:nowrap;
+  box-shadow:var(--lift-2);
+  transition:background .15s var(--ease),transform .06s var(--ease);
+}
+#btnLineOa:hover{background:#05a948;color:#fff}
+#btnLineOa:active{transform:scale(.96)}
+#btnLineOa:focus-visible{outline:2px solid #06c755;outline-offset:3px}
+#btnLineOa svg{width:20px;height:20px;flex:none;fill:currentColor}
+@media(min-width:769px){
+  #btnLineOa{bottom:var(--s4);bottom:calc(var(--s4) + env(safe-area-inset-bottom))}
 }
 /* จอแคบมาก เหลือแค่ SOS ไม่ให้ชนปุ่มติดตั้งแอปที่มุมซ้าย (มี aria-label ให้โปรแกรมอ่านหน้าจอ) */
 @media(max-width:400px){
   #btnSos{padding:0 var(--s3)}
   #btnSos .sos-long{display:none}
+  #btnLineOa{padding:0 var(--s3)}
+  #btnLineOa .line-long{display:none}
 }
-@media print{#btnSos{display:none!important}}
+@media print{#btnSos,#btnLineOa{display:none!important}}
 .sheet-help{
   display:flex;align-items:center;gap:var(--s3);
   margin-bottom:var(--s4);padding:var(--s3) var(--s4);min-height:60px;
