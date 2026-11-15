@@ -70,7 +70,20 @@ footer a{color:var(--st-watch);text-decoration:none}
 </header>
 
 <div id="content">
-  <!-- ประชาชน -->
+  <!-- ประชาชน: LINE ถามแล้วตอบทันที · ซ่อนอยู่จนกว่าจะตั้ง LINE_OA_ID -->
+  <div class="card hide" id="lineCard">
+    <h2>ถามสถานการณ์น้ำผ่าน LINE</h2>
+    <p>เพิ่มเพื่อน LINE ของ NaraFlood แล้วแตะเมนูหรือพิมพ์ถามได้ทันที เช่น <b>สถานการณ์น้ำ</b> · ส่งตำแหน่งมาเพื่อดู<b>สถานีน้ำและศูนย์พักพิงใกล้คุณ</b> · ตอบทันทีตลอด 24 ชม.</p>
+    <div class="row" style="margin-top:10px;align-items:flex-start">
+      <img id="lineQr" alt="QR เพิ่มเพื่อน LINE NaraFlood" width="120" height="120" style="border-radius:8px;border:1px solid var(--outline)" onerror="this.remove()">
+      <div>
+        <a class="btn" id="lineLink" href="#" target="_blank" rel="noopener">เพิ่มเพื่อนใน LINE</a>
+        <p class="muted" id="lineHint" style="margin-top:6px"></p>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:10px">LINE ตอบเมื่อคุณถาม ไม่ได้ส่งเตือนเอง เพราะ LINE แผนฟรีส่งข้อความหาเพื่อนได้จำกัดต่อเดือน · ถ้าต้องการให้ระบบเตือนเองเมื่อน้ำใกล้ล้นตลิ่ง ใช้ Telegram ด้านล่าง</p>
+  </div>
+
   <div class="card">
     <h2>รับแจ้งเตือนระดับน้ำ จ.นราธิวาส</h2>
     <p>เมื่อสถานีน้ำแห่งใดในจังหวัดระดับสูงถึงเกณฑ์ที่เลือก ระบบจะส่งข้อความเข้า <b>Telegram</b> ให้ทันที · ไม่ต้องเปิดเว็บเฝ้าเอง เหมาะเวลาน้ำมาตอนกลางคืน · <b>สมัครเองได้ทันทีในแชท ไม่ต้องรอเจ้าหน้าที่</b></p>
@@ -83,7 +96,7 @@ footer a{color:var(--st-watch);text-decoration:none}
     </div>
     <p class="muted" style="margin-top:10px"><b>กลุ่มของอำเภอ/อปท.:</b> เชิญบอทเข้ากลุ่ม Telegram ของหน่วยงาน แล้วให้สมาชิกคนใดคนหนึ่งพิมพ์ <code>/start</code> ในกลุ่มแล้วเลือกระดับเหมือนกัน ทุกคนในกลุ่มจะได้รับเตือนพร้อมกัน</p>
     <p class="muted"><b>ต้องการเฝ้าเฉพาะสถานีเดียว</b> (ไม่ใช่ทั้งจังหวัด): พิมพ์ <code>/status</code> ในบอทเพื่อดู chat id ของคุณ แล้วแจ้งเจ้าหน้าที่ให้ตั้งกฎเฉพาะทางในส่วน "จัดการกติกาแจ้งเตือน" ด้านล่าง</p>
-    <p class="muted">ใช้ Telegram เพราะส่งข้อความได้ไม่จำกัดและไม่มีค่าใช้จ่าย ต่างจาก LINE OA ที่จำกัดโควตาต่อเดือน (LINE Notify ปิดบริการไปแล้ว มี.ค. 2025)</p>
+    <p class="muted">แบ่งหน้าที่กันสองช่องทาง: <b>LINE = ถามแล้วตอบทันที</b> · <b>Telegram = เตือนอัตโนมัติไม่จำกัด</b> เพราะ Telegram ส่งข้อความได้ไม่จำกัดและไม่มีค่าใช้จ่าย ส่วน LINE OA แผนฟรีส่งข้อความหาเพื่อนได้ 300 ข้อความต่อเดือน</p>
   </div>
 
   <!-- สมาชิก: จัดการกติกา -->
@@ -104,7 +117,7 @@ footer a{color:var(--st-watch);text-decoration:none}
       <div class="row" style="margin-top:8px">
         <select id="fMetric"><option value="wl_pct_bank">% ของตลิ่ง</option><option value="rain_24h">ฝน 24 ชม. (มม.)</option></select>
         <input id="fThreshold" type="number" placeholder="เกณฑ์ เช่น 80" style="width:120px">
-        <input id="fChannel" placeholder="ช่องทาง เช่น telegram:123456789 หรือ telegram:-1001234567890 (กลุ่ม)" style="flex:1;min-width:180px">
+        <input id="fChannel" placeholder="ช่องทาง เช่น telegram:123456789 หรือ telegram:-1001234567890 (กลุ่ม) หรือ line:Uxxxxxxxx (LINE รายคน ใช้โควตา 300/เดือน)" style="flex:1;min-width:180px">
         <input id="fCooldown" type="number" value="180" title="cooldown (นาที)" style="width:90px">
       </div>
       <div class="row" style="margin-top:8px">
@@ -139,6 +152,9 @@ footer a{color:var(--st-watch);text-decoration:none}
    ต้องเป็นบอทตัวเดียวกับ TELEGRAM_BOT_TOKEN ที่ตั้งไว้ใน Supabase secrets
    ปล่อยว่างไว้ = ปุ่มจะขึ้นว่ายังไม่ได้ตั้งค่า แทนที่จะพาไปลิงก์เสีย */
 const TG_BOT = 'NaraFloodbot';
+/* Basic ID ของ LINE OA (รวม @ เช่น '@123abcde') จาก LINE Official Account Manager
+   ปล่อยว่างไว้ = ซ่อนการ์ด LINE ทั้งใบ ไม่พาไปลิงก์เสีย (ขั้นตอนใน DEPLOY.md หัวข้อ 4) */
+const LINE_OA_ID = '@192olpfc';
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const STATUS = {enabled:{c:'var(--st-normal)',l:'เปิด'}, disabled:{c:'var(--ink-3)',l:'ปิด'}};
@@ -204,6 +220,14 @@ async function saveRule(){
     a.style.pointerEvents = 'none';
     if(hint) hint.textContent = 'ยังไม่ได้ตั้งชื่อบอท · ผู้ดูแลระบบแก้ค่า TG_BOT ในไฟล์ alert.html';
   }
+})();
+
+(function initLineCard(){
+  if(!LINE_OA_ID) return;
+  $('lineLink').href = 'https://line.me/R/ti/p/' + encodeURIComponent(LINE_OA_ID);
+  $('lineHint').textContent = 'หรือค้นหา ' + LINE_OA_ID + ' ในแอป LINE';
+  $('lineQr').src = 'line-qr.png';
+  $('lineCard').classList.remove('hide');
 })();
 
 $('btnAddRule').onclick = ()=> $('ruleForm').classList.toggle('hide');

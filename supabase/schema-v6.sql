@@ -190,9 +190,9 @@ create table if not exists public.alert_rules (
   metric       text not null check (metric in ('wl_pct_bank','rain_24h','nowcast_intensity')),
   threshold    numeric not null,           -- เช่น 80 (% ตลิ่ง), 90 (มม.)
   channel      text not null,              -- 'telegram:<chat_id>' (รายคนบวก · กลุ่มขึ้นต้น -100)
-                                            -- เดิมรองรับ 'line:<group_id>' ด้วย แต่ sendTelegram()
-                                            -- ใน notify-water คืน false ให้ทุก prefix ที่ไม่ใช่ telegram:
-                                            -- ตั้งแต่ย้ายไป Telegram แล้ว — กฎ line: จะไม่มีวันส่งได้
+                                            -- หรือ 'line:<userId>' (LINE รายคน · ผู้ส่งต่อที่เจ้าหน้าที่ตั้งให้)
+                                            -- ใช้โควตา push 300/เดือนของ LINE OA แผนฟรี · ส่งได้เมื่อ notify-water
+                                            -- รองรับ line: แล้ว (LINE-OA-PLAN.md เฟส 3) · ก่อนนั้นกฎ line: ยังไม่ถูกส่ง
   cooldown_min int not null default 180,   -- กันสแปม
   enabled      boolean not null default true,
   created_by   uuid references auth.users(id),
