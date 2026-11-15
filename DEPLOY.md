@@ -320,6 +320,11 @@ curl -X POST 'https://tnvzeahfugmmrydtnsdv.supabase.co/functions/v1/notify-water
    - **อย่าใส่สองค่านี้ลงไฟล์ใดใน repo** (repo เป็นสาธารณะ)
 
 ### 4.2 ตั้ง secrets + deploy (Supabase)
+
+**ทางลัด (ทำ 4.2–4.3 ในคำสั่งเดียว บนคอมผู้ดูแล):** `node line-oa/deploy-all.mjs`
+ถาม Channel secret / access token → ล็อกอิน Supabase ในเบราว์เซอร์ → deploy → ตั้ง secrets → ผูก webhook → ติดตั้ง rich menu
+
+ทำทีละขั้นเอง:
 ```bash
 supabase functions deploy line-webhook --no-verify-jwt
 supabase secrets set LINE_CHANNEL_SECRET=<Channel secret>  LINE_CHANNEL_ACCESS_TOKEN=<long-lived token>
