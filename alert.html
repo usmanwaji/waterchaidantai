@@ -50,7 +50,7 @@ footer a{color:var(--st-watch);text-decoration:none}
   #rulesTbl{min-width:620px}
 }
 </style>
-<link rel="stylesheet" href="shared.css?v=15">
+<link rel="stylesheet" href="shared.css?v=16">
 </head>
 <body>
 <header>
@@ -151,7 +151,7 @@ footer a{color:var(--st-watch);text-decoration:none}
 const TG_BOT = 'NaraFloodbot';
 /* Basic ID ของ LINE OA (เช่น '@123abcde' · ดูได้จาก node line-oa/setup-richmenu.mjs --info หรือ LINE OA Manager)
    ปล่อยว่างไว้ = ซ่อนการ์ด LINE ทั้งใบ ไม่พาไปลิงก์เสีย (ดู DEPLOY.md ข้อ 4) */
-const LINE_OA_ID = '';
+const LINE_OA_ID = '@192olpfc';
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const STATUS = {enabled:{c:'var(--st-normal)',l:'เปิด'}, disabled:{c:'var(--ink-3)',l:'ปิด'}};
@@ -247,7 +247,7 @@ function showMember(profile){
 </script>
 <script src="js/pwa.js" defer></script>
 <script src="js/ui.js" defer></script>
-<script src="js/tabbar.js?v=6" defer></script>
+<script src="js/tabbar.js?v=7" defer></script>
 <script src="js/install.js?v=2" defer></script>
 </body>
 </html>

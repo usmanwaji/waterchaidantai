@@ -626,6 +626,19 @@ body{padding-bottom:calc(var(--tabbar-h) + var(--dock-gap) * 2 + env(safe-area-i
   #btnSos .sos-short{display:none}
   #btnSos svg{width:17px;height:17px}
 }
+/* ไอคอน LINE ลอยเกาะมุมขวาบนของปุ่มขอความช่วยเหลือ (js/tabbar.js)
+   เขียว LINE เป็นสีของแบรนด์ คนจำได้ทันทีว่ากดแล้วไปแชท · ขอบขาวแยกออกจากแดงของปุ่ม
+   วงกลมเห็นแค่ 24px แต่พื้นที่กดขยายด้วย ::after ให้นิ้วกดโดนง่าย */
+.sos-wrap{position:relative;display:inline-flex;flex:none}
+#btnLineOa{position:absolute;top:-11px;right:-11px;z-index:2;
+  display:grid;place-items:center;width:24px;height:24px;
+  border-radius:50%;background:#06c755;border:2px solid var(--card);
+  box-shadow:0 1px 3px rgba(0,0,0,.25);text-decoration:none}
+#btnLineOa::after{content:"";position:absolute;inset:-8px;border-radius:50%}
+#btnLineOa:hover{background:#05b04b}
+#btnLineOa:focus-visible{outline:2px solid #06c755;outline-offset:2px}
+#btnLineOa svg{width:15px;height:15px;fill:#fff}
+@media(max-width:768px){.sos-wrap{margin-right:6px}}
 .sheet-help{
   display:flex;align-items:center;gap:var(--s3);
   margin-bottom:var(--s4);padding:var(--s3) var(--s4);min-height:60px;

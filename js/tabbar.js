@@ -88,6 +88,10 @@
     ]}
   ];
 
+  /* LINE OA ของ naraflood.com (ตอบเมื่อผู้ใช้ถาม · DEPLOY.md ข้อ 4) */
+  var LINE_OA = '@192olpfc';
+  var LINE_BUBBLE = 'M12 3.2c-5.5 0-10 3.6-10 8 0 4 3.5 7.3 8.3 7.9.3.1.8.2.9.5.1.3.1.7 0 .9l-.1.9c0 .3-.2 1 .9.5 1.1-.5 5.9-3.5 8.1-6 1.5-1.6 2.2-3.3 2.2-4.7 0-4.4-4.5-8-10.3-8z';
+
   function svg(name) {
     return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (ICON[name] || ICON.layers) + '</svg>';
   }
@@ -181,6 +185,12 @@
       var anchor = head.querySelector('.navtab') || head.querySelector('h1');
       var html = HELP_LINK.replace('class="help-link"', 'class="help-link" id="btnSos" title="ขอความช่วยเหลือ: โทร 1784 หรือแอปพ้นภัย" aria-label="ขอความช่วยเหลือ"') +
         svg('phone') + '<span class="sos-long">ขอความช่วยเหลือ</span><span class="sos-short">ช่วยเหลือ</span></a>';
+      /* ไอคอน LINE ลอยเกาะมุมขวาบนของปุ่มแดง: ถามสถานการณ์น้ำกับบอทของ NaraFlood ได้ตลอด
+         ห่อไว้ด้วยกันเพื่อให้ไอคอนอ้างตำแหน่งจากปุ่มแดงเสมอ ไม่ว่าหัวเว็บจะจัดเรียงแบบไหน */
+      html = '<span class="sos-wrap">' + html +
+        '<a id="btnLineOa" href="https://line.me/R/ti/p/' + encodeURIComponent(LINE_OA) + '" target="_blank" rel="noopener"' +
+        ' title="แชทกับ NaraFlood ทาง LINE ' + LINE_OA + '" aria-label="แชทกับ NaraFlood ทาง LINE ' + LINE_OA + '">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + LINE_BUBBLE + '"/></svg></a></span>';
       if (anchor) anchor.insertAdjacentHTML('afterend', html);
       else head.insertAdjacentHTML('afterbegin', html);
     }
