@@ -11,7 +11,7 @@ These files build the 9:16 promo clip `promo/naraflood-promo*.mp4`. They are not
 
 ## Rebuild the narrated version
 
-Prerequisites: an API key for `texttospeech.googleapis.com`, saved in the cloud environment as a Network secret with header `X-Goog-Api-Key` (the proxy injects it), plus `pip install numpy soundfile` and ffmpeg.
+Prerequisites: a Network secret on `texttospeech.googleapis.com` of type "GCP access token (with Service Account Key)" (the proxy injects the token), plus `pip install numpy soundfile` and ffmpeg.
 
 ```bash
 cd promo/src

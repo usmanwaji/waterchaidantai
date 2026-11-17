@@ -1,13 +1,14 @@
 """Thai voice-over via Google Cloud Text-to-Speech.
-The API key is injected by the environment proxy (Network secret on
-texttospeech.googleapis.com, header X-Goog-Api-Key); the value sent here is a dummy.
+Credentials are injected by the environment proxy (Network secret of type
+"GCP access token (with Service Account Key)" on texttospeech.googleapis.com);
+the bearer token sent here is a dummy the proxy replaces.
 Usage: python3 gtts.py list            -> list th-TH voices
        python3 gtts.py synth VOICE     -> write vo/<key>.wav for every line in vo_script.json
 """
 import sys, os, json, base64, urllib.request, wave
 C = os.path.dirname(os.path.abspath(__file__))
 API = 'https://texttospeech.googleapis.com/v1'
-HDR = {'X-Goog-Api-Key': 'dummy-replaced-by-proxy', 'Content-Type': 'application/json'}
+HDR = {'Authorization': 'Bearer dummy-replaced-by-proxy', 'Content-Type': 'application/json'}
 
 def call(path, body=None):
     req = urllib.request.Request(API + path, data=json.dumps(body).encode() if body else None, headers=HDR,
