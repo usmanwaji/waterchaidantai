@@ -156,8 +156,31 @@ footer a{color:var(--orange-warm);text-decoration:none}
 #ncWindy{display:block;width:100%;height:340px;border:1px solid var(--outline);border-radius:10px;background:var(--card-2)}
 @media(max-width:768px){#ncWindy{height:min(440px,62vh)}}
 .ncAltNote{font-size:11.5px;color:var(--ink-2);margin-top:6px}
-/* ยามยาก: ฝังแอปไว้ท้ายหน้า ความสูงคงที่ เนื้อหาเกินให้เลื่อนในกรอบเอง ไม่ดันหน้าให้ยาว */
-#yamyakFrame{display:block;width:100%;max-width:480px;margin:0 auto;height:min(520px,70vh);border:1px solid var(--outline);border-radius:10px;background:var(--card-2)}
+/* ขอความช่วยเหลือ: 3 ช่องทางเดียวกับปุ่ม SOS (ยามยาก · พ้นภัย · 1784) เป็นแท็บ
+   iframe ยามยากเต็มความกว้างการ์ด ความสูงคงที่ เนื้อหาเกินเลื่อนในกรอบเอง ไม่ดันหน้าให้ยาว */
+.hlpTabs{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s2);margin-bottom:var(--s3)}
+.hlpTab{display:flex;align-items:center;justify-content:center;gap:var(--s2);min-height:52px;padding:var(--s2) var(--s3);
+  border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);
+  font:inherit;font-size:15px;font-weight:700;line-height:1.25;cursor:pointer;text-align:left}
+.hlpTab:hover{background:var(--paper-2)}
+.hlpTab svg{width:24px;height:24px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.hlpTab small{display:block;font-size:11.5px;font-weight:500;color:var(--ink-3)}
+.hlpTab[aria-selected="true"]{background:var(--navy-d,#0f5a6b);border-color:var(--navy-d,#0f5a6b);color:#fff}
+.hlpTab[aria-selected="true"] small{color:rgba(255,255,255,.85)}
+.hlpTab.hlpCall{border-color:var(--st-danger);color:var(--st-danger)}
+.hlpTab.hlpCall[aria-selected="true"]{background:var(--st-danger);color:#fff}
+.hlpTab:focus-visible{outline:2px solid var(--st-danger);outline-offset:2px}
+@media(max-width:560px){.hlpTab{flex-direction:column;gap:2px;font-size:13.5px;text-align:center}.hlpTab small{display:none}}
+#yamyakFrame{display:block;width:100%;height:min(720px,80vh);border:1px solid var(--outline);border-radius:10px;background:var(--card-2)}
+@media(max-width:768px){#yamyakFrame{height:min(560px,72vh)}}
+.hlpPane{padding:var(--s4);border:1px solid var(--line);border-radius:14px;background:var(--card-2)}
+.hlpPane p{font-size:14px;line-height:var(--lh-thai,1.6);margin-bottom:var(--s3)}
+.hlpBtns{display:flex;flex-wrap:wrap;gap:var(--s2)}
+.hlpBtn{display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);min-height:48px;padding:0 var(--s4);
+  border-radius:12px;background:var(--navy-d,#0f5a6b);color:#fff;font-size:15px;font-weight:700;text-decoration:none}
+.hlpBtn:hover{filter:brightness(1.1);color:#fff}
+.hlpBtn.hlpCallBtn{background:var(--st-danger);font-size:20px;min-height:56px}
+.hlpBtn[hidden]{display:none}
 
 /* สถานการณ์น้ำท่า (telemeter gauges) */
 .wtaRow{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-around;align-items:flex-start}
@@ -518,15 +541,61 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     </details>
   </div>
 
-  <!-- ขอความช่วยเหลือผ่านแอปยามยาก (yamyak.app) · ฝังตัวแอปจริงใน iframe กรอกได้ในหน้านี้เลย
-       loading="lazy" เพราะอยู่ล่างสุด ผู้ใช้ที่ไม่เลื่อนลงมาจะไม่โหลดแอปเลย
-       allow: ตำแหน่ง (ส่งพิกัดให้เจ้าหน้าที่) · กล้อง (แนบรูป) · สแกนหน้า/ลายนิ้วมือ (เข้าใช้งาน) -->
+  <!-- ขอความช่วยเหลือ: 3 ช่องทางเดียวกับแผ่น SOS ใน js/tabbar.js (ยามยาก · พ้นภัย · 1784) เป็นแท็บ
+       ยามยาก: ฝังตัวแอปจริงใน iframe กรอกได้ในหน้านี้เลย · loading="lazy" เพราะอยู่ท้ายหน้า
+       allow: ตำแหน่ง (ส่งพิกัดให้เจ้าหน้าที่) · กล้อง (แนบรูป) · สแกนหน้า/ลายนิ้วมือ (เข้าใช้งาน)
+       พ้นภัย: ไม่มีลิงก์เปิดแอปตรง ๆ จึงส่งไปหน้าแอปในสโตร์ (มีปุ่ม "เปิด" ถ้าติดตั้งแล้ว) -->
   <div class="card full" id="yamyakCard">
-    <h2>ขอความช่วยเหลือ (แอปยามยาก) <a class="where" href="https://yamyak.app/" target="_blank" rel="noopener">เปิดเต็มจอ ↗</a></h2>
-    <iframe id="yamyakFrame" src="https://yamyak.app/" title="กรอกข้อมูลขอความช่วยเหลือผ่านแอปยามยาก" loading="lazy"
-      allow="geolocation; camera; publickey-credentials-get; publickey-credentials-create; clipboard-write"
-      referrerpolicy="strict-origin-when-cross-origin"></iframe>
-    <div class="ncAltNote">ใส่เบอร์มือถือแล้วแจ้งเรื่องได้เลย เจ้าหน้าที่จะติดต่อกลับทางเบอร์นั้น · เลื่อนในกรอบเพื่อดูส่วนที่เหลือ · เหตุด่วนถึงชีวิตโทร <a href="tel:1784">1784</a></div>
+    <h2>ขอความช่วยเหลือ <span class="where">เลือกช่องทางที่สะดวก</span></h2>
+    <div class="hlpTabs" role="tablist" aria-label="ช่องทางขอความช่วยเหลือ">
+      <button type="button" class="hlpTab" role="tab" id="hlpTabYy" aria-controls="hlpYy" aria-selected="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M3.4 12h17.2"/><path d="M12 3.4c2.4 2.4 3.6 5.3 3.6 8.6s-1.2 6.2-3.6 8.6c-2.4-2.4-3.6-5.3-3.6-8.6s1.2-6.2 3.6-8.6z"/></svg>
+        <span>ยามยาก<small>กรอกได้ในหน้านี้</small></span></button>
+      <button type="button" class="hlpTab" role="tab" id="hlpTabPp" aria-controls="hlpPp" aria-selected="false" tabindex="-1">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.4" y="2.8" width="11.2" height="18.4" rx="2.2"/><path d="M10.6 18h2.8"/><path d="M12 7.4v5.2"/><path d="M9.4 10h5.2"/></svg>
+        <span>พ้นภัย<small>แอปสภากาชาดไทย</small></span></button>
+      <button type="button" class="hlpTab hlpCall" role="tab" id="hlpTabTel" aria-controls="hlpTel" aria-selected="false" tabindex="-1">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3.6h2.9l1.5 4.1-2 1.4a11.4 11.4 0 0 0 5.9 5.9l1.4-2 4.1 1.5v2.9a1.9 1.9 0 0 1-2 1.9A15.8 15.8 0 0 1 4.6 5.6a1.9 1.9 0 0 1 2-2z"/></svg>
+        <span>โทร 1784<small>สายด่วน ปภ. 24 ชม.</small></span></button>
+    </div>
+    <div class="hlpPanel" role="tabpanel" id="hlpYy" aria-labelledby="hlpTabYy">
+      <iframe id="yamyakFrame" src="https://yamyak.app/" title="กรอกข้อมูลขอความช่วยเหลือผ่านแอปยามยาก" loading="lazy"
+        allow="geolocation; camera; publickey-credentials-get; publickey-credentials-create; clipboard-write"
+        referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      <div class="ncAltNote">ใส่เบอร์มือถือแล้วแจ้งเรื่องได้เลย เจ้าหน้าที่จะติดต่อกลับทางเบอร์นั้น · เลื่อนในกรอบเพื่อดูส่วนที่เหลือ · <a href="https://yamyak.app/" target="_blank" rel="noopener">เปิดเต็มจอ ↗</a></div>
+    </div>
+    <div class="hlpPanel" role="tabpanel" id="hlpPp" aria-labelledby="hlpTabPp" hidden>
+      <div class="hlpPane">
+        <p><b>แอปพ้นภัย</b> (สภากาชาดไทย) แจ้งขอความช่วยเหลือพร้อมพิกัดตำแหน่ง · ถ้ายังไม่มีแอป ปุ่มด้านล่างจะพาไปหน้าติดตั้ง ถ้ามีแล้วกด "เปิด" ในหน้าสโตร์</p>
+        <div class="hlpBtns">
+          <a class="hlpBtn" id="hlpPlay" href="https://play.google.com/store/apps/details?id=th.co.mm.phonphai" target="_blank" rel="noopener">Google Play (Android)</a>
+          <a class="hlpBtn" id="hlpIos" href="https://apps.apple.com/th/app/phonphai/id1434801222" target="_blank" rel="noopener">App Store (iPhone)</a>
+        </div>
+      </div>
+    </div>
+    <div class="hlpPanel" role="tabpanel" id="hlpTel" aria-labelledby="hlpTabTel" hidden>
+      <div class="hlpPane">
+        <p><b>สายด่วนนิรภัย 1784</b> กรมป้องกันและบรรเทาสาธารณภัย (ปภ.) รับแจ้งเหตุตลอด 24 ชั่วโมง · เหตุด่วนถึงชีวิตโทรทันที</p>
+        <div class="hlpBtns"><a class="hlpBtn hlpCallBtn" href="tel:1784">โทร 1784</a></div>
+      </div>
+    </div>
+    <script>
+    (function(){
+      var tabs=[].slice.call(document.querySelectorAll('#yamyakCard .hlpTab'));
+      function sel(t,focus){tabs.forEach(function(x){var on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;
+        document.getElementById(x.getAttribute('aria-controls')).hidden=!on;});if(focus)t.focus();}
+      tabs.forEach(function(t,i){
+        t.addEventListener('click',function(){sel(t);});
+        t.addEventListener('keydown',function(e){var d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;
+          if(d){e.preventDefault();sel(tabs[(i+d+tabs.length)%tabs.length],true);}});
+      });
+      /* มือถือ: เหลือปุ่มสโตร์ของเครื่องนั้นปุ่มเดียว · จอคอมเปิดแอปไม่ได้ ให้ทั้งสองลิงก์ไว้ส่งต่อให้โทรศัพท์ */
+      var ua=navigator.userAgent||'';
+      var ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);
+      if(/android/i.test(ua))document.getElementById('hlpIos').hidden=true;
+      else if(ios)document.getElementById('hlpPlay').hidden=true;
+    })();
+    </script>
   </div>
 
   <!-- ผู้เข้าชมเว็บไซต์ · js/visits-widget.js เติมเนื้อหาให้ และซ่อนการ์ดทั้งใบถ้าอ่านยอดไม่ได้ -->
