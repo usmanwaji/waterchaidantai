@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#171a1f;font-family:Anuphan,sans-serif;color:#fff}
+#stage{position:absolute;inset:0;overflow:hidden;background:radial-gradient(120% 80% at 50% 0%,#252a32 0%,#171a1f 60%,#0d0f12 100%)}
+.abs{position:absolute}
+.center{left:0;right:0;text-align:center}
+#water{position:absolute;left:0;top:0;width:1080px;height:1920px}
+.hl{background:linear-gradient(transparent 58%,#ffc533 58%,#ffc533 92%,transparent 92%);color:#fff;padding:0 6px}
+#hook1{top:620px;font-size:84px;font-weight:700;line-height:1.25}
+#hook2{top:820px;font-size:104px;font-weight:700;line-height:1.2;color:#ffc533}
+#logoWrap{top:640px}
+#logoIcon{width:220px;height:220px;border-radius:56px;background:#ffc533;margin:0 auto;display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(255,197,51,.25)}
+#logoName{font-size:120px;font-weight:700;margin-top:48px;letter-spacing:-1px}
+#logoName span{color:#ffc533}
+#logoSub{font-size:50px;font-weight:500;color:#c9cdd4;margin-top:18px}
+#phone{left:50%;width:680px;height:1440px;margin-left:-340px;border-radius:92px;background:#0b0c0e;padding:20px;
+  box-shadow:0 0 0 4px #3a3f47,0 60px 120px rgba(0,0,0,.55);transform:scale(.9);transform-origin:50% 0}
+#screen{position:relative;width:640px;height:1400px;border-radius:74px;overflow:hidden;background:#f1f1ec}
+#screen img{position:absolute;left:0;top:0;width:640px}
+#notch{position:absolute;left:50%;top:18px;width:190px;height:52px;margin-left:-95px;background:#0b0c0e;border-radius:30px;z-index:5}
+#cap{top:110px;left:70px;right:70px}
+#kicker{display:inline-block;background:#ffc533;color:#171a1f;font-weight:700;font-size:38px;padding:8px 26px;border-radius:40px}
+#title{font-size:76px;font-weight:700;line-height:1.18;margin-top:22px}
+#sub{font-size:40px;font-weight:500;color:#c9cdd4;margin-top:14px}
+#cta{top:300px}
+#ctaSmall{font-size:52px;font-weight:600;color:#c9cdd4}
+#ctaUrl{font-size:132px;font-weight:700;margin-top:10px;letter-spacing:-2px}
+#ctaUrl span{color:#ffc533}
+#ctaPills{margin-top:40px;display:flex;flex-wrap:wrap;gap:18px;justify-content:center;padding:0 80px}
+.pill{font-size:40px;font-weight:600;padding:14px 32px;border-radius:50px;background:#2a2f37;color:#fff}
+#qrBox{margin:70px auto 0;width:400px;background:#fff;border-radius:40px;padding:34px}
+#qrBox img{width:332px;display:block}
+#qrBox div{color:#171a1f;font-size:34px;font-weight:600;margin-top:12px}
+#sos{margin:56px auto 0;display:inline-flex;align-items:center;gap:20px;background:#be123c;border-radius:60px;padding:22px 48px;font-size:48px;font-weight:700}
+#src{bottom:70px;font-size:30px;color:#8b8e94}
+#prog{left:0;top:0;height:10px;background:#ffc533}
+</style></head><body>
+<div id="stage">
+  <svg id="water" viewBox="0 0 1080 1920"><path id="w2" fill="#1d4a75" opacity=".55"/><path id="w1" fill="#2d6aa3" opacity=".9"/></svg>
+
+  <div id="hook1" class="abs center">ฝนตกหนักทั้งคืน…</div>
+  <div id="hook2" class="abs center">น้ำจะมาถึงบ้านเราไหม?</div>
+
+  <div id="logoWrap" class="abs center">
+    <div id="logoIcon"><svg width="150" height="150" viewBox="0 0 24 24" fill="none" stroke="#171a1f" stroke-width="2.4" stroke-linecap="round"><path d="M2 9c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6-1"/><path d="M2 14c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6-1"/><path d="M2 19c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6-1"/></svg></div>
+    <div id="logoName">nara<span>flood</span>.com</div>
+    <div id="logoSub">Dashboard น้ำท่วม จังหวัดนราธิวาส</div>
+  </div>
+
+  <div id="cap" class="abs">
+    <div id="kicker"></div>
+    <div id="title"></div>
+    <div id="sub"></div>
+  </div>
+
+  <div id="phone" class="abs"><div id="screen"><div id="notch"></div>
+    <img id="imgA"><img id="imgB">
+  </div></div>
+
+  <div id="cta" class="abs center">
+    <div id="ctaSmall">เปิดดูได้เลยที่</div>
+    <div id="ctaUrl">nara<span>flood</span>.com</div>
+    <div id="ctaPills"><div class="pill">ฟรี</div><div class="pill">ไม่ต้องโหลดแอป</div><div class="pill">เปิดได้ทุกมือถือ</div></div>
+    <div id="qrBox"><img src="qr.png"><div>สแกนเปิดเว็บ</div></div>
+    <div id="sos">🆘 เหตุฉุกเฉิน โทร 1784</div>
+  </div>
+  <div id="src" class="abs center">ข้อมูลจาก สสน. · กรมชลประทาน · ปภ. · กรมอุตุนิยมวิทยา</div>
+  <div id="prog" class="abs"></div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const ease=x=>{x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
+const out=x=>1-Math.pow(1-clamp(x),3);
+const back=x=>{x=clamp(x);const c1=1.5,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+// fade in at a, hold, fade out at b
+const win=(t,a,b,d=.45)=>clamp((t-a)/d)*clamp((b-t)/d);
+let DUR=33, T=null, S=[];
+const SC={
+ index:['shots/index-clean.png','สถานการณ์น้ำ','ระดับน้ำ ฝน พยากรณ์<br><span class="hl">ข้อมูลสด</span> ในหน้าเดียว','ข้อมูลจาก สสน. · ชป. · ปภ. · กรมอุตุฯ',{from:0,to:2900}],
+ map:['shots/map-v.png','แผนที่ระดับน้ำ','ดูทุกสถานี<br>บน<span class="hl">แผนที่</span>','ลุ่มน้ำสายบุรี · บางนรา · โก-ลก',null],
+ check:['shots/check-v.png','เช็คพื้นที่ฉัน','บ้านเราเสี่ยงไหม?<br>รู้ใน<span class="hl">คลิกเดียว</span>','ใช้ตำแหน่งมือถือ หรือเลือกอำเภอ',null],
+ shelter:['shots/shelter-v.png','ศูนย์พักพิง','<span class="hl">386</span> ศูนย์พักพิง<br>รองรับรวม 45,064 คน','ค้นหาศูนย์ใกล้บ้าน พร้อมที่จอดรถ',null],
+ alert:['shots/alert-v.png','แจ้งเตือน','ถามสถานการณ์น้ำ<br>ผ่าน <span class="hl">LINE</span> ได้ 24 ชม.','สมัครแจ้งเตือนระดับน้ำทาง Telegram ได้ด้วย',null],
+};
+// T = {hook:[a,b], logo, index, map, check, shelter, alert, cta}; optional hook2 = time 2nd hook line appears
+function setTimeline(tl){ T=tl; DUR=T.cta[1]; window.DUR=DUR;
+  S=['index','map','check','shelter','alert'].map(k=>[T[k][0],T[k][1],...SC[k]]); }
+setTimeline({hook:[0,3.2],logo:[3.2,6],index:[6,11.6],map:[11.6,15.6],check:[15.6,19.6],shelter:[19.6,23.8],alert:[23.8,28.4],cta:[28.4,33]});
+function wave(y,amp,len,ph){let d=`M0 ${y}`;for(let x=0;x<=1080;x+=20)d+=` L${x} ${y+amp*Math.sin(x/len*2*Math.PI+ph)}`;return d+' L1080 1920 L0 1920 Z'}
+function render(t){
+  // water level: rises during hook, recedes to a band
+  const H=T.logo[0], L1=T.index[0], C=T.cta[0], H2=T.hook2??Math.min(1.0,H*.35);
+  let lvl = t<H ? 1920-ease(t/(H-.2))*760 : t<L1 ? 1160+ease((t-H)/1.4)*620 : t<C ? 1780 : 1780-ease((t-C)/1.2)*90;
+  $('w1').setAttribute('d',wave(lvl,22,520,t*2.2));
+  $('w2').setAttribute('d',wave(lvl-26,26,700,-t*1.6+1));
+  // hook
+  let h1=win(t,.2,H-.1,.4), h2=win(t,H2,H-.1,.4);
+  $('hook1').style.cssText=`opacity:${h1};transform:translateY(${(1-out((t-.2)/.5))*40}px)`;
+  $('hook2').style.cssText=`opacity:${h2};transform:translateY(${(1-out((t-H2)/.5))*40}px) scale(${.9+.1*back((t-H2)/.6)})`;
+  // logo
+  let lg=win(t,H+.1,L1,.4);
+  $('logoWrap').style.opacity=lg;
+  $('logoIcon').style.transform=`scale(${back((t-H-.1)/.7)}) rotate(${(1-out((t-H-.1)/.7))*-20}deg)`;
+  $('logoName').style.transform=`translateY(${(1-out((t-H-.4)/.6))*50}px)`;
+  $('logoName').style.opacity=clamp((t-H-.4)/.4);
+  $('logoSub').style.opacity=clamp((t-H-.8)/.4);
+  // phone position
+  const PT=590, E=C-.6; let py = t<E ? 1920-out((t-(L1-.3))/.8)*(1920-PT) : PT+ease((t-E)/.8)*1500;
+  $('phone').style.top=py+'px';
+  $('phone').style.display=(t>L1-.4&&t<C+.6)?'block':'none';
+  // scenes
+  let cur=S.findIndex(s=>t>=s[0]&&t<s[1]);
+  $('cap').style.display=cur<0?'none':'block';
+  if(cur>=0){
+    const s=S[cur], lt=t-s[0], len=s[1]-s[0];
+    const capIn=out(lt/.5), capOut=cur===S.length-1?clamp((s[1]-t)/.35):1;
+    $('kicker').textContent=s[3]; $('title').innerHTML=s[4]; $('sub').textContent=s[5];
+    $('kicker').style.cssText=`opacity:${capIn*capOut};transform:translateX(${(1-capIn)*-40}px)`;
+    const ti=out((lt-.12)/.5); $('title').style.cssText=`opacity:${ti*capOut};transform:translateY(${(1-ti)*30}px)`;
+    const si=out((lt-.3)/.5); $('sub').style.cssText=`opacity:${si*capOut}`;
+    const A=$('imgA'),B=$('imgB');
+    if(A.dataset.src!==s[2]){A.src=s[2];A.dataset.src=s[2]}
+    let y=0;
+    if(s[6]){ const p=ease((lt-1.2)/(len-1.8)); y=-(s[6].from+(s[6].to-s[6].from)*p)*640/1170; }
+    else { y=-out(lt/len)*0; }
+    // gentle zoom on still screens
+    const z = s[6]?1:1+0.04*ease(lt/len);
+    A.style.cssText=`top:${y}px;transform:scale(${z});transform-origin:50% 30%;opacity:1`;
+    // crossfade from previous scene's image during first .35s
+    if(cur>0 && lt<.35){ const p=S[cur-1]; if(B.dataset.src!==p[2]){B.src=p[2];B.dataset.src=p[2]}
+      let py2=0; if(p[6]) py2=-p[6].to*640/1170;
+      B.style.cssText=`top:${py2}px;opacity:${1-lt/.35};z-index:2`; }
+    else B.style.cssText='opacity:0';
+  }
+  // CTA
+  const c=clamp((t-C)/.5);
+  $('cta').style.cssText=`opacity:${c};transform:translateY(${(1-out((t-C)/.7))*60}px)`;
+  $('qrBox').style.transform=`scale(${t<C+.5?0:back((t-C-.5)/.6)})`;
+  $('sos').style.transform=`scale(${t<C+1.2?0:back((t-C-1.2)/.5)*(1+0.03*Math.sin((t-C-1.2)*6))})`;
+  $('src').style.opacity=clamp((t-C-1.6)/.5)*.9;
+  $('prog').style.width=(t/DUR*1080)+'px';
+}
+window.render=render; window.setTimeline=setTimeline; window.DUR=DUR;
+render(0);
+</script>
+</body></html>
