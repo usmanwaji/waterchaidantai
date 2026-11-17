@@ -153,6 +153,11 @@ footer a{color:var(--orange-warm);text-decoration:none}
 .ncStale{font-size:12.5px;line-height:1.5;color:var(--st-warn);background:var(--st-warn-wash);border-radius:8px;padding:8px 10px;margin-bottom:8px}
 .ncStale button{font:inherit;font-weight:700;color:var(--navy);background:none;border:0;padding:0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 #ncUpdated.late{color:var(--st-warn);font-weight:700}
+/* แท็บแหล่งข้อมูล: Windy (แสดงก่อนเสมอ) · กรมอุตุฯ */
+.ncTabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.ncTabs .chip{padding:5px 12px;font-size:12.5px}
+.ncTabWarn{margin-left:6px;font-size:10.5px;font-weight:700;color:var(--st-warn)}
+.ncTabs .chip.on .ncTabWarn{color:inherit}
 #ncWindy{display:block;width:100%;height:340px;border:1px solid var(--outline);border-radius:10px;background:var(--card-2)}
 @media(max-width:768px){#ncWindy{height:min(440px,62vh)}}
 .ncAltNote{font-size:11.5px;color:var(--ink-2);margin-top:6px}
@@ -516,9 +521,18 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
   </div>
 
   <div class="card" id="ncCard">
-    <h2><span id="ncTitle">คาดการณ์ฝนระยะสั้น (กรมอุตุฯ)</span> <span class="where" id="ncUpdated"></span></h2>
+    <h2>คาดการณ์ฝน <span class="where" id="ncUpdated"></span></h2>
+    <div class="ncTabs" id="ncTabs" role="tablist" aria-label="แหล่งข้อมูลคาดการณ์ฝน">
+      <button type="button" role="tab" class="chip on" data-tab="windy" aria-selected="true" aria-controls="ncAlt">Windy · ล่วงหน้าหลายวัน</button>
+      <button type="button" role="tab" class="chip" data-tab="tmd" aria-selected="false" aria-controls="ncTmd">กรมอุตุฯ · 1 ชม.<span class="ncTabWarn" id="ncTabLate" hidden>ล่าช้า</span></button>
+    </div>
+    <div id="ncAlt" role="tabpanel">
+      <div class="ncAltTip">ปุ่ม ▶ ของ Windy เล่นเร็วและปรับความเร็วไม่ได้ · <b>ลากแถบเวลาใต้แผนที่ช้า ๆ</b> แทน จะเห็นกลุ่มฝนเคลื่อนตามจังหวะที่ต้องการ</div>
+      <iframe id="ncWindy" src="https://embed.windy.com/embed2.html?lat=6.10&amp;lon=101.73&amp;detailLat=6.43&amp;detailLon=101.82&amp;width=650&amp;height=450&amp;zoom=8&amp;level=surface&amp;overlay=rain&amp;product=ecmwf&amp;menu=&amp;message=true&amp;marker=&amp;calendar=now&amp;pressure=&amp;type=map&amp;location=coordinates&amp;detail=&amp;metricWind=default&amp;metricTemp=default&amp;radarRange=-1" title="พยากรณ์ฝนรายชั่วโมงจากแบบจำลอง ECMWF (Windy)" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      <div class="ncAltNote">พยากรณ์ฝนจากแบบจำลอง ECMWF ผ่าน <a href="https://www.windy.com/?rain,6.10,101.73,8" target="_blank" rel="noopener">Windy ↗</a> · ไม่ใช่ภาพเรดาร์ · ดูได้ล่วงหน้าหลายวัน</div>
+    </div>
+    <div id="ncTmd" role="tabpanel" hidden>
     <div id="ncStale" class="ncStale" role="status" hidden></div>
-    <div id="ncTmd">
     <div class="ncBar">
       <button type="button" id="ncPlay" aria-label="หยุด/เล่น">❚❚</button>
       <input type="range" id="ncSlider" min="0" max="0" value="0" aria-label="เลือกเวลา">
@@ -532,15 +546,9 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
       <span><i style="background:#FF00FF"></i>หนักมาก</span>
     </div>
     </div>
-    <div id="ncAlt" hidden>
-      <!-- ใส่ src ตอนต้องใช้เท่านั้น (ncApplyMode) · ผู้ใช้ส่วนใหญ่จะไม่โหลด Windy เลย -->
-      <div class="ncAltTip">ปุ่ม ▶ ของ Windy เล่นเร็วและปรับความเร็วไม่ได้ · <b>ลากแถบเวลาใต้แผนที่ช้า ๆ</b> แทน จะเห็นกลุ่มฝนเคลื่อนตามจังหวะที่ต้องการ</div>
-      <iframe id="ncWindy" title="พยากรณ์ฝนรายชั่วโมงจากแบบจำลอง ECMWF (Windy)" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-      <div class="ncAltNote">พยากรณ์ฝนจากแบบจำลอง ECMWF ผ่าน <a href="https://www.windy.com/?rain,6.10,101.73,8" target="_blank" rel="noopener">Windy ↗</a> · ไม่ใช่ภาพเรดาร์ · ดูได้ล่วงหน้าหลายวัน</div>
-    </div>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
-    <div class="note">ภาพฝนจากเรดาร์กรมอุตุนิยมวิทยา ช่วงละ 15 นาที · ภาพก่อน "ตอนนี้" คือฝนที่ตรวจวัดได้จริง ภาพหลังจากนั้นคือฝนคาดการณ์ (ประมาณ 1 ชั่วโมงข้างหน้า) ดูทิศทางที่กลุ่มฝนเคลื่อนไปได้จากภาพเคลื่อนไหว · กดปุ่มเพื่อหยุด หรือเลื่อนแถบเพื่อเลือกเวลา · ออกใหม่ทุก 15 นาที · ถ้าภาพล่าสุดของกรมอุตุฯ เก่ากว่า 1 ชั่วโมง (ระบบต้นทางค้าง) หรือโหลดไม่ได้ จะแสดงพยากรณ์ฝนจากแบบจำลอง ECMWF ผ่าน Windy แทนอัตโนมัติ และกลับมาใช้ภาพกรมอุตุฯ เองเมื่อมีภาพใหม่ · ที่มา: <a href="https://satda.tmd.go.th/wp-content/uploads/data/dashboard/radar_map/south_nowcast.php" target="_blank" rel="noopener">Southern Nowcasting กรมอุตุฯ ↗</a></div>
+    <div class="note"><b>แท็บ Windy</b> (แสดงก่อนเสมอ): พยากรณ์ฝนรายชั่วโมงจากแบบจำลอง ECMWF ล่วงหน้าหลายวัน ไม่ใช่ภาพเรดาร์ · <b>แท็บกรมอุตุฯ</b>: ภาพฝนจากเรดาร์กรมอุตุนิยมวิทยา ช่วงละ 15 นาที ภาพก่อน "ตอนนี้" คือฝนที่ตรวจวัดได้จริง ภาพหลังจากนั้นคือฝนคาดการณ์ (ประมาณ 1 ชั่วโมงข้างหน้า) กดปุ่มเพื่อหยุด หรือเลื่อนแถบเพื่อเลือกเวลา ออกใหม่ทุก 15 นาที · ถ้าภาพล่าสุดของกรมอุตุฯ เก่ากว่า 1 ชั่วโมง (ระบบต้นทางค้าง) แท็บจะขึ้นป้าย "ล่าช้า" และบอกเวลาของภาพ · ที่มา: <a href="https://satda.tmd.go.th/wp-content/uploads/data/dashboard/radar_map/south_nowcast.php" target="_blank" rel="noopener">Southern Nowcasting กรมอุตุฯ ↗</a></div>
     </details>
   </div>
 
@@ -1787,43 +1795,37 @@ const NC_STEP_MS = 800, NC_HOLD_MS = 1600;           // ความเร็ว
 /* ต้นทางค้างได้: 15 พ.ย. 2026 layers.json ยังออกใหม่ทุก 15 นาที (generated_at ใหม่) แต่ภาพข้างในค้างที่ 04:30 น. นาน 8 ชม.
    หน้าเว็บเลยติดป้ายภาพเก่าว่า "ตอนนี้" · จึงวัดอายุจากเวลาของภาพ "ตอนนี้" เทียบนาฬิกาจริง
    ปกติภาพช้ากว่านาฬิกาไม่เกิน ~45 นาที (ต้นทางประมวลผล + แคช tmd-proxy 5 นาที + home-proxy รอบ 14 นาที)
-   เกิน NC_STALE_MIN หรือโหลดไม่ได้เลย → แสดงพยากรณ์ฝนรายชั่วโมงจากแบบจำลอง (Windy · ECMWF) แทน ไม่ใช่เรดาร์
-   ผู้ใช้กดกลับไปดูภาพกรมอุตุฯ เก่าได้ (ป้ายบอกว่าล่าช้าเท่าไร) · ภาพใหม่มาถึงเมื่อไรก็กลับเป็นภาพกรมอุตุฯ เอง */
+   เกิน NC_STALE_MIN หรือโหลดไม่ได้ → แท็บกรมอุตุฯ ขึ้นป้าย "ล่าช้า" และแถบเตือนบอกเวลาของภาพ
+   การ์ดเปิดที่แท็บ Windy (พยากรณ์ฝนจากแบบจำลอง ECMWF) เสมอ ผู้ใช้กดแท็บกรมอุตุฯ เอง */
 const NC_STALE_MIN = 60;
-const NC_WINDY = 'https://embed.windy.com/embed2.html?lat=6.10&lon=101.73&detailLat=6.43&detailLon=101.82&width=650&height=450&zoom=8&level=surface&overlay=rain&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1';
 let ncMap, ncFrames = [], ncIdx = 0, ncNow = 0, ncTimer = null, ncPlaying = true, ncGen = '';
-let ncAlt = false, ncUserTmd = false;   // ncAlt = กำลังแสดง Windy · ncUserTmd = ผู้ใช้ขอดูภาพกรมอุตุฯ ที่ค้างอยู่
+let ncTab = 'windy';   // แท็บที่เปิดอยู่ · ไม่จำข้ามการโหลดหน้า เปิดหน้าใหม่เริ่มที่ Windy
 const ncUtc = s => new Date(s.replace(/Z?$/, 'Z'));
 const ncHm = d => d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Bangkok'});
 const ncAgo = m => m < 60 ? `${m} นาที` : `${Math.floor(m/60)} ชม.` + (m < 180 && m % 60 ? ` ${m % 60} นาที` : '');
 /* อายุของภาพ "ตอนนี้" เป็นนาที · null = ไม่มีภาพ */
 const ncLateMin = () => ncFrames.length ? Math.max(0, Math.round((Date.now() - ncFrames[ncNow].t)/60000)) : null;
 const ncIsStale = () => { const m = ncLateMin(); return m == null || m > NC_STALE_MIN; };
+/* แสดงแท็บที่เลือก + ป้ายความล่าช้าของภาพกรมอุตุฯ · เรียกทุกรอบโหลด (ภาพเก่าลงตามเวลา) และตอนกดแท็บ */
 function ncApplyMode(){
   const tmdBox = document.getElementById('ncTmd'), altBox = document.getElementById('ncAlt');
   if(!tmdBox || !altBox) return;
-  const late = ncLateMin(), stale = ncIsStale();
-  if(!stale) ncUserTmd = false;
-  const wasAlt = ncAlt;
-  ncAlt = stale && !(ncUserTmd && ncFrames.length);
-  tmdBox.hidden = ncAlt;
-  altBox.hidden = !ncAlt;
-  const fr = document.getElementById('ncWindy');
-  if(ncAlt && fr && !fr.getAttribute('src')) fr.src = NC_WINDY;
-  document.getElementById('ncTitle').textContent = ncAlt ? 'คาดการณ์ฝนรายชั่วโมง (แบบจำลอง · Windy)' : 'คาดการณ์ฝนระยะสั้น (กรมอุตุฯ)';
+  const late = ncLateMin(), stale = ncIsStale(), tmd = ncTab === 'tmd';
+  tmdBox.hidden = !tmd;
+  altBox.hidden = tmd;
+  document.querySelectorAll('#ncTabs [data-tab]').forEach(b=>{
+    const on = b.dataset.tab === ncTab;
+    b.classList.toggle('on', on); b.setAttribute('aria-selected', on);
+  });
+  document.getElementById('ncTabLate').hidden = !stale;
   const upd = document.getElementById('ncUpdated');
-  upd.textContent = ncAlt || !ncFrames.length ? '' : 'ข้อมูล ' + ncHm(ncFrames[ncNow].t) + ' น.' + (stale ? ' · ล่าช้า ' + ncAgo(late) : '');
-  upd.classList.toggle('late', stale);
+  upd.textContent = !tmd || !ncFrames.length ? '' : 'ข้อมูล ' + ncHm(ncFrames[ncNow].t) + ' น.' + (stale ? ' · ล่าช้า ' + ncAgo(late) : '');
+  upd.classList.toggle('late', tmd && stale);
   const box = document.getElementById('ncStale');
   box.hidden = !stale;
-  if(stale){
-    const at = ncFrames.length ? `ภาพฝนจากกรมอุตุฯ ค้างอยู่ที่ ${ncHm(ncFrames[ncNow].t)} น. (ล่าช้า ${ncAgo(late)})` : 'โหลดภาพฝนจากกรมอุตุฯ ไม่สำเร็จ';
-    box.innerHTML = !ncFrames.length ? `${at} · แสดงพยากรณ์ฝนจากแบบจำลองแทน`
-      : ncAlt ? `${at} · แสดงพยากรณ์ฝนจากแบบจำลองแทน · <button type="button" data-nc="tmd">ดูภาพกรมอุตุฯ ล่าสุดที่มี</button>`
-      : `${at} · ภาพนี้ไม่ใช่ฝนตอนนี้ · <button type="button" data-nc="alt">กลับไปดูพยากรณ์จากแบบจำลอง</button>`;
-  }
-  /* แผนที่ Leaflet ที่เคยถูกซ่อนไม่รู้ขนาดกรอบ ต้องคำนวณใหม่ตอนกลับมาแสดง */
-  if(wasAlt && !ncAlt && ncMap){ ncMap.invalidateSize(); ncMap.fitBounds(NC_VIEW, {padding:[4,4]}); }
+  if(stale) box.textContent = ncFrames.length
+    ? `ภาพฝนจากกรมอุตุฯ ค้างอยู่ที่ ${ncHm(ncFrames[ncNow].t)} น. (ล่าช้า ${ncAgo(late)}) · ภาพนี้ไม่ใช่ฝนตอนนี้ · ดูแท็บ Windy แทน`
+    : 'โหลดภาพฝนจากกรมอุตุฯ ไม่สำเร็จ · ดูแท็บ Windy แทน';
   if(ncFrames.length) ncShow(ncIdx);
   ncTick();
 }
@@ -1838,7 +1840,7 @@ function ncShow(i){
 }
 function ncTick(){
   clearTimeout(ncTimer);
-  if(!ncPlaying || !ncFrames.length || ncAlt) return;   // ซ่อนภาพกรมอุตุฯ อยู่ ไม่ต้องเล่น
+  if(!ncPlaying || !ncFrames.length || ncTab !== 'tmd') return;   // ไม่ได้เปิดแท็บกรมอุตุฯ ไม่ต้องเล่น
   ncTimer = setTimeout(()=>{ ncShow(ncIdx+1); ncTick(); }, ncIdx === ncFrames.length-1 ? NC_HOLD_MS : NC_STEP_MS);
 }
 function ncSetPlaying(on){
@@ -1886,18 +1888,20 @@ async function loadNowcast(){
   const sl = document.getElementById('ncSlider');
   sl.max = ncFrames.length-1;
   ncIdx = 0;
-  ncApplyMode();   // ตั้งหัวการ์ด/แถบเตือน · แสดงเฟรมแรก · เริ่มเล่น
+  ncApplyMode();   // ตั้งป้ายล่าช้า · แสดงเฟรมแรก · เริ่มเล่น (ถ้าเปิดแท็บกรมอุตุฯ อยู่)
 }
 (function initNowcastControls(){
-  const play = document.getElementById('ncPlay'), sl = document.getElementById('ncSlider'), stale = document.getElementById('ncStale');
+  const play = document.getElementById('ncPlay'), sl = document.getElementById('ncSlider'), tabs = document.getElementById('ncTabs');
   if(!play || !sl) return;
   play.onclick = ()=> ncSetPlaying(!ncPlaying);
   sl.oninput = ()=>{ ncSetPlaying(false); ncShow(+sl.value); };
-  if(stale) stale.onclick = e=>{
-    const b = e.target.closest('button[data-nc]');
-    if(!b) return;
-    ncUserTmd = b.dataset.nc === 'tmd';
+  if(tabs) tabs.onclick = e=>{
+    const b = e.target.closest('button[data-tab]');
+    if(!b || b.dataset.tab === ncTab) return;
+    ncTab = b.dataset.tab;
     ncApplyMode();
+    /* แผนที่ Leaflet ถูกสร้างตอนแท็บซ่อนอยู่ ไม่รู้ขนาดกรอบ ต้องคำนวณใหม่ตอนเปิดแท็บ */
+    if(ncTab === 'tmd' && ncMap){ ncMap.invalidateSize(); ncMap.fitBounds(NC_VIEW, {padding:[4,4]}); }
   };
 })();
 
