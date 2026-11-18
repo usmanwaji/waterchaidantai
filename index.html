@@ -1662,7 +1662,7 @@ function renderHero(met, sel){
   const nearLbl = useNear ? 'ใกล้คุณ' : 'สถานีใกล้';
   document.getElementById('heroRows').innerHTML =
     ((nearChips || locChip) ? `<div class="hrow"><span class="hrow-k">${nearLbl}</span><div class="hrow-c">${locChip}${nearChips}</div></div>` : '') +
-    `<div class="hrow"><span class="hrow-k">${esc(placeName)}</span><div class="hrow-c">${stChips}</div></div>` +
+    `<div class="hrow"><span class="hrow-k">${amp ? esc(placeName) : 'ทั้งจังหวัด'}</span><div class="hrow-c">${stChips}</div></div>` +
     `<div class="hrow"><span class="hrow-k">ฝน 7 วัน</span><div class="hrow-c">${rainChips}</div></div>`;
   const lb = document.getElementById('heroLocBtn');
   if(lb) lb.onclick = askLocation;
