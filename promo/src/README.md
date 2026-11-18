@@ -27,3 +27,14 @@ python3 build_vo.py ../naraflood-promo-voice-120s.mp4
 Voice: model `gemini-2.5-flash-preview-tts`, voice Fenrir (excitable young male), with the energetic direction in
 `STYLE`. The 3.x TTS models read any direction aloud. Write numbers and English words the way they should be
 spoken (`หนึ่ง เจ็ด แปด สี่`, `นาราฟลัด ดอทคอม`). `TEMPO=1.1 python3 build_vo.py …` speeds the voice up.
+
+## Subtitles and background music
+
+Each scene in `scenes.json` has `subs`: the subtitle chunks shown while its line is spoken. `build_vo.py`
+times them by text length and snaps each cut to a pause in the voice. Background music:
+
+```bash
+MUSIC=music/bg.mp3 python3 build_vo.py ../naraflood-promo-120s-music-subs.mp4   # MUSIC_VOL=0.6 by default
+```
+
+The music is ducked under the voice (sidechain compression) and faded in/out. `music/` is not committed.
