@@ -23,8 +23,7 @@ th:{
   teleSrc:'กรมชลประทาน', teleProj:'โครงการชลประทาน', teleView:'เปิดระบบโทรมาตร ชป. ↗',
   extDdpm:'CCTV ปภ. ↗', extTelerid:'▲ โทรมาตร ชป. ↗',
   lyDdpm:'CCTV ปภ.', ddpmSrc:'ระบบเฝ้าระวังภัยพิบัติ ปภ.', ddpmCoord:'พิกัด (ละติจูด, ลองจิจูด)',
-  ddpmWL:'ระดับน้ำปัจจุบัน (ม.)', ddpmCam:'สถานะกล้อง', camOn:'ออนไลน์', camOff:'ออฟไลน์', ddpmTel:'โทรศัพท์',
-  ddpmLow:'น้ำน้อย', ddpmMed:'ปานกลาง', ddpmHigh:'น้ำมาก เฝ้าระวัง', ddpmCrit:'วิกฤต',
+  ddpmWL:'ระดับน้ำปัจจุบัน (ม.)', ddpmTel:'โทรศัพท์',
   ddpmOpen:'ดูข้อมูลต้นทาง cctv.disaster.go.th', ddpmNewTabLbl:'เปิดแท็บใหม่ ↗',
   ddpmModalTitle:'ระบบเฝ้าระวังภัยพิบัติ ปภ. (cctv.disaster.go.th)',
   ddpmNoteTxt:'หากหน้าต่างด้านบนว่างเปล่า แสดงว่าเว็บ ปภ. ไม่อนุญาตให้ฝังหน้า · กด "เปิดแท็บใหม่" แทน',
@@ -786,7 +785,7 @@ function applyWlFilter(){
     if(show){ if(!gWL.hasLayer(m)) m.addTo(gWL); } else if(gWL.hasLayer(m)) gWL.removeLayer(m); });
 }
 function shareSnapshot(){
-  const over=wlStations.filter(s=>wlBucket(s)==='overflow'), high=wlStations.filter(s=>wlBucket(s)==='near'||wlBucket(s)==='high');
+  const all=allWl(), over=all.filter(s=>wlBucket(s)==='overflow'), high=all.filter(s=>wlBucket(s)==='near'||wlBucket(s)==='high');
   const top=[...over,...high].sort((a,b)=>(b.pct??-1)-(a.pct??-1)).slice(0,6);
   const W=720,H=210+top.length*28+40, c=document.createElement('canvas'); c.width=W; c.height=H;
   const x=c.getContext('2d');
@@ -858,6 +857,21 @@ function buildLegend(){
 /* ---------- สถานะรวม ---------- */
 let wlStations = [], rainSpots = [], damList = [], riskAreas = [];
 let markersById = {};
+/* สถานี ปภ. · โทรมาตร ชป. · อุทกวิทยา ชป. นับในแถบสรุป/รายการด้วย ให้ตัวเลขตรงกับหน้าแรกซึ่งนับทุกแหล่ง
+   (เดิมนับแค่ wlStations จึงขึ้น "ล้นตลิ่ง 0" ทั้งที่หน้าแรกบอกว่ามีสถานี ปภ. ล้นตลิ่ง)
+   เกณฑ์เดียวกับหน้าแรก: ล้นตลิ่ง = ระดับ ≥ ตลิ่ง · ไม่มี % → ถึงเส้นเฝ้าระวังของหน่วยงานนับเป็น "ใกล้ล้นตลิ่ง" */
+const extraWl = {ddpm:[], tele:[], hyd:[]};
+const allWl = () => [...wlStations, ...extraWl.ddpm, ...extraWl.tele, ...extraWl.hyd];
+const thDt = d => d && !isNaN(d) ? new Date(d.getTime() + 7*3600e3).toISOString().slice(0,16).replace('T',' ') : '';
+function extraRow(src, tag, o){
+  const {cur, bank, warn, pct} = o;
+  const cls = cur==null ? 'unknown' : bank!=null && cur >= bank ? 'overflow'
+    : pct!=null ? wlClass(pct)
+    : warn!=null && warn < (bank ?? Infinity) && cur >= warn ? 'near'
+    : bank!=null ? 'normal' : 'unknown';
+  return {...o, id:`${src}:${o.code}`, src, tag, msl:cur, cls, diff: bank!=null && cur!=null ? bank - cur : null};
+}
+const extraColor = (s, base) => isStale(s.dt) ? 'var(--ink-3)' : s.cls==='overflow' || s.cls==='near' ? WL_CLASSES[s.cls].color : base;
 let filterProv = 'นราธิวาส';
 let filterClass = null;
 let lastGraphReq = 0;
@@ -1262,7 +1276,8 @@ async function loadCctv(){
    ใส่ URL ของ Worker ที่ deploy แล้ว เช่น 'https://ddpm-proxy.xxxx.workers.dev'
    เว้นว่าง '' = ปิดฟีเจอร์ภาพ (popup แสดงข้อมูล+ลิงก์เหมือนเดิม ไม่มี error) */
 const DDPM_PROXY = 'https://ddpm-proxy.newusmanwaji.workers.dev';
-const DDPM_URL = 'https://gis-portal.disaster.go.th/arcgis/rest/services/Map_DDPM_CCTV/DDPM_CCTV_STATION_PROD/FeatureServer/0/query?where=1%3D1&outFields=code,name,latitude,longitude,basin,agency,telephone,current_water_level,water_level_status,camera_status,updated_at&returnGeometry=false&f=json';
+/* รายชื่อ+ระดับน้ำ+ตลิ่ง จาก <proxy>/stations ชุดเดียวกับหน้าแรก (ArcGIS ของ ปภ. ค้างตั้งแต่ ส.ค. 2569 และไม่มีระดับตลิ่ง) */
+const DDPM_PROV_CODE = ['96','95','94'];   // นราธิวาส · ยะลา · ปัตตานี (สองจังหวัดหลังเฉพาะรหัสใน DDPM_EXTRA)
 const DDPM_PROV = {'ปภ.จ.นราธิวาส':'นราธิวาส'};
 /* สถานี ปภ. จังหวัดข้างเคียงที่ให้แสดงด้วย (แม่น้ำสายบุรี ต้นน้ำ→ปลายน้ำ) · เพิ่ม/ลบรหัสได้ที่นี่ที่เดียว
    ใช้ทั้งข้อมูลสดและพิกัดสำรอง · {รหัสสถานี: จังหวัด} */
@@ -1311,37 +1326,36 @@ const DDPM_STATIONS = [
 ["YLA09","สะพานเฉลิมพระเกียรติ",6.44175,101.465195,"ยะลา"],
 ["YLA10","สะพานมิตรภาพท่าธง-เกะรอ แม่น้ำสายบุรี",6.549634,101.486618,"ยะลา"]
 ];
-function ddpmStatusInfo(st){
-  const s = String(st||'').toUpperCase();
-  if(s==='LOW')      return {label:t('ddpmLow'),  color:'var(--st-normal)', blink:false};
-  if(s==='MEDIUM')   return {label:t('ddpmMed'),  color:'var(--st-watch)', blink:false};
-  if(s==='HIGH')     return {label:t('ddpmHigh'), color:'var(--st-warn)', blink:false};
-  if(s==='VERYHIGH'||s==='CRITICAL'||s==='CRISIS') return {label:t('ddpmCrit'), color:'var(--st-danger)', blink:true};
-  return {label:t('nodata'), color:'var(--ink-3)', blink:false};
-}
+/* waterLevelStatus เทียบเกณฑ์รายสถานีของ ปภ. (ชื่อระดับเดียวกับหน้าแรก) · ไม่ดูตลิ่ง: NWT07 เคยล้นตลิ่งขณะสถานะยังเป็น 1
+   จึงใช้สีจากระดับเทียบตลิ่ง (extraRow) ส่วนสถานะ ปภ. แสดงเป็นข้อมูลประกอบใน popup */
+const DDPM_LV = {1:'ปกติ', 2:'เฝ้าระวัง', 3:'เตรียมรับมือ', 4:'อพยพ', 5:'ต้องอพยพ'};
 function ddpmMarker(row){
-  // row: {code,name,lat,lon,prov, wl?, status?, cam?, tel?, updated?}
-  const S = ddpmStatusInfo(row.status);
-  const live = row.status !== undefined;
-  const m = L.marker([row.lat,row.lon], {icon: mkIcon('mk-ddpm', live ? S.color : 'var(--ink-3)', 20, '📹', live && S.blink), zIndexOffset:120})
+  // row: extraRow ของ ปภ. หรือพิกัดสำรอง {code,name,lat,lon,prov} (ไม่มีค่าระดับน้ำ)
+  const live = row.cur != null;
+  const color = live ? extraColor(row, WL_CLASSES[row.cls].color) : 'var(--ink-3)';
+  const blink = live && !isStale(row.dt) && row.cls==='overflow';
+  const m = L.marker([row.lat,row.lon], {icon: mkIcon('mk-ddpm', color, 20, '📹', blink), zIndexOffset:120})
     .bindPopup(()=>{
-      const S2 = ddpmStatusInfo(row.status);
+      const B = live ? wlBadge(row, 0, ' ') : null;
       return `
       <div class="pp-title">${esc(row.name)} (${esc(row.code)})</div>
       <div class="pp-sub">${tProv(row.prov)} · ${t('ddpmSrc')}</div>
       <div class="ddpm-snap" id="snap-${esc(row.code)}" style="margin:6px 0"></div>
-      ${live?`<div class="pp-status"><span class="badge" style="background:${S2.color};font-size:12px;padding:3px 14px">${S2.label}${row.wl!=null?` · ${fmt(row.wl)} m`:''}</span></div>`:''}
+      ${B?`<div class="pp-status"><span class="badge" style="background:${B.color};font-size:12px;padding:3px 14px">${B.text} · ${fmt(row.cur)} m</span></div>`:''}
       <dl class="pp-grid">
         <dt>${t('ddpmCoord')}</dt><dd>${row.lat.toFixed(5)}, ${row.lon.toFixed(5)}</dd>
-        ${live&&row.wl!=null?`<dt>${t('ddpmWL')}</dt><dd>${fmt(row.wl)}</dd>`:''}
-        ${live?`<dt>${t('ddpmCam')}</dt><dd>${row.cam===1?t('camOn'):t('camOff')}</dd>`:''}
+        ${live?`<dt>${t('ddpmWL')}</dt><dd>${fmt(row.cur)}</dd>`:''}
+        ${row.bank!=null?`<dt style="color:var(--st-danger)">ระดับตลิ่ง</dt><dd>${fmt(row.bank)} ม.</dd>`:''}
+        ${row.diff!=null?`<dt>${row.diff>=0?'ต่ำกว่าตลิ่ง':'สูงกว่าตลิ่ง'}</dt><dd>${fmt(Math.abs(row.diff))} ม.</dd>`:''}
+        ${DDPM_LV[row.lvNum]?`<dt>สถานะ ปภ.</dt><dd>${DDPM_LV[row.lvNum]}</dd>`:''}
         ${row.tel?`<dt>${t('ddpmTel')}</dt><dd>${esc(row.tel)}</dd>`:''}
-        ${row.updated?`<dt>${t('time')}</dt><dd>${new Date(row.updated).toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'})}</dd>`:''}
+        ${row.updated?`<dt>${t('time')}</dt><dd>${row.updated.toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'})}</dd>`:''}
       </dl>
       <a class="pp-link" href="https://cctv.disaster.go.th/stations/${esc(row.code)}" target="_blank" rel="noopener">ผลวิเคราะห์</a>`;
     }, {maxWidth:300});
   m.on('popupopen', ev=>loadDdpmSnapshot(row, ev.popup));
   m.addTo(gDdpm);
+  return m;
 }
 /* ภาพกล้อง ปภ. ในหน้าต่าง popup
    ข้อมูลสถานี: GET <proxy>/stations/{code} (ผ่าน DDPM_PROXY แก้ CORS)
@@ -1505,20 +1519,29 @@ function ddpmCam(btn, url){
 async function loadDdpm(){
   gDdpm.clearLayers();
   try{
-    const g = await fetchJSON(DDPM_URL, 20000);
-    const rows = (g?.features||[]).map(f=>f.attributes)
-      .filter(a => ddpmProvOf(a.agency, a.code) && num(a.latitude)!=null && num(a.longitude)!=null);
+    const res = await Promise.allSettled(DDPM_PROV_CODE.map(c => fetchJSON(`${DDPM_PROXY}/stations?provCode=${c}&limit=100`, 20000)));
+    const rows = res.flatMap(r => r.status==='fulfilled' && Array.isArray(r.value?.data) ? r.value.data : [])
+      .filter(d => d.isActive!==0 && !d.deletedAt && ddpmProvOf(d.agency, d.code) && num(d.latitude)!=null && num(d.longitude)!=null);
     if(!rows.length) throw new Error('empty');
-    rows.forEach(a => ddpmMarker({
-      code:a.code, name:String(a.name||'').trim(), lat:num(a.latitude), lon:num(a.longitude),
-      prov:ddpmProvOf(a.agency, a.code), wl:num(a.current_water_level), status:a.water_level_status,
-      cam:a.camera_status, tel:a.telephone||'', updated:num(a.updated_at)
-    }));
+    extraWl.ddpm = rows.map(d => {
+      // updatedAt ของ ปภ. เป็นเวลาไทยไม่มีโซน (แบบเดียวกับหน้าแรก)
+      const updated = d.updatedAt ? new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(d.updatedAt) ? d.updatedAt : d.updatedAt+'+07:00') : null;
+      const cur = num(d.currentWaterLevel), bank = num(d.riverBankLevel);
+      const row = extraRow('ddpm', 'ปภ.', {
+        code:String(d.code).trim(), name:String(d.name||'').trim(), lat:num(d.latitude), lon:num(d.longitude),
+        prov:ddpmProvOf(d.agency, d.code), amphoe:d.amphoeName||'', river:d.basin && d.basin!=='-' ? d.basin : '',
+        cur, bank, pct: cur!=null && bank > 0 ? cur / bank * 100 : null,
+        lvNum:d.waterLevelStatus, tel:d.telephone||'', updated, dt:thDt(updated)});
+      row.marker = ddpmMarker(row);
+      return row;
+    });
   }catch(e){
     // ดึงสดไม่ได้ → ใช้พิกัดสำรอง (ไม่มีค่าระดับน้ำ)
+    extraWl.ddpm = [];
     DDPM_STATIONS.filter(r => PROV_SET.has(r[4]) || DDPM_EXTRA[r[0]])
       .forEach(r => ddpmMarker({code:r[0], name:r[1], lat:r[2], lon:r[3], prov:r[4]}));
   }
+  renderSidebar();
 }
 function openDdpm(){
   const f = document.getElementById('ddpmFrame');
@@ -1559,6 +1582,7 @@ async function loadTelerid(pre){
     const rows = Array.isArray(j?.stations) ? j.stations : [];
     teleUpdated = j?.updated || null;
     gTele.clearLayers();
+    extraWl.tele = [];
     let n = 0;
     rows.forEach(d => {
       const lat = num(d.lat), lon = num(d.lon);
@@ -1569,7 +1593,12 @@ async function loadTelerid(pre){
       const wlOk = teleReporting(d, j.updated);
       if(!wlOk && !teleOnline(d, j.updated)) return;
       n++;
-      const mk = L.marker([lat,lon], {icon: mkIcon('mk-tele', wlOk ? 'var(--data)' : 'var(--ink-3)', 18, '▲', false), zIndexOffset: wlOk ? 80 : 70})
+      // ตลิ่ง = ระดับวิกฤตของ ชป. (ไม่มีจึงใช้ bank) · เกณฑ์เดียวกับหน้าแรก
+      const row = wlOk ? extraRow('tele', 'โทรมาตร ชป.', {code:String(d.code).trim(), name:String(d.name||d.code||'').trim(), lat, lon,
+        prov:String(d.province||'').trim(), amphoe:String(d.amphur||'').replace(/^อำเภอ|^อ\./,'').trim(), river:d.basin||'',
+        cur:num(d.level), bank:num(d.critical) ?? num(d.bank), warn:num(d.warning), pct:null,
+        dt:thDt(new Date(d.levelDt || d.dt || j.updated))}) : null;
+      const mk = L.marker([lat,lon], {icon: mkIcon('mk-tele', row ? extraColor(row, 'var(--data)') : 'var(--ink-3)', 18, '▲', !!row && !isStale(row.dt) && row.cls==='overflow'), zIndexOffset: wlOk ? 80 : 70})
         .bindPopup(()=>{
           // เวลาที่สถานีวัดค่า/ถ่ายภาพจริง (dt) · ไม่มีจึงใช้เวลาที่ scraper ส่งขึ้น
           const at = d.levelDt || d.dt || j.updated;
@@ -1602,6 +1631,7 @@ async function loadTelerid(pre){
           <a class="pp-link" href="https://telerid.rid.go.th/#/" target="_blank">${t('teleView')}</a>`;
         }, {maxWidth:320})
         .addTo(gTele);
+      if(row){ row.marker = mk; extraWl.tele.push(row); }
       if(d.hasDetail){
         mk.on('popupopen', (ev)=>{
           const el = ev.popup.getElement().querySelector('.tele-detail');
@@ -1611,6 +1641,7 @@ async function loadTelerid(pre){
         });
       }
     });
+    renderSidebar();
   }catch(e){ /* ยังไม่มีสาขา cam / โหลดไม่ได้ → คงหมุดชุดเดิมไว้ */ }
   // (เลิกใช้ station_list สดของ telerid เป็นทางสำรอง: เบราว์เซอร์เรียกไม่ได้ (CORS) และไม่มีค่าระดับน้ำ)
 }
@@ -1666,6 +1697,7 @@ async function loadHyd(){
 function renderHyd(){
   if(!hydData || !Array.isArray(hydData.stations)) return;
   gHyd.clearLayers();
+  extraWl.hyd = [];
   const have = new Set(wlStations.map(s=>String(s.code||'').trim()));
   hydData.stations.forEach(d => {
     const c = HYD_COORDS[d.code];
@@ -1673,12 +1705,17 @@ function renderHyd(){
     if(d.level==null) return;
     // ค่าวัดเก่ากว่า 6 ชม. → หมุดสีเทา (สถานีอาจหยุดส่ง)
     const old = d.levelDt && (Date.now() - new Date(d.levelDt)) > 6*3600e3;
-    const over = d.bank!=null && d.level >= d.bank;
-    const color = old ? 'var(--ink-3)' : over ? 'var(--st-danger)' : 'var(--data)';
+    const bank = num(d.bank);
+    // เส้นเฝ้าระวัง = ตลิ่ง − 1 ม. แบบเดียวกับหน้าแรก
+    const row = extraRow('hyd', 'อุทกวิทยา ชป.', {code:d.code, name:String(d.name||d.code).trim(), lat:c[0], lon:c[1],
+      prov:String(d.province||'').trim(), amphoe:String(d.amphur||'').replace(/^อำเภอ|^อ\./,'').trim(), river:'',
+      cur:num(d.level), bank, warn: bank!=null ? bank - 1 : null, pct:null, dt: d.levelDt ? thDt(new Date(d.levelDt)) : ''});
+    const over = row.cls==='overflow';
+    const color = old ? 'var(--ink-3)' : extraColor(row, 'var(--data)');
     const pts = d.wl && Array.isArray(d.wl.v) ? d.wl.v : [];
     const prev3 = pts.length > 3 ? pts[pts.length-4] : null;
     const diff3 = prev3!=null ? d.level - prev3 : null;
-    L.marker([c[0],c[1]], {icon: mkIcon('mk-tele', color, 18, '▲', !old && over), zIndexOffset:85})
+    row.marker = L.marker([c[0],c[1]], {icon: mkIcon('mk-tele', color, 18, '▲', !old && over), zIndexOffset:85})
       .bindPopup(()=>{
         const at = d.levelDt ? new Date(d.levelDt).toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}) : '';
         const toBank = d.bank!=null ? d.bank - d.level : null;
@@ -1697,7 +1734,9 @@ function renderHyd(){
         <a class="pp-link" href="https://hyd-app.rid.go.th/hydro8h.html" target="_blank" rel="noopener">เปิดระบบอุทกวิทยา ชป. ↗</a>`;
       }, {maxWidth:320})
       .addTo(gHyd);
+    extraWl.hyd.push(row);
   });
+  renderSidebar();
 }
 
 /* ---------- 6.56) ระบบเตือนภัยล่วงหน้า กรมทรัพยากรน้ำ (EWS · ews.dwr.go.th) ----------
@@ -1910,7 +1949,7 @@ async function loadBoundaries(){
 /* ================= Sidebar ================= */
 function renderSidebar(){
   const q = document.getElementById('search').value.trim().toLowerCase();
-  const inProv = wlStations.filter(s => filterProv==='all' || s.prov===filterProv);
+  const inProv = allWl().filter(s => filterProv==='all' || s.prov===filterProv);
   const counts = {};
   Object.keys(WL_CLASSES).forEach(k=>counts[k]=0);
   counts.nodata = 0;
@@ -1939,7 +1978,7 @@ function renderSidebar(){
   document.getElementById('list').innerHTML = list.map(s=>{
     return `<div class="item" style="border-left-color:${wlBadge(s).color}" onclick="focusStation('${s.id}')">
       <div class="nm">${esc(s.name)} ${s.code?`<span style="color:var(--ink-3);font-weight:400">(${esc(s.code)})</span>`:''}</div>
-      <div class="sub">${esc(s.river||'')} · ${esc(s.amphoe)} · ${tProv(s.prov)} ${isStale(s.dt)?`<span class="stale">${t('stale')}</span>`:''}</div>
+      <div class="sub">${esc(s.river||'')} · ${esc(s.amphoe)} · ${tProv(s.prov)}${s.tag?` · ${esc(s.tag)}`:''} ${isStale(s.dt)?`<span class="stale">${t('stale')}</span>`:''}</div>
       <div class="row2">
         <span class="badge" style="background:${wlBadge(s,0,' ').color}">${wlBadge(s,0,' ').text}</span>
         <span style="color:var(--ink-3)">${s.msl!=null?fmt(s.msl)+' m':''}${trendArrow(s)}</span>
@@ -1957,9 +1996,12 @@ function toggleSidebar(){
   setTimeout(()=>map.invalidateSize(), 250);
 }
 function focusStation(id){
-  const m = markersById[id];
+  const extra = allWl().find(s=>s.id===id && s.marker);
+  const m = extra ? extra.marker : markersById[id];
   if(!m) return;
-  if(!map.hasLayer(gWL)){ map.addLayer(gWL); document.getElementById('lyWL').checked = true; }
+  // อุทกวิทยา ชป. อยู่ใน gHyd ซึ่งเปิด/ปิดตามชั้นโทรมาตร ชป.
+  const [g, ly] = !extra ? [gWL,'lyWL'] : extra.src==='ddpm' ? [gDdpm,'lyDdpm'] : [gTele,'lyTele'];
+  if(!map.hasLayer(g)){ map.addLayer(g); document.getElementById(ly).checked = true; }
   if(window.innerWidth<=768) document.getElementById('sidebar').classList.remove('open');
   map.flyTo(m.getLatLng(), Math.max(map.getZoom(), 12), {duration:.6});
   setTimeout(()=>m.openPopup(), 650);
@@ -1990,12 +2032,12 @@ function copyReport(){
   const now = new Date().toLocaleString(locale(),{dateStyle:'medium', timeStyle:'short'});
   const lines = [t('rpTitle'), `${now}`, ''];
   PROVINCES.forEach(p=>{
-    const st = wlStations.filter(s=>s.prov===p.name);
+    const st = allWl().filter(s=>s.prov===p.name);
     if(!st.length) return;
     const o = st.filter(s=>wlBucket(s)==='overflow').length, n = st.filter(s=>wlBucket(s)==='near').length, h = st.filter(s=>wlBucket(s)==='high').length;
     lines.push(`• ${tProv(p.name)}: ${wlLabel('overflow')} ${o} · ${wlLabel('near')} ${n} · ${wlLabel('high')} ${h} / ${st.length} ${t('rpStations')}`);
   });
-  const crit = wlStations.filter(s=>WL_URGENT.has(wlBucket(s)))
+  const crit = allWl().filter(s=>WL_URGENT.has(wlBucket(s)))
     .sort((a,b)=>(b.pct??0)-(a.pct??0)).slice(0,10);
   lines.push('');
   if(crit.length){

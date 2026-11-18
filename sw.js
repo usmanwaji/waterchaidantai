@@ -10,7 +10,7 @@ const SHELL = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 
 const SHELL_ASSETS = [
-  'index.html','map.html','map.js?v=42','forecast.html','history.html','repeat.html',
+  'index.html','map.html','map.js?v=43','forecast.html','history.html','repeat.html',
   'sim.html','shelter.html','route.html','resources.html','admin.html',
   'check.html','alert.html','eoc.html','people.html','stats.html',
   'js/criteria.js?v=2','js/supabase-client.js?v=3','js/auth-ui.js?v=3','js/shelters_nwt.js','js/parking_nwt.js','js/hosts_nwt.js','js/ddpm_risk_data.js','js/ffr_risk_data.js?v=2','js/onwr-nara-subdistricts.geojson','js/rivers.js?v=5','js/leaflet-heat.js','js/pwa.js','js/ui.js','js/views.js?v=4',

@@ -60,7 +60,7 @@ header h1 small{display:block;font-size:11px;font-weight:400;opacity:.9}
 /* กล่องในกริดต้องยอมหดได้ ไม่งั้นเนื้อหากว้าง ๆ (แถวเลื่อนแนวนอน/ภาพ) จะดันคอลัมน์
    จนทั้งหน้าเลื่อนซ้าย-ขวาได้บนมือถือ · grid item ค่าเริ่มต้นคือ min-width:auto */
 #content>*{min-width:0}
-.card{background:var(--elevated);border:1px solid var(--outline);border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.10),0 1px 2px rgba(0,0,0,.06)}
+.card{background:var(--elevated);border:1px solid var(--outline);border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.10),0 1px 2px rgba(0,0,0,.06);scroll-margin-top:72px}
 .card.full{grid-column:1 / -1}
 .card h2{font-size:14.5px;color:var(--navy-d);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
 .card h2 .where{font-size:11px;color:var(--muted);font-weight:400}
@@ -485,7 +485,7 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     </details>
   </div>
 
-  <div class="card full">
+  <div class="card full" id="stCard">
     <h2>มาตรวัดน้ำต้องระวังเป็นพิเศษ (ระดับน้ำ ≥ 90% ของตลิ่ง) <span class="where" id="whereSt"></span></h2>
     <div id="stList"><span class="spin"></span></div>
     <details class="fold fold-note">
@@ -1645,9 +1645,10 @@ function renderHero(met, sel){
   let stChips = '';
   if(!area.length) stChips = chip('map.html','wave','เปิดแผนที่ระดับน้ำ');
   else{
-    if(over.length) stChips += chip('map.html','wave',`ล้นตลิ่ง <b>${over.length}</b>`,'danger');
-    if(high.length) stChips += chip('map.html','wave',`ใกล้ตลิ่ง <b>${high.length}</b>`,'warn');
-    if(watch.length) stChips += chip('map.html','wave',`เฝ้าระวัง <b>${watch.length}</b>`,'watch');
+    // หน้าแผนที่นับเฉพาะสถานี สสน./ชป. จึงไม่เห็นสถานี ปภ./โทรมาตร ที่นับรวมไว้ตรงนี้ · ชี้ไปการ์ดในหน้านี้แทน
+    if(over.length) stChips += chip('#stCard','wave',`ล้นตลิ่ง <b>${over.length}</b>`,'danger');
+    if(high.length) stChips += chip('#stCard','wave',`ใกล้ตลิ่ง <b>${high.length}</b>`,'warn');
+    if(watch.length) stChips += chip('#stCard','wave',`เฝ้าระวัง <b>${watch.length}</b>`,'watch');
     if(!over.length && !high.length && !watch.length) stChips += chip('map.html','ok',`${placeName} ไม่มีสถานีเข้าเกณฑ์`,'normal');
     if(withPrev.length){
       stChips += chip('#dirCard','up',`กำลังขึ้น <b>${rise.length}</b>`);
