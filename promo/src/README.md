@@ -1,24 +1,29 @@
 # naraflood promo clip: source files
 
-These files build the 9:16 promo clip `promo/naraflood-promo*.mp4`. They are not part of the website.
+These files build the 9:16 promo clips `promo/naraflood-promo*.mp4`. They are not part of the website.
 
-- `comp.html` – the animation: one page that `render(t)` draws for any time `t`; `setTimeline()` sets the scene lengths
-- `shots/` – screenshots of naraflood.com taken 16 Nov 2026 (iPhone 13, 390×853)
-- `render.js` – Playwright renders `comp.html` to 30 fps JPEG frames
-- `vo_script.json` – Thai voice-over script, one line per scene
-- `gemini_tts.py` – synthesizes the voice-over with the Gemini API (`GEMINI_API_KEY`), writing `vo/<scene>.wav`; the current clip uses `MODEL=gemini-3.1-flash-tts-preview`, voice Kore
-- `gtts.py` – alternative: Google Cloud Text-to-Speech
-- `build_vo.py` – fits the scene lengths to the voice, mixes the narration, renders the frames and encodes the MP4
+- `scenes.json` – every scene in order: Thai voice-over line, caption, screenshot, scroll range and zoom
+- `comp.html` – the animation; `setTimeline(scenes-with-times)` then `render(t)` draws any moment
+- `shoot.js` – screenshots naraflood.com pages into `shots/` (iPhone 13, 390×853)
+- `gemini_tts.py` – voice-over with the Gemini API (`GEMINI_API_KEY`)
+- `split_vo.py` – cuts a one-take voice-over into one clip per scene (Whisper + text alignment)
+- `build_vo.py` – fits scene lengths to the voice, mixes the narration, renders frames, encodes the MP4
+- `render.js` – Playwright renders `comp.html` to 30 fps frames (`--preview t…` for stills)
+- `gtts.py` – alternative voice: Google Cloud Text-to-Speech
 
-## Rebuild the narrated version
+## Rebuild the 120-second version
 
-Prerequisites: `GEMINI_API_KEY` in the environment (a free AI Studio key allows 10 TTS requests per model per day), plus `pip install numpy soundfile` and ffmpeg.
+Needs `GEMINI_API_KEY`, `pip install numpy soundfile sherpa-onnx`, ffmpeg, Playwright, and the Whisper small model
+for sherpa-onnx (`sherpa-onnx-whisper-small.tar.bz2` from the k2-fsa/sherpa-onnx `asr-models` release).
 
 ```bash
 cd promo/src
-MODEL=gemini-3.1-flash-tts-preview python3 gemini_tts.py Kore          # all 8 lines (8 requests)
-MODEL=gemini-3.1-flash-tts-preview python3 gemini_tts.py Kore map cta  # redo only some lines
-python3 build_vo.py ../naraflood-promo-voice.mp4
+node shoot.js                                   # optional: fresh screenshots (update numbers in scenes.json)
+python3 gemini_tts.py Fenrir --joined           # whole script in ONE request (free tier: 10 requests/model/day)
+WHISPER_DIR=/path/to/sherpa-onnx-whisper-small python3 split_vo.py
+python3 build_vo.py ../naraflood-promo-voice-120s.mp4
 ```
 
-The TTS models read any style instruction aloud, so only the Thai text is sent. Write numbers and English words the way they should be spoken (e.g. `หนึ่ง เจ็ด แปด สี่`, `นาราฟลัด ดอทคอม`).
+Voice: model `gemini-2.5-flash-preview-tts`, voice Fenrir (excitable young male), with the energetic direction in
+`STYLE`. The 3.x TTS models read any direction aloud. Write numbers and English words the way they should be
+spoken (`หนึ่ง เจ็ด แปด สี่`, `นาราฟลัด ดอทคอม`). `TEMPO=1.1 python3 build_vo.py …` speeds the voice up.
