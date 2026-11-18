@@ -86,7 +86,8 @@ if MUSIC:
             f'[2:a]aresample=48000,aformat=channel_layouts=stereo,atrim=0:{DUR:.2f},asetpts=PTS-STARTPTS,'
             f'afade=t=in:d=1.5,afade=t=out:st={DUR - 3:.2f}:d=3,volume={MVOL}[m];'
             '[m][key]sidechaincompress=threshold=0.015:ratio=6:attack=30:release=500[md];'
-            '[vo][md]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-15:TP=-1.5:LRA=9[a]',
+            '[vo][md]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-15:TP=-1.5:LRA=9,'
+            f'afade=t=out:st={DUR - 1.8:.2f}:d=1.8[a]',   # fade after loudnorm so it is not undone
             '-map', '0:v', '-map', '[a]']
 else:
     cmd += ['-af', 'loudnorm=I=-15:TP=-1.5:LRA=7']
