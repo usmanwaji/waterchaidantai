@@ -12,11 +12,13 @@ These files build the 9:16 promo clip `promo/naraflood-promo*.mp4`. They are not
 
 ## Rebuild the narrated version
 
-Prerequisites: a Network secret on `texttospeech.googleapis.com` of type "GCP access token (with Service Account Key)" (the proxy injects the token), plus `pip install numpy soundfile` and ffmpeg.
+Prerequisites: `GEMINI_API_KEY` in the environment (a free AI Studio key allows 10 TTS requests per model per day), plus `pip install numpy soundfile` and ffmpeg.
 
 ```bash
 cd promo/src
-python3 gtts.py list                       # list the th-TH voices
-python3 gtts.py synth <voice-name>       # a name printed by the list command
+MODEL=gemini-3.1-flash-tts-preview python3 gemini_tts.py Kore          # all 8 lines (8 requests)
+MODEL=gemini-3.1-flash-tts-preview python3 gemini_tts.py Kore map cta  # redo only some lines
 python3 build_vo.py ../naraflood-promo-voice.mp4
 ```
+
+The TTS models read any style instruction aloud, so only the Thai text is sent. Write numbers and English words the way they should be spoken (e.g. `หนึ่ง เจ็ด แปด สี่`, `นาราฟลัด ดอทคอม`).
