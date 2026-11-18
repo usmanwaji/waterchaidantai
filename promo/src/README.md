@@ -6,7 +6,8 @@ These files build the 9:16 promo clip `promo/naraflood-promo*.mp4`. They are not
 - `shots/` – screenshots of naraflood.com taken 16 Nov 2026 (iPhone 13, 390×853)
 - `render.js` – Playwright renders `comp.html` to 30 fps JPEG frames
 - `vo_script.json` – Thai voice-over script, one line per scene
-- `gtts.py` – synthesizes the voice-over with Google Cloud Text-to-Speech, writing `vo/<scene>.wav`
+- `gemini_tts.py` – synthesizes the voice-over with the Gemini API (`GEMINI_API_KEY`), writing `vo/<scene>.wav`; the current clip uses `MODEL=gemini-3.1-flash-tts-preview`, voice Kore
+- `gtts.py` – alternative: Google Cloud Text-to-Speech
 - `build_vo.py` – fits the scene lengths to the voice, mixes the narration, renders the frames and encodes the MP4
 
 ## Rebuild the narrated version
