@@ -17,6 +17,10 @@
   4) จะได้ URL  https://naramet-proxy.<ชื่อบัญชี>.workers.dev  (ตรงกับ NARAMET_PROXY ใน index.html แล้ว)
 
   ทดสอบว่าใช้ได้:  เปิด  https://<worker>/rainfall  ต้องเห็นหน้าปริมาณฝนสะสม
+
+  ใช้กับการ์ดเรดาร์ใน index.html ด้วย (เพิ่ม 20 พ.ย. 2026 · ต้องวางโค้ดนี้ใหม่ใน Cloudflare แล้ว Save and deploy):
+  - HEAD /__semet/loop/NTWLoop.gif  →  ส่งหัว Last-Modified/ETag ของภาพ GIF เรดาร์ระดับตำบลบน semet.uk ให้หน้าแรกวัดว่าภาพค้างกี่นาที
+  - /?radar=1  →  หน้าแรก naramet ตามปกติ แต่ EMBED ส่ง {naramet:'radar', src} = URL ภาพ "เรดาร์ล่าสุด" กลับไปให้หน้าแรกใช้แทน GIF ที่ค้าง
   ------------------------------------------------------------------
 */
 
@@ -48,6 +52,10 @@ if(!ok&&root&&root.children.length){ok=true;post({naramet:'ok'});}
 if(ok&&!nav)nav=hideNav();if(ok&&!tab)tab=pickTab();
 var t=Date.now()-t0;if(!ok&&!bad&&t>25000){bad=true;post({naramet:'fail',why:'แอปต้นทางไม่แสดงผลใน 25 วิ · '+L.slice(0,4).join(' | ')});}
 if(t>120000||(ok&&nav&&tab))clearInterval(iv);},500);
+if(/[?&]radar=1/.test(location.search)){var rt=setInterval(function(){
+var im=document.querySelectorAll('main img'),i,e;
+for(i=0;i<im.length;i++){e=im[i];if(/เรดาร์/.test(e.alt||'')&&!/เคลื่อนไหว/.test(e.alt||'')&&e.complete&&e.naturalWidth>200){clearInterval(rt);post({naramet:'radar',src:e.currentSrc||e.src});return;}}
+if(Date.now()-t0>40000){clearInterval(rt);post({naramet:'radar',src:'',why:'ไม่พบภาพเรดาร์ในหน้า naramet ใน 40 วิ · '+L.slice(0,3).join(' | ')});}},500);}
 })();</script>`;
 const UA = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Mobile Safari/537.36';
 
@@ -56,8 +64,24 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { headers: cors() });
     if (!['GET', 'HEAD', 'POST'].includes(request.method)) return new Response('Method Not Allowed', { status: 405, headers: cors() });
 
-    // ส่งต่อเฉพาะโดเมน naramet.semet.uk เท่านั้น (ทุก path)
     const url = new URL(request.url);
+
+    // /__semet/loop/<ไฟล์>: ส่งหัว Last-Modified/ETag ของภาพบน semet.uk (R2) ให้หน้าแรกวัดว่าภาพค้างนานเท่าไร
+    // เฉพาะ HEAD และเฉพาะโฟลเดอร์ loop/ ไม่ใช่ตัวส่งต่อเปิดกว้าง
+    if (url.pathname.startsWith('/__semet/')) {
+      const key = url.pathname.slice('/__semet/'.length);
+      if (request.method !== 'HEAD' || !/^loop\/[\w.-]+$/.test(key)) return new Response('Not allowed', { status: 403, headers: cors() });
+      let r;
+      try { r = await fetch('https://semet.uk/' + key, { method: 'HEAD', headers: { 'User-Agent': UA }, cf: { cacheTtl: 60, cacheEverything: true } }); }
+      catch (e) { return new Response(null, { status: 502, headers: cors() }); }
+      const h = new Headers(cors());
+      for (const k of ['content-type', 'last-modified', 'etag']) { const v = r.headers.get(k); if (v) h.set(k, v); }
+      h.set('Access-Control-Expose-Headers', 'Last-Modified, ETag');
+      h.set('Cache-Control', 'public, max-age=60');
+      return new Response(null, { status: r.status, headers: h });
+    }
+
+    // ส่งต่อเฉพาะโดเมน naramet.semet.uk เท่านั้น (ทุก path)
     const target = UPSTREAM + url.pathname + url.search;
     const get = request.method !== 'POST';
     const headers = { 'User-Agent': UA, 'Accept': request.headers.get('Accept') || '*/*', 'Referer': UPSTREAM + '/rainfall' };

@@ -513,9 +513,10 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     <div class="fold-body">
     <div class="radarWrap">
       <div class="radarImgBox" id="radarImgBox">
-        <img id="radarImg" alt="เรดาร์ฝนนราธิวาส ล่าสุด" style="max-width:100%;max-height:936px;border-radius:8px;border:1px solid var(--line);cursor:pointer;background:var(--card-2);display:block" onclick="window.open('https://sites.google.com/view/naramet-radar/narathiwat?authuser=0','_blank','noopener')">
-        <canvas id="radarFreeze" onclick="window.open('https://sites.google.com/view/naramet-radar/narathiwat?authuser=0','_blank','noopener')"></canvas>
+        <img id="radarImg" alt="เรดาร์ฝนนราธิวาส ล่าสุด" style="max-width:100%;max-height:936px;border-radius:8px;border:1px solid var(--line);cursor:pointer;background:var(--card-2);display:block" onclick="openRadarLink()">
+        <canvas id="radarFreeze" onclick="openRadarLink()"></canvas>
       </div>
+      <div class="note" id="radarNote" hidden></div>
     </div>
     </div>
   </div>
@@ -1778,12 +1779,110 @@ function renderRadarBar(){
   const open = document.getElementById('radarOpen');
   if(open) open.href = radarUrl(prov);
 }
-function loadRadarImg(){
+/* ภาพหลัก: GIF เรดาร์ระดับตำบล (semet.uk/loop/NTWLoop.gif) · ต้นทางค้างได้ (20 พ.ย. 2026 เที่ยงวันภาพยังเป็นเวลา 08:45 น.)
+   วัดอายุจากหัว Last-Modified ของไฟล์ (ผ่าน naramet-proxy /__semet/… ซึ่งให้ ETag ด้วย · ถ้า worker ยังไม่อัปเดตจะลองอ่านตรงจาก semet.uk)
+   และจำว่า ETag เดิมเห็นครั้งแรกเมื่อไร (กันกรณีต้นทางอัปโหลดภาพเดิมซ้ำจน Last-Modified ใหม่แต่ภาพไม่เปลี่ยน)
+   ภาพเก่ากว่า RADAR_STALE_MIN → เปิดหน้าแรก naramet.semet.uk ผ่าน naramet-proxy ในกรอบที่ซ่อนไว้ (?radar=1)
+   สคริปต์ EMBED ในกรอบส่ง URL ภาพ "เรดาร์ล่าสุด" กลับมา แล้วแสดงภาพนั้นแทน · ภาพ GIF กลับมาสดเมื่อไรก็สลับกลับเอง
+   วัดอายุไม่ได้ (เครือข่าย/worker ล่ม) → คงภาพ GIF ไว้ตามเดิม */
+const RADAR_GIF = 'https://semet.uk/loop/NTWLoop.gif';
+const RADAR_GIF_LINK = 'https://sites.google.com/view/naramet-radar/narathiwat?authuser=0';
+const RADAR_ALT_LINK = 'https://naramet.semet.uk/';
+const RADAR_STALE_MIN = 30;
+const NARAMET_PROXY = 'https://naramet-proxy.newusmanwaji.workers.dev';   // naramet-proxy.worker.js (โดเมนเดียวกับ NARAMET_EMBED ด้านล่าง)
+let radarLink = RADAR_GIF_LINK, radarAltFrame, radarAltTimer;
+function openRadarLink(){ window.open(radarLink, '_blank', 'noopener'); }
+const hhmm = d => d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+
+/* คืน {lm: Date|null, etag: string|null} หรือ null ถ้าอ่านไม่ได้ · ต้องเป็นภาพจริง (content-type image/*) */
+async function radarGifHead(){
+  const v = 'v=' + Date.now();
+  for(const u of [`${NARAMET_PROXY}/__semet/loop/NTWLoop.gif?${v}`, `${RADAR_GIF}?${v}`]){
+    try{
+      const r = await fetch(u, {method:'HEAD', cache:'no-store'});
+      if(!r.ok || !/^image\//.test(r.headers.get('content-type')||'')) continue;
+      const lm = r.headers.get('last-modified'), etag = r.headers.get('etag');
+      if(!lm && !etag) continue;
+      return { lm: lm ? new Date(lm) : null, etag };
+    }catch(e){}
+  }
+  return null;
+}
+/* เวลาที่ภาพนี้เริ่มเป็นภาพนี้: ค่าที่เก่ากว่าระหว่าง Last-Modified กับเวลาที่เห็น ETag นี้ครั้งแรก */
+function radarContentSince(h){
+  let since = h.lm && !isNaN(h.lm) ? h.lm.getTime() : null;
+  if(h.etag){
+    let seen = null;
+    try{
+      const o = JSON.parse(localStorage.getItem('radarGifEtag') || 'null');
+      if(o && o.etag === h.etag) seen = o.t;
+      else localStorage.setItem('radarGifEtag', JSON.stringify({etag:h.etag, t:Date.now()}));
+    }catch(e){}
+    if(seen) since = since == null ? seen : Math.min(since, seen);
+  }
+  return since;
+}
+function radarShow(src, link, updText, note){
+  const img = document.getElementById('radarImg'), upd = document.getElementById('radarUpdated'), n = document.getElementById('radarNote');
+  if(src && img.getAttribute('src') !== src) img.src = src;
+  radarLink = link;
+  if(upd) upd.textContent = updText;
+  if(n){ n.hidden = !note; n.textContent = note || ''; }
+}
+function radarAltCleanup(){
+  clearTimeout(radarAltTimer);
+  if(radarAltFrame){ radarAltFrame.remove(); radarAltFrame = null; }
+}
+/* เปิดหน้าแรก naramet ในกรอบซ่อน รอให้ EMBED ส่ง URL ภาพเรดาร์กลับมา (message ด้านล่าง) */
+function radarLoadAlt(staleAt){
+  radarAltCleanup();
+  const fr = document.createElement('iframe');
+  fr.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+  fr.setAttribute('aria-hidden', 'true'); fr.tabIndex = -1;
+  fr.referrerPolicy = 'no-referrer';
+  // ไม่ใช้ display:none · บางเบราว์เซอร์ไม่โหลดภาพในกรอบที่ไม่แสดงผล
+  fr.style.cssText = 'position:absolute;left:-10000px;top:0;width:1024px;height:900px;border:0;visibility:hidden';
+  fr.dataset.staleAt = staleAt;
+  fr.src = `${NARAMET_PROXY}/?radar=1&v=${Date.now()}`;
+  document.body.appendChild(fr);
+  radarAltFrame = fr;
+  radarAltTimer = setTimeout(() => radarAltDone('', 'naramet-proxy ไม่ตอบใน 45 วิ'), 45000);
+}
+function radarAltDone(src, why){
+  const staleAt = radarAltFrame ? +radarAltFrame.dataset.staleAt : null;
+  radarAltCleanup();
+  const age = staleAt ? Math.round((Date.now() - staleAt)/60000) : null;
+  if(src){
+    radarShow(src, RADAR_ALT_LINK,
+      'เรดาร์จาก naramet.semet.uk · โหลด ' + hhmm(new Date()),
+      `ภาพเรดาร์ระดับตำบลของกรมอุตุฯ ไม่อัปเดตตั้งแต่ ${staleAt ? hhmm(new Date(staleAt)) + ' น.' : '-'}${age != null ? ' (' + age + ' นาที)' : ''} จึงแสดงภาพเรดาร์นราธิวาสล่าสุดจากสถานีอุตุนิยมวิทยานราธิวาส (naramet.semet.uk) แทน · เวลาที่มุมขวาล่างของภาพเป็นเวลาสากล (UTC) บวก 7 ชม. เป็นเวลาไทย · กลับไปใช้ภาพระดับตำบลเองเมื่ออัปเดตแล้ว`);
+  }else{
+    radarShow(radarLink === RADAR_GIF_LINK ? null : `${RADAR_GIF}?v=${Date.now()}`, RADAR_GIF_LINK,
+      'ล่าช้า · ภาพเมื่อ ' + (staleAt ? hhmm(new Date(staleAt)) : '-'),
+      `ภาพเรดาร์ระดับตำบลไม่อัปเดตมา ${age ?? '-'} นาที และโหลดภาพสำรองจาก naramet.semet.uk ไม่ได้${why ? ' (' + why + ')' : ''} · ดูที่ naramet.semet.uk โดยตรง`);
+  }
+}
+window.addEventListener('message', e=>{
+  if(!radarAltFrame || e.source !== radarAltFrame.contentWindow || e.data?.naramet !== 'radar') return;
+  const src = String(e.data.src || '');
+  radarAltDone(/^https?:\/\//.test(src) ? src : '', e.data.why ? String(e.data.why).slice(0, 200) : '');
+});
+
+async function loadRadarImg(){
   const img = document.getElementById('radarImg');
   if(!img) return;
-  img.src = `https://semet.uk/loop/NTWLoop.gif?v=${Date.now()}`;
-  const upd = document.getElementById('radarUpdated');
-  if(upd) upd.textContent = 'โหลดล่าสุด ' + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  const now = new Date();
+  // แสดง GIF ไปก่อนทุกครั้ง (ครั้งแรกจะได้ไม่ว่าง) · ถ้ากำลังแสดงภาพสำรองอยู่ ค้างภาพสำรองไว้จนกว่าจะรู้ว่า GIF สดแล้ว
+  if(radarLink === RADAR_GIF_LINK) radarShow(`${RADAR_GIF}?v=${now.getTime()}`, RADAR_GIF_LINK, 'โหลดล่าสุด ' + hhmm(now), '');
+  const h = await radarGifHead();
+  const since = h ? radarContentSince(h) : null;
+  if(since == null || (Date.now() - since) / 60000 <= RADAR_STALE_MIN){
+    radarAltCleanup();
+    radarShow(radarLink === RADAR_GIF_LINK ? null : `${RADAR_GIF}?v=${now.getTime()}`, RADAR_GIF_LINK,
+      since ? 'อัปเดต ' + hhmm(new Date(since)) + ' · โหลด ' + hhmm(now) : 'โหลดล่าสุด ' + hhmm(now), '');
+    return;
+  }
+  radarLoadAlt(since);
 }
 
 /* ---------- คาดการณ์ฝนระยะสั้น (Southern Nowcasting กรมอุตุฯ) ----------
