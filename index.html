@@ -262,7 +262,9 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
 /* ระดับน้ำเทียบตลิ่งในประโยคใต้หัวข้อ ใช้สีและแถบไฮไลต์เดียวกับหัวข้อ (.hero-word) */
 .hero-sub .hero-fb{font-weight:700;margin:0 .1em}
 .hero-sub .hero-note{display:block;margin-top:.5em}
-.hero-sub .hero-note a{color:var(--signal);font-weight:700;text-decoration:underline;text-underline-offset:2px}
+/* ข้อความเตือนน้ำล้นตลิ่ง ใช้สีแดงและแถบไฮไลต์เดียวกับหัวข้อ "น้ำล้นตลิ่ง" (.hero-word) แต่ให้ตัดบรรทัดได้ */
+.hero-sub .hero-note .hero-word{white-space:normal;font-weight:600}
+.hero-sub .hero-note a{color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 
 </style>
 <link rel="stylesheet" href="shared.css?v=18">
@@ -1620,7 +1622,7 @@ function renderHero(met, sel){
   }
   /* น้ำล้นตลิ่ง ≠ น้ำท่วมเสมอไป · เตือนให้ดูสภาพจริงจากหน่วยงานในพื้นที่และกล้องสดบนหน้าแผนที่ */
   const overNote = W.k==='danger'
-    ? `<span class="hero-note">กรณีน้ำล้นตลิ่งอาจยังไม่ท่วม ขึ้นกับสภาพจริงพื้นที่ ให้ติดตามข้อมูลจากหน่วยงานในพื้นที่ และ<a href="/map">ดูกล้องสดที่นี่</a></span>`
+    ? `<span class="hero-note"><span class="hero-word" data-lv="danger">กรณีน้ำล้นตลิ่งอาจยังไม่ท่วม ขึ้นกับสภาพจริงพื้นที่ ให้ติดตามข้อมูลจากหน่วยงานในพื้นที่ และ<a href="/map">ดูกล้องสดที่นี่</a></span></span>`
     : '';
   sub.innerHTML = s1 + (R ? ` · ฝนพยากรณ์ 7 วัน <b>${fmt1(sum)} มม.</b> (${R.n})` : '') + overNote;
 
