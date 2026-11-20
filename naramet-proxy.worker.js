@@ -19,8 +19,8 @@
   ทดสอบว่าใช้ได้:  เปิด  https://<worker>/rainfall  ต้องเห็นหน้าปริมาณฝนสะสม
 
   ใช้กับการ์ดเรดาร์ใน index.html ด้วย (เพิ่ม 20 พ.ย. 2026 · ต้องวางโค้ดนี้ใหม่ใน Cloudflare แล้ว Save and deploy):
-  - HEAD /__semet/loop/NTWLoop.gif  →  ส่งหัว Last-Modified/ETag ของภาพ GIF เรดาร์ระดับตำบลบน semet.uk ให้หน้าแรกวัดว่าภาพค้างกี่นาที
   - /?radar=1  →  หน้าแรก naramet ตามปกติ แต่ EMBED ส่ง {naramet:'radar', src} = URL ภาพ "เรดาร์ล่าสุด" กลับไปให้หน้าแรกใช้แทน GIF ที่ค้าง
+    (หน้าแรกอ่านเวลาบนเฟรมสุดท้ายของ GIF เอง ด้วย OCR · ดู loadRadarImg)
   ------------------------------------------------------------------
 */
 
@@ -65,21 +65,6 @@ export default {
     if (!['GET', 'HEAD', 'POST'].includes(request.method)) return new Response('Method Not Allowed', { status: 405, headers: cors() });
 
     const url = new URL(request.url);
-
-    // /__semet/loop/<ไฟล์>: ส่งหัว Last-Modified/ETag ของภาพบน semet.uk (R2) ให้หน้าแรกวัดว่าภาพค้างนานเท่าไร
-    // เฉพาะ HEAD และเฉพาะโฟลเดอร์ loop/ ไม่ใช่ตัวส่งต่อเปิดกว้าง
-    if (url.pathname.startsWith('/__semet/')) {
-      const key = url.pathname.slice('/__semet/'.length);
-      if (request.method !== 'HEAD' || !/^loop\/[\w.-]+$/.test(key)) return new Response('Not allowed', { status: 403, headers: cors() });
-      let r;
-      try { r = await fetch('https://semet.uk/' + key, { method: 'HEAD', headers: { 'User-Agent': UA }, cf: { cacheTtl: 60, cacheEverything: true } }); }
-      catch (e) { return new Response(null, { status: 502, headers: cors() }); }
-      const h = new Headers(cors());
-      for (const k of ['content-type', 'last-modified', 'etag']) { const v = r.headers.get(k); if (v) h.set(k, v); }
-      h.set('Access-Control-Expose-Headers', 'Last-Modified, ETag');
-      h.set('Cache-Control', 'public, max-age=60');
-      return new Response(null, { status: r.status, headers: h });
-    }
 
     // ส่งต่อเฉพาะโดเมน naramet.semet.uk เท่านั้น (ทุก path)
     const target = UPSTREAM + url.pathname + url.search;

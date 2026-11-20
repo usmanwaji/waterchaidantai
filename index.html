@@ -1782,48 +1782,128 @@ function renderRadarBar(){
   const open = document.getElementById('radarOpen');
   if(open) open.href = radarUrl(prov);
 }
-/* ภาพหลัก: GIF เรดาร์ระดับตำบล (semet.uk/loop/NTWLoop.gif) · ต้นทางค้างได้ (20 พ.ย. 2026 เที่ยงวันภาพยังเป็นเวลา 08:45 น.)
-   วัดอายุจากหัว Last-Modified ของไฟล์ (ผ่าน naramet-proxy /__semet/… ซึ่งให้ ETag ด้วย · ถ้า worker ยังไม่อัปเดตจะลองอ่านตรงจาก semet.uk)
-   และจำว่า ETag เดิมเห็นครั้งแรกเมื่อไร (กันกรณีต้นทางอัปโหลดภาพเดิมซ้ำจน Last-Modified ใหม่แต่ภาพไม่เปลี่ยน)
-   ภาพเก่ากว่า RADAR_STALE_MIN → เปิดหน้าแรก naramet.semet.uk ผ่าน naramet-proxy ในกรอบที่ซ่อนไว้ (?radar=1)
-   สคริปต์ EMBED ในกรอบส่ง URL ภาพ "เรดาร์ล่าสุด" กลับมา แล้วแสดงภาพนั้นแทน · ภาพ GIF กลับมาสดเมื่อไรก็สลับกลับเอง
-   วัดอายุไม่ได้ (เครือข่าย/worker ล่ม) → คงภาพ GIF ไว้ตามเดิม */
+/* ภาพหลัก: GIF เรดาร์ระดับตำบล (semet.uk/loop/NTWLoop.gif · ภาพเคลื่อนไหวหลายเฟรม ช่วงละ 15 นาที)
+   ต้นทางค้างได้ และค้างแบบที่ไฟล์ยังถูกอัปโหลดใหม่เรื่อย ๆ (Last-Modified ใหม่) แต่เฟรมข้างในเป็นภาพเก่า
+   เช่น 20 พ.ย. 2026 เวลา 12:20 น. ไฟล์อัปเดต 12:09 แต่เฟรมล่าสุดเป็นเวลา ~10:00 น. → วัดจากหัวไฟล์ไม่ได้
+   จึงอ่าน "เวลา HH:MM น." ที่พิมพ์บนเฟรมสุดท้ายของ GIF (OCR ด้วย tesseract.js ในเบราว์เซอร์)
+   1) ดึง GIF เป็น bytes ครั้งเดียว (semet.uk เปิด CORS) แล้วแสดงผ่าน blob URL ไม่โหลดซ้ำ
+   2) ถอดเฟรมสุดท้าย (ImageDecoder ถ้ามี ไม่มีใช้ gifuct-js) ตัดเฉพาะแถบบรรทัดวันที่/เวลา ทำขาวดำ
+   3) แถบเดิมเคยอ่านแล้ว (hash ตรง) ใช้ผลที่จำไว้ใน localStorage ไม่ต้องโหลด OCR · ไม่เคย → OCR (~4 MB ครั้งแรก แคชในเบราว์เซอร์)
+   4) เวลาบนภาพเก่ากว่า RADAR_STALE_MIN → เปิดหน้าแรก naramet.semet.uk ผ่าน naramet-proxy ในกรอบซ่อน (?radar=1)
+      สคริปต์ EMBED ในกรอบส่ง URL ภาพ "เรดาร์ล่าสุด" กลับมาแสดงแทน · GIF กลับมาสดเมื่อไรก็สลับกลับเอง
+   อ่านเวลาไม่ได้ (OCR ล้ม/ดึง GIF ไม่ได้) → คงภาพ GIF ไว้ตามเดิม */
 const RADAR_GIF = 'https://semet.uk/loop/NTWLoop.gif';
 const RADAR_GIF_LINK = 'https://sites.google.com/view/naramet-radar/narathiwat?authuser=0';
 const RADAR_ALT_LINK = 'https://naramet.semet.uk/';
 const RADAR_STALE_MIN = 30;
 const NARAMET_PROXY = 'https://naramet-proxy.newusmanwaji.workers.dev';   // naramet-proxy.worker.js (โดเมนเดียวกับ NARAMET_EMBED ด้านล่าง)
-let radarLink = RADAR_GIF_LINK, radarAltFrame, radarAltTimer;
+// แถบบรรทัด "วันที่ … เวลา HH:MM น." เป็นสัดส่วนของภาพ (1740×1860) · กว้างกว่าตัวอักษรเล็กน้อย เดือนชื่อยาว/สั้นก็ยังอยู่ในกรอบ
+const RADAR_TIME_BAND = { x0:.18, x1:.85, y0:.062, y1:.125 };
+const TESS_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.esm.min.js';
+const GIFUCT_URL = 'https://cdn.jsdelivr.net/npm/gifuct-js@2.1.2/+esm';
+let radarLink = RADAR_GIF_LINK, radarAltFrame, radarAltTimer, radarBlobUrl, radarBusy = false;
 function openRadarLink(){ window.open(radarLink, '_blank', 'noopener'); }
-const hhmm = d => d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+const hhmm = d => d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Bangkok'});
 
-/* คืน {lm: Date|null, etag: string|null} หรือ null ถ้าอ่านไม่ได้ · ต้องเป็นภาพจริง (content-type image/*) */
-async function radarGifHead(){
-  const v = 'v=' + Date.now();
-  for(const u of [`${NARAMET_PROXY}/__semet/loop/NTWLoop.gif?${v}`, `${RADAR_GIF}?${v}`]){
+/* แถบเวลาของเฟรมสุดท้าย → canvas ขาวดำ ขยาย 1.5 เท่า (ตัวหนังสือสีเข้มบนพื้นสว่าง) */
+async function radarLastFrameBand(buf){
+  let W, H, out = document.createElement('canvas'), ctx = out.getContext('2d', {willReadFrequently:true});
+  const B = RADAR_TIME_BAND;
+  if('ImageDecoder' in window){
     try{
-      const r = await fetch(u, {method:'HEAD', cache:'no-store'});
-      if(!r.ok || !/^image\//.test(r.headers.get('content-type')||'')) continue;
-      const lm = r.headers.get('last-modified'), etag = r.headers.get('etag');
-      if(!lm && !etag) continue;
-      return { lm: lm ? new Date(lm) : null, etag };
-    }catch(e){}
+      const dec = new ImageDecoder({data: buf, type: 'image/gif'});
+      await dec.tracks.ready; await dec.completed;
+      const n = dec.tracks.selectedTrack.frameCount;
+      const {image} = await dec.decode({frameIndex: n - 1});
+      W = image.displayWidth; H = image.displayHeight;
+      const sx = Math.round(B.x0*W), sy = Math.round(B.y0*H), sw = Math.round((B.x1-B.x0)*W), sh = Math.round((B.y1-B.y0)*H);
+      out.width = Math.round(sw*1.5); out.height = Math.round(sh*1.5);
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, out.width, out.height);
+      ctx.drawImage(image, sx, sy, sw, sh, 0, 0, out.width, out.height);
+      image.close(); dec.close();
+    }catch(e){ W = null; }
   }
-  return null;
+  if(!W){
+    // ไม่มี ImageDecoder (Safari) → gifuct-js ถอดทีละเฟรม ประกอบเฉพาะแถบเวลา (ไม่เก็บทั้งภาพ กันหน่วยความจำมือถือ)
+    const G = await import(GIFUCT_URL), parseGIF = G.parseGIF || G.default.parseGIF, decompressFrame = G.decompressFrame || G.default.decompressFrame;
+    const gif = parseGIF(buf);
+    W = gif.lsd.width; H = gif.lsd.height;
+    const bx = Math.round(B.x0*W), by = Math.round(B.y0*H), bw = Math.round((B.x1-B.x0)*W), bh = Math.round((B.y1-B.y0)*H);
+    const band = new Uint8ClampedArray(bw*bh*4).fill(255);
+    let prev = null, saved = null;
+    for(const fr of gif.frames){
+      if(!fr.image) continue;
+      if(prev){
+        if(prev.disposalType === 2) clearRect(prev.dims);
+        else if(prev.disposalType === 3 && saved) band.set(saved);
+      }
+      const f = decompressFrame(fr, gif.gct, true), d = f.dims;
+      saved = f.disposalType === 3 ? band.slice() : null;
+      const x0 = Math.max(bx, d.left), x1 = Math.min(bx+bw, d.left+d.width), y0 = Math.max(by, d.top), y1 = Math.min(by+bh, d.top+d.height);
+      for(let y = y0; y < y1; y++) for(let x = x0; x < x1; x++){
+        const s = ((y-d.top)*d.width + (x-d.left))*4;
+        if(f.patch[s+3]){ const t = ((y-by)*bw + (x-bx))*4; band[t]=f.patch[s]; band[t+1]=f.patch[s+1]; band[t+2]=f.patch[s+2]; band[t+3]=255; }
+      }
+      prev = f;
+    }
+    function clearRect(d){
+      for(let y = Math.max(by,d.top); y < Math.min(by+bh,d.top+d.height); y++) for(let x = Math.max(bx,d.left); x < Math.min(bx+bw,d.left+d.width); x++){
+        const t = ((y-by)*bw + (x-bx))*4; band[t]=band[t+1]=band[t+2]=band[t+3]=255;
+      }
+    }
+    const tmp = document.createElement('canvas'); tmp.width = bw; tmp.height = bh;
+    tmp.getContext('2d').putImageData(new ImageData(band, bw, bh), 0, 0);
+    out.width = Math.round(bw*1.5); out.height = Math.round(bh*1.5);
+    ctx.drawImage(tmp, 0, 0, out.width, out.height);
+  }
+  // ขาวดำ: เข้มกว่าเกณฑ์ = ตัวอักษร · คำนวณ hash ไปด้วยเพื่อจำผล OCR ของแถบเดิม
+  const im = ctx.getImageData(0, 0, out.width, out.height), p = im.data;
+  let h = 2166136261;
+  for(let i = 0; i < p.length; i += 4){
+    const v = (p[i]*299 + p[i+1]*587 + p[i+2]*114)/1000 < 120 ? 0 : 255;
+    p[i] = p[i+1] = p[i+2] = v; p[i+3] = 255;
+    if((i & 31) === 0){ h ^= v; h = Math.imul(h, 16777619); }
+  }
+  ctx.putImageData(im, 0, 0);
+  return { canvas: out, hash: (h >>> 0).toString(36) + '_' + out.width };
 }
-/* เวลาที่ภาพนี้เริ่มเป็นภาพนี้: ค่าที่เก่ากว่าระหว่าง Last-Modified กับเวลาที่เห็น ETag นี้ครั้งแรก */
-function radarContentSince(h){
-  let since = h.lm && !isNaN(h.lm) ? h.lm.getTime() : null;
-  if(h.etag){
-    let seen = null;
-    try{
-      const o = JSON.parse(localStorage.getItem('radarGifEtag') || 'null');
-      if(o && o.etag === h.etag) seen = o.t;
-      else localStorage.setItem('radarGifEtag', JSON.stringify({etag:h.etag, t:Date.now()}));
-    }catch(e){}
-    if(seen) since = since == null ? seen : Math.min(since, seen);
+/* ข้อความ OCR → เวลาของภาพ (ms) · "วันที่ 20 … 2569 เวลา 08:45 น." · อักษรไทยอ่านเป็นขยะได้ ใช้เฉพาะตัวเลข */
+function radarParseTime(text){
+  const tm = [...String(text).matchAll(/(\d{1,2})\s*[:.]\s*(\d{2})(?!\d)/g)].filter(m => +m[1] < 24 && +m[2] < 60).pop();
+  if(!tm) return null;
+  const dm = String(text).match(/(?:^|\D)(\d{1,2})\D+25\d\d/);
+  const B7 = 7*3600e3, now = Date.now(), bkk = new Date(now + B7);
+  let y = bkk.getUTCFullYear(), mo = bkk.getUTCMonth(), day = bkk.getUTCDate();
+  const dd = dm ? +dm[1] : null;
+  if(dd && dd >= 1 && dd <= 31){ if(dd > day + 1) mo -= 1; day = dd; }
+  let t = Date.UTC(y, mo, day, +tm[1], +tm[2]) - B7;
+  if(t > now + 20*60e3) t -= dd ? 0 : 24*3600e3;   // ไม่รู้วันที่ และเวลาอยู่ในอนาคต = เมื่อวาน
+  return t > now + 20*60e3 ? null : t;
+}
+let tessWorker;
+async function radarOcr(canvas){
+  if(!tessWorker){
+    const T = await import(TESS_URL);
+    tessWorker = await (T.createWorker || T.default.createWorker)('eng', 1);
+    await tessWorker.setParameters({ tessedit_pageseg_mode: '7' });
   }
-  return since;
+  const r = await tessWorker.recognize(canvas);
+  return r.data.text || '';
+}
+/* เวลาบนเฟรมสุดท้าย (ms) หรือ null · จำผลตาม hash ของแถบ (เก็บ 8 รายการล่าสุด) */
+async function radarFrameTime(buf){
+  const { canvas, hash } = await radarLastFrameBand(buf);
+  let memo = {};
+  try{ memo = JSON.parse(localStorage.getItem('radarGifTime') || '{}') || {}; }catch(e){}
+  if(memo[hash]) return memo[hash].t;
+  const text = await radarOcr(canvas);
+  const t = radarParseTime(text);
+  if(t){
+    memo[hash] = { t, at: Date.now() };
+    const keep = Object.entries(memo).sort((a,b) => b[1].at - a[1].at).slice(0, 8);
+    try{ localStorage.setItem('radarGifTime', JSON.stringify(Object.fromEntries(keep))); }catch(e){}
+  }
+  return t;
 }
 function radarShow(src, link, updText, note){
   const img = document.getElementById('radarImg'), upd = document.getElementById('radarUpdated'), n = document.getElementById('radarNote');
@@ -1837,7 +1917,7 @@ function radarAltCleanup(){
   if(radarAltFrame){ radarAltFrame.remove(); radarAltFrame = null; }
 }
 /* เปิดหน้าแรก naramet ในกรอบซ่อน รอให้ EMBED ส่ง URL ภาพเรดาร์กลับมา (message ด้านล่าง) */
-function radarLoadAlt(staleAt){
+function radarLoadAlt(gifTime){
   radarAltCleanup();
   const fr = document.createElement('iframe');
   fr.setAttribute('sandbox', 'allow-scripts allow-same-origin');
@@ -1845,24 +1925,25 @@ function radarLoadAlt(staleAt){
   fr.referrerPolicy = 'no-referrer';
   // ไม่ใช้ display:none · บางเบราว์เซอร์ไม่โหลดภาพในกรอบที่ไม่แสดงผล
   fr.style.cssText = 'position:absolute;left:-10000px;top:0;width:1024px;height:900px;border:0;visibility:hidden';
-  fr.dataset.staleAt = staleAt;
+  fr.dataset.gifTime = gifTime;
   fr.src = `${NARAMET_PROXY}/?radar=1&v=${Date.now()}`;
   document.body.appendChild(fr);
   radarAltFrame = fr;
   radarAltTimer = setTimeout(() => radarAltDone('', 'naramet-proxy ไม่ตอบใน 45 วิ'), 45000);
 }
 function radarAltDone(src, why){
-  const staleAt = radarAltFrame ? +radarAltFrame.dataset.staleAt : null;
+  const gifTime = radarAltFrame ? +radarAltFrame.dataset.gifTime : null;
   radarAltCleanup();
-  const age = staleAt ? Math.round((Date.now() - staleAt)/60000) : null;
+  const age = gifTime ? Math.round((Date.now() - gifTime)/60000) : null;
+  const when = gifTime ? hhmm(new Date(gifTime)) + ' น.' : '-';
   if(src){
     radarShow(src, RADAR_ALT_LINK,
       'เรดาร์จาก naramet.semet.uk · โหลด ' + hhmm(new Date()),
-      `ภาพเรดาร์ระดับตำบลของกรมอุตุฯ ไม่อัปเดตตั้งแต่ ${staleAt ? hhmm(new Date(staleAt)) + ' น.' : '-'}${age != null ? ' (' + age + ' นาที)' : ''} จึงแสดงภาพเรดาร์นราธิวาสล่าสุดจากสถานีอุตุนิยมวิทยานราธิวาส (naramet.semet.uk) แทน · เวลาที่มุมขวาล่างของภาพเป็นเวลาสากล (UTC) บวก 7 ชม. เป็นเวลาไทย · กลับไปใช้ภาพระดับตำบลเองเมื่ออัปเดตแล้ว`);
+      `ภาพเรดาร์ระดับตำบลของกรมอุตุฯ ค้างที่เวลา ${when}${age != null ? ' (' + age + ' นาทีที่แล้ว)' : ''} จึงแสดงภาพเรดาร์นราธิวาสล่าสุดจากสถานีอุตุนิยมวิทยานราธิวาส (naramet.semet.uk) แทน · เวลาที่มุมขวาล่างของภาพเป็นเวลาสากล (UTC) บวก 7 ชม. เป็นเวลาไทย · กลับไปใช้ภาพระดับตำบลเองเมื่ออัปเดตแล้ว`);
   }else{
-    radarShow(radarLink === RADAR_GIF_LINK ? null : `${RADAR_GIF}?v=${Date.now()}`, RADAR_GIF_LINK,
-      'ล่าช้า · ภาพเมื่อ ' + (staleAt ? hhmm(new Date(staleAt)) : '-'),
-      `ภาพเรดาร์ระดับตำบลไม่อัปเดตมา ${age ?? '-'} นาที และโหลดภาพสำรองจาก naramet.semet.uk ไม่ได้${why ? ' (' + why + ')' : ''} · ดูที่ naramet.semet.uk โดยตรง`);
+    radarShow(radarLink === RADAR_GIF_LINK ? null : (radarBlobUrl || `${RADAR_GIF}?v=${Date.now()}`), RADAR_GIF_LINK,
+      'ล่าช้า · ภาพเวลา ' + when,
+      `ภาพเรดาร์ระดับตำบลค้างที่เวลา ${when}${age != null ? ' (' + age + ' นาทีที่แล้ว)' : ''} และโหลดภาพสำรองจาก naramet.semet.uk ไม่ได้${why ? ' (' + why + ')' : ''} · ดูที่ naramet.semet.uk โดยตรง`);
   }
 }
 window.addEventListener('message', e=>{
@@ -1873,19 +1954,33 @@ window.addEventListener('message', e=>{
 
 async function loadRadarImg(){
   const img = document.getElementById('radarImg');
-  if(!img) return;
-  const now = new Date();
-  // แสดง GIF ไปก่อนทุกครั้ง (ครั้งแรกจะได้ไม่ว่าง) · ถ้ากำลังแสดงภาพสำรองอยู่ ค้างภาพสำรองไว้จนกว่าจะรู้ว่า GIF สดแล้ว
-  if(radarLink === RADAR_GIF_LINK) radarShow(`${RADAR_GIF}?v=${now.getTime()}`, RADAR_GIF_LINK, 'โหลดล่าสุด ' + hhmm(now), '');
-  const h = await radarGifHead();
-  const since = h ? radarContentSince(h) : null;
-  if(since == null || (Date.now() - since) / 60000 <= RADAR_STALE_MIN){
-    radarAltCleanup();
-    radarShow(radarLink === RADAR_GIF_LINK ? null : `${RADAR_GIF}?v=${now.getTime()}`, RADAR_GIF_LINK,
-      since ? 'อัปเดต ' + hhmm(new Date(since)) + ' · โหลด ' + hhmm(now) : 'โหลดล่าสุด ' + hhmm(now), '');
-    return;
-  }
-  radarLoadAlt(since);
+  if(!img || radarBusy) return;
+  radarBusy = true;
+  try{
+    const now = new Date(), direct = `${RADAR_GIF}?v=${now.getTime()}`;
+    let buf = null;
+    try{
+      const r = await fetch(direct, {cache:'no-store'});
+      if(r.ok && /^image\//.test(r.headers.get('content-type') || '')) buf = await r.arrayBuffer();
+    }catch(e){}
+    let gifSrc = direct;
+    if(buf){
+      if(radarBlobUrl) URL.revokeObjectURL(radarBlobUrl);
+      radarBlobUrl = URL.createObjectURL(new Blob([buf], {type:'image/gif'}));
+      gifSrc = radarBlobUrl;
+    }
+    // แสดง GIF ไปก่อน (ครั้งแรกจะได้ไม่ว่าง) · ถ้ากำลังแสดงภาพสำรองอยู่ ค้างไว้จนกว่าจะรู้ว่า GIF สดแล้ว
+    if(radarLink === RADAR_GIF_LINK) radarShow(gifSrc, RADAR_GIF_LINK, 'โหลดล่าสุด ' + hhmm(now), '');
+    let t = null;
+    if(buf){ try{ t = await radarFrameTime(buf.slice(0)); }catch(e){ console.warn('radar OCR', e); } }
+    if(t == null || (Date.now() - t) / 60000 <= RADAR_STALE_MIN){
+      radarAltCleanup();
+      radarShow(radarLink === RADAR_GIF_LINK ? null : gifSrc, RADAR_GIF_LINK,
+        (t ? 'ภาพเวลา ' + hhmm(new Date(t)) + ' น. · ' : '') + 'โหลด ' + hhmm(now), '');
+      return;
+    }
+    radarLoadAlt(t);
+  }finally{ radarBusy = false; }
 }
 
 /* ---------- คาดการณ์ฝนระยะสั้น (Southern Nowcasting กรมอุตุฯ) ----------
