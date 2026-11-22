@@ -2440,15 +2440,30 @@ loadAll();
 if(!loadManualLoc()) askLocation();   // พิกัดที่ผู้ใช้ตั้งเองมาก่อน · ไม่มีจึงขอตำแหน่งอัตโนมัติ · ไม่อนุญาตก็ใช้ศูนย์กลางอำเภอแทน
 loadTmd();
 loadDistRain();
-setInterval(loadTmd, 60*60*1000);
-setInterval(loadAll, 30*60*1000);
+/* รอบรีเฟรช + ตามทันเมื่อกลับมาที่แอป
+   มือถือหยุดตัวตั้งเวลาทั้งหมดระหว่างแอปอยู่พื้นหลัง และแตะไอคอน PWA = เปิดหน้าเดิมที่ค้างไว้ ไม่โหลดใหม่
+   → กลับมาแล้ว ตัวโหลดไหนไม่ได้รันมานานเกิน min(รอบของมัน, RESUME_STALE_MS) สั่งรันทันที ให้สดเท่าเปิด URL ใหม่
+   ตัวตั้งเวลาข้ามรอบที่เพิ่งรันไป (กันยิงซ้ำตอนรอบที่ค้างไว้ยิงตามมาหลังกลับมา) */
+const RESUME_STALE_MS = 5*60*1000;
+const refreshers = [];
+function every(ms, fn){
+  const r = {ms, last: Date.now(), run(){ r.last = Date.now(); return fn(); }};
+  refreshers.push(r);
+  setInterval(()=>{ if(Date.now() - r.last >= ms - 5000) r.run(); }, ms);
+}
+function catchUp(){
+  const now = Date.now();
+  refreshers.forEach(r=>{ if(now - r.last >= Math.min(r.ms, RESUME_STALE_MS)) r.run(); });
+}
+every(30*60*1000, loadAll);   // ลงทะเบียนก่อน: loadAll ตั้ง loadingAll ทันที → pollHome ด้านล่างข้ามไปเอง ไม่ขอ home-proxy ซ้ำ
+every(60*60*1000, loadTmd);
+every(10*60*1000, loadRadarImg);
+every(5*60*1000, loadNowcast);
+every(60*60*1000, loadDistRain);
 setInterval(pollRid, 2*60*1000);
 setInterval(pollHome, HOME_POLL_MS);
-// กลับมาที่แท็บ: ขอชุดล่าสุดทั้งหมดจาก home-proxy (รวมโทรมาตร ชป.) · ระหว่างซ่อนแท็บรอบ poll ข้ามไป
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollHome(); });
-setInterval(loadRadarImg, 10*60*1000);
-setInterval(loadNowcast, 5*60*1000);
-setInterval(loadDistRain, 60*60*1000);
+// กลับมาที่แท็บ: ตัวโหลดที่ค้างเกินรอบรันทันที + ขอชุดล่าสุดจาก home-proxy (รวมโทรมาตร ชป.) · ระหว่างซ่อนแท็บรอบ poll ข้ามไป
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ catchUp(); pollHome(); } });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
