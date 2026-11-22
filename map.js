@@ -10,6 +10,22 @@ const PROV_SET = new Set(PROVINCES.map(p=>p.name));
 const BBOX = {latMin:5.60, latMax:6.85, lonMin:101.25, lonMax:102.20};   // กรอบจังหวัดนราธิวาส
 const inBbox = (lat,lon)=> lat!=null && lon!=null && lat>=BBOX.latMin && lat<=BBOX.latMax && lon>=BBOX.lonMin && lon<=BBOX.lonMax;
 
+/* ================= รอบรีเฟรช + ตามทันเมื่อกลับมาที่แอป =================
+   มือถือหยุดตัวตั้งเวลาทั้งหมดระหว่างแอปอยู่พื้นหลัง และแตะไอคอน PWA = เปิดหน้าเดิมที่ค้างไว้ ไม่โหลดใหม่
+   → กลับมาแล้ว (visibilitychange ท้ายส่วนโทรมาตร ชป.) ตัวโหลดไหนไม่ได้รันมานานเกิน min(รอบของมัน, RESUME_STALE_MS)
+   สั่งรันทันที ให้สดเท่าเปิด URL ใหม่ · ตัวตั้งเวลาข้ามรอบที่เพิ่งรันไป (กันยิงซ้ำตอนรอบที่ค้างไว้ยิงตามมา) */
+const RESUME_STALE_MS = 5*60*1000;
+const refreshers = [];
+function every(ms, fn){
+  const r = {ms, last: Date.now(), run(){ r.last = Date.now(); return fn(); }};
+  refreshers.push(r);
+  setInterval(()=>{ if(Date.now() - r.last >= ms - 5000) r.run(); }, ms);
+}
+function catchUp(){
+  const now = Date.now();
+  refreshers.forEach(r=>{ if(now - r.last >= Math.min(r.ms, RESUME_STALE_MS)) r.run(); });
+}
+
 /* ================= ภาษา (TH / EN / MS) ================= */
 const STR = {
 th:{
@@ -286,12 +302,12 @@ function renderRadarBar(){
 }
 /* ดึงรายการเฟรมใหม่เป็นระยะ เพื่อให้ภาพ "ล่าสุด" ตามจริงเสมอ (เรดาร์ออกภาพทุก ~15 นาที)
    ทำเฉพาะตอนเปิดชั้นเรดาร์อยู่ และไม่แตะเฟรมถ้าผู้ใช้กำลังเล่นภาพย้อนหลังค้างไว้ */
-setInterval(async ()=>{
+every(5*60*1000, async ()=>{
   if(!radarLayer || !map.hasLayer(radarLayer) || radarTimer) return;
   const wasLatest = radarIdx === radarFrames.length-1;
   if(await loadRadarFrames() && wasLatest) showRadarFrame(radarFrames.length-1);
   else renderRadarBar();
-}, 5*60*1000);
+});
 
 (async function setupRadar(){
   const cb = document.getElementById('lyRadar');
@@ -442,11 +458,11 @@ async function onwrSetRadar(on){
   buildLegend();
 }
 /* ดึงรายการเฟรมใหม่ทุก 5 นาทีเฉพาะตอนเปิดชั้นอยู่และไม่ได้กำลังเล่นภาพ · ถ้าดูเฟรมปัจจุบันอยู่ให้ตามไปเฟรมปัจจุบันรอบใหม่ */
-setInterval(async ()=>{
+every(5*60*1000, async ()=>{
   if(!ONWR.layer || !map.hasLayer(ONWR.layer) || ONWR.timer) return;
   const wasPresent = ONWR.idx === onwrPresentIdx();
   if(await onwrLoadFrames()){ onwrShowFrame(wasPresent ? onwrPresentIdx() : Math.min(ONWR.idx, ONWR.frames.frames.length-1)); buildLegend(); }
-}, 5*60*1000);
+});
 
 /* ---- 2) ประมาณการฝนสะสม 3 ชม. ล่วงหน้า รายอำเภอ/ตำบล ----
    สถิติ (max_mm / mean_mm / covered_px ต่อโซน + max_mm_hr ต่อเฟรม) คำนวณโดย backend สทนช. จากเฟรม nowcast 13 เฟรม
@@ -876,17 +892,22 @@ let filterProv = 'นราธิวาส';
 let filterClass = null;
 let lastGraphReq = 0;
 /* ================= โหลดข้อมูลทั้งหมด ================= */
+let loadingAll = false;
 async function loadAll(){
-  const btn = document.getElementById('btnRefresh');
-  btn.classList.add('loading'); btn.disabled = true;
-  document.getElementById('updated').textContent = t('loading');
-  const results = await Promise.allSettled([loadWaterLevel(), loadDwr(), loadRain(), loadDam(), loadSea(), loadCctv(), loadDdpm(), loadTelerid(), loadFlashFlood(), loadOnwrActive(), loadHyd(), loadEws()]);
-  renderHyd();   // thaiwater โหลดเสร็จทีหลังก็ตัดสถานีที่ซ้ำออก
-  const fails = results.filter(r=>r.status==='rejected').length;
-  const now = new Date().toLocaleString(locale(),{dateStyle:'medium', timeStyle:'short'});
-  document.getElementById('updated').innerHTML =
-    `${t('updated')} ${now}` + (fails ? `<br><span style="color:var(--st-watch)">${t('partial')} (${fails})</span>` : '');
-  btn.classList.remove('loading'); btn.disabled = false;
+  if(loadingAll) return;   // ตัวตั้งเวลา/กลับมาที่แอปชนกันระหว่างโหลด → ใช้รอบที่กำลังโหลดอยู่
+  loadingAll = true;
+  try{
+    const btn = document.getElementById('btnRefresh');
+    btn.classList.add('loading'); btn.disabled = true;
+    document.getElementById('updated').textContent = t('loading');
+    const results = await Promise.allSettled([loadWaterLevel(), loadDwr(), loadRain(), loadDam(), loadSea(), loadCctv(), loadDdpm(), loadTelerid(), loadFlashFlood(), loadOnwrActive(), loadHyd(), loadEws()]);
+    renderHyd();   // thaiwater โหลดเสร็จทีหลังก็ตัดสถานีที่ซ้ำออก
+    const fails = results.filter(r=>r.status==='rejected').length;
+    const now = new Date().toLocaleString(locale(),{dateStyle:'medium', timeStyle:'short'});
+    document.getElementById('updated').innerHTML =
+      `${t('updated')} ${now}` + (fails ? `<br><span style="color:var(--st-watch)">${t('partial')} (${fails})</span>` : '');
+    btn.classList.remove('loading'); btn.disabled = false;
+  }finally{ loadingAll = false; }
 }
 
 /* ---------- 1) ระดับน้ำ ---------- */
@@ -1516,11 +1537,18 @@ function ddpmCam(btn, url){
   if(img){ img.dataset.alt = ''; img.dataset.triedAlt = ''; img.onerror = () => ddpmImgErr(img); img.src = url; }
   w.querySelectorAll('.ddpm-tab').forEach(b=>b.classList.toggle('on', b===btn));
 }
-async function loadDdpm(){
-  gDdpm.clearLayers();
+/* pre = ชุดนราธิวาสจาก home-proxy (pollDdpm) · จังหวัดอื่นใน DDPM_PROV_CODE ใช้ชุดจากรอบเต็มล่าสุด (loadAll ทุก 10 นาที)
+   รอบเต็มดึงจังหวัดไหนไม่ได้ คงแถวชุดเดิมของจังหวัดนั้น (มีเวลาวัดของตัวเอง ป้ายค่าเก่าขึ้นเองถ้าเก่าเกิน) */
+const ddpmRaw = {};   // provCode → แถวดิบของรอบล่าสุดที่ดึงได้
+async function loadDdpm(pre){
   try{
-    const res = await Promise.allSettled(DDPM_PROV_CODE.map(c => fetchJSON(`${DDPM_PROXY}/stations?provCode=${c}&limit=100`, 20000)));
-    const rows = res.flatMap(r => r.status==='fulfilled' && Array.isArray(r.value?.data) ? r.value.data : [])
+    if(pre) ddpmRaw[DDPM_PROV_CODE[0]] = pre.data;
+    else{
+      const res = await Promise.allSettled(DDPM_PROV_CODE.map(c => fetchJSON(`${DDPM_PROXY}/stations?provCode=${c}&limit=100`, 20000)));
+      res.forEach((r, i) => { if(r.status==='fulfilled' && Array.isArray(r.value?.data)) ddpmRaw[DDPM_PROV_CODE[i]] = r.value.data; });
+    }
+    gDdpm.clearLayers();
+    const rows = Object.values(ddpmRaw).flat()
       .filter(d => d.isActive!==0 && !d.deletedAt && ddpmProvOf(d.agency, d.code) && num(d.latitude)!=null && num(d.longitude)!=null);
     if(!rows.length) throw new Error('empty');
     extraWl.ddpm = rows.map(d => {
@@ -1536,7 +1564,9 @@ async function loadDdpm(){
       return row;
     });
   }catch(e){
+    if(pre) return;   // รอบเช็กถี่ใช้ชุดนี้ไม่ได้ → คงหมุดชุดเดิม
     // ดึงสดไม่ได้ → ใช้พิกัดสำรอง (ไม่มีค่าระดับน้ำ)
+    gDdpm.clearLayers();
     extraWl.ddpm = [];
     DDPM_STATIONS.filter(r => PROV_SET.has(r[4]) || DDPM_EXTRA[r[0]])
       .forEach(r => ddpmMarker({code:r[0], name:r[1], lat:r[2], lon:r[3], prov:r[4]}));
@@ -1672,8 +1702,32 @@ async function pollTelerid(){
   }catch(e){}
 }
 setInterval(pollTelerid, 2*60*1000);
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollTelerid(); });
+// กลับมาที่แท็บ: ตัวโหลดที่ค้างเกินรอบรันทันที (ดู every) · loadAll ที่เริ่มแล้วดึงโทรมาตรให้เอง จึงไม่ต้อง poll ซ้ำ
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ catchUp(); if(!loadingAll){ pollTelerid(); pollDdpm(); } } });
 gTele.on('add', pollTelerid);   // เปิดชั้นกลับมา → เช็กค่าใหม่ทันที
+
+/* ระดับน้ำ ปภ. เช็กถี่ (เดิมมากับ loadAll ทุก 10 นาที + แคช ddpm-proxy 4 นาที = ช้าสุด ~14 นาที)
+   ขอส่วน ddpm ของ home-proxy (นราธิวาส · cron ดึงต้นทางทุก DDPM_EVERY อยู่แล้ว จึงไม่เพิ่มภาระ ปภ.)
+   ตั้งเวลาเช็กครั้งถัดไปตามรอบดึงของ Worker (เวลาดึง t + DDPM_EVERY + ครู่หนึ่ง) แทนการถามทุก 2 นาที → คำขอน้อยแต่ได้ชุดใหม่แทบทันที
+   ข้ามถ้าซ่อนแท็บ / กำลังโหลดทั้งหน้า / เปิด popup ปภ. อยู่ (วาดหมุดใหม่จะปิด popup) */
+const HOME_PROXY = 'https://home-proxy.newusmanwaji.workers.dev';
+const DDPM_EVERY = 5*60*1000, DDPM_POLL_MIN = 2*60*1000;
+let ddpmSeen = null, ddpmTimer = null;
+async function pollDdpm(){
+  clearTimeout(ddpmTimer);
+  let next = DDPM_POLL_MIN;   // ข้ามรอบนี้ (popup เปิด/กำลังโหลด) → ลองใหม่เร็ว
+  try{
+    if(document.hidden || loadingAll || gDdpm.getLayers().some(m=>m.isPopupOpen && m.isPopupOpen())) return;
+    const p = (await fetchJSON(`${HOME_PROXY}/home.json?parts=ddpm`, 8000))?.parts?.ddpm;
+    // Worker ไม่มีชุดนี้ → รอบ loadAll ดึงตรงจาก ddpm-proxy เหมือนเดิม · ถามห่างลง
+    if(!Array.isArray(p?.d?.data) || !p.d.data.length){ next = DDPM_EVERY; return; }
+    next = Math.min(DDPM_EVERY, Math.max(DDPM_POLL_MIN, p.t + DDPM_EVERY + 20000 - Date.now()));
+    if(p.t === ddpmSeen || loadingAll) return;
+    ddpmSeen = p.t;
+    await loadDdpm(p.d);
+  }catch(e){}
+  finally{ ddpmTimer = setTimeout(pollDdpm, next); }
+}
 
 /* ---------- 6.55) สถานีอุทกวิทยา ชป. (hyd-app.rid.go.th/hydro8h.html) ----------
    ระดับน้ำรายชั่วโมงของศูนย์อุทกวิทยาที่ 8 ผ่าน Worker hyd-proxy (hyd-app ตัดการเชื่อมต่อจาก IP นอกไทย)
@@ -2101,7 +2155,8 @@ function applyLang(){
 applyLang();
 loadAll();
 loadBoundaries();
-setInterval(loadAll, 10*60*1000);
+every(10*60*1000, loadAll);
+pollDdpm();
 
 /* วาดแม่น้ำสายหลัก (thick blue) */
 if (window.OMSRivers) window.OMSRivers.drawLeaflet(map);
