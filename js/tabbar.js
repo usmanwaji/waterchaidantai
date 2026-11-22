@@ -84,10 +84,10 @@
       /* ปิดปุ่ม "ศูนย์บัญชาการ" ไว้ก่อน */
       // { href: 'eoc.html',       label: 'ศูนย์บัญชาการ', icon: 'grid'   },
       { href: 'people.html',    label: 'กลุ่มเปราะบาง', icon: 'people' },
-      { href: 'admin.html',     label: 'ผู้ดูแล',      icon: 'tools'  },
-      /* หน้าสถิติเปิดได้เฉพาะแอดมิน คนอื่นกดเข้าไปจะเจอหน้าให้ล็อกอินแทน
-         ปุ่มยังอยู่ในแผ่นเพราะการซ่อนปุ่มไม่ได้กันอะไรเลย ตัวกั้นจริงอยู่ที่ฐานข้อมูล */
-      { href: 'stats.html',     label: 'สถิติผู้เข้าชม', icon: 'chart' }
+      { href: 'admin.html',     label: 'ผู้ดูแล',      icon: 'tools'  }
+      /* หน้าสถิติผู้เข้าชม (statistic.html → naraflood.com/statistic) ไม่มีปุ่มในเมนู
+         เปิดได้ทางลิงก์ตรงเท่านั้น และยังต้องล็อกอินแอดมิน ตัวกั้นจริงอยู่ที่ฐานข้อมูล
+         (admin_visit_pages / admin_visit_dim ใน supabase/schema-v10.sql) */
     ]}
   ];
 

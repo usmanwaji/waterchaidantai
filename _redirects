@@ -1,0 +1,4 @@
+# Cloudflare Pages redirects (https://developers.cloudflare.com/pages/configuration/redirects/)
+# หน้าสถิติผู้เข้าชมย้ายจาก /stats ไป /statistic · ลิงก์เก่าที่บันทึกไว้ยังใช้ได้
+/stats        /statistic  301
+/stats.html   /statistic  301
