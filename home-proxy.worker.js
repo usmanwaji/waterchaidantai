@@ -25,7 +25,8 @@
 
   อายุของแต่ละส่วน (PARTS):
     every  cron ดึงให้เมื่ออายุถึงเท่านี้ · at = ดึงตามเวลาที่กำหนดแทน (วันละครั้ง/เดือนละครั้ง เวลาไทย)
-    poll   ข้อมูลรายชั่วโมง: dataAt(j) = เวลาวัดล่าสุดที่มีครบ · ยังไม่ถึงต้นชั่วโมงนี้ → cron ดึงทุก poll แทน every
+    poll   ข้อมูลที่วัดเป็นรอบ (period ค่าเริ่มต้น 1 ชม.): dataAt(j) = เวลาวัดล่าสุดที่มีครบ · ยังไม่ถึงต้นรอบนี้ → cron ดึงทุก poll แทน every
+           ต้นทางค้างเกิน 2 รอบ (สถานีล่ม) → กลับไปใช้ every ไม่ถามถี่ไปเรื่อย ๆ
     ttl  หมดอายุ → คำขอของคนดูสั่งดึงใหม่เอง (ยาวกว่า every → ถ้า cron ทำงาน ไม่ถึงตรงนี้)
          ส่วนที่ใช้ at: คนดูสั่งดึงเองเฉพาะเมื่อเลยเวลาที่กำหนดมาเกิน SCHED_GRACE แล้วยังไม่ได้ดึง (cron พลาด)
     swr  ยังไม่เก่าเกินนี้ → ตอบชุดเดิมทันที แล้วดึงใหม่เบื้องหลัง
@@ -86,7 +87,6 @@ const monthlyOn = (day) => (now) => { const d = new Date(now + ICT); const t = D
 const POOL = 3;               // คำขอไปต้นทางเดียวกันพร้อมกันได้ไม่เกินนี้ (กราฟ/รายละเอียดรายสถานี) ไม่ยิงเป็นชุดใหญ่
 const FRESH_MS = 6 * HOUR * 1000;   // ทิศทางน้ำคิดเฉพาะสถานีที่ส่งค่าใน 6 ชม. (HERO_FRESH_H ใน index.html)
 const STORE = 'https://home-proxy.cache/store-v1';
-const HOUR_MS = 3600e3;       // เวลาไทย +7 ชม. เต็ม → ต้นชั่วโมงไทยตรงกับต้นชั่วโมง UTC
 
 const CORS = {
   'access-control-allow-origin': '*',
@@ -173,12 +173,15 @@ async function trends(env, budget, dep) {
     && (d.levelDt || d.dt) && now - Date.parse(d.levelDt || d.dt) <= FRESH_MS).map((d) => d.code);
   const prev = dep.prev;
   const graphsFresh = prev?.ddpmAt && now - prev.ddpmAt < (GRAPH_EVERY - CRON_SLACK) * 1000;
-  const ridFresh = !dep.updated?.includes('rid') && prev?.ridAt && now - prev.ridAt < (PARTS.rid.every - CRON_SLACK) * 1000;
+  // ชป.: ดึงโทรมาตรรอบนี้ได้ แต่ค่าวัดล่าสุดยังเป็นชุดเดิม (cron ถามถี่ระหว่างรอค่ารอบใหม่) → ทิศทางเดิม ไม่ขอ detail.json ซ้ำ
+  const ridData = ridNewest(dep.rid?.j || {});
+  const ridFresh = (prev?.rid && prev.ridData && prev.ridData === ridData)
+    || (!dep.updated?.includes('rid') && prev?.ridAt && now - prev.ridAt < (PARTS.rid.every - CRON_SLACK) * 1000);
   // โควตาไม่พอ (มักเป็นรอบแรกที่ดึงทุกส่วนพร้อมกัน): ตัดท้าย สถานีที่เหลือไม่มีลูกศรรอบนี้
   const room = Math.max(0, budget.left);
   const ddUse = graphsFresh ? [] : dd.slice(0, room), rrUse = ridFresh ? [] : rr.slice(0, Math.max(0, room - ddUse.length));
   const out = { ddpm: graphsFresh ? prev.ddpm || {} : {}, rid: ridFresh ? prev.rid || {} : {},
-    ddpmAt: graphsFresh ? prev.ddpmAt : null, ridAt: ridFresh ? prev.ridAt : now };
+    ddpmAt: graphsFresh ? prev.ddpmAt : null, ridAt: ridFresh ? prev.ridAt : now, ridData };
   const minute = Math.floor(now / 60000);
   await Promise.all([
     eachLimit(ddUse, POOL, (code) => fetchText(env, `${DDPM}/water-level/graph?stationCode=${encodeURIComponent(code)}&type=hour&isSimulatorMode=false`, budget).then((r) => {
@@ -233,7 +236,10 @@ function hydComplete(j) {
    trends ไม่มี every: cron คิดต่อจากรอบที่ได้โทรมาตร ชป. ใหม่ หรือเมื่อกราฟ ปภ. ถึงชั่วโมง (ดู cronRun) */
 const PARTS = {
   ddpm:    { every: 5 * MIN,   ttl: 8 * MIN,   swr: 20 * MIN,  max: 6 * HOUR,   get: simple(`${DDPM}/stations?provCode=${PROV_CODE}&limit=100`, (j) => Array.isArray(j?.data)) },
-  rid:     { every: 14 * MIN,  ttl: 20 * MIN,  swr: 40 * MIN,  max: 6 * HOUR,   get: rid },
+  // โทรมาตรวัดทุก 15 นาที (:00/:15/:30/:45) → ถามทุก 2 นาทีจนกว่าค่ารอบนี้เข้า แล้วพักจนถึงรอบถัดไป
+  rid:     { every: 10 * MIN,  poll: 2 * MIN, period: 15 * MIN, dataAt: (j) => Date.parse(ridNewest(j.j)) || 0,
+             label: 'every 2 min until this quarter-hour is in, then wait for the next',
+             ttl: 20 * MIN,  swr: 40 * MIN,  max: 6 * HOUR,   get: rid },
   hyd:     { every: 30 * MIN,  poll: 5 * MIN, dataAt: hydComplete, label: 'every 5 min until this hour is in, then 30 min',
              ttl: 40 * MIN,  swr: 90 * MIN,  max: 6 * HOUR,   get: simple(['HYD', '/stations.json'], (j) => Array.isArray(j?.stations), 28000) },   // hyd-proxy ที่ไม่มีแคชรอ hyd-app ~25 วิ
   rain3d:  { every: 22 * HOUR, ttl: 24 * HOUR, swr: 30 * HOUR, max: 48 * HOUR,  get: simple(`${TW}/provinces/rain3d?province_code=${PROV_CODE}`, (j) => Array.isArray(j?.data)) },
@@ -296,8 +302,11 @@ function cronDue(p, m, now) {
   const def = PARTS[p];
   if (!m?.t) return true;
   if (def.at) return m.t < def.at(now);
-  // ข้อมูลรายชั่วโมงที่ยังไม่มีค่าของชั่วโมงนี้ → ถามถี่ขึ้นจนกว่าจะได้
-  if (def.poll && !(m.h >= Math.floor(now / HOUR_MS) * HOUR_MS)) return ageSec(m, now) >= def.poll - CRON_SLACK;
+  // ข้อมูลที่วัดเป็นรอบ ยังไม่มีค่าของรอบนี้ → ถามถี่ขึ้นจนกว่าจะได้ · ค้างเกิน 2 รอบ = ต้นทางค้าง ใช้ every ตามปกติ
+  if (def.poll) {
+    const per = (def.period || HOUR) * 1000, start = Math.floor(now / per) * per;
+    if (!(m.h >= start) && now - (m.h || 0) < 2 * per) return ageSec(m, now) >= def.poll - CRON_SLACK;
+  }
   return def.every ? ageSec(m, now) >= def.every - CRON_SLACK : false;
 }
 // cron = ถึงรอบ cron · ไม่ใช่ = หมดอายุสำหรับคนดู

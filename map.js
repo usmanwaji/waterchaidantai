@@ -1537,11 +1537,18 @@ function ddpmCam(btn, url){
   if(img){ img.dataset.alt = ''; img.dataset.triedAlt = ''; img.onerror = () => ddpmImgErr(img); img.src = url; }
   w.querySelectorAll('.ddpm-tab').forEach(b=>b.classList.toggle('on', b===btn));
 }
-async function loadDdpm(){
-  gDdpm.clearLayers();
+/* pre = ชุดนราธิวาสจาก home-proxy (pollDdpm) · จังหวัดอื่นใน DDPM_PROV_CODE ใช้ชุดจากรอบเต็มล่าสุด (loadAll ทุก 10 นาที)
+   รอบเต็มดึงจังหวัดไหนไม่ได้ คงแถวชุดเดิมของจังหวัดนั้น (มีเวลาวัดของตัวเอง ป้ายค่าเก่าขึ้นเองถ้าเก่าเกิน) */
+const ddpmRaw = {};   // provCode → แถวดิบของรอบล่าสุดที่ดึงได้
+async function loadDdpm(pre){
   try{
-    const res = await Promise.allSettled(DDPM_PROV_CODE.map(c => fetchJSON(`${DDPM_PROXY}/stations?provCode=${c}&limit=100`, 20000)));
-    const rows = res.flatMap(r => r.status==='fulfilled' && Array.isArray(r.value?.data) ? r.value.data : [])
+    if(pre) ddpmRaw[DDPM_PROV_CODE[0]] = pre.data;
+    else{
+      const res = await Promise.allSettled(DDPM_PROV_CODE.map(c => fetchJSON(`${DDPM_PROXY}/stations?provCode=${c}&limit=100`, 20000)));
+      res.forEach((r, i) => { if(r.status==='fulfilled' && Array.isArray(r.value?.data)) ddpmRaw[DDPM_PROV_CODE[i]] = r.value.data; });
+    }
+    gDdpm.clearLayers();
+    const rows = Object.values(ddpmRaw).flat()
       .filter(d => d.isActive!==0 && !d.deletedAt && ddpmProvOf(d.agency, d.code) && num(d.latitude)!=null && num(d.longitude)!=null);
     if(!rows.length) throw new Error('empty');
     extraWl.ddpm = rows.map(d => {
@@ -1557,7 +1564,9 @@ async function loadDdpm(){
       return row;
     });
   }catch(e){
+    if(pre) return;   // รอบเช็กถี่ใช้ชุดนี้ไม่ได้ → คงหมุดชุดเดิม
     // ดึงสดไม่ได้ → ใช้พิกัดสำรอง (ไม่มีค่าระดับน้ำ)
+    gDdpm.clearLayers();
     extraWl.ddpm = [];
     DDPM_STATIONS.filter(r => PROV_SET.has(r[4]) || DDPM_EXTRA[r[0]])
       .forEach(r => ddpmMarker({code:r[0], name:r[1], lat:r[2], lon:r[3], prov:r[4]}));
@@ -1694,8 +1703,31 @@ async function pollTelerid(){
 }
 setInterval(pollTelerid, 2*60*1000);
 // กลับมาที่แท็บ: ตัวโหลดที่ค้างเกินรอบรันทันที (ดู every) · loadAll ที่เริ่มแล้วดึงโทรมาตรให้เอง จึงไม่ต้อง poll ซ้ำ
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ catchUp(); if(!loadingAll) pollTelerid(); } });
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ catchUp(); if(!loadingAll){ pollTelerid(); pollDdpm(); } } });
 gTele.on('add', pollTelerid);   // เปิดชั้นกลับมา → เช็กค่าใหม่ทันที
+
+/* ระดับน้ำ ปภ. เช็กถี่ (เดิมมากับ loadAll ทุก 10 นาที + แคช ddpm-proxy 4 นาที = ช้าสุด ~14 นาที)
+   ขอส่วน ddpm ของ home-proxy (นราธิวาส · cron ดึงต้นทางทุก DDPM_EVERY อยู่แล้ว จึงไม่เพิ่มภาระ ปภ.)
+   ตั้งเวลาเช็กครั้งถัดไปตามรอบดึงของ Worker (เวลาดึง t + DDPM_EVERY + ครู่หนึ่ง) แทนการถามทุก 2 นาที → คำขอน้อยแต่ได้ชุดใหม่แทบทันที
+   ข้ามถ้าซ่อนแท็บ / กำลังโหลดทั้งหน้า / เปิด popup ปภ. อยู่ (วาดหมุดใหม่จะปิด popup) */
+const HOME_PROXY = 'https://home-proxy.newusmanwaji.workers.dev';
+const DDPM_EVERY = 5*60*1000, DDPM_POLL_MIN = 2*60*1000;
+let ddpmSeen = null, ddpmTimer = null;
+async function pollDdpm(){
+  clearTimeout(ddpmTimer);
+  let next = DDPM_POLL_MIN;   // ข้ามรอบนี้ (popup เปิด/กำลังโหลด) → ลองใหม่เร็ว
+  try{
+    if(document.hidden || loadingAll || gDdpm.getLayers().some(m=>m.isPopupOpen && m.isPopupOpen())) return;
+    const p = (await fetchJSON(`${HOME_PROXY}/home.json?parts=ddpm`, 8000))?.parts?.ddpm;
+    // Worker ไม่มีชุดนี้ → รอบ loadAll ดึงตรงจาก ddpm-proxy เหมือนเดิม · ถามห่างลง
+    if(!Array.isArray(p?.d?.data) || !p.d.data.length){ next = DDPM_EVERY; return; }
+    next = Math.min(DDPM_EVERY, Math.max(DDPM_POLL_MIN, p.t + DDPM_EVERY + 20000 - Date.now()));
+    if(p.t === ddpmSeen || loadingAll) return;
+    ddpmSeen = p.t;
+    await loadDdpm(p.d);
+  }catch(e){}
+  finally{ ddpmTimer = setTimeout(pollDdpm, next); }
+}
 
 /* ---------- 6.55) สถานีอุทกวิทยา ชป. (hyd-app.rid.go.th/hydro8h.html) ----------
    ระดับน้ำรายชั่วโมงของศูนย์อุทกวิทยาที่ 8 ผ่าน Worker hyd-proxy (hyd-app ตัดการเชื่อมต่อจาก IP นอกไทย)
@@ -2124,6 +2156,7 @@ applyLang();
 loadAll();
 loadBoundaries();
 every(10*60*1000, loadAll);
+pollDdpm();
 
 /* วาดแม่น้ำสายหลัก (thick blue) */
 if (window.OMSRivers) window.OMSRivers.drawLeaflet(map);

@@ -684,8 +684,10 @@ async function homeGet(parts){
   const boot = parts.every(p=>homeBootLeft.has(p));
   parts.forEach(p=>homeBootLeft.delete(p));
   const j = boot ? await homeBoot : await fetchJSON(`${HOME_PROXY}/home.json?parts=${parts.join(',')}`, 8000, 1).catch(()=>null);
+  Object.entries(j?.parts || {}).forEach(([p, v])=>{ if(v?.d != null) homeSeen[p] = v.t; });
   return j?.parts || {};
 }
+const homeSeen = {};   // เวลาที่ Worker ดึงแต่ละส่วนมา (t) ของชุดล่าสุดที่หน้านี้ได้รับ · pollHome ใช้ดูว่าส่วนไหนมีชุดใหม่
 const homeData = (h, p) => h[p]?.d ?? null;
 
 let prov = 'นราธิวาส';
@@ -755,7 +757,7 @@ async function loadAll(recheck){
     [wl, met].forEach(p=>p.catch(()=>{}));   // ผลจริงอ่านใน allSettled ด้านล่าง · กัน unhandled rejection ระหว่างรอ home-proxy
     h = await homeGet(HOME_MAIN);
     // ไม่รอ hyd-app: hyd-proxy ตอบช้าได้ราว 30 วิ ตอนแคชใน Worker หมด (กรณีดึงตรง ไม่ผ่าน home-proxy)
-    // มาถึงแล้ววาดเฉพาะส่วนที่ใช้ (X.199 ในการ์ดมาตรวัด/ทิศทางน้ำ + ฮีโร่) แบบเดียวกับ pollRid
+    // มาถึงแล้ววาดเฉพาะส่วนที่ใช้ (X.199 ในการ์ดมาตรวัด/ทิศทางน้ำ + ฮีโร่)
     hyd = loadHyd(homeData(h,'hyd'));
     res = await Promise.allSettled([met, wl,
       loadSoil(homeData(h,'rain3d')), loadDdpm(homeData(h,'ddpm')), loadRid(ridFromHome(h))]);
@@ -820,8 +822,41 @@ async function loadMeteo(p, force){
   if(!arr[0]?.hourly) throw new Error('open-meteo: no hourly');
   return meteoCache[p] = arr;
 }
+/* ระดับน้ำ thaiwater มีรอบของตัวเอง ไม่ต้องรอ loadAll 30 นาที
+   สสน. วัดทุก 10 นาที แต่ thaiwater เผยแพร่ช้ากว่าเวลาวัด (วัดจริง: 13:59 เห็นค่าล่าสุด 13:40)
+   → เรียนรู้ความล่าช้า wlLag จากเวลาที่เห็นค่าใหม่ครั้งแรก แล้วขอรอบถัดไปตอน "เวลาวัดล่าสุด + 10 นาที + wlLag − WL_RETRY_MS"
+     ยังไม่มีค่าใหม่ลองซ้ำทุก WL_RETRY_MS · ขอเร็วกว่าที่คาดเล็กน้อยทุกรอบ ค่า wlLag จึงขยับลงหาความล่าช้าจริงได้เอง
+     โดยทั่วไป ~2 คำขอต่อ 10 นาที และเห็นค่าใหม่ภายใน ~2 นาทีหลังเผยแพร่
+   ต้นทางค้างเกิน 1 ชม. (สถานีล่ม) ใช้ WL_MAX_MS ไม่ลองถี่ไปเรื่อย ๆ
+   ดึงตรงจากเครื่องผู้ใช้ (thaiwater จำกัดคำขอต่อ IP แต่ละคนคนละ IP) จึงไม่กินโควตา Worker */
+const WL_STEP_MS = 10*60*1000, WL_RETRY_MS = 2*60*1000, WL_MAX_MS = 10*60*1000;
+let wlTimer = null, wlLast = 0, wlLag = 15*60*1000, wlPrevNewest = 0;
+const wlNewest = () => Math.max(0, ...wlAll.map(s=>s.dt ? +s.dt : 0));
+const wlSig = () => wlAll.map(s=>`${s.code}|${s.dt ? +s.dt : ''}|${s.msl}`).join();
+function scheduleWater(){
+  clearTimeout(wlTimer);
+  const newest = wlNewest(), now = Date.now();
+  if(wlPrevNewest && newest > wlPrevNewest) wlLag = Math.min(30*60e3, Math.max(5*60e3, now - newest));   // เพิ่งเห็นค่าใหม่
+  if(newest) wlPrevNewest = newest;
+  const wait = now - newest > 3600e3 ? WL_MAX_MS
+    : Math.min(WL_MAX_MS, Math.max(WL_RETRY_MS, newest + WL_STEP_MS + wlLag - WL_RETRY_MS - now));
+  wlTimer = setTimeout(pollWater, wait);
+}
+async function pollWater(){
+  if(document.hidden || loadingAll || !heroReady) return scheduleWater();
+  const before = wlSig();
+  try{ await loadWater(); }catch(e){ return; }   // ล้มเหลว → คงชุดเดิม · loadWater ตั้งรอบถัดไปให้แล้ว
+  if(loadingAll || wlSig() === before) return;   // loadAll วาดให้เอง / ยังเป็นค่าชุดเดิม
+  renderAll();
+  document.getElementById('updated').textContent = 'อัปเดต ' + new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+}
 async function loadWater(){
-  // ดึงใหม่ทุกรอบ (ปุ่มรีเฟรช/ทุก 30 นาที) · ประกอบใส่ตัวแปรชั่วคราวก่อน การ์ดจะได้ไม่ว่างระหว่างโหลด
+  wlLast = Date.now();
+  try{ await loadWaterOnce(); }
+  finally{ scheduleWater(); }   // ทุกทาง (loadAll / ปุ่มรีเฟรช / pollWater) ตั้งรอบถัดไปจากเวลาวัดล่าสุดที่มี
+}
+async function loadWaterOnce(){
+  // ประกอบใส่ตัวแปรชั่วคราวก่อน การ์ดจะได้ไม่ว่างระหว่างโหลด
   // ดึงเฉพาะนราธิวาส (96) เหมือนหน้าแผนที่ · เดิมดึงทั้ง 5 จังหวัดทุกรอบ ทำให้ thaiwater ตอบ 429 (เรียกถี่เกิน)
   const res = await Promise.allSettled([PROV_CODE['นราธิวาส']].map(c =>
     fetchJSON(`${API}/public/waterlevel?province_code=${c}`)));
@@ -955,35 +990,30 @@ async function loadHyd(pre, recheck){
 }
 // สถานี hyd-app ที่ thaiwater ไม่มี (thaiwater ล่ม → ใช้ครบทุกสถานี)
 const hydExtra = () => hydAll.filter(h=>!wlAll.some(w=>String(w.code||'').trim()===h.code));
-/* โทรมาตร ชป. เช็กถี่กว่าส่วนอื่น (เหมือนหน้าแผนที่): ดู stations.json ทุก 2 นาที
-   ถ้า scraper ส่งค่าใหม่ขึ้นมา → โหลดใหม่ + ทิศทางน้ำ แล้ววาดเฉพาะส่วนที่ใช้ข้อมูล ชป. (hero + มาตรวัดน้ำ)
+/* แท็บที่เปิดค้าง: ส่วนที่อัปเดตถี่ขอจาก home-proxy ในคำขอเดียวทุก FAST_POLL_MS
+   (แทนของเดิม: โทรมาตร ชป. ทุก 2 นาที + ทุกส่วนทุก 6 นาที + nowcast ทุก 5 นาที → คำขอน้อยลง แต่ ปภ./nowcast สดขึ้น)
+   Worker ตอบจากแคช (cron ดึงต้นทางตามรอบของมันเอง) จึงไม่เพิ่มภาระต้นทาง · วาดใหม่เฉพาะเมื่อมีส่วนที่ Worker ดึงมาใหม่
+   ฝน 3 วัน / เกณฑ์ ปภ. เปลี่ยนวันละครั้ง ไปกับรอบ loadAll · ส่วนที่ไม่มีในคำตอบ ข้ามไป คงชุดเดิม (โทรมาตร ชป. ดึงตรงแทน)
    ข้ามถ้าซ่อนแท็บ หรือกำลังโหลดทั้งหน้าอยู่ */
-async function pollRid(){
-  if(document.hidden || loadingAll || !heroReady) return;
-  try{
-    const h = await homeGet(['rid','trends']);
-    const j = ridFromHome(h) || await fetchRid();
-    if(!j?.updated || (j.updated === ridUpdated && j._base === ridBase) || loadingAll) return;
-    await loadRid(j);
-    if(homeData(h,'trends')) applyTrends(homeData(h,'trends'));
-    else await Promise.allSettled(ridTrends());
-    if(loadingAll) return;   // loadAll วาดให้เองแล้ว
-    renderWaterta(); renderStations(); rerenderHero();
-  }catch(e){}
-}
-/* แท็บที่เปิดค้าง: ขอทุกส่วนของ home-proxy ทุก HOME_POLL_MS แล้ววาดใหม่ · Worker ตอบจากแคช (cron ดึงต้นทางตามรอบของมันเอง)
-   จึงไม่เพิ่มภาระต้นทาง · ระดับน้ำ thaiwater / พยากรณ์ open-meteo ยังดึงตรงตามรอบ loadAll 30 นาที (ไม่ยิงถี่ใส่ต้นทาง)
-   ส่วนที่ไม่มีในคำตอบ ข้ามไป คงชุดเดิม (รอบ loadAll ถัดไปค่อยดึงตรงแทน) */
-const HOME_POLL_MS = 6*60*1000;
+const HOME_FAST = ['ddpm','rid','hyd','trends','nowcast'];
+const FAST_POLL_MS = 2*60*1000;
 async function pollHome(){
   if(document.hidden || loadingAll || !heroReady) return;
-  const h = await homeGet(HOME_MAIN);
+  const seen = {...homeSeen};
+  const h = await homeGet(HOME_FAST);
   if(loadingAll) return;
-  const pre = { rain3d: homeData(h,'rain3d'), ddpm: homeData(h,'ddpm'), rid: ridFromHome(h), hyd: homeData(h,'hyd') };
-  if(!Object.values(pre).some(Boolean)) return;
-  await Promise.allSettled([pre.rain3d && loadSoil(pre.rain3d), pre.ddpm && loadDdpm(pre.ddpm), pre.rid && loadRid(pre.rid), pre.hyd && loadHyd(pre.hyd)]);
-  Object.assign(ddpmThr, homeData(h,'thr'));
-  if(homeData(h,'trends')) applyTrends(homeData(h,'trends'));
+  const isNew = p => homeData(h,p) != null && h[p].t !== seen[p];
+  let rid = ridFromHome(h);
+  if(!rid) rid = await fetchRid().catch(()=>null);
+  if(rid && rid.updated === ridUpdated && rid._base === ridBase) rid = null;   // ค่าวัดชุดเดิม ไม่ต้องวาดใหม่
+  const pre = { ddpm: isNew('ddpm') && homeData(h,'ddpm'), hyd: isNew('hyd') && homeData(h,'hyd'), rid };
+  const tr = isNew('trends') && homeData(h,'trends');
+  if(isNew('nowcast')) loadNowcast(homeData(h,'nowcast'));   // วาดในกรอบของตัวเอง
+  else if(!homeData(h,'nowcast')) loadNowcast(false);         // home-proxy ไม่มี nowcast → ดึงตรง (จำกัดความถี่ในตัว)
+  if(!pre.ddpm && !pre.hyd && !pre.rid && !tr) return;
+  await Promise.allSettled([pre.ddpm && loadDdpm(pre.ddpm), pre.rid && loadRid(pre.rid), pre.hyd && loadHyd(pre.hyd)]);
+  if(tr) applyTrends(tr);
+  else if(pre.rid && !homeData(h,'trends')) await Promise.allSettled(ridTrends());
   if(loadingAll) return;   // loadAll วาดให้เองแล้ว
   renderAll();
   document.getElementById('updated').textContent = 'อัปเดต ' + new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
@@ -2111,12 +2141,17 @@ function ncSetPlaying(on){
   document.getElementById('ncPlay').textContent = on ? '❚❚' : '▶';
   ncTick();
 }
-async function loadNowcast(){
+/* pre = ชุดจาก home-proxy ที่ pollHome ได้มาแล้ว · false = home-proxy ไม่มี nowcast ดึงตรงจาก tmd-proxy (ไม่ถี่กว่า NC_DIRECT_MS) */
+const NC_DIRECT_MS = 5*60*1000;
+let ncDirectAt = 0;
+async function loadNowcast(pre){
   const mapEl = document.getElementById('ncMap');
   if(!mapEl) return;
+  if(pre === false && Date.now() - ncDirectAt < NC_DIRECT_MS) return;
   let j;
   try{
-    j = homeData(await homeGet(['nowcast']), 'nowcast') || await fetchJSON(TMD_PROXY+'/nowcast');
+    j = pre || (pre === false ? null : homeData(await homeGet(['nowcast']), 'nowcast'));
+    if(!j){ ncDirectAt = Date.now(); j = await fetchJSON(TMD_PROXY+'/nowcast'); }
   }catch(e){ j = null; }
   const list = j?.frames || [];
   if(!list.length){
@@ -2514,15 +2549,17 @@ function catchUp(){
   const now = Date.now();
   refreshers.forEach(r=>{ if(now - r.last >= Math.min(r.ms, RESUME_STALE_MS)) r.run(); });
 }
-every(30*60*1000, loadAll);   // ลงทะเบียนก่อน: loadAll ตั้ง loadingAll ทันที → pollHome ด้านล่างข้ามไปเอง ไม่ขอ home-proxy ซ้ำ
+every(30*60*1000, loadAll);   // ลงทะเบียนก่อน: loadAll ตั้ง loadingAll ทันที → pollHome/pollWater ด้านล่างข้ามไปเอง ไม่ขอซ้ำ
 every(60*60*1000, loadTmd);
 every(10*60*1000, loadRadarImg);
-every(5*60*1000, loadNowcast);
 every(60*60*1000, loadDistRain);
-setInterval(pollRid, 2*60*1000);
-setInterval(pollHome, HOME_POLL_MS);
-// กลับมาที่แท็บ: ตัวโหลดที่ค้างเกินรอบรันทันที + ขอชุดล่าสุดจาก home-proxy (รวมโทรมาตร ชป.) · ระหว่างซ่อนแท็บรอบ poll ข้ามไป
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ catchUp(); pollHome(); } });
+setInterval(pollHome, FAST_POLL_MS);   // ปภ. · ชป. · hyd · ทิศทางน้ำ · nowcast · ระดับน้ำ thaiwater ตั้งรอบเองใน loadWater
+// กลับมาที่แท็บ: ตัวโหลดที่ค้างเกินรอบรันทันที + ขอชุดล่าสุดจาก home-proxy + ระดับน้ำ thaiwater · ระหว่างซ่อนแท็บรอบ poll ข้ามไป
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden) return;
+  catchUp(); pollHome();
+  if(Date.now() - wlLast >= WL_RETRY_MS) pollWater();
+});
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js?v=3"></script>
