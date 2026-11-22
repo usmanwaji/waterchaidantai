@@ -1795,19 +1795,32 @@ function renderRadarBar(){
    1) ดึง GIF เป็น bytes ครั้งเดียว (semet.uk เปิด CORS) แล้วแสดงผ่าน blob URL ไม่โหลดซ้ำ
    2) ถอดเฟรมสุดท้าย (ImageDecoder ถ้ามี ไม่มีใช้ gifuct-js) ตัดเฉพาะแถบบรรทัดวันที่/เวลา ทำขาวดำ
    3) แถบเดิมเคยอ่านแล้ว (hash ตรง) ใช้ผลที่จำไว้ใน localStorage ไม่ต้องโหลด OCR · ไม่เคย → OCR (~4 MB ครั้งแรก แคชในเบราว์เซอร์)
-   4) เวลาบนภาพเก่ากว่า RADAR_STALE_MIN → เปิดหน้าแรก naramet.semet.uk ผ่าน naramet-proxy ในกรอบซ่อน (?radar=1)
-      สคริปต์ EMBED ในกรอบส่ง URL ภาพ "เรดาร์ล่าสุด" กลับมาแสดงแทน · GIF กลับมาสดเมื่อไรก็สลับกลับเอง
-   อ่านเวลาไม่ได้ (OCR ล้ม/ดึง GIF ไม่ได้) → คงภาพ GIF ไว้ตามเดิม */
+   4) ดึง GIF ไม่ได้ (ไม่ตอบใน RADAR_FETCH_MS) หรือเวลาบนภาพเก่ากว่า RADAR_STALE_MIN → แสดง GIF สำรอง RADAR_NRT
+      (semet.uk/nrt/NRTLoop.gif · อ่านเวลาบนภาพนี้ไม่ได้ เพราะคนละรูปแบบ จึงไม่ได้ตรวจความสด)
+   5) GIF สำรองก็ดึงไม่ได้: ภาพหลักเก่า → เปิดหน้าแรก naramet.semet.uk ผ่าน naramet-proxy ในกรอบซ่อน (?radar=1)
+      สคริปต์ EMBED ในกรอบส่ง URL ภาพ "เรดาร์ล่าสุด" กลับมาแสดงแทน · ภาพหลักดึงไม่ได้ → ใส่ URL ภาพหลักให้ <img> โหลดเอง
+   GIF หลักกลับมาสดเมื่อไรก็สลับกลับเอง · อ่านเวลาไม่ได้ (OCR ล้ม) → ถือว่าภาพหลักยังใช้ได้ */
 const RADAR_GIF = 'https://semet.uk/loop/NTWLoop.gif';
 const RADAR_GIF_LINK = 'https://sites.google.com/view/naramet-radar/narathiwat?authuser=0';
 const RADAR_ALT_LINK = 'https://naramet.semet.uk/';
-const RADAR_STALE_MIN = 30;
+const RADAR_NRT = 'https://semet.uk/nrt/NRTLoop.gif';   // GIF สำรอง
+const RADAR_NRT_LINK = 'https://naramet.semet.uk/';
+const RADAR_STALE_MIN = 60;
+const RADAR_FETCH_MS = 20000;
 const NARAMET_PROXY = 'https://naramet-proxy.newusmanwaji.workers.dev';   // naramet-proxy.worker.js (โดเมนเดียวกับ NARAMET_EMBED ด้านล่าง)
 // แถบบรรทัด "วันที่ … เวลา HH:MM น." เป็นสัดส่วนของภาพ (1740×1860) · กว้างกว่าตัวอักษรเล็กน้อย เดือนชื่อยาว/สั้นก็ยังอยู่ในกรอบ
 const RADAR_TIME_BAND = { x0:.18, x1:.85, y0:.062, y1:.125 };
 const TESS_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.esm.min.js';
 const GIFUCT_URL = 'https://cdn.jsdelivr.net/npm/gifuct-js@2.1.2/+esm';
-let radarLink = RADAR_GIF_LINK, radarAltFrame, radarAltTimer, radarBlobUrl, radarBusy = false;
+let radarLink = RADAR_GIF_LINK, radarAltFrame, radarAltTimer, radarBlobUrl, radarNrtBlobUrl, radarBusy = false;
+/* ดึง GIF เป็น bytes · ล้มเหลว/ไม่ใช่ภาพ/ช้าเกิน RADAR_FETCH_MS → null */
+async function radarFetchGif(url){
+  try{
+    const r = await fetch(url, {cache:'no-store', signal: AbortSignal.timeout ? AbortSignal.timeout(RADAR_FETCH_MS) : undefined});
+    if(r.ok && /^image\//.test(r.headers.get('content-type') || '')) return await r.arrayBuffer();
+  }catch(e){}
+  return null;
+}
 function openRadarLink(){ window.open(radarLink, '_blank', 'noopener'); }
 const hhmm = d => d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Bangkok'});
 
@@ -2000,28 +2013,38 @@ async function loadRadarImg(){
   radarBusy = true;
   try{
     const now = new Date(), direct = `${RADAR_GIF}?v=${now.getTime()}`;
-    let buf = null;
-    try{
-      const r = await fetch(direct, {cache:'no-store'});
-      if(r.ok && /^image\//.test(r.headers.get('content-type') || '')) buf = await r.arrayBuffer();
-    }catch(e){}
-    let gifSrc = direct;
+    const buf = await radarFetchGif(direct);
+    let gifSrc = direct, t = null;
     if(buf){
       if(radarBlobUrl) URL.revokeObjectURL(radarBlobUrl);
       radarBlobUrl = URL.createObjectURL(new Blob([radarHoldLast(buf)], {type:'image/gif'}));
       gifSrc = radarBlobUrl;
+      // แสดง GIF ไปก่อน (ครั้งแรกจะได้ไม่ว่าง) · ถ้ากำลังแสดงภาพสำรองอยู่ ค้างไว้จนกว่าจะรู้ว่า GIF สดแล้ว
+      if(radarLink === RADAR_GIF_LINK) radarShow(gifSrc, RADAR_GIF_LINK, 'โหลดล่าสุด ' + hhmm(now), '');
+      try{ t = await radarFrameTime(buf.slice(0)); }catch(e){ console.warn('radar OCR', e); }
+      if(t == null || (Date.now() - t) / 60000 <= RADAR_STALE_MIN){
+        radarAltCleanup();
+        radarShow(radarLink === RADAR_GIF_LINK ? null : gifSrc, RADAR_GIF_LINK,
+          (t ? 'ภาพเวลา ' + hhmm(new Date(t)) + ' น. · ' : '') + 'โหลด ' + hhmm(now), '');
+        return;
+      }
     }
-    // แสดง GIF ไปก่อน (ครั้งแรกจะได้ไม่ว่าง) · ถ้ากำลังแสดงภาพสำรองอยู่ ค้างไว้จนกว่าจะรู้ว่า GIF สดแล้ว
-    if(radarLink === RADAR_GIF_LINK) radarShow(gifSrc, RADAR_GIF_LINK, 'โหลดล่าสุด ' + hhmm(now), '');
-    let t = null;
-    if(buf){ try{ t = await radarFrameTime(buf.slice(0)); }catch(e){ console.warn('radar OCR', e); } }
-    if(t == null || (Date.now() - t) / 60000 <= RADAR_STALE_MIN){
+    // ภาพหลักดึงไม่ได้ หรือเก่ากว่า RADAR_STALE_MIN → GIF สำรอง
+    const nb = await radarFetchGif(`${RADAR_NRT}?v=${now.getTime()}`);
+    if(nb){
       radarAltCleanup();
-      radarShow(radarLink === RADAR_GIF_LINK ? null : gifSrc, RADAR_GIF_LINK,
-        (t ? 'ภาพเวลา ' + hhmm(new Date(t)) + ' น. · ' : '') + 'โหลด ' + hhmm(now), '');
+      if(radarNrtBlobUrl) URL.revokeObjectURL(radarNrtBlobUrl);
+      radarNrtBlobUrl = URL.createObjectURL(new Blob([radarHoldLast(nb)], {type:'image/gif'}));
+      const when = t ? hhmm(new Date(t)) + ' น. (' + Math.round((Date.now() - t)/60000) + ' นาทีที่แล้ว)' : '';
+      radarShow(radarNrtBlobUrl, RADAR_NRT_LINK, 'ภาพสำรอง · โหลด ' + hhmm(now),
+        buf ? `ภาพเรดาร์ระดับตำบลค้างที่เวลา ${when} จึงแสดงภาพเรดาร์สำรองจาก semet.uk แทน · กลับไปใช้ภาพระดับตำบลเองเมื่ออัปเดตแล้ว`
+            : 'โหลดภาพเรดาร์ระดับตำบลไม่ได้ จึงแสดงภาพเรดาร์สำรองจาก semet.uk แทน · กลับไปใช้ภาพระดับตำบลเองเมื่อโหลดได้');
       return;
     }
-    radarLoadAlt(t);
+    // GIF สำรองก็ดึงไม่ได้
+    if(buf){ radarLoadAlt(t); return; }
+    radarAltCleanup();
+    radarShow(direct, RADAR_GIF_LINK, 'โหลดล่าสุด ' + hhmm(now), '');
   }finally{ radarBusy = false; }
 }
 
