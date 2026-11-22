@@ -212,8 +212,11 @@ function renderKpis(cur, prev) {
     <div class="kpi"><div class="k">ดูกี่หน้าต่อคน</div>
       <div class="v">${perVisitor}<small>หน้า/คน</small></div></div>`;
 
+  // เว็บเปิด 2 ต.ค. 2569 (supabase/schema-v13.sql) ช่วงก่อนหน้าจึงอาจสั้นกว่าช่วงที่เลือก
+  // บอกจำนวนวันจริงที่เอามาเทียบ ไม่ให้ % ที่ขึ้นเพราะฐานสั้นกว่าดูเหมือนคนเพิ่มขึ้นจริง
+  const short = prev.length < cur.length ? ' · เว็บเปิดก่อนช่วงนี้ได้แค่ ' + prev.length + ' วัน' : '';
   el('cmpNote').innerHTML = (pv || pw)
-    ? `เทียบกับ ${DAYS} วันก่อนหน้า (${fmt(pv)} คน · ${fmt(pw)} ครั้ง)` +
+    ? `เทียบกับ ${prev.length} วันก่อนหน้า (${fmt(pv)} คน · ${fmt(pw)} ครั้ง${short})` +
       (best && best.visitors ? ` · วันที่คนเข้ามากที่สุดคือ ${esc(dayLabel(best.day, true))} ${fmt(best.visitors)} คน` : '')
     : 'ยังไม่มีข้อมูลของช่วงก่อนหน้าไว้เทียบ';
 }
@@ -234,7 +237,7 @@ function renderChart(rows) {
   }).join('');
 
   el('chart').innerHTML =
-    `<div class="chart" role="img" aria-label="กราฟผู้เข้าชมรายวัน ${DAYS} วัน">${bars}</div>` +
+    `<div class="chart" role="img" aria-label="กราฟผู้เข้าชมรายวัน ${rows.length} วัน">${bars}</div>` +
     `<div class="axis"><span>${rows.length ? esc(dayLabel(rows[0].day, true)) : ''}</span>` +
     `<span>สูงสุด ${fmt(max)} ครั้ง/วัน</span>` +
     `<span>${rows.length ? esc(dayLabel(rows[rows.length - 1].day, true)) : ''}</span></div>` +
@@ -292,6 +295,11 @@ async function loadAll() {
   const cur  = all.slice(-DAYS);
   const prev = all.slice(0, Math.max(all.length - DAYS, 0));
   SERIES = cur;
+
+  // get_visit_daily ไม่ส่งวันก่อนเปิดเว็บมา ขอ 90 วันอาจได้น้อยกว่านั้น
+  if (cur.length < DAYS && cur.length) {
+    el('rangeLbl').textContent = 'ตั้งแต่เปิดเว็บ ' + dayLabel(cur[0].day, true) + ' · ' + cur.length + ' วัน (รวมวันนี้)';
+  }
 
   renderKpis(cur, prev);
   renderChart(cur);
