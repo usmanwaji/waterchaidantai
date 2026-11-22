@@ -149,7 +149,7 @@ footer a{color:var(--orange-warm);text-decoration:none}
 #ncTime .fc{color:var(--orange-d)}
 .ncLegend{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-2);margin-top:6px}
 .ncLegend i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
-/* ภาพกรมอุตุฯ ค้าง/โหลดไม่ได้ → แถบเตือน + พยากรณ์ฝนจากแบบจำลอง (Windy) แทน */
+/* ภาพกรมอุตุฯ ค้าง/โหลดไม่ได้ → แถบเตือน + ภาพเรดาร์จาก Windy แทน */
 .ncStale{font-size:12.5px;line-height:1.5;color:var(--st-warn);background:var(--st-warn-wash);border-radius:8px;padding:8px 10px;margin-bottom:8px}
 .ncStale button{font:inherit;font-weight:700;color:var(--navy);background:none;border:0;padding:0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 #ncUpdated.late{color:var(--st-warn);font-weight:700}
@@ -529,13 +529,13 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
   <div class="card" id="ncCard">
     <h2>คาดการณ์ฝน <span class="where" id="ncUpdated"></span></h2>
     <div class="ncTabs" id="ncTabs" role="tablist" aria-label="แหล่งข้อมูลคาดการณ์ฝน">
-      <button type="button" role="tab" class="chip on" data-tab="windy" aria-selected="true" aria-controls="ncAlt">Windy · ล่วงหน้าหลายวัน</button>
+      <button type="button" role="tab" class="chip on" data-tab="windy" aria-selected="true" aria-controls="ncAlt">Windy · เรดาร์</button>
       <button type="button" role="tab" class="chip" data-tab="tmd" aria-selected="false" aria-controls="ncTmd">กรมอุตุฯ · 1 ชม.<span class="ncTabWarn" id="ncTabLate" hidden>ล่าช้า</span></button>
     </div>
     <div id="ncAlt" role="tabpanel">
       <div class="ncAltTip">ปุ่ม ▶ ของ Windy เล่นเร็วและปรับความเร็วไม่ได้ · <b>ลากแถบเวลาใต้แผนที่ช้า ๆ</b> แทน จะเห็นกลุ่มฝนเคลื่อนตามจังหวะที่ต้องการ</div>
-      <iframe id="ncWindy" src="https://embed.windy.com/embed2.html?lat=6.10&amp;lon=101.73&amp;detailLat=6.43&amp;detailLon=101.82&amp;width=650&amp;height=450&amp;zoom=8&amp;level=surface&amp;overlay=rain&amp;product=ecmwf&amp;menu=&amp;message=true&amp;marker=&amp;calendar=now&amp;pressure=&amp;type=map&amp;location=coordinates&amp;detail=&amp;metricWind=default&amp;metricTemp=default&amp;radarRange=-1" title="พยากรณ์ฝนรายชั่วโมงจากแบบจำลอง ECMWF (Windy)" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-      <div class="ncAltNote">พยากรณ์ฝนจากแบบจำลอง ECMWF ผ่าน <a href="https://www.windy.com/?rain,6.10,101.73,8" target="_blank" rel="noopener">Windy ↗</a> · ไม่ใช่ภาพเรดาร์ · ดูได้ล่วงหน้าหลายวัน</div>
+      <iframe id="ncWindy" src="https://embed.windy.com/embed2.html?lat=6.10&amp;lon=101.73&amp;detailLat=6.43&amp;detailLon=101.82&amp;width=650&amp;height=450&amp;zoom=8&amp;level=surface&amp;overlay=radar&amp;product=ecmwf&amp;menu=&amp;message=true&amp;marker=&amp;calendar=now&amp;pressure=&amp;type=map&amp;location=coordinates&amp;detail=&amp;metricWind=default&amp;metricTemp=default&amp;radarRange=-1" title="ภาพเรดาร์ตรวจอากาศ (Windy)" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      <div class="ncAltNote">ภาพเรดาร์ตรวจอากาศ (ฝนที่ตรวจพบจริง) ผ่าน <a href="https://www.windy.com/?radar,6.10,101.73,8" target="_blank" rel="noopener">Windy ↗</a> · ดูพยากรณ์ฝนล่วงหน้าหลายวันได้ที่ <a href="https://www.windy.com/?rain,6.10,101.73,8" target="_blank" rel="noopener">ชั้นฝน ฟ้าคะนอง ↗</a></div>
     </div>
     <div id="ncTmd" role="tabpanel" hidden>
     <div id="ncStale" class="ncStale" role="status" hidden></div>
@@ -554,7 +554,7 @@ button.hchip:hover{border-color:var(--signal);color:var(--signal)}
     </div>
     <details class="fold fold-note">
     <summary>คำอธิบาย</summary>
-    <div class="note"><b>แท็บ Windy</b> (แสดงก่อนเสมอ): พยากรณ์ฝนรายชั่วโมงจากแบบจำลอง ECMWF ล่วงหน้าหลายวัน ไม่ใช่ภาพเรดาร์ · <b>แท็บกรมอุตุฯ</b>: ภาพฝนจากเรดาร์กรมอุตุนิยมวิทยา ช่วงละ 15 นาที ภาพก่อน "ตอนนี้" คือฝนที่ตรวจวัดได้จริง ภาพหลังจากนั้นคือฝนคาดการณ์ (ประมาณ 1 ชั่วโมงข้างหน้า) กดปุ่มเพื่อหยุด หรือเลื่อนแถบเพื่อเลือกเวลา ออกใหม่ทุก 15 นาที · ถ้าภาพล่าสุดของกรมอุตุฯ เก่ากว่า 1 ชั่วโมง (ระบบต้นทางค้าง) แท็บจะขึ้นป้าย "ล่าช้า" และบอกเวลาของภาพ · ที่มา: <a href="https://satda.tmd.go.th/wp-content/uploads/data/dashboard/radar_map/south_nowcast.php" target="_blank" rel="noopener">Southern Nowcasting กรมอุตุฯ ↗</a></div>
+    <div class="note"><b>แท็บ Windy</b> (แสดงก่อนเสมอ): ภาพเรดาร์ตรวจอากาศ แสดงกลุ่มฝนที่ตรวจพบจริงช่วงที่ผ่านมา · พยากรณ์ฝนล่วงหน้าหลายวันจากแบบจำลอง ECMWF ดูได้ที่ลิงก์ "ชั้นฝน ฟ้าคะนอง" ใต้แผนที่ · <b>แท็บกรมอุตุฯ</b>: ภาพฝนจากเรดาร์กรมอุตุนิยมวิทยา ช่วงละ 15 นาที ภาพก่อน "ตอนนี้" คือฝนที่ตรวจวัดได้จริง ภาพหลังจากนั้นคือฝนคาดการณ์ (ประมาณ 1 ชั่วโมงข้างหน้า) กดปุ่มเพื่อหยุด หรือเลื่อนแถบเพื่อเลือกเวลา ออกใหม่ทุก 15 นาที · ถ้าภาพล่าสุดของกรมอุตุฯ เก่ากว่า 1 ชั่วโมง (ระบบต้นทางค้าง) แท็บจะขึ้นป้าย "ล่าช้า" และบอกเวลาของภาพ · ที่มา: <a href="https://satda.tmd.go.th/wp-content/uploads/data/dashboard/radar_map/south_nowcast.php" target="_blank" rel="noopener">Southern Nowcasting กรมอุตุฯ ↗</a></div>
     </details>
   </div>
 
@@ -2089,7 +2089,7 @@ const NC_STEP_MS = 800, NC_HOLD_MS = 1600;           // ความเร็ว
    หน้าเว็บเลยติดป้ายภาพเก่าว่า "ตอนนี้" · จึงวัดอายุจากเวลาของภาพ "ตอนนี้" เทียบนาฬิกาจริง
    ปกติภาพช้ากว่านาฬิกาไม่เกิน ~45 นาที (ต้นทางประมวลผล + แคช tmd-proxy 5 นาที + home-proxy รอบ 14 นาที)
    เกิน NC_STALE_MIN หรือโหลดไม่ได้ → แท็บกรมอุตุฯ ขึ้นป้าย "ล่าช้า" และแถบเตือนบอกเวลาของภาพ
-   การ์ดเปิดที่แท็บ Windy (พยากรณ์ฝนจากแบบจำลอง ECMWF) เสมอ ผู้ใช้กดแท็บกรมอุตุฯ เอง */
+   การ์ดเปิดที่แท็บ Windy (ภาพเรดาร์ตรวจอากาศ overlay=radar) เสมอ ผู้ใช้กดแท็บกรมอุตุฯ เอง */
 const NC_STALE_MIN = 60;
 let ncMap, ncFrames = [], ncIdx = 0, ncNow = 0, ncTimer = null, ncPlaying = true, ncGen = '';
 let ncTab = 'windy';   // แท็บที่เปิดอยู่ · ไม่จำข้ามการโหลดหน้า เปิดหน้าใหม่เริ่มที่ Windy
