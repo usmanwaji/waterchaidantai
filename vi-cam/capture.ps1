@@ -166,6 +166,12 @@ if ([ViCap]::Levels($bmp) -lt 24) {
 try {
   $levels = [ViCap]::Levels($bmp)
   if ($bmp.Width -lt 320 -or $levels -lt 24) { NoImage "ภาพ $($bmp.Width)x$($bmp.Height) ระดับสี $levels (กล้องหลุด/ภาพดำ?)" }
+  # ครอปตาม crop ใน cams.json (สัดส่วน 0–1 ของภาพเต็ม) ให้เหลือแค่พื้นที่ดูระดับน้ำ ไม่ติดบ้านคน
+  if ($cam.crop) {
+    $W = $bmp.Width; $H = $bmp.Height
+    $rc = [System.Drawing.Rectangle]::FromLTRB([int]($W * $cam.crop.left), [int]($H * $cam.crop.top), [int]($W * $cam.crop.right), [int]($H * $cam.crop.bottom))
+    $full = $bmp; $bmp = $full.Clone($rc, $full.PixelFormat); $full.Dispose()
+  }
   # ย่อตาม scale ใน cams.json (0.5 = ครึ่งหนึ่ง): พอเห็นระดับน้ำ แต่ไม่เห็นรายละเอียดคนในภาพ
   Save-Jpeg $bmp (Join-Path $OutDir "$($cam.id).jpg") ([int]($bmp.Width * $(if ($cam.scale) { $cam.scale } else { 1 })))
   $now = (Get-Date).ToUniversalTime().ToString('o')
