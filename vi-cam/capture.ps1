@@ -145,7 +145,8 @@ catch { NoImage "จับหน้าจอไม่ได้ (หน้าจ�
 try {
   $levels = [ViCap]::Levels($bmp)
   if ($bmp.Width -lt 320 -or $levels -lt 24) { NoImage "ภาพ $($bmp.Width)x$($bmp.Height) ระดับสี $levels (กล้องหลุด/ภาพดำ?)" }
-  Save-Jpeg $bmp (Join-Path $OutDir "$($cam.id).jpg")
+  # ย่อตาม scale ใน cams.json (0.5 = ครึ่งหนึ่ง): พอเห็นระดับน้ำ แต่ไม่เห็นรายละเอียดคนในภาพ
+  Save-Jpeg $bmp (Join-Path $OutDir "$($cam.id).jpg") ([int]($bmp.Width * $(if ($cam.scale) { $cam.scale } else { 1 })))
   $now = (Get-Date).ToUniversalTime().ToString('o')
   $meta = [ordered]@{
     updated = $now
