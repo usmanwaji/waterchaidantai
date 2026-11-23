@@ -37,17 +37,18 @@ public static class ViCap {
   const uint NOSIZE_NOMOVE_NOACTIVATE = 0x0001 | 0x0002 | 0x0010;
   static long Area(IntPtr h) { RECT r; GetWindowRect(h, out r); return (long)(r.R - r.L) * (r.B - r.T); }
 
-  // หน้าต่างหลัก = หน้าต่างที่ใหญ่ที่สุดของโปรเซส (หน้าล็อกอินก็ชื่อ "VI MonitorPlus" แต่เล็กกว่ามาก)
-  public static IntPtr FindMain(uint[] pids) {
-    IntPtr best = IntPtr.Zero; long bestArea = 0;
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr h, StringBuilder s, int n);
+  public static string Title(IntPtr h) { var s = new StringBuilder(512); GetWindowText(h, s, 512); return s.ToString(); }
+
+  // หน้าต่างระดับบนทุกบานของ VI: หน้าต่างหลัก + หน้าต่างกล้องที่ป๊อปออกมา (ปุ่ม ⧉ บนแท็บ)
+  public static IntPtr[] TopWindows(uint[] pids) {
+    var list = new System.Collections.Generic.List<IntPtr>();
     EnumWindows((h, l) => {
       uint pid; GetWindowThreadProcessId(h, out pid);
-      if (Array.IndexOf(pids, pid) < 0 || !IsWindowVisible(h)) return true;
-      long a = IsIconic(h) ? 1 : Area(h);
-      if (a > bestArea) { bestArea = a; best = h; }
+      if (Array.IndexOf(pids, pid) >= 0 && IsWindowVisible(h)) list.Add(h);
       return true;
     }, IntPtr.Zero);
-    return best;
+    return list.ToArray();
   }
 
   // กรอบวิดีโอ = หน้าต่างลูกคลาส WindowsForms10.STATIC ที่ใหญ่ที่สุด (แท็บแบบ 1 กล้องมีอันเดียว)
@@ -130,56 +131,73 @@ function Save-Jpeg([System.Drawing.Bitmap]$bmp, [string]$path, [int]$maxW = 1280
 }
 
 $stamp = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
-function NoImage([string]$why) { Write-Output "$stamp ไม่มีภาพ: $why"; exit 2 }
+function Log([string]$m) { [Console]::Out.WriteLine("$stamp $m") }   # ไม่ปนกับค่าที่ฟังก์ชันคืน
 
 New-Item -ItemType Directory -Force $OutDir | Out-Null
-$cam = (Get-Content (Join-Path $PSScriptRoot 'cams.json') -Raw -Encoding UTF8 | ConvertFrom-Json).cams[0]
+$cams = @((Get-Content (Join-Path $PSScriptRoot 'cams.json') -Raw -Encoding UTF8 | ConvertFrom-Json).cams)
 
 $procs = @(Get-Process VIMonitorPlus -ErrorAction SilentlyContinue)
-if (-not $procs.Count) { NoImage 'ไม่ได้เปิด VI MonitorPlus' }
-$main = [ViCap]::FindMain([uint32[]]($procs | ForEach-Object { [uint32]$_.Id }))
-if ($main -eq [IntPtr]::Zero) { NoImage 'หาหน้าต่าง VI MonitorPlus ไม่เจอ' }
-if ([ViCap]::IsIconic($main)) {
-  [ViCap]::ShowWindow($main, 4) | Out-Null   # SW_SHOWNOACTIVATE: คืนขนาดโดยไม่แย่งโฟกัส
-  Start-Sleep -Seconds 3
-}
-$video = [ViCap]::FindVideo($main)
-if ($video -eq [IntPtr]::Zero) { NoImage 'ไม่พบกรอบวิดีโอ (ยังไม่ได้ล็อกอิน หรือไม่ได้เปิดกล้องในแท็บ?)' }
+if (-not $procs.Count) { Log 'ไม่มีภาพ: ไม่ได้เปิด VI MonitorPlus'; exit 2 }
 
-# ต้องเป็นกล้องที่อนุญาตเท่านั้น: ชื่อแท็บที่เปิดอยู่เปลี่ยนตามกล้องที่ลากมาวาง
-# (มีคนเปิดกล้องอื่นดูชั่วคราว → ข้ามรอบนี้ ไม่ส่งภาพกล้องอื่นขึ้นไปในชื่อกล้องนี้)
+# ชื่อกล้องที่หน้าต่างนั้นแสดงอยู่ = ชื่อแท็บที่เลือกอยู่ (เปลี่ยนตามกล้องที่ลากมาวาง) · ไม่มีแท็บใช้ชื่อหน้าต่าง
 Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes
 $A = [System.Windows.Automation.AutomationElement]
-$tabs = @($A::FromHandle($main).FindAll([System.Windows.Automation.TreeScope]::Descendants,
-  [System.Windows.Automation.PropertyCondition]::new($A::ControlTypeProperty, [System.Windows.Automation.ControlType]::TabItem)))
-$open = @($tabs | Where-Object { try { $_.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected } catch { $false } })
-if ($tabs.Count -eq 1) { $open = $tabs }
-$openName = if ($open.Count) { $open[0].Current.Name } else { '' }
-if (-not $openName.Contains($cam.match)) { NoImage "แท็บที่เปิดอยู่คือ '$openName' ไม่ใช่ $($cam.match)" }
-
-$bmp = [ViCap]::Direct($video); $how = 'direct'
-if ([ViCap]::Levels($bmp) -lt 24) {
-  $bmp.Dispose(); $how = 'screen'
-  try { $bmp = [ViCap]::Grab($main, $video, 800) }
-  catch { NoImage "จับหน้าจอไม่ได้ (หน้าจอล็อก/Sleep?) $($_.Exception.Message)" }
+function Get-ViewName([IntPtr]$win) {
+  $tabs = @($A::FromHandle($win).FindAll([System.Windows.Automation.TreeScope]::Descendants,
+    [System.Windows.Automation.PropertyCondition]::new($A::ControlTypeProperty, [System.Windows.Automation.ControlType]::TabItem)))
+  $open = @($tabs | Where-Object { try { $_.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected } catch { $false } })
+  if ($tabs.Count -eq 1) { $open = $tabs }
+  if ($open.Count) { return $open[0].Current.Name }
+  return [ViCap]::Title($win)
 }
-try {
-  $levels = [ViCap]::Levels($bmp)
-  if ($bmp.Width -lt 320 -or $levels -lt 24) { NoImage "ภาพ $($bmp.Width)x$($bmp.Height) ระดับสี $levels (กล้องหลุด/ภาพดำ?)" }
-  # ครอปตาม crop ใน cams.json (สัดส่วน 0–1 ของภาพเต็ม) ให้เหลือแค่พื้นที่ดูระดับน้ำ ไม่ติดบ้านคน
-  if ($cam.crop) {
-    $W = $bmp.Width; $H = $bmp.Height
-    $rc = [System.Drawing.Rectangle]::FromLTRB([int]($W * $cam.crop.left), [int]($H * $cam.crop.top), [int]($W * $cam.crop.right), [int]($H * $cam.crop.bottom))
-    $full = $bmp; $bmp = $full.Clone($rc, $full.PixelFormat); $full.Dispose()
+
+# หน้าต่าง VI ทุกบานที่มีกรอบวิดีโอ (หน้าต่างหลัก + หน้าต่างกล้องที่ป๊อปออกมา)
+$views = foreach ($win in [ViCap]::TopWindows([uint32[]]($procs | ForEach-Object { [uint32]$_.Id }))) {
+  if ([ViCap]::IsIconic($win)) { [ViCap]::ShowWindow($win, 4) | Out-Null; Start-Sleep -Seconds 3 }   # SW_SHOWNOACTIVATE
+  $video = [ViCap]::FindVideo($win)
+  if ($video -eq [IntPtr]::Zero) { continue }
+  [pscustomobject]@{ win = $win; video = $video; name = (Get-ViewName $win) }
+}
+
+function Save-Cam($cam, $view) {
+  $bmp = [ViCap]::Direct($view.video); $how = 'direct'
+  if ([ViCap]::Levels($bmp) -lt 24) {
+    $bmp.Dispose(); $how = 'screen'
+    try { $bmp = [ViCap]::Grab($view.win, $view.video, 800) }
+    catch { Log "ข้าม $($cam.id): จับหน้าจอไม่ได้ (หน้าจอล็อก/Sleep?) $($_.Exception.Message)"; return $false }
   }
-  # ย่อตาม scale ใน cams.json (0.5 = ครึ่งหนึ่ง): พอเห็นระดับน้ำ แต่ไม่เห็นรายละเอียดคนในภาพ
-  Save-Jpeg $bmp (Join-Path $OutDir "$($cam.id).jpg") ([int]($bmp.Width * $(if ($cam.scale) { $cam.scale } else { 1 })))
-  $now = (Get-Date).ToUniversalTime().ToString('o')
-  $meta = [ordered]@{
-    updated = $now
-    cams    = @([ordered]@{ id = $cam.id; name = $cam.name; lat = $cam.lat; lon = $cam.lon; file = "$($cam.id).jpg"; capturedAt = $now })
+  try {
+    $levels = [ViCap]::Levels($bmp)
+    if ($bmp.Width -lt 320 -or $levels -lt 24) { Log "ข้าม $($cam.id): ภาพ $($bmp.Width)x$($bmp.Height) ระดับสี $levels (กล้องหลุด/ภาพดำ?)"; return $false }
+    # ครอปตาม crop (สัดส่วน 0–1 ของภาพเต็ม) ให้เหลือแค่พื้นที่ดูระดับน้ำ ไม่ติดบ้านคน
+    if ($cam.crop) {
+      $W = $bmp.Width; $H = $bmp.Height
+      $rc = [System.Drawing.Rectangle]::FromLTRB([int]($W * $cam.crop.left), [int]($H * $cam.crop.top), [int]($W * $cam.crop.right), [int]($H * $cam.crop.bottom))
+      $full = $bmp; $bmp = $full.Clone($rc, $full.PixelFormat); $full.Dispose()
+    }
+    # ย่อตาม scale (0.5 = ครึ่งหนึ่ง): พอเห็นระดับน้ำ แต่ไม่เห็นรายละเอียดคนในภาพ
+    Save-Jpeg $bmp (Join-Path $OutDir "$($cam.id).jpg") ([int]($bmp.Width * $(if ($cam.scale) { $cam.scale } else { 1 })))
+    Log "ได้ภาพ $($cam.id) $($bmp.Width)x$($bmp.Height) ระดับสี $levels ($how)"
+    return $true
+  } finally { $bmp.Dispose() }
+}
+
+# กล้องที่ไม่ได้เปิดอยู่ (มีคนเปิดกล้องอื่นดูชั่วคราว) ข้ามไป ไม่ส่งภาพกล้องอื่นขึ้นไปในชื่อกล้องนี้
+# และคงภาพ+เวลาถ่ายเดิมไว้ในรายการ ให้เว็บยังแสดงภาพล่าสุดพร้อมป้ายภาพเก่า
+$metaPath = Join-Path $OutDir 'cams.json'
+$prev = @{}
+if (Test-Path $metaPath) { (Get-Content $metaPath -Raw -Encoding UTF8 | ConvertFrom-Json).cams | ForEach-Object { $prev[$_.id] = $_.capturedAt } }
+$got = 0
+$entries = foreach ($cam in $cams) {
+  $view = $views | Where-Object { $_.name -and $_.name.Contains($cam.match) } | Select-Object -First 1
+  $at = $prev[$cam.id]
+  if (-not $view) { Log "ข้าม $($cam.id): ไม่ได้เปิด $($cam.match) ใน VI (เปิดอยู่: $(($views | ForEach-Object { $_.name }) -join ' | '))" }
+  elseif (Save-Cam $cam $view) { $at = (Get-Date).ToUniversalTime().ToString('o'); $got++ }
+  if ($at -and (Test-Path (Join-Path $OutDir "$($cam.id).jpg"))) {
+    [ordered]@{ id = $cam.id; name = $cam.name; lat = $cam.lat; lon = $cam.lon; file = "$($cam.id).jpg"; capturedAt = $at }
   }
-  [IO.File]::WriteAllText((Join-Path $OutDir 'cams.json'), ($meta | ConvertTo-Json -Depth 5), (New-Object System.Text.UTF8Encoding $false))
-  Write-Output "$stamp ได้ภาพ $($cam.id) $($bmp.Width)x$($bmp.Height) ระดับสี $levels ($how)"
-  exit 0
-} finally { $bmp.Dispose() }
+}
+if (-not $got) { exit 2 }
+$meta = [ordered]@{ updated = (Get-Date).ToUniversalTime().ToString('o'); cams = @($entries) }
+[IO.File]::WriteAllText($metaPath, ($meta | ConvertTo-Json -Depth 5), (New-Object System.Text.UTF8Encoding $false))
+exit 0
