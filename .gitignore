@@ -1,6 +1,10 @@
 # ภาพจากการตรวจงาน (review gate) เป็นผลลัพธ์ ไม่ใช่ซอร์ส
 shots/
 
+# ภาพกล้องเทศบาลที่จับได้ + log (ส่งขึ้นสาขา vicam แยกต่างหาก ไม่เก็บในซอร์ส)
+vi-cam/out/
+vi-cam/vi-cam.log
+
 # ของที่ติดตั้งเฉพาะเครื่อง
 telerid-scraper/node_modules/
 node_modules/

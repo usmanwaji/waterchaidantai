@@ -38,7 +38,7 @@ th:{
   ewsNote:'ระดับน้ำวัดจากศูนย์เสาวัดของสถานี (ไม่ใช่ ม.รทก.) · ระบบนี้ไม่มีระดับตลิ่ง สีหมุดตามสถานะเตือนภัยของ ทน.',
   teleSrc:'กรมชลประทาน', teleProj:'โครงการชลประทาน', teleView:'เปิดระบบโทรมาตร ชป. ↗',
   extDdpm:'CCTV ปภ. ↗', extTelerid:'▲ โทรมาตร ชป. ↗',
-  lyDdpm:'CCTV ปภ.', ddpmSrc:'ระบบเฝ้าระวังภัยพิบัติ ปภ.', ddpmCoord:'พิกัด (ละติจูด, ลองจิจูด)',
+  lyDdpm:'CCTV ปภ.', lyMuni:'CCTV เทศบาล', ddpmSrc:'ระบบเฝ้าระวังภัยพิบัติ ปภ.', ddpmCoord:'พิกัด (ละติจูด, ลองจิจูด)',
   ddpmWL:'ระดับน้ำปัจจุบัน (ม.)', ddpmTel:'โทรศัพท์',
   ddpmOpen:'ดูข้อมูลต้นทาง cctv.disaster.go.th', ddpmNewTabLbl:'เปิดแท็บใหม่ ↗',
   ddpmModalTitle:'ระบบเฝ้าระวังภัยพิบัติ ปภ. (cctv.disaster.go.th)',
@@ -229,9 +229,10 @@ const gWL=L.layerGroup().addTo(map), gRain=L.layerGroup(),
       gDam=L.layerGroup().addTo(map), gSea=L.layerGroup().addTo(map),
       gCctv=L.layerGroup().addTo(map), gDdpm=L.layerGroup().addTo(map), gTele=L.layerGroup().addTo(map),
       gEws=L.layerGroup().addTo(map),
-      gRisk=L.layerGroup().addTo(map), gBnd=L.layerGroup().addTo(map);
+      gRisk=L.layerGroup().addTo(map), gBnd=L.layerGroup().addTo(map),
+      gMuni=L.layerGroup().addTo(map);   // CCTV เทศบาล (เทศบาลอนุญาตให้เผยแพร่แล้ว 2026-11-23)
 gRain.on('add remove', () => buildLegend());
-[['lyWL',gWL],['lyRain',gRain],['lyDam',gDam],['lySea',gSea],['lyCctv',gCctv],['lyDdpm',gDdpm],['lyTele',gTele],['lyEws',gEws],['lyRisk',gRisk]].forEach(([id,g])=>{
+[['lyWL',gWL],['lyRain',gRain],['lyDam',gDam],['lySea',gSea],['lyCctv',gCctv],['lyDdpm',gDdpm],['lyMuni',gMuni],['lyTele',gTele],['lyEws',gEws],['lyRisk',gRisk]].forEach(([id,g])=>{
   const cb = document.getElementById(id);
   cb.checked = map.hasLayer(g);                       // สถานะติ๊กตรงกับแผนที่เสมอ
   cb.onchange = e => e.target.checked ? map.addLayer(g) : map.removeLayer(g);
@@ -900,7 +901,7 @@ async function loadAll(){
     const btn = document.getElementById('btnRefresh');
     btn.classList.add('loading'); btn.disabled = true;
     document.getElementById('updated').textContent = t('loading');
-    const results = await Promise.allSettled([loadWaterLevel(), loadDwr(), loadRain(), loadDam(), loadSea(), loadCctv(), loadDdpm(), loadTelerid(), loadFlashFlood(), loadOnwrActive(), loadHyd(), loadEws()]);
+    const results = await Promise.allSettled([loadWaterLevel(), loadDwr(), loadRain(), loadDam(), loadSea(), loadCctv(), loadDdpm(), loadViCam(), loadTelerid(), loadFlashFlood(), loadOnwrActive(), loadHyd(), loadEws()]);
     renderHyd();   // thaiwater โหลดเสร็จทีหลังก็ตัดสถานีที่ซ้ำออก
     const fails = results.filter(r=>r.status==='rejected').length;
     const now = new Date().toLocaleString(locale(),{dateStyle:'medium', timeStyle:'short'});
@@ -1579,6 +1580,32 @@ function openDdpm(){
   document.getElementById('ddpmModal').classList.add('show');
 }
 
+/* ---------- 6.45) CCTV เทศบาลเมืองนราธิวาส (ภาพนิ่งจาก VI MonitorPlus) ----------
+   กล้องอยู่ IP ภายในของเทศบาล เว็บดึงตรงไม่ได้ · vi-cam/run.bat บนคอมที่เปิด VI MonitorPlus ค้างไว้
+   จับภาพทุก 20 นาที ส่งขึ้นสาขา vicam (ดู vi-cam/README.md) · ภาพเกิน 1 ชม. = คอมปิด/VI หลุด แสดงพร้อมป้ายภาพเก่า */
+const VICAM = 'https://raw.githubusercontent.com/usmanwaji/waterchaidantai/vicam';
+async function loadViCam(){
+  let j;
+  try{ j = await fetchJSON(`${VICAM}/cams.json?t=${Math.floor(Date.now()/60000)}`, 15000); }
+  catch(e){ return; }   // ยังไม่มีสาขา vicam / โหลดไม่ได้ → คงหมุดเดิมไว้ ไม่นับเป็นแหล่งข้อมูลล่ม
+  gMuni.clearLayers();
+  (j?.cams || []).forEach(c => {
+    const lat = num(c.lat), lon = num(c.lon);
+    if(!inBbox(lat, lon)) return;
+    const at = new Date(c.capturedAt);
+    const old = !(Date.now() - at < 60*60e3);
+    L.marker([lat,lon], {icon: mkIcon('mk-cctv', old ? 'var(--ink-3)' : '#0f766e', 20, '📷', false), zIndexOffset:60})
+      .bindPopup(()=>`
+        <div class="pp-title">📷 ${esc(c.name)}</div>
+        <div class="pp-sub">CCTV เทศบาลเมืองนราธิวาส · ภาพนิ่งอัปเดตทุก 20 นาที</div>
+        <img src="${VICAM}/${encodeURIComponent(c.file)}?v=${encodeURIComponent(c.capturedAt)}" alt="${esc(c.name)}"
+          style="width:100%;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;background:var(--card-2);margin:6px 0"
+          onerror="this.remove()" onclick="window.open(this.src,'_blank')">
+        <div style="font-size:10.5px;color:${old ? 'var(--st-watch)' : 'var(--ink-3)'}">ภาพเมื่อ ${esc(at.toLocaleString(locale(),{dateStyle:'short',timeStyle:'short'}))}${old ? ' · ภาพเก่า (เกิน 1 ชม.)' : ''}</div>`, {maxWidth:320})
+      .addTo(gMuni);
+  });
+}
+
 /* ---------- 6.5) สถานีโทรมาตร กรมชลประทาน (telerid.rid.go.th) ----------
    ภาพ+ระดับน้ำมาจาก scraper (Playwright บนคอมในไทย) ที่ publish ไว้สาขา cam
    ดูวิธีตั้งค่าใน telerid-scraper/README.md · เปลี่ยน repo/สาขาได้ที่ TELERID_CAM
@@ -2132,7 +2159,7 @@ function applyLang(){
   document.querySelectorAll('.provbtn').forEach(b=>{
     if(b.dataset.prov!=='all') b.textContent = '🏙️ ' + tProv(b.dataset.prov);
   });
-  [['tWL','lyWL'],['tRain','lyRain'],['tDam','lyDam'],['tSea','lySea'],['tCctv','lyCctv'],['tDdpm','lyDdpm'],['tTele','lyTele'],['tEws','lyEws'],['tRisk','lyRisk'],['tZone','lyZone'],['tRadar','lyRadar']]
+  [['tWL','lyWL'],['tRain','lyRain'],['tDam','lyDam'],['tSea','lySea'],['tCctv','lyCctv'],['tDdpm','lyDdpm'],['tMuni','lyMuni'],['tTele','lyTele'],['tEws','lyEws'],['tRisk','lyRisk'],['tZone','lyZone'],['tRadar','lyRadar']]
     .forEach(([sp,key])=>{ const el=document.getElementById(sp); if(el) el.textContent = t(key); });
   renderRadarBar();   // ป้ายเวลา/ปุ่มเล่นในแถบเรดาร์เปลี่ยนภาษาด้วย
   onwrApplyLang();
