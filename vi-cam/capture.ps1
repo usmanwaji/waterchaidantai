@@ -129,6 +129,17 @@ if ([ViCap]::IsIconic($main)) {
 $video = [ViCap]::FindVideo($main)
 if ($video -eq [IntPtr]::Zero) { NoImage 'ไม่พบกรอบวิดีโอ (ยังไม่ได้ล็อกอิน หรือไม่ได้เปิดกล้องในแท็บ?)' }
 
+# ต้องเป็นกล้องที่อนุญาตเท่านั้น: ชื่อแท็บที่เปิดอยู่เปลี่ยนตามกล้องที่ลากมาวาง
+# (มีคนเปิดกล้องอื่นดูชั่วคราว → ข้ามรอบนี้ ไม่ส่งภาพกล้องอื่นขึ้นไปในชื่อกล้องนี้)
+Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes
+$A = [System.Windows.Automation.AutomationElement]
+$tabs = @($A::FromHandle($main).FindAll([System.Windows.Automation.TreeScope]::Descendants,
+  [System.Windows.Automation.PropertyCondition]::new($A::ControlTypeProperty, [System.Windows.Automation.ControlType]::TabItem)))
+$open = @($tabs | Where-Object { try { $_.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected } catch { $false } })
+if ($tabs.Count -eq 1) { $open = $tabs }
+$openName = if ($open.Count) { $open[0].Current.Name } else { '' }
+if (-not $openName.Contains($cam.match)) { NoImage "แท็บที่เปิดอยู่คือ '$openName' ไม่ใช่ $($cam.match)" }
+
 try { $bmp = [ViCap]::Grab($main, $video, 800) }
 catch { NoImage "จับหน้าจอไม่ได้ (หน้าจอล็อก/Sleep?) $($_.Exception.Message)" }
 try {
