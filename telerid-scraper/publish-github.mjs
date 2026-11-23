@@ -20,7 +20,9 @@ import { pathToFileURL } from 'node:url';
 const TOKEN = process.env.GH_TOKEN || '';
 const REPO = process.env.GH_REPO || 'usmanwaji/waterchaidantai';
 const BRANCH = process.env.GH_BRANCH || 'cam';
-const DIR = 'telerid-cam';
+// โฟลเดอร์ที่อัปโหลด · vi-cam/run.bat ใช้ตัวนี้ส่งภาพกล้องเทศบาลขึ้นสาขา vicam ของมันเอง
+// (ห้ามใช้สาขา cam ร่วมกัน: แต่ละรอบสร้างสาขาใหม่จากไฟล์ในโฟลเดอร์นี้อย่างเดียว ไฟล์ของอีกงานจะหาย)
+const DIR = process.env.PUBLISH_DIR || 'telerid-cam';
 const API = 'https://api.github.com';
 
 async function gh(method, urlPath, body) {
@@ -81,7 +83,7 @@ export async function publish({ quiet = false } = {}) {
 
   // 3) สร้าง commit (ไม่มี parent = สาขาคอมมิตเดียว ไม่บวมประวัติ)
   const c = await gh('POST', `/repos/${REPO}/git/commits`, {
-    message: 'telerid cam ' + new Date().toISOString(),
+    message: `${BRANCH} ${new Date().toISOString()}`,
     tree: t.json.sha, parents: [],
   });
   if (c.status >= 300) throw new Error(`สร้าง commit ล้มเหลว ${c.status} ${c.text.slice(0, 200)}`);
