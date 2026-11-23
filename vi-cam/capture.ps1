@@ -2,8 +2,8 @@
   capture.ps1 — จับภาพกล้อง CCTV เทศบาลจากหน้าต่าง VI MonitorPlus ที่เปิดค้างไว้ บันทึกเป็น JPG ลงโฟลเดอร์ out\
   (VI ใช้โปรโตคอลของตัวเอง ดึงภาพจากกล้องตรง ๆ ไม่ได้ เพราะกล้องอยู่ IP ภายในของเทศบาล)
 
-  VI วาดวิดีโอด้วย DirectX ซึ่ง PrintWindow ได้ภาพดำ จึงต้องจับจากหน้าจอจริง:
-    ยกหน้าต่าง VI ขึ้นบนสุดชั่วคราว (ไม่แย่งโฟกัสคีย์บอร์ด) → จับเฉพาะกรอบวิดีโอ → วางกลับใต้หน้าต่างที่ใช้อยู่
+  VI วาดวิดีโอด้วย DirectX ซึ่ง PrintWindow ได้ภาพดำ จึงอ่านพิกเซลจากกรอบวิดีโอโดยตรง (BitBlt จาก DC ของกรอบ)
+  ไม่ต้องยกหน้าต่าง และไม่ติดป๊อปอัปที่ลอยทับ · ถ้าได้ภาพดำ ใช้ทางสำรอง: ยก VI ขึ้นบนสุดชั่วคราว แล้วจับจากหน้าจอ
   เงื่อนไข: หน้าจอต้องไม่ล็อก/ไม่ Sleep และเปิดกล้องไว้ในแท็บแบบ 1 กล้อง
   ภาพดำ/ไอคอนปลั๊ก "ไม่มีสัญญาณ" ไม่บันทึกทับภาพเดิม
 
@@ -63,7 +63,24 @@ public static class ViCap {
     return best;
   }
 
-  // ยกหน้าต่างขึ้นบนสุดโดยไม่แย่งโฟกัส จับภาพจากหน้าจอ แล้ววางกลับไว้ใต้หน้าต่างที่ผู้ใช้กำลังใช้
+  [DllImport("user32.dll")] static extern IntPtr GetDC(IntPtr h);
+  [DllImport("user32.dll")] static extern int ReleaseDC(IntPtr h, IntPtr dc);
+  [DllImport("gdi32.dll")] static extern bool BitBlt(IntPtr d, int x, int y, int w, int h, IntPtr s, int sx, int sy, int rop);
+
+  // อ่านพิกเซลจากกรอบวิดีโอโดยตรง: ได้ภาพแม้มีหน้าต่างอื่นบัง และไม่ติดป๊อปอัป/พรีวิวทาสก์บาร์ที่ลอยทับหน้าจอ
+  public static Bitmap Direct(IntPtr video) {
+    RECT r; GetWindowRect(video, out r);
+    var bmp = new Bitmap(r.R - r.L, r.B - r.T, PixelFormat.Format32bppArgb);
+    using (var g = Graphics.FromImage(bmp)) {
+      IntPtr dst = g.GetHdc(), src = GetDC(video);
+      BitBlt(dst, 0, 0, bmp.Width, bmp.Height, src, 0, 0, 0x00CC0020 | 0x40000000);   // SRCCOPY | CAPTUREBLT
+      ReleaseDC(video, src); g.ReleaseHdc(dst);
+    }
+    return bmp;
+  }
+
+  // ทางสำรอง: ยกหน้าต่างขึ้นบนสุดโดยไม่แย่งโฟกัส จับภาพจากหน้าจอ แล้ววางกลับไว้ใต้หน้าต่างที่ผู้ใช้กำลังใช้
+  // (ติดสิ่งที่ลอยทับหน้าจอได้ เช่นพรีวิวทาสก์บาร์/การแจ้งเตือน)
   public static Bitmap Grab(IntPtr main, IntPtr video, int settleMs) {
     IntPtr prev = GetForegroundWindow();
     SetWindowPos(main, new IntPtr(-1), 0, 0, 0, 0, NOSIZE_NOMOVE_NOACTIVATE);       // HWND_TOPMOST
@@ -109,7 +126,7 @@ function Save-Jpeg([System.Drawing.Bitmap]$bmp, [string]$path, [int]$maxW = 1280
   $ep.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter ([System.Drawing.Imaging.Encoder]::Quality), 80L
   $tmp = "$path.tmp"
   $out.Save($tmp, $codec, $ep); $out.Dispose()
-  Move-Item -Force $tmp $path
+  [IO.File]::Copy($tmp, $path, $true); [IO.File]::Delete($tmp)
 }
 
 $stamp = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
@@ -140,8 +157,12 @@ if ($tabs.Count -eq 1) { $open = $tabs }
 $openName = if ($open.Count) { $open[0].Current.Name } else { '' }
 if (-not $openName.Contains($cam.match)) { NoImage "แท็บที่เปิดอยู่คือ '$openName' ไม่ใช่ $($cam.match)" }
 
-try { $bmp = [ViCap]::Grab($main, $video, 800) }
-catch { NoImage "จับหน้าจอไม่ได้ (หน้าจอล็อก/Sleep?) $($_.Exception.Message)" }
+$bmp = [ViCap]::Direct($video); $how = 'direct'
+if ([ViCap]::Levels($bmp) -lt 24) {
+  $bmp.Dispose(); $how = 'screen'
+  try { $bmp = [ViCap]::Grab($main, $video, 800) }
+  catch { NoImage "จับหน้าจอไม่ได้ (หน้าจอล็อก/Sleep?) $($_.Exception.Message)" }
+}
 try {
   $levels = [ViCap]::Levels($bmp)
   if ($bmp.Width -lt 320 -or $levels -lt 24) { NoImage "ภาพ $($bmp.Width)x$($bmp.Height) ระดับสี $levels (กล้องหลุด/ภาพดำ?)" }
@@ -153,6 +174,6 @@ try {
     cams    = @([ordered]@{ id = $cam.id; name = $cam.name; lat = $cam.lat; lon = $cam.lon; file = "$($cam.id).jpg"; capturedAt = $now })
   }
   [IO.File]::WriteAllText((Join-Path $OutDir 'cams.json'), ($meta | ConvertTo-Json -Depth 5), (New-Object System.Text.UTF8Encoding $false))
-  Write-Output "$stamp ได้ภาพ $($cam.id) $($bmp.Width)x$($bmp.Height) ระดับสี $levels"
+  Write-Output "$stamp ได้ภาพ $($cam.id) $($bmp.Width)x$($bmp.Height) ระดับสี $levels ($how)"
   exit 0
 } finally { $bmp.Dispose() }
