@@ -97,6 +97,22 @@ public static class ViCap {
     }
   }
 
+  // คลิกขวาจริงที่ตำแหน่งบนจอ (ใช้เปิดเมนูของกล้องในรายการ) แล้วคืนเคอร์เซอร์ที่เดิม
+  [StructLayout(LayoutKind.Sequential)] struct POINT { public int X, Y; }
+  [DllImport("user32.dll")] static extern bool GetCursorPos(out POINT p);
+  [DllImport("user32.dll")] static extern bool SetCursorPos(int x, int y);
+  [DllImport("user32.dll")] static extern void mouse_event(uint f, int dx, int dy, uint d, IntPtr e);
+  public static void RightClick(int x, int y) {
+    POINT old; GetCursorPos(out old);
+    SetCursorPos(x, y); System.Threading.Thread.Sleep(150);
+    mouse_event(0x0008, 0, 0, 0, IntPtr.Zero); mouse_event(0x0010, 0, 0, 0, IntPtr.Zero);   // RIGHTDOWN, RIGHTUP
+    System.Threading.Thread.Sleep(150);
+    SetCursorPos(old.X, old.Y);
+  }
+  public static void Topmost(IntPtr h, bool on) {
+    SetWindowPos(h, new IntPtr(on ? -1 : -2), 0, 0, 0, 0, NOSIZE_NOMOVE_NOACTIVATE);
+  }
+
   // จำนวนระดับความสว่างที่มีพิกเซล >= 0.1% · ภาพจริง (รวมกลางคืนขาวดำ) มีหลายสิบถึงหลายร้อยระดับ
   // ภาพดำ/ไอคอนปลั๊กของ VI มีไม่กี่ระดับ
   public static int Levels(Bitmap b) {
@@ -151,12 +167,57 @@ function Get-ViewName([IntPtr]$win) {
   return [ViCap]::Title($win)
 }
 
+$pids = [uint32[]]($procs | ForEach-Object { [uint32]$_.Id })
+function Find-First($el, $type, [string]$name) {
+  $cond = [System.Windows.Automation.PropertyCondition]::new($A::ControlTypeProperty, $type)
+  foreach ($e in $el.FindAll([System.Windows.Automation.TreeScope]::Descendants, $cond)) { if ($e.Current.Name.Contains($name)) { return $e } }
+}
+
 # หน้าต่าง VI ทุกบานที่มีกรอบวิดีโอ (หน้าต่างหลัก + หน้าต่างกล้องที่ป๊อปออกมา)
-$views = foreach ($win in [ViCap]::TopWindows([uint32[]]($procs | ForEach-Object { [uint32]$_.Id }))) {
-  if ([ViCap]::IsIconic($win)) { [ViCap]::ShowWindow($win, 4) | Out-Null; Start-Sleep -Seconds 3 }   # SW_SHOWNOACTIVATE
-  $video = [ViCap]::FindVideo($win)
-  if ($video -eq [IntPtr]::Zero) { continue }
-  [pscustomobject]@{ win = $win; video = $video; name = (Get-ViewName $win) }
+function Get-Views {
+  foreach ($win in [ViCap]::TopWindows($pids)) {
+    if ([ViCap]::IsIconic($win)) { [ViCap]::ShowWindow($win, 4) | Out-Null; Start-Sleep -Seconds 3 }   # SW_SHOWNOACTIVATE
+    $video = [ViCap]::FindVideo($win)
+    if ($video -eq [IntPtr]::Zero) { continue }
+    [pscustomobject]@{ win = $win; video = $video; name = (Get-ViewName $win) }
+  }
+}
+
+# เปิดกล้องที่ยังไม่ได้เปิด (เช่นหลังคอมรีสตาร์ทแล้วเพิ่งล็อกอิน): คลิกขวาที่ชื่อกล้องในรายการ Servers → View in New Window
+# ยก VI ขึ้นบนสุดชั่วคราวให้คลิกโดนรายการ แล้ววางกลับ · ทำเฉพาะตอนที่กล้องไม่ได้เปิดอยู่ ไม่รบกวนรอบปกติ
+function Open-Cam($cam) {
+  $main = [ViCap]::TopWindows($pids) | Where-Object { Find-First $A::FromHandle($_) ([System.Windows.Automation.ControlType]::Group) 'Servers' } | Select-Object -First 1
+  if (-not $main) { Log "เปิด $($cam.id) เองไม่ได้: ยังไม่ได้ล็อกอิน VI (ไม่พบรายการ Servers)"; return }
+  $root = $A::FromHandle($main)
+  $servers = Find-First $root ([System.Windows.Automation.ControlType]::Group) 'Servers'
+  try { $servers.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand() } catch {}
+  Start-Sleep -Milliseconds 500
+  $item = Find-First $root ([System.Windows.Automation.ControlType]::TreeItem) $cam.match
+  if (-not $item) { Log "เปิด $($cam.id) เองไม่ได้: ไม่พบ $($cam.match) ในรายการ Servers"; return }
+  try { $item.GetCurrentPattern([System.Windows.Automation.ScrollItemPattern]::Pattern).ScrollIntoView() } catch {}
+  try { $item.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select() } catch {}
+  Start-Sleep -Milliseconds 500
+  $r = $item.Current.BoundingRectangle
+  $panel = $servers.Current.BoundingRectangle
+  [ViCap]::Topmost($main, $true)
+  try {
+    Start-Sleep -Milliseconds 300
+    [ViCap]::RightClick([int][Math]::Min($r.X + 100, $panel.Right - 20), [int]($r.Y + $r.Height / 2))
+    Start-Sleep -Milliseconds 800
+    $menu = foreach ($w in [ViCap]::TopWindows($pids)) { Find-First $A::FromHandle($w) ([System.Windows.Automation.ControlType]::MenuItem) 'View in New Window' }
+    $menu = @($menu)[0]
+    if (-not $menu) { Log "เปิด $($cam.id) เองไม่ได้: เมนู View in New Window ไม่ขึ้น"; return }
+    $menu.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    Log "เปิดกล้อง $($cam.id) ในหน้าต่างใหม่ให้แล้ว"
+  } finally { [ViCap]::Topmost($main, $false) }
+  Start-Sleep -Seconds 8   # รอวิดีโอเริ่มเล่น
+}
+
+$views = @(Get-Views)
+$missing = @($cams | Where-Object { $c = $_; -not ($views | Where-Object { $_.name -and $_.name.Contains($c.match) }) })
+if ($missing.Count) {
+  foreach ($cam in $missing) { Open-Cam $cam }
+  $views = @(Get-Views)
 }
 
 function Save-Cam($cam, $view) {
