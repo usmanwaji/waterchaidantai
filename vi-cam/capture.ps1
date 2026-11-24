@@ -175,8 +175,14 @@ function Find-First($el, $type, [string]$name) {
 
 # หน้าต่าง VI ทุกบานที่มีกรอบวิดีโอ (หน้าต่างหลัก + หน้าต่างกล้องที่ป๊อปออกมา)
 function Get-Views {
+  # หน้าต่างที่ถูกย่อ: คืนขนาดก่อน (SW_SHOWNOACTIVATE ไม่แย่งโฟกัส) แล้วรอให้แท็บกับวิดีโอวาดใหม่
+  # (รอแค่ 3 วิ เคยได้ชื่อแท็บว่าง/ภาพดำ → เปิดกล้องซ้ำและข้ามรอบ)
+  $restored = $false
   foreach ($win in [ViCap]::TopWindows($pids)) {
-    if ([ViCap]::IsIconic($win)) { [ViCap]::ShowWindow($win, 4) | Out-Null; Start-Sleep -Seconds 3 }   # SW_SHOWNOACTIVATE
+    if ([ViCap]::IsIconic($win)) { [ViCap]::ShowWindow($win, 4) | Out-Null; $restored = $true }
+  }
+  if ($restored) { Start-Sleep -Seconds 10 }
+  foreach ($win in [ViCap]::TopWindows($pids)) {
     $video = [ViCap]::FindVideo($win)
     if ($video -eq [IntPtr]::Zero) { continue }
     [pscustomobject]@{ win = $win; video = $video; name = (Get-ViewName $win) }
@@ -222,6 +228,9 @@ if ($missing.Count) {
 
 function Save-Cam($cam, $view) {
   $bmp = [ViCap]::Direct($view.video); $how = 'direct'
+  if ([ViCap]::Levels($bmp) -lt 24) {   # วิดีโอเพิ่งเริ่ม/เพิ่งคืนขนาด อาจยังดำอยู่ → รออีกนิดแล้วลองใหม่
+    $bmp.Dispose(); Start-Sleep -Seconds 5; $bmp = [ViCap]::Direct($view.video)
+  }
   if ([ViCap]::Levels($bmp) -lt 24) {
     $bmp.Dispose(); $how = 'screen'
     try { $bmp = [ViCap]::Grab($view.win, $view.video, 800) }
