@@ -1,13 +1,13 @@
 /* js/announce.js · ป๊อปอัพประกาศเตือนภัยชั่วคราว (รูปภาพเต็มจอ)
- * ใส่ในทุกหน้า: <script src="js/announce.js?v=1" defer></script>
+ * ใส่ในทุกหน้า: <script src="js/announce.js?v=2" defer></script>
  *
  * กฎการโผล่
- *   • แสดงครั้งเดียวต่อเครื่อง/เบราว์เซอร์ (จำไว้ใน localStorage ตั้งแต่ตอนที่แสดง)
- *     มือถือกับคอมเก็บแยกกัน จึงเห็นเครื่องละครั้ง
+ *   • แสดงวันละครั้ง เฉพาะครั้งแรกที่เข้าในวันนั้น (นับวันตามเวลาไทย ขึ้นวันใหม่ตอนเที่ยงคืน)
+ *     จำวันที่แสดงล่าสุดไว้ใน localStorage ตั้งแต่ตอนที่แสดง มือถือกับคอมเก็บแยกกัน
  *   • หมดเวลา UNTIL แล้วไม่แสดง และไม่โหลดรูปเลย
  *   • ปิดได้ด้วยปุ่ม ×, ปุ่ม "รับทราบ", แตะพื้นหลัง หรือกด Esc
  *
- * ประกาศใหม่: เปลี่ยน ID (ให้ทุกคนเห็นอีกรอบ), IMG, ALT, UNTIL แล้วเพิ่ม ?v= ในหน้าเว็บ
+ * ประกาศใหม่: เปลี่ยน ID (ให้ทุกคนเห็นทันทีแม้วันนี้เห็นประกาศเดิมแล้ว), IMG, ALT, UNTIL แล้วเพิ่ม ?v= ในหน้าเว็บ
  */
 (function () {
   'use strict';
@@ -22,9 +22,11 @@
   var KEY   = 'naraflood.announce.' + ID;
 
   if (!(Date.now() < UNTIL)) return;
+  /* วันที่วันนี้ตามเวลาไทย (UTC+7) เช่น "2026-11-27" ไม่ขึ้นกับโซนเวลาที่ตั้งในเครื่อง */
+  var today = new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10);
   try {
-    if (localStorage.getItem(KEY)) return;
-    localStorage.setItem(KEY, String(Date.now()));
+    if (localStorage.getItem(KEY) === today) return;
+    localStorage.setItem(KEY, today);
   } catch (e) { /* โหมดส่วนตัวบางเบราว์เซอร์เขียนไม่ได้ → แสดงตามปกติ */ }
 
   var css =
