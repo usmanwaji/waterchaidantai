@@ -777,7 +777,9 @@ function ffrLoadLive(){
       ]);
       if (error || !data || !Array.isArray(data.rows)) return;
       const rows = ffrRowsOf(data.rows);
-      if (!rows.length) return;
+      // ชุดว่าง = เจ้าหน้าที่เผยแพร่ว่ารอบนี้นราธิวาสไม่มีหมู่บ้านเสี่ยง (ใช้ตามนั้น ไม่ถอยไปใช้ไฟล์ในเว็บที่เป็นรอบเก่า)
+      // มีแถวแต่อ่านไม่ได้สักแถว = ข้อมูลเสีย ใช้ไฟล์ในเว็บไปก่อน
+      if (data.rows.length && !rows.length) return;
       ffrRows = rows;
       ffrPeriodText = data.period || '-';
       ffrUpdText = ' (อัปเดต ' + new Date(data.uploaded_at).toLocaleString('th-TH', {dateStyle:'medium', timeStyle:'short', timeZone:'Asia/Bangkok'}) + ' น.)';
@@ -809,12 +811,14 @@ async function ffrToggle(on){
     ffrLegend = L.control({position:'bottomleft'});
     ffrLegend.onAdd = () => {
       const d = L.DomUtil.create('div','legend');
-      d.innerHTML = `<b style="font-size:11.5px">ความเสี่ยงน้ำป่าไหลหลากและดินโคลนถล่ม (FFR)</b>` + ffrLevels().map(k =>
-        `<div class="lg"><span class="sw" style="background:${FFR_LV[k].color};border-radius:3px"></span>${FFR_LV[k].name}</div>`).join('');
+      d.innerHTML = `<b style="font-size:11.5px">ความเสี่ยงน้ำป่าไหลหลากและดินโคลนถล่ม (FFR)</b>` + (ffrRows.length ? ffrLevels().map(k =>
+        `<div class="lg"><span class="sw" style="background:${FFR_LV[k].color};border-radius:3px"></span>${FFR_LV[k].name}</div>`).join('') : '<div class="lg">ไม่มีหมู่บ้านเสี่ยงในช่วงนี้</div>');
       return d;
     };
     document.getElementById('ffrPeriod').textContent = ffrPeriodText;
     document.getElementById('ffrUpd').textContent = ffrUpdText;
+    // ชุดว่าง: ไม่มีอะไรให้กรอง (.ffr-filt ตั้ง display:flex ไว้ ใช้ hidden ไม่ได้)
+    document.querySelector('#ffrPanel .ffr-filt').style.display = ffrRows.length ? '' : 'none';
     const lvSel = document.getElementById('ffrLevel');
     ffrLevels().forEach(lv => lvSel.insertAdjacentHTML('beforeend', `<option value="${lv}">${FFR_LV[lv].name}</option>`));
     const ampSel = document.getElementById('ffrAmp');
@@ -879,6 +883,7 @@ function ffrRender(fit){
 
 function ffrRenderStats(rows){
   const el = document.getElementById('ffrStats');
+  if (!ffrRows.length) { el.innerHTML = '<div style="font-size:12.5px;color:var(--st-normal);font-weight:600">✅ ช่วงเวลานี้ไม่มีหมู่บ้านเสี่ยงน้ำป่าไหลหลากและดินโคลนถล่มใน จ.นราธิวาส</div><div style="font-size:11px;color:var(--ink-3);margin-top:3px">ตามตารางคาดการณ์ 36 ชม. ของกรมทรัพยากรน้ำรอบล่าสุด · ยังควรติดตามประกาศเตือนภัยและสภาพฝนในพื้นที่</div>'; return; }
   if (!rows.length) { el.innerHTML = '<div style="font-size:12px;color:var(--ink-3)">ไม่มีหมู่บ้านตามเงื่อนไขที่เลือก</div>'; return; }
   const by = new Map();
   rows.forEach(r => {

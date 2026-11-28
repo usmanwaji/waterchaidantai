@@ -192,7 +192,7 @@ async function loadStatus(){
   const {data, error} = await sb.from('ffr_current').select('period,row_count,source_name,uploaded_at').maybeSingle();
   const builtin = typeof FFR_RISK !== 'undefined' ? FFR_RISK : null;
   $('status').innerHTML = (!error && data)
-    ? `ใช้ชุดที่อัปโหลด: <b>${fmt(data.row_count)} หมู่บ้าน</b> · ช่วง <b>${esc(data.period)}</b><br>จากไฟล์ “${esc(data.source_name)}” · อัปเดต ${when(data.uploaded_at)}`
+    ? `ใช้ชุดที่อัปโหลด: <b>${data.row_count ? fmt(data.row_count)+' หมู่บ้าน' : 'ไม่มีหมู่บ้านเสี่ยง'}</b> · ช่วง <b>${esc(data.period)}</b><br>จากไฟล์ “${esc(data.source_name)}” · อัปเดต ${when(data.uploaded_at)}`
     : `ใช้ข้อมูลเดิมที่ติดมากับเว็บ (js/ffr_risk_data.js)`+(builtin ? ` · ${fmt(builtin.rows.length)} หมู่บ้าน · ช่วง <b>${esc(builtin.period)}</b>` : '');
 }
 
@@ -257,14 +257,15 @@ let map, layer;
 function show(res){
   RESULT = res;
   const R = res.rows;
-  if(!R.length){ setMsg($('parseMsg'), 'err', 'อ่าน “'+FILE.name+'” แล้วไม่พบหมู่บ้านของ จ.นราธิวาส'+(res.warn.length ? ' · '+res.warn[0] : '')); return; }
-  setMsg($('parseMsg'), 'ok', 'อ่าน “'+FILE.name+'” ได้ '+fmt(R.length)+' หมู่บ้าน ตรวจตัวอย่างด้านล่างก่อนเผยแพร่');
+  // ไม่มีหมู่บ้านของนราธิวาส: บางรอบนราธิวาสไม่มีพื้นที่เสี่ยงจริง เผยแพร่ชุดว่างได้ หน้า forecast จะแสดงว่าไม่มีหมู่บ้านเสี่ยง
+  if(!R.length) setMsg($('parseMsg'), 'info', 'อ่าน “'+FILE.name+'” แล้วไม่พบหมู่บ้านของ จ.นราธิวาส'+(res.warn.length ? ' · '+res.warn[0] : '')+' · ถ้ารอบนี้นราธิวาสไม่มีพื้นที่เสี่ยงจริง เผยแพร่ได้เลย หน้าเว็บจะแสดงว่าไม่มีหมู่บ้านเสี่ยงในช่วงเวลานี้');
+  else setMsg($('parseMsg'), 'ok', 'อ่าน “'+FILE.name+'” ได้ '+fmt(R.length)+' หมู่บ้าน ตรวจตัวอย่างด้านล่างก่อนเผยแพร่');
   $('preview').classList.remove('hide');
   $('period').value = res.period || '';
   $('periodHint').textContent = res.period ? 'อ่านจากหัวเอกสาร ตรวจให้ตรงกับต้นฉบับ แก้ไขได้' : 'หาช่วงเวลาในไฟล์ไม่พบ กรุณาพิมพ์เอง (จำเป็น)';
   const n = lv => R.filter(r=>r[4]===lv).length;
   const tambons = new Set(R.map(r=>r[0]+'|'+r[1])).size, amps = new Set(R.map(r=>r[0])).size;
-  $('pvStats').innerHTML = `<span><b>${fmt(R.length)}</b> หมู่บ้าน</span>`+
+  $('pvStats').innerHTML = !R.length ? `<span><b>0</b> หมู่บ้าน · ไม่มีหมู่บ้านเสี่ยงใน จ.นราธิวาส</span>` : `<span><b>${fmt(R.length)}</b> หมู่บ้าน</span>`+
     ['high','mid','low'].filter(lv=>n(lv)).map(lv=>`<span>${lvTag(lv)} <b>${fmt(n(lv))}</b></span>`).join('')+
     `<span><b>${fmt(tambons)}</b> ตำบล · <b>${fmt(amps)}</b> อำเภอ</span>`+
     (res.unmatched ? `<span style="color:#8a4b00">ไม่พบบนแผนที่ <b>${fmt(res.unmatched)}</b> ตำบล</span>` : '');
@@ -275,6 +276,7 @@ function show(res){
     `<tr><td>${esc(r[2])}</td><td>ต.${esc(r[1]||'-')} <span class="sub">อ.${esc(r[0]||'-')}</span></td><td class="num">${r[3].toFixed(2)}</td><td>${lvTag(r[4])}</td></tr>`).join('');
   drawMap(R);
   $('publish').disabled = false;
+  $('publish').textContent = R.length ? '3. เผยแพร่ขึ้นเว็บ' : '3. เผยแพร่ (ไม่มีหมู่บ้านเสี่ยง)';
 }
 // ระบายสีทั้งตำบลตามหมู่บ้านที่เสี่ยงที่สุด แบบเดียวกับหน้า forecast.html
 function drawMap(R){
@@ -300,14 +302,22 @@ function drawMap(R){
 
 /* ---------- เผยแพร่ / ประวัติ ---------- */
 async function publish(){
-  if(!RESULT || !RESULT.rows.length) return;
+  if(!RESULT) return;
+  const n = RESULT.rows.length;
   const period = $('period').value.trim();
   if(period.length < 4){ setMsg($('pubMsg'), 'err', 'กรุณาใส่ช่วงเวลาคาดการณ์ก่อนเผยแพร่'); $('period').focus(); return; }
-  if(!confirm(`เผยแพร่ความเสี่ยงน้ำป่าไหลหลากและดินโคลนถล่ม ${RESULT.rows.length} หมู่บ้าน (ช่วง ${period}) จาก “${FILE.name}” แทนข้อมูลชุดเดิมบนเว็บ?`)) return;
+  if(!confirm(n
+    ? `เผยแพร่ความเสี่ยงน้ำป่าไหลหลากและดินโคลนถล่ม ${n} หมู่บ้าน (ช่วง ${period}) จาก “${FILE.name}” แทนข้อมูลชุดเดิมบนเว็บ?`
+    : `เผยแพร่ว่า “ไม่มีหมู่บ้านเสี่ยงใน จ.นราธิวาส” (ช่วง ${period}) จาก “${FILE.name}” แทนข้อมูลชุดเดิมบนเว็บ?`)) return;
   const b = $('publish'); b.disabled = true; b.textContent = 'กำลังเผยแพร่…';
   const {data, error} = await sb.rpc('ffr_publish', {p_token:TOKEN, p_period:period, p_rows:RESULT.rows, p_source:FILE.name, p_note:$('note').value.trim()||null});
-  b.disabled = false; b.textContent = '3. เผยแพร่ขึ้นเว็บ';
-  if(error){ if(!expired(error)) setMsg($('pubMsg'), 'err', 'เผยแพร่ไม่สำเร็จ: '+error.message); return; }
+  b.disabled = false; b.textContent = n ? '3. เผยแพร่ขึ้นเว็บ' : '3. เผยแพร่ (ไม่มีหมู่บ้านเสี่ยง)';
+  if(error){
+    if(expired(error)) return;
+    // ฐานข้อมูลยังไม่ได้รัน schema-v13 (ffr_publish เดิมรับไม่ต่ำกว่า 1 แถว)
+    if(!n && /out of range/.test(error.message||'')) return setMsg($('pubMsg'), 'err', 'ฐานข้อมูลยังไม่รองรับการเผยแพร่ชุดว่าง: ผู้ดูแลต้องรัน supabase/schema-v13.sql ใน Supabase SQL Editor ก่อน');
+    setMsg($('pubMsg'), 'err', 'เผยแพร่ไม่สำเร็จ: '+error.message); return;
+  }
   $('pubMsg').className = 'msg ok';
   $('pubMsg').innerHTML = `เผยแพร่แล้ว (เวอร์ชัน #${data}) · <a href="forecast.html#ffr" target="_blank" rel="noopener">เปิดดูบนหน้าคาดการณ์พื้นที่เสี่ยง</a> (ผู้ใช้จะเห็นข้อมูลใหม่เมื่อโหลดหน้า)`;
   loadStatus(); loadHistory();
