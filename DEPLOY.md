@@ -203,6 +203,7 @@ select path, sum(views) as views from public.page_views group by path order by v
   ถ้าเจ้าหน้าที่ถูกล็อกเพราะมีคนเดารหัส: `delete from public.ffr_login_fail;`
 - ทุกการอัปโหลดเก็บประวัติ ย้อนกลับเวอร์ชันเก่า หรือกลับไปใช้ไฟล์ที่ติดมากับเว็บ (`js/ffr_risk_data.js`) ได้จากหน้าเดียวกัน
 - ยังไม่ได้รัน v12 / ยังไม่เคยอัปโหลด / ฐานข้อมูลล่ม: forecast.html ใช้ `js/ffr_risk_data.js` ตามเดิม
+- รอบที่ไฟล์ไม่มีหมู่บ้านของนราธิวาสเลย (มีแต่จังหวัดอื่น): เผยแพร่ชุดว่างได้ หน้า forecast จะแสดงว่า "ไม่มีหมู่บ้านเสี่ยง" ในช่วงเวลานั้น — ต้องรัน `supabase/schema-v13.sql` ใน SQL Editor ก่อน (ครั้งเดียว)
 
 ---
 
